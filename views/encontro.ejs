@@ -5,7 +5,9 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Formulário de inscrição para Encontro" />
+  <meta name="theme-color" content="#000000" />
   <title>Inscrição Encontro EJC</title>
+  <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
@@ -13,7 +15,7 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body style="background-color: #000;">
-  <div id="root"></div>
+  <main id="root" role="main"></main>
 
   <footer class="text-center py-3 bg-light">
     <div class="container">
@@ -22,11 +24,19 @@
   </footer>
 
   <!-- React and dependencies -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script type="text/babel" src="/js/app.js?v=20260309-1"></script>
+  <script defer src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script defer type="text/babel" src="/js/app.js?v=20260310-1"></script>
   <script>
+    const deferHeavyWork = (callback) => {
+      if ('requestIdleCallback' in window) {
+        window.requestIdleCallback(callback, { timeout: 3000 });
+      } else {
+        setTimeout(callback, 1200);
+      }
+    };
+
     const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
     if ('serviceWorker' in navigator) {
       if (isLocalhost) {
@@ -37,12 +47,14 @@
           caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
         }
       } else {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('Service worker registered');
-            registration.update();
-          })
-          .catch((err) => console.warn('SW registration failed', err));
+        deferHeavyWork(() => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('Service worker registered');
+              registration.update();
+            })
+            .catch((err) => console.warn('SW registration failed', err));
+        });
       }
     }
 

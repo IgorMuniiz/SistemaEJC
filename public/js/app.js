@@ -18,6 +18,22 @@ function GenericForm() {
   const path = window.location.pathname;
   const isEncontro = path === '/encontro';
 
+  const autocompleteByField = {
+    nomeCompleto: 'name',
+    comoQuerSerChamado: 'nickname',
+    dataNascimento: 'bday',
+    telefone: 'tel',
+    cep: 'postal-code',
+    bairro: 'address-level2',
+    logradouro: 'street-address',
+    email: 'email',
+    instagram: 'username',
+    nomeMae: 'name',
+    nomePai: 'name',
+    telefoneMae: 'tel',
+    telefonePai: 'tel',
+  };
+
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     cep: '',
@@ -98,10 +114,18 @@ function GenericForm() {
   const [errors, setErrors] = useState([]);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [showServiuOptions, setShowServiuOptions] = useState(false);
-  const [showCoordenouOptions, setShowCoordenouOptions] = useState(false);
-  const [serviuOption, setServiuOption] = useState('');
-  const [coordenouOption, setCoordenouOption] = useState('');
+
+  useEffect(() => {
+    const fields = document.querySelectorAll('input[name], textarea[name], select[name]');
+    fields.forEach((field) => {
+      const fieldName = field.getAttribute('name');
+      if (!fieldName) return;
+      const autocomplete = autocompleteByField[fieldName];
+      if (autocomplete && !field.getAttribute('autocomplete')) {
+        field.setAttribute('autocomplete', autocomplete);
+      }
+    });
+  });
 
   const handleChange = (e) => {
     const { name, value, options, multiple } = e.target;
@@ -117,22 +141,6 @@ function GenericForm() {
 
   const handleFile = (e) => {
     setFormData((prev) => ({ ...prev, foto: e.target.files[0] }));
-  };
-
-  const addEquipeOption = (field, value, clearValue) => {
-    if (!value) return;
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].includes(value) ? prev[field] : [...prev[field], value],
-    }));
-    clearValue('');
-  };
-
-  const removeEquipeOption = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: prev[field].filter((item) => item !== value),
-    }));
   };
 
   const handleTiosChange = (pessoa, e) => {
@@ -160,25 +168,25 @@ function GenericForm() {
     }));
   };
 
-  const addTiosEquipe = (pessoa, field, value, clearValue) => {
-    if (!value) return;
-    setTiosData((prev) => ({
-      ...prev,
-      [pessoa]: {
-        ...prev[pessoa],
-        [field]: prev[pessoa][field].includes(value) ? prev[pessoa][field] : [...prev[pessoa][field], value],
-      },
-    }));
-    clearValue('');
-  };
+  const toggleEquipeSelection = (pessoa, field, value, checked) => {
+    if (pessoa) {
+      setTiosData((prev) => ({
+        ...prev,
+        [pessoa]: {
+          ...prev[pessoa],
+          [field]: checked
+            ? (prev[pessoa][field].includes(value) ? prev[pessoa][field] : [...prev[pessoa][field], value])
+            : prev[pessoa][field].filter((item) => item !== value),
+        },
+      }));
+      return;
+    }
 
-  const removeTiosEquipe = (pessoa, field, value) => {
-    setTiosData((prev) => ({
+    setFormData((prev) => ({
       ...prev,
-      [pessoa]: {
-        ...prev[pessoa],
-        [field]: prev[pessoa][field].filter((item) => item !== value),
-      },
+      [field]: checked
+        ? (prev[field].includes(value) ? prev[field] : [...prev[field], value])
+        : prev[field].filter((item) => item !== value),
     }));
   };
 
@@ -467,8 +475,6 @@ function GenericForm() {
     const data = isTios ? tiosData[pessoa] : formData;
     const handleCh = (e) => isTios ? handleTiosChange(pessoa, e) : handleChange(e);
     const handleF = (e) => isTios ? handleTiosFile(pessoa, e) : handleFile(e);
-    const addEq = (field, value, clear) => isTios ? addTiosEquipe(pessoa, field, value, clear) : addEquipeOption(field, value, clear);
-    const removeEq = (field, value) => isTios ? removeTiosEquipe(pessoa, field, value) : removeEquipeOption(field, value);
 
     return (
       <>
@@ -619,103 +625,49 @@ function GenericForm() {
               <label htmlFor={`equipeServiu-${pessoa}`} className="form-label">
                 Equipe que já serviu
               </label>
-              <button
-                type="button"
-                className="btn btn-outline-secondary w-100 text-start"
-                onClick={() => setShowServiuOptions((prev) => !prev)}
-              >
-                {showServiuOptions ? 'Ocultar opções' : 'Selecionar opções'}
-              </button>
-              {showServiuOptions && (
-                <div className="d-flex gap-2 mt-2">
-                  <select
-                    className="form-control"
-                    id={`equipeServiu-${pessoa}`}
-                    name="equipeServiu"
-                    value={serviuOption}
-                    onChange={(e) => setServiuOption(e.target.value)}
-                  >
-                    <option value="">Escolha uma equipe</option>
-                    {equipeOptions.map((opt) => (
-                      <option key={`serv-${opt}`} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => addEq('equipeServiu', serviuOption, setServiuOption)}
-                  >
-                    Adicionar
-                  </button>
-                </div>
-              )}
-              {data.equipeServiu.length > 0 && (
-                <div className="d-flex flex-wrap gap-2 mt-2">
-                  {data.equipeServiu.map((item) => (
-                    <span key={`serv-tag-${item}`} className="badge bg-secondary d-inline-flex align-items-center">
-                      {item}
-                      <button
-                        type="button"
-                        className="btn-close btn-close-white ms-2"
-                        aria-label="Remover"
-                        onClick={() => removeEq('equipeServiu', item)}
-                      ></button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <small className="text-muted">Clique no campo e use o botão Adicionar para incluir quantas equipes quiser.</small>
+              <div className="equipe-options-grid d-flex flex-column gap-2">
+                {equipeOptions.map((opt) => (
+                  <div className="form-check" key={`${pessoa || 'unico'}-serviu-${opt}`}>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`equipeServiu-${pessoa}-${opt}`}
+                      name="equipeServiu"
+                      value={opt}
+                      checked={data.equipeServiu.includes(opt)}
+                      onChange={(e) => toggleEquipeSelection(isTios ? pessoa : null, 'equipeServiu', opt, e.target.checked)}
+                    />
+                    <label className="form-check-label" htmlFor={`equipeServiu-${pessoa}-${opt}`}>
+                      {opt}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <small className="text-muted">Pode selecionar mais de uma opção.</small>
             </div>
             <div className="mb-3">
               <label htmlFor={`equipeCoordenou-${pessoa}`} className="form-label">
                 Equipe que já coordenou
               </label>
-              <button
-                type="button"
-                className="btn btn-outline-secondary w-100 text-start"
-                onClick={() => setShowCoordenouOptions((prev) => !prev)}
-              >
-                {showCoordenouOptions ? 'Ocultar opções' : 'Selecionar opções'}
-              </button>
-              {showCoordenouOptions && (
-                <div className="d-flex gap-2 mt-2">
-                  <select
-                    className="form-control"
-                    id={`equipeCoordenou-${pessoa}`}
-                    name="equipeCoordenou"
-                    value={coordenouOption}
-                    onChange={(e) => setCoordenouOption(e.target.value)}
-                  >
-                    <option value="">Escolha uma equipe</option>
-                    {equipeOptions.map((opt) => (
-                      <option key={`coord-${opt}`} value={opt}>{opt}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    onClick={() => addEq('equipeCoordenou', coordenouOption, setCoordenouOption)}
-                  >
-                    Adicionar
-                  </button>
-                </div>
-              )}
-              {data.equipeCoordenou.length > 0 && (
-                <div className="d-flex flex-wrap gap-2 mt-2">
-                  {data.equipeCoordenou.map((item) => (
-                    <span key={`coord-tag-${item}`} className="badge bg-secondary d-inline-flex align-items-center">
-                      {item}
-                      <button
-                        type="button"
-                        className="btn-close btn-close-white ms-2"
-                        aria-label="Remover"
-                        onClick={() => removeEq('equipeCoordenou', item)}
-                      ></button>
-                    </span>
-                  ))}
-                </div>
-              )}
-              <small className="text-muted">Clique no campo e use o botão Adicionar para incluir quantas equipes quiser.</small>
+              <div className="equipe-options-grid d-flex flex-column gap-2">
+                {equipeOptions.map((opt) => (
+                  <div className="form-check" key={`${pessoa || 'unico'}-coordenou-${opt}`}>
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`equipeCoordenou-${pessoa}-${opt}`}
+                      name="equipeCoordenou"
+                      value={opt}
+                      checked={data.equipeCoordenou.includes(opt)}
+                      onChange={(e) => toggleEquipeSelection(isTios ? pessoa : null, 'equipeCoordenou', opt, e.target.checked)}
+                    />
+                    <label className="form-check-label" htmlFor={`equipeCoordenou-${pessoa}-${opt}`}>
+                      {opt}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <small className="text-muted">Pode selecionar mais de uma opção.</small>
             </div>
             {isTios && (
               <div className="mb-3">
@@ -1169,8 +1121,8 @@ function GenericForm() {
   return (
     <>
       {submitting && !success && (
-        <div className="loader-overlay">
-          <div className="loader"></div>
+        <div className="loader-overlay" role="status" aria-live="polite" aria-label="Enviando formulário">
+          <div className="loader" aria-hidden="true"></div>
         </div>
       )}
       <header className="text-white mb-5" style={{position: 'relative', paddingTop: '60px'}}>
@@ -1227,7 +1179,7 @@ function GenericForm() {
                 </>
               )}
 
-            <form onSubmit={handleSubmit} encType="multipart/form-data">
+            <form onSubmit={handleSubmit} encType="multipart/form-data" aria-busy={submitting ? 'true' : 'false'}>
               {errors.length > 0 && (
                 <div className="alert alert-danger">
                   <ul>

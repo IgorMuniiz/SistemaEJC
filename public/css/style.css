@@ -432,8 +432,24 @@ textarea.form-control {
   margin-bottom: 0 !important;
 }
 
+/* Opcoes de equipe: 2 colunas no desktop */
+.equipe-options-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  column-gap: 24px;
+  row-gap: 10px;
+}
+
+.equipe-options-grid .form-check {
+  margin-bottom: 0;
+}
+
 @media (max-width: 768px) {
   .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .equipe-options-grid {
     grid-template-columns: 1fr;
   }
 }
