@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Formul&aacute;rio de inscri&ccedil;&atilde;o para o EJC" />
+  <title>Inscri&ccedil;&atilde;o EJC - Cadastro</title>
+  <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
+  <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body style="background-color: #000;">
+  <div id="root"></div>
+
+  <footer class="text-center py-3 bg-light">
+    <div class="container">
+      <small>&copy; 2026 EJC - Todos os direitos reservados</small>
+    </div>
+  </footer>
+
+  <!-- React and dependencies -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel" src="/js/app.js?v=20260309-1"></script>
+  <script>
+    const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    if ('serviceWorker' in navigator) {
+      if (isLocalhost) {
+        navigator.serviceWorker.getRegistrations().then((registrations) => {
+          registrations.forEach((r) => r.unregister());
+        });
+        if ('caches' in window) {
+          caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+        }
+      } else {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service worker registered');
+            registration.update();
+            navigator.serviceWorker.ready.then(reg => {
+              reg.pushManager.getSubscription().then(sub => {
+                if (sub) return;
+                fetch('/vapidPublicKey').then(r => r.text()).then(key => {
+                  const vapidKey = urlBase64ToUint8Array(key);
+                  reg.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: vapidKey
+                  }).then(newSub => {
+                    fetch('/subscribe', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify(newSub)
+                    });
+                  });
+                });
+              });
+            });
+          })
+          .catch((err) => console.warn('SW registration failed', err));
+      }
+    }
+
+    function urlBase64ToUint8Array(base64String) {
+      const padding = '='.repeat((4 - base64String.length % 4) % 4);
+      const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+      const rawData = window.atob(base64);
+      const outputArray = new Uint8Array(rawData.length);
+      for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+      }
+      return outputArray;
+    }
+
+  </script>
+</body>
+</html>

@@ -1,0 +1,2703 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Painel de gestao de cadastros do EJC COP com controle de encontristas, encontreiros, tios, encontros e administradores.">
+  <title>Painel Administrativo - EJC COP</title>
+  <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
+  <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
+  <link rel="stylesheet" href="/css/admin-saas.css">
+  <style>
+    :root {
+      --bg-main: #f4f7fc;
+      --sidebar-bg: linear-gradient(180deg, #0f2c44 0%, #173f61 52%, #1d557f 100%);
+      --sidebar-hover: rgba(255, 255, 255, 0.12);
+      --card-bg: #ffffff;
+      --text-main: #1d2b39;
+      --text-muted: #6b7d90;
+      --brand: #1a78d6;
+      --brand-dark: #1257a0;
+      --ok: #2f9b5d;
+      --warn: #d3981f;
+    }
+
+    body {
+      margin: 0;
+      background: radial-gradient(circle at 12% 18%, #dfeeff 0%, #f4f7fc 42%, #edf2f9 100%);
+      color: var(--text-main);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+    }
+
+    .admin-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      width: 78px;
+      background: var(--sidebar-bg);
+      color: #fff;
+      transition: width 0.28s ease;
+      overflow: hidden;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      box-shadow: 10px 0 30px rgba(6, 18, 29, 0.2);
+      z-index: 20;
+    }
+
+    .sidebar:hover {
+      width: 270px;
+    }
+
+    .sidebar-top {
+      padding: 20px 16px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .brand-inline {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 44px;
+      margin-bottom: 10px;
+    }
+
+    .brand-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.18);
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      flex: 0 0 auto;
+    }
+
+    .brand-text {
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      white-space: nowrap;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .sidebar:hover .brand-text {
+      opacity: 1;
+    }
+
+    .side-menu {
+      padding: 14px 10px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #fff;
+      text-decoration: none;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: background 0.2s ease, transform 0.2s ease;
+      border: none;
+      width: 100%;
+      background: transparent;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .menu-link i {
+      width: 28px;
+      text-align: center;
+      font-size: 1rem;
+      flex: 0 0 auto;
+    }
+
+    .menu-label {
+      white-space: nowrap;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar:hover .menu-label {
+      opacity: 1;
+    }
+
+    .menu-link:hover,
+    .menu-link.active {
+      background: var(--sidebar-hover);
+      transform: translateX(2px);
+      color: #fff;
+    }
+
+    .sidebar-note {
+      margin: auto 12px 16px;
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.75rem;
+      line-height: 1.35;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      text-align: center;
+    }
+
+    .sidebar:hover .sidebar-note {
+      opacity: 1;
+    }
+
+    .main-panel {
+      flex: 1;
+      padding: 24px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #dce6f1;
+      border-radius: 14px;
+      padding: 16px 18px;
+      box-shadow: 0 6px 18px rgba(25, 52, 78, 0.08);
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #12304b;
+    }
+
+    .topbar p {
+      margin: 3px 0 0;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .admin-pill {
+      background: #e8f2ff;
+      border: 1px solid #c7defa;
+      color: #184f85;
+      padding: 7px 12px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .content-card {
+      background: var(--card-bg);
+      border: 1px solid #dce5f1;
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(26, 49, 71, 0.08);
+    }
+
+    .nav-tabs .nav-link {
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      color: #3f5872;
+      padding: 10px 14px;
+      margin-right: 5px;
+    }
+
+    .nav-tabs .nav-link.active {
+      background: #1a78d6;
+      color: #fff;
+    }
+
+    .table-wrap {
+      margin-top: 16px;
+      border: 1px solid #e1eaf4;
+      border-radius: 12px;
+      overflow: auto;
+    }
+
+    table {
+      margin-bottom: 0 !important;
+      min-width: 850px;
+    }
+
+    thead th {
+      background: #eff5fc !important;
+      color: #29445c !important;
+      border-bottom: 1px solid #dbe5f0 !important;
+      font-size: 0.84rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    td {
+      vertical-align: middle;
+    }
+
+    .table-photo {
+      width: 52px;
+      height: 52px;
+      border-radius: 8px;
+      object-fit: cover;
+      border: 1px solid #dce5f2;
+    }
+
+    .status-badge {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 0.74rem;
+    }
+
+    .status-ok {
+      background: #e7f7ee;
+      border: 1px solid #bce8cf;
+      color: var(--ok);
+    }
+
+    .status-warn {
+      background: #fff4e0;
+      border: 1px solid #f2d9aa;
+      color: var(--warn);
+    }
+
+    .btn-edit {
+      background: linear-gradient(135deg, var(--brand) 0%, #2f8fe6 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 7px 11px;
+      margin-right: 5px;
+    }
+
+    .btn-edit:hover {
+      background: linear-gradient(135deg, var(--brand-dark) 0%, #2a7bc2 100%);
+      color: #fff;
+    }
+
+    .btn-delete {
+      background: linear-gradient(135deg, #dc3545 0%, #a0252f 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 7px 11px;
+      margin-right: 5px;
+    }
+
+    .btn-delete:hover {
+      background: linear-gradient(135deg, #c82333 0%, #8a1e27 100%);
+      color: #fff;
+    }
+
+    .btn-approve {
+      background: linear-gradient(135deg, var(--ok) 0%, #1e7a47 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 7px 11px;
+      margin-right: 5px;
+    }
+
+    .btn-approve:hover {
+      background: linear-gradient(135deg, #2a8a5a 0%, #176139 100%);
+      color: #fff;
+    }
+
+    .btn-reject {
+      background: linear-gradient(135deg, var(--warn) 0%, #b8771a 100%);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 7px 11px;
+    }
+
+    .btn-reject:hover {
+      background: linear-gradient(135deg, #c27f1f 0%, #9d6615 100%);
+      color: #fff;
+    }
+
+    .admin-form-card {
+      border: 1px solid #dce6f2;
+      background: #f8fbff;
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+
+    .import-result {
+      margin-top: 10px;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.86rem;
+      display: none;
+    }
+
+    .import-result.success {
+      display: block;
+      background: #e8f8ef;
+      border: 1px solid #bfe5cd;
+      color: #186a3b;
+    }
+
+    .import-result.error {
+      display: block;
+      background: #fdecec;
+      border: 1px solid #f4c5c5;
+      color: #8a1f1f;
+    }
+
+    .form-label {
+      font-weight: 700;
+      font-size: 0.84rem;
+      color: #35506a;
+    }
+
+    .modal-foto-preview {
+      max-width: 180px;
+      max-height: 180px;
+      border-radius: 10px;
+      object-fit: cover;
+      border: 1px solid #dbe4ef;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #6e8297;
+      padding: 16px;
+      font-weight: 600;
+    }
+
+    .export-group-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .export-btn {
+      background: #f0f4f8;
+      color: #36526d;
+      border: 1px solid #d9e6f2;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      white-space: nowrap;
+    }
+
+    .export-btn:hover {
+      background: #1a78d6;
+      color: #fff;
+      border-color: #1a78d6;
+      transform: translateY(-1px);
+      text-decoration: none;
+    }
+
+    .search-toolbar {
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .search-input-wrap {
+      position: relative;
+      width: min(420px, 100%);
+    }
+
+    .search-input-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6b7d90;
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .search-input {
+      width: 100%;
+      border: 1px solid #d9e5f2;
+      border-radius: 10px;
+      padding: 9px 12px 9px 34px;
+      font-size: 0.9rem;
+      color: #1d2b39;
+      background: #fff;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: #1a78d6;
+      box-shadow: 0 0 0 3px rgba(26, 120, 214, 0.14);
+    }
+
+    .search-empty-row td {
+      text-align: center;
+      color: #6e8297;
+      font-weight: 600;
+      padding: 14px;
+    }
+
+    .list-section-title {
+      margin: 14px 0 10px;
+      font-weight: 800;
+      color: #173f61;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .transfer-lote-bar {
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .checkbox-col {
+      width: 42px;
+      text-align: center;
+    }
+
+    .btn-clear-search {
+      border: 1px solid #d9e5f2;
+      background: #fff;
+      color: #35506a;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 8px 12px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-clear-search:hover {
+      border-color: #1a78d6;
+      color: #1a78d6;
+      background: #f4f9ff;
+    }
+
+    @media (max-width: 991px) {
+      .sidebar {
+        width: 68px;
+      }
+
+      .sidebar:hover {
+        width: 220px;
+      }
+
+      .main-panel {
+        padding: 16px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <% const encontreirosIndividuais = (encontreiros || []).filter(function(c){ return c.tipo !== 'tios'; }); %>
+  <% const tios = (encontreiros || []).filter(function(c){ return c.tipo === 'tios'; }); %>
+  <% const statusCadastro = function(c){
+    if (c && c.statusAprovacao === 'aprovado') return 'aprovado';
+    if (c && c.statusAprovacao === 'reprovado') return 'reprovado';
+    if (c && c.aprovado) return 'aprovado';
+    return 'pendente';
+  }; %>
+  <% const encontristasAprovados = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'aprovado'; }); %>
+  <% const encontristasReprovados = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'reprovado'; }); %>
+  <% const encontristasPendentes = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'pendente'; }); %>
+  <% const encontreirosAprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'aprovado'; }); %>
+  <% const encontreirosReprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'reprovado'; }); %>
+  <% const encontreirosPendentes = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'pendente'; }); %>
+
+  <div class="admin-shell">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-inline">
+          <div class="brand-badge"><i class="fas fa-shield-heart"></i></div>
+          <div class="brand-text">Painel Admin</div>
+        </div>
+      </div>
+
+      <nav class="side-menu">
+        <button type="button" class="menu-link" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
+        <button type="button" class="menu-link" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
+        <button type="button" class="menu-link" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
+        <button type="button" class="menu-link" onclick="abrirAba('aprovacoes-tab')"><i class="fas fa-check-circle"></i><span class="menu-label">Aprovações</span></button>
+        <button type="button" class="menu-link" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
+        <button type="button" class="menu-link" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
+        <a href="/admin/logout" class="menu-link"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
+      </nav>
+
+      <div class="sidebar-note">
+        Passe o mouse para expandir
+      </div>
+    </aside>
+
+    <main class="main-panel">
+      <header class="topbar">
+        <div>
+          <h1><i class="fas fa-users-cog me-2"></i>Painel de Gestão</h1>
+          <p>Gerencie cadastros, aprovações e administradores do sistema.</p>
+        </div>
+        <div class="admin-pill"><i class="fas fa-user-circle me-2"></i><%= adminUsername %></div>
+      </header>
+
+      <section class="content-card">
+        <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="encontristas-tab" data-bs-toggle="tab" data-bs-target="#encontristas" type="button">
+              <i class="fas fa-user me-1"></i>Encontristas (<%= encontristas.length %>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="encontreiros-tab" data-bs-toggle="tab" data-bs-target="#encontreiros" type="button">
+              <i class="fas fa-user-group me-1"></i>Encontreiros (<%= encontreirosIndividuais.length %>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tios-tab" data-bs-toggle="tab" data-bs-target="#tios" type="button">
+              <i class="fas fa-heart me-1"></i>Tios (<%= tios.length %>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="aprovacoes-tab" data-bs-toggle="tab" data-bs-target="#aprovacoes" type="button">
+              <i class="fas fa-check-circle me-1"></i>Aprovações
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="encontros-tab" data-bs-toggle="tab" data-bs-target="#encontros" type="button">
+              <i class="fas fa-calendar-days me-1"></i>Encontros
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button">
+              <i class="fas fa-user-shield me-1"></i>Administradores (<%= administradores.length %>)
+            </button>
+          </li>
+        </ul>
+
+        <div class="tab-content" id="cadastroTabsContent">
+          <!-- TAB: ENCONTRISTAS -->
+          <div class="tab-pane fade show active" id="encontristas" role="tabpanel">
+            <div class="export-group-actions mb-3">
+              <a href="/export?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+              </a>
+              <a href="/export-encontrista-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
+                <i class="fas fa-table me-1"></i>Relatório
+              </a>
+              <a href="/export-images-encontristas" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+                <i class="fas fa-file-archive me-1"></i>Imagens
+              </a>
+            </div>
+            <div class="transfer-lote-bar">
+              <button id="btn-transferir-selecionados" class="btn btn-approve" type="button" onclick="transferirSelecionadosEncontristas()" disabled>
+                <i class="fas fa-right-left me-1"></i>Transferir selecionados (0)
+              </button>
+              <small class="text-muted">Voce pode selecionar varios encontristas e transferir todos de uma vez.</small>
+            </div>
+            <div class="search-toolbar">
+              <div class="search-input-wrap">
+                <i class="fas fa-search"></i>
+                <input id="search-encontristas" class="search-input" type="text" placeholder="Pesquisar encontristas por nome ou EJC">
+              </div>
+              <button id="clear-search-encontristas" type="button" class="btn-clear-search">
+                <i class="fas fa-eraser me-1"></i>Limpar busca
+              </button>
+            </div>
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-circle-check text-success"></i>Encontristas aprovados (<%= encontristasAprovados.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'aprovado')" title="Selecionar todos aprovados"></th>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontristasAprovados.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista aprovado.</td></tr>
+                  <% } else { %>
+                    <% encontristasAprovados.forEach(function(cadastro) { %>
+                      <tr data-searchable="true" data-transfer-group="aprovado">
+                        <td class="checkbox-col">
+                          <input class="transfer-encontrista-check" type="checkbox" value="<%= cadastro._id %>" onchange="atualizarTransferenciaLoteUI()">
+                        </td>
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td>
+                          <% if (statusCadastro(cadastro) === 'aprovado') { %>
+                            <span class="status-badge status-ok">Aprovado</span>
+                          <% } else if (statusCadastro(cadastro) === 'reprovado') { %>
+                            <span class="status-badge status-warn">Reprovado</span>
+                          <% } else { %>
+                            <span class="status-badge status-warn">Pendente</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-approve" onclick="transferirParaEncontreiros('<%= cadastro._id %>', '<%= cadastro.nomeCompleto.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-right-left me-1"></i>Transferir
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontrista', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-circle-xmark text-warning"></i>Encontristas reprovados (<%= encontristasReprovados.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'reprovado')" title="Selecionar todos reprovados"></th>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontristasReprovados.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista reprovado.</td></tr>
+                  <% } else { %>
+                    <% encontristasReprovados.forEach(function(cadastro) { %>
+                      <tr data-searchable="true" data-transfer-group="reprovado">
+                        <td class="checkbox-col">
+                          <input class="transfer-encontrista-check" type="checkbox" value="<%= cadastro._id %>" onchange="atualizarTransferenciaLoteUI()">
+                        </td>
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td><span class="status-badge status-warn">Reprovado</span></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-approve" onclick="transferirParaEncontreiros('<%= cadastro._id %>', '<%= cadastro.nomeCompleto.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-right-left me-1"></i>Transferir
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontrista', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-hourglass-half text-secondary"></i>Encontristas pendentes (<%= encontristasPendentes.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'pendente')" title="Selecionar todos pendentes"></th>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontristasPendentes.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista pendente.</td></tr>
+                  <% } else { %>
+                    <% encontristasPendentes.forEach(function(cadastro) { %>
+                      <tr data-searchable="true" data-transfer-group="pendente">
+                        <td class="checkbox-col">
+                          <input class="transfer-encontrista-check" type="checkbox" value="<%= cadastro._id %>" onchange="atualizarTransferenciaLoteUI()">
+                        </td>
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td><span class="status-badge status-warn">Pendente</span></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-approve" onclick="transferirParaEncontreiros('<%= cadastro._id %>', '<%= cadastro.nomeCompleto.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-right-left me-1"></i>Transferir
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontrista', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: ENCONTREIROS -->
+          <div class="tab-pane fade" id="encontreiros" role="tabpanel">
+            <div class="export-group-actions mb-3">
+              <a href="/export-encontro?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+              </a>
+              <a href="/export-encontro-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
+                <i class="fas fa-table me-1"></i>Relatório
+              </a>
+              <a href="/export-images-encontreiros" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+                <i class="fas fa-file-archive me-1"></i>Imagens
+              </a>
+            </div>
+            <div class="search-toolbar">
+              <div class="search-input-wrap">
+                <i class="fas fa-search"></i>
+                <input id="search-encontreiros" class="search-input" type="text" placeholder="Pesquisar encontreiros por nome ou EJC">
+              </div>
+              <button id="clear-search-encontreiros" type="button" class="btn-clear-search">
+                <i class="fas fa-eraser me-1"></i>Limpar busca
+              </button>
+            </div>
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-circle-check text-success"></i>Encontreiros aprovados (<%= encontreirosAprovados.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontreirosAprovados.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro aprovado.</td></tr>
+                  <% } else { %>
+                    <% encontreirosAprovados.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td>
+                          <% if (cadastro.tipo !== 'tios') { %>
+                            <i class="fas fa-users text-primary"></i> Jovens
+                          <% } else { %>
+                            <i class="fas fa-heart text-danger"></i> Tios
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td>
+                          <% if (statusCadastro(cadastro) === 'aprovado') { %>
+                            <span class="status-badge status-ok">Aprovado</span>
+                          <% } else if (statusCadastro(cadastro) === 'reprovado') { %>
+                            <span class="status-badge status-warn">Reprovado</span>
+                          <% } else { %>
+                            <span class="status-badge status-warn">Pendente</span>
+                          <% } %>
+                        </td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontreiro', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-circle-xmark text-warning"></i>Encontreiros reprovados (<%= encontreirosReprovados.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontreirosReprovados.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro reprovado.</td></tr>
+                  <% } else { %>
+                    <% encontreirosReprovados.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td>
+                          <% if (cadastro.tipo !== 'tios') { %>
+                            <i class="fas fa-users text-primary"></i> Jovens
+                          <% } else { %>
+                            <i class="fas fa-heart text-danger"></i> Tios
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td><span class="status-badge status-warn">Reprovado</span></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontreiro', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="table-wrap">
+              <div class="list-section-title"><i class="fas fa-hourglass-half text-secondary"></i>Encontreiros pendentes (<%= encontreirosPendentes.length %>)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (encontreirosPendentes.length === 0) { %>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro pendente.</td></tr>
+                  <% } else { %>
+                    <% encontreirosPendentes.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td>
+                          <% if (cadastro.tipo !== 'tios') { %>
+                            <i class="fas fa-users text-primary"></i> Jovens
+                          <% } else { %>
+                            <i class="fas fa-heart text-danger"></i> Tios
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td><span class="status-badge status-warn">Pendente</span></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontreiro', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+              <button class="btn btn-danger" onclick="limparTodosEncontreiros()">
+                <i class="fas fa-broom me-2"></i>Limpar Todos os Encontreiros
+              </button>
+            </div>
+          </div>
+
+          <!-- TAB: TIOS -->
+          <div class="tab-pane fade" id="tios" role="tabpanel">
+            <div class="export-group-actions mb-3">
+              <a href="/export-tios?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+                <i class="fas fa-file-pdf me-1"></i>PDF
+              </a>
+              <a href="/export-images-tios" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+                <i class="fas fa-file-archive me-1"></i>Imagens
+              </a>
+            </div>
+
+            <div class="search-toolbar">
+              <div class="search-input-wrap">
+                <i class="fas fa-search"></i>
+                <input id="search-tios" class="search-input" type="text" placeholder="Pesquisar tios por nome ou EJC">
+              </div>
+              <button id="clear-search-tios" type="button" class="btn-clear-search">
+                <i class="fas fa-eraser me-1"></i>Limpar busca
+              </button>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Categoria</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (tios.length === 0) { %>
+                    <tr><td colspan="7" class="empty-state">Nenhum tios cadastrado.</td></tr>
+                  <% } else { %>
+                    <% tios.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td><%= cadastro.tiosCategoria === 'casal' ? 'Casal' : 'Tio Solo' %></td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" data-nome="<%= cadastro.nomeCompleto %>" onclick="deletarCadastro('encontreiro', '<%= cadastro._id %>', this.dataset.nome)">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: APROVACOES -->
+          <div class="tab-pane fade" id="aprovacoes" role="tabpanel">
+            <div class="admin-form-card">
+              <h5 class="mb-2"><i class="fas fa-hourglass-half me-2"></i>Encontristas Pendentes de Aprovação</h5>
+            </div>
+            <div class="search-toolbar">
+              <div class="search-input-wrap">
+                <i class="fas fa-search"></i>
+                <input id="search-aprovacoes" class="search-input" type="text" placeholder="Pesquisar aprovações por nome ou EJC">
+              </div>
+              <button id="clear-search-aprovacoes" type="button" class="btn-clear-search">
+                <i class="fas fa-eraser me-1"></i>Limpar busca
+              </button>
+            </div>
+            <div class="table-wrap">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% const encontristasPendentesAprovacoes = (encontristas || []).filter(c => statusCadastro(c) === 'pendente'); %>
+                  <% if (encontristasPendentesAprovacoes.length === 0) { %>
+                    <tr><td colspan="6" class="empty-state">Todos os encontristas estão aprovados!</td></tr>
+                  <% } else { %>
+                    <% encontristasPendentesAprovacoes.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td>
+                          <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-check me-1"></i>Aprovar
+                          </button>
+                          <button class="btn btn-reject btn-sm" onclick="reprovarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-times me-1"></i>Reprovar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="admin-form-card" style="margin-top: 24px;">
+              <h5 class="mb-2"><i class="fas fa-hourglass-half me-2"></i>Encontreiros Pendentes de Aprovação</h5>
+            </div>
+            <div class="table-wrap">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Foto</th>
+                    <th>Nome</th>
+                    <th>Tipo</th>
+                    <th>EJC</th>
+                    <th>Telefone</th>
+                    <th>Email</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% const encontreirosPendentesAprovacoes = (encontreiros || []).filter(c => statusCadastro(c) === 'pendente'); %>
+                  <% if (encontreirosPendentesAprovacoes.length === 0) { %>
+                    <tr><td colspan="7" class="empty-state">Todos os encontreiros estão aprovados!</td></tr>
+                  <% } else { %>
+                    <% encontreirosPendentesAprovacoes.forEach(function(cadastro) { %>
+                      <tr data-searchable="true">
+                        <td>
+                          <% if (cadastro.foto) { %>
+                            <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
+                          <% } else { %>
+                            <i class="fas fa-user-circle fa-2x text-secondary"></i>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.nomeCompleto %></td>
+                        <td>
+                          <% if (cadastro.tipo !== 'tios') { %>
+                            <i class="fas fa-users text-primary"></i> Jovens
+                          <% } else { %>
+                            <i class="fas fa-heart text-danger"></i> Tios <%= cadastro.tiosCategoria === 'casal' ? '(Casal)' : '(Solo)' %>
+                          <% } %>
+                        </td>
+                        <td><%= cadastro.ejc %></td>
+                        <td><%= cadastro.telefone %></td>
+                        <td><%= cadastro.email %></td>
+                        <td>
+                          <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-check me-1"></i>Aprovar
+                          </button>
+                          <button class="btn btn-reject btn-sm" onclick="reprovarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-times me-1"></i>Reprovar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: ENCONTROS -->
+          <div class="tab-pane fade" id="encontros" role="tabpanel">
+            <div class="admin-form-card">
+              <h5 class="mb-3"><i class="fas fa-location-arrow me-2"></i>Selecionar EJC</h5>
+              <div class="row g-3">
+                <div class="col-md-9">
+                  <select id="seletor_ejc_pagina" class="form-select">
+                    <option value="">Selecione um EJC</option>
+                    <% (ejcs || []).forEach(function(item) { %>
+                      <option value="<%= item._id %>"><%= item.nome %></option>
+                    <% }); %>
+                  </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                  <button type="button" class="btn btn-primary w-100" onclick="abrirPaginaEjc()">
+                    <i class="fas fa-arrow-right me-1"></i>Acessar EJC
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-card">
+              <h5 class="mb-3"><i class="fas fa-plus-circle me-2"></i>Criar EJC</h5>
+              <form id="formEjc" class="row g-3">
+                <div class="col-md-10">
+                  <label class="form-label">Nome do EJC *</label>
+                  <input type="text" id="ejc_nome" class="form-control" placeholder="Ex: EJC São José" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                  <button type="button" class="btn btn-primary w-100" onclick="criarEjc()">
+                    <i class="fas fa-save me-1"></i>Criar
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div class="table-wrap mb-3">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Nome do EJC</th>
+                    <th>Data de Criação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (!ejcs || ejcs.length === 0) { %>
+                    <tr><td colspan="3" class="empty-state">Nenhum EJC cadastrado.</td></tr>
+                  <% } else { %>
+                    <% ejcs.forEach(function(item) { %>
+                      <tr>
+                        <td><strong><%= item.nome %></strong></td>
+                        <td><%= new Date(item.dataCriacao).toLocaleDateString('pt-BR') %></td>
+                        <td>
+                          <button class="btn btn-delete" onclick="deletarEjc('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-trash me-1"></i>Excluir Encontro
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: ADMINISTRADORES -->
+          <div class="tab-pane fade" id="admins" role="tabpanel">
+            <div class="admin-form-card">
+              <h5 class="mb-3"><i class="fas fa-file-import me-2"></i>Importar Apenas Encontreiros</h5>
+              <form id="formImportacao" class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Origem da Importacao *</label>
+                  <select id="import_sourceType" class="form-select" onchange="atualizarCamposImportacao()">
+                    <option value="database">Link direto do banco</option>
+                    <option value="excel">Arquivo Excel</option>
+                    <option value="pdf">Arquivo PDF</option>
+                  </select>
+                </div>
+
+                <div class="col-md-4">
+                  <label class="form-label">Limite de Registros</label>
+                  <input type="number" id="import_limite" class="form-control" value="1000" min="1" max="5000">
+                </div>
+
+                <div id="import_db_fields" class="row g-3 m-0 p-0">
+                  <div class="col-md-4">
+                    <label class="form-label">Banco de Origem *</label>
+                    <select id="import_dbEngine" class="form-select" onchange="atualizarCamposImportacao()">
+                      <option value="mongodb">MongoDB</option>
+                      <option value="postgresql">PostgreSQL</option>
+                      <option value="mysql">MySQL</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <label class="form-label" id="import_connection_label">Conexao do Banco Externo *</label>
+                    <input type="text" id="import_connectionString" class="form-control" placeholder="mongodb+srv://usuario:senha@cluster.exemplo.mongodb.net">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Nome do Banco (opcional)</label>
+                    <input type="text" id="import_databaseName" class="form-control" placeholder="nome_do_banco">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label" id="import_table_label">Colecao/Tabela de Encontreiros</label>
+                    <input type="text" id="import_tableName" class="form-control" value="Encontro">
+                  </div>
+                  <div class="col-12" id="import_sqlquery_wrap" style="display:none;">
+                    <label class="form-label">Consulta SQL (opcional)</label>
+                    <textarea id="import_sqlQuery" class="form-control" rows="3" placeholder="SELECT * FROM encontro LIMIT 1000"></textarea>
+                  </div>
+                </div>
+
+                <div id="import_file_fields" class="row g-3 m-0 p-0" style="display:none;">
+                  <div class="col-12">
+                    <label class="form-label">Arquivo para Importacao *</label>
+                    <input type="file" id="import_arquivo" class="form-control" accept=".xlsx,.xls,.xlsm,.pdf">
+                  </div>
+                  <div class="col-md-6">
+                    <label class="form-label">Foto Padrao (opcional)</label>
+                    <input type="text" id="import_fotoPadrao" class="form-control" placeholder="arquivo-foto.jpg">
+                  </div>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-end">
+                  <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="import_atualizarExistentes">
+                    <label class="form-check-label" for="import_atualizarExistentes">Atualizar encontreiros ja existentes</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 d-flex align-items-end">
+                  <button type="button" class="btn btn-primary w-100" onclick="importarCadastros()">
+                    <i class="fas fa-file-import me-1"></i>Importar Encontreiros
+                  </button>
+                </div>
+              </form>
+              <small class="text-muted">Formatos aceitos: MongoDB, PostgreSQL, MySQL, Excel (.xlsx/.xls/.xlsm) e PDF.</small>
+              <div id="import_result" class="import-result"></div>
+            </div>
+
+            <div class="admin-form-card">
+              <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i>Cadastrar Novo Administrador</h5>
+              <form id="formAdmin" class="row g-3">
+                <div class="col-md-5">
+                  <label class="form-label">Usuário *</label>
+                  <input type="text" id="admin_username" class="form-control" required>
+                </div>
+                <div class="col-md-5">
+                  <label class="form-label">Senha *</label>
+                  <input type="password" id="admin_senha" class="form-control" minlength="6" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                  <button type="button" class="btn btn-primary w-100" onclick="cadastrarAdmin()">
+                    <i class="fas fa-save me-1"></i>Salvar
+                  </button>
+                </div>
+              </form>
+              <small class="text-muted">Senha mínima: 6 caracteres.</small>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Usuário</th>
+                    <th>Data de Criação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (administradores.length === 0) { %>
+                    <tr><td colspan="3" class="empty-state">Nenhum administrador cadastrado.</td></tr>
+                  <% } else { %>
+                    <% administradores.forEach(function(admin) { %>
+                      <tr>
+                        <td><strong><%= admin.username %></strong></td>
+                        <td><%= new Date(admin.dataCriacao).toLocaleDateString('pt-BR') %></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarAdmin('<%= admin._id %>', '<%= admin.username %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" onclick="deletarAdmin('<%= admin._id %>', '<%= admin.username %>')">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL DE EDICAO -->
+  <div class="modal fade" id="modalEdicao" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Cadastro</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="formEdicao" enctype="multipart/form-data">
+            <input type="hidden" id="edit_tipo" name="tipo_cadastro">
+            <input type="hidden" id="edit_id" name="id_cadastro">
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label class="form-label">Nome Completo *</label>
+                <input type="text" class="form-control" id="edit_nomeCompleto" name="nomeCompleto" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">EJC *</label>
+                <input type="text" class="form-control" id="edit_ejc" name="ejc" required>
+              </div>
+            </div>
+
+            <div class="row mb-3" id="row_encontreiro_identidade">
+              <div class="col-md-6">
+                <label class="form-label">Como quer ser chamado</label>
+                <input type="text" class="form-control" id="edit_comoQuerSerChamado" name="comoQuerSerChamado">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Gênero</label>
+                <select class="form-select" id="edit_genero" name="genero">
+                  <option value="outros">Outros</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row mb-3" id="row_encontreiro_ejc_pertence">
+              <div class="col-md-12">
+                <label class="form-label">A qual EJC pertence</label>
+                <input type="text" class="form-control" id="edit_qualEjcPertence" name="qualEjcPertence">
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-8">
+                <label class="form-label">Logradouro *</label>
+                <input type="text" class="form-control" id="edit_logradouro" name="logradouro" required>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Bairro *</label>
+                <input type="text" class="form-control" id="edit_bairro" name="bairro" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Telefone *</label>
+                <input type="text" class="form-control" id="edit_telefone" name="telefone" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Email *</label>
+                <input type="email" class="form-control" id="edit_email" name="email" required>
+              </div>
+            </div>
+
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Instagram</label>
+                <input type="text" class="form-control" id="edit_instagram" name="instagram">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Data de Nascimento *</label>
+                <input type="date" class="form-control" id="edit_dataNascimento" name="dataNascimento" required>
+              </div>
+            </div>
+
+            <div id="camposEncontrista" style="display: none;">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">CEP</label>
+                  <input type="text" class="form-control" id="edit_cep" name="cep">
+                </div>
+                <div class="col-md-8">
+                  <label class="form-label">Estado Civil</label>
+                  <input type="text" class="form-control" id="edit_estadoCivil" name="estadoCivil">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Nome da Mae</label>
+                  <input type="text" class="form-control" id="edit_nomeMae" name="nomeMae">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Telefone da Mae</label>
+                  <input type="text" class="form-control" id="edit_telefoneMae" name="telefoneMae">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Nome do Pai</label>
+                  <input type="text" class="form-control" id="edit_nomePai" name="nomePai">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Telefone do Pai</label>
+                  <input type="text" class="form-control" id="edit_telefonePai" name="telefonePai">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Paroquia que frequenta</label>
+                  <input type="text" class="form-control" id="edit_paroquiaFrequenta" name="paroquiaFrequenta">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Participa de movimento da igreja</label>
+                  <input type="text" class="form-control" id="edit_participaMovimentoIgreja" name="participaMovimentoIgreja">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Conhecido na inscricao de hoje</label>
+                  <input type="text" class="form-control" id="edit_conhecidoInscricaoHoje" name="conhecidoInscricaoHoje">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Conhecido que ja fez EJC</label>
+                  <input type="text" class="form-control" id="edit_conhecidoFezEjc" name="conhecidoFezEjc">
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Inscricao anterior</label>
+                  <input type="text" class="form-control" id="edit_inscricaoAnterior" name="inscricaoAnterior">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Instrumento musical / canto</label>
+                  <input type="text" class="form-control" id="edit_instrumentoMusical" name="instrumentoMusical">
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Expectativa para o EJC</label>
+                <textarea class="form-control" id="edit_expectativaXixEjcCop" name="expectativaXixEjcCop" rows="3"></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Intolerancias / Restricoes alimentares</label>
+                <input type="text" class="form-control" id="edit_intolerante_encontrista" name="intolerante_encontrista">
+              </div>
+            </div>
+
+            <div class="row mb-3" id="row_encontreiro_relacionamento">
+              <div class="col-md-12">
+                <label class="form-label">Tem relacionamento com algum encontreiro ou encontrista?</label>
+                <input type="text" class="form-control" id="edit_temRelacionamento" name="temRelacionamento">
+              </div>
+            </div>
+
+            <div id="camposEncontreiro" style="display: none;">
+              <div class="row mb-3">
+                <div class="col-md-4">
+                  <label class="form-label">Tipo</label>
+                  <select class="form-select" id="edit_tipo_pessoa" name="tipo">
+                    <option value="jovens">Jovens</option>
+                    <option value="tios">Tios</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Categoria Tios</label>
+                  <select class="form-select" id="edit_tiosCategoria" name="tiosCategoria">
+                    <option value="solo">Tio Solo</option>
+                    <option value="casal">Casal</option>
+                  </select>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Origem Tios</label>
+                  <select class="form-select" id="edit_origemTios" name="origemTios">
+                    <option value="false">Não</option>
+                    <option value="true">Sim</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row mb-3">
+                <div class="col-md-6">
+                  <label class="form-label">Equipe Serviu (separado por vírgulas)</label>
+                  <textarea class="form-control" id="edit_equipeServiu" name="equipeServiu" rows="2"></textarea>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Equipe Coordenou (separado por vírgulas)</label>
+                  <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="2"></textarea>
+                </div>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Intolerâncias/Alergias</label>
+                <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="2"></textarea>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="edit_aprovado" name="statusAprovacao">
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="reprovado">Reprovado</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Foto Atual</label>
+              <div id="fotoAtualContainer"></div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">Nova Foto (JPG ou PNG)</label>
+              <input type="file" class="form-control" id="edit_foto" name="foto" accept="image/jpeg,image/png">
+            </div>
+
+            <div class="mb-3" id="row_encontreiro_observacoes">
+              <label class="form-label">Observações</label>
+              <textarea class="form-control" id="edit_observacoes" name="observacoes" rows="3"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="salvarEdicao()">
+            <i class="fas fa-save"></i> Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="modalEdicaoAdmin" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title"><i class="fas fa-user-pen me-2"></i>Editar Administrador</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="edit_admin_id">
+          <div class="mb-3">
+            <label class="form-label">Usuario</label>
+            <input type="text" class="form-control" id="edit_admin_username" placeholder="Digite o usuario">
+          </div>
+          <div class="mb-1">
+            <label class="form-label">Nova senha (opcional)</label>
+            <input type="password" class="form-control" id="edit_admin_senha" minlength="6" placeholder="Deixe em branco para manter a atual">
+          </div>
+          <small class="text-muted">Se informar senha, ela deve ter no minimo 6 caracteres.</small>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" onclick="salvarEdicaoAdmin()">
+            <i class="fas fa-save me-1"></i>Salvar alteracoes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
+  <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
+  <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
+  <script id="equipes-data" type="application/json"><%- JSON.stringify(equipes || []) %></script>
+  <script id="encontreiros-equipe-data" type="application/json"><%- JSON.stringify(encontreirosParaEquipe || []) %></script>
+  <script>
+    const encontristas = JSON.parse(document.getElementById('encontristas-data').textContent || '[]');
+    const encontreiros = JSON.parse(document.getElementById('encontreiros-data').textContent || '[]');
+    const ejcs = JSON.parse(document.getElementById('ejcs-data').textContent || '[]');
+    const equipes = JSON.parse(document.getElementById('equipes-data').textContent || '[]');
+    const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
+
+    let modalEdicao = new bootstrap.Modal(document.getElementById('modalEdicao'));
+    let modalEdicaoAdmin = new bootstrap.Modal(document.getElementById('modalEdicaoAdmin'));
+
+    function ensureAppPopup() {
+      let modalElement = document.getElementById('app-popup-modal');
+      if (modalElement) {
+        return {
+          element: modalElement,
+          instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+        };
+      }
+
+      modalElement = document.createElement('div');
+      modalElement.className = 'modal fade';
+      modalElement.id = 'app-popup-modal';
+      modalElement.tabIndex = -1;
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+              <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+              <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
+              <input id="app-popup-input" type="text" class="form-control mt-3" style="display:none;" />
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalElement);
+
+      return {
+        element: modalElement,
+        instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+      };
+    }
+
+    function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary', inputValue = null, inputPlaceholder = '' }) {
+      const { element, instance } = ensureAppPopup();
+      const titleEl = element.querySelector('#app-popup-title');
+      const messageEl = element.querySelector('#app-popup-message');
+      const inputEl = element.querySelector('#app-popup-input');
+      const confirmBtn = element.querySelector('#app-popup-confirm');
+      const cancelBtn = element.querySelector('#app-popup-cancel');
+
+      titleEl.textContent = title || 'Aviso';
+      messageEl.textContent = message || '';
+      confirmBtn.textContent = confirmText;
+      confirmBtn.className = `btn btn-${tone}`;
+
+      if (cancelText) {
+        cancelBtn.style.display = '';
+        cancelBtn.textContent = cancelText;
+      } else {
+        cancelBtn.style.display = 'none';
+      }
+
+      const isPrompt = inputValue !== null;
+      inputEl.style.display = isPrompt ? '' : 'none';
+      inputEl.value = isPrompt ? String(inputValue) : '';
+      inputEl.placeholder = inputPlaceholder || '';
+
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const cleanup = () => {
+          confirmBtn.removeEventListener('click', onConfirm);
+          cancelBtn.removeEventListener('click', onCancel);
+          element.removeEventListener('hidden.bs.modal', onHidden);
+          inputEl.removeEventListener('keydown', onInputKeyDown);
+        };
+
+        const settle = (value) => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(value);
+        };
+
+        const onConfirm = () => {
+          settle(isPrompt ? inputEl.value : true);
+          instance.hide();
+        };
+
+        const onCancel = () => {
+          settle(isPrompt ? null : false);
+          instance.hide();
+        };
+
+        const onHidden = () => settle(isPrompt ? null : false);
+
+        const onInputKeyDown = (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onConfirm();
+          }
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        element.addEventListener('hidden.bs.modal', onHidden, { once: true });
+        inputEl.addEventListener('keydown', onInputKeyDown);
+
+        instance.show();
+        if (isPrompt) {
+          setTimeout(() => inputEl.focus(), 50);
+        }
+      });
+    }
+
+    async function appAlert(message, tone = 'primary', title = 'Aviso') {
+      await showAppPopup({ title, message, confirmText: 'Entendi', tone });
+    }
+
+    async function appConfirm(message, title = 'Confirmacao') {
+      return await showAppPopup({
+        title,
+        message,
+        confirmText: 'Confirmar',
+        cancelText: 'Cancelar',
+        tone: 'warning',
+      });
+    }
+
+    async function appPrompt(message, defaultValue = '', title = 'Informe um valor') {
+      return await showAppPopup({
+        title,
+        message,
+        confirmText: 'Salvar',
+        cancelText: 'Cancelar',
+        tone: 'primary',
+        inputValue: defaultValue,
+      });
+    }
+
+    function abrirAba(tabId) {
+      const tabButton = document.getElementById(tabId);
+      if (tabButton) {
+        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+      }
+    }
+
+    function getAbaAtivaId() {
+      const ativa = document.querySelector('#cadastroTabs .nav-link.active');
+      if (!ativa || !ativa.id) return 'encontristas';
+      return ativa.id.replace(/-tab$/, '');
+    }
+
+    function salvarAbaAtiva() {
+      const abaId = getAbaAtivaId();
+      localStorage.setItem('admin_gerenciar_cadastros_aba_ativa', abaId);
+
+      const url = new URL(window.location.href);
+      url.searchParams.set('tab', abaId);
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    function restaurarAbaAtiva() {
+      const url = new URL(window.location.href);
+      const abaNaUrl = url.searchParams.get('tab');
+      const abaNoStorage = localStorage.getItem('admin_gerenciar_cadastros_aba_ativa');
+      const abaDesejada = abaNaUrl || abaNoStorage || 'encontristas';
+      const botao = document.getElementById(`${abaDesejada}-tab`);
+
+      if (!botao) {
+        salvarAbaAtiva();
+        return;
+      }
+
+      bootstrap.Tab.getOrCreateInstance(botao).show();
+      salvarAbaAtiva();
+    }
+
+    function recarregarMantendoAbaAtual() {
+      salvarAbaAtiva();
+      window.location.href = window.location.href;
+    }
+
+    function normalizeSearchText(value) {
+      return String(value || '')
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filtrarTabela(table, query) {
+      if (!table) return;
+
+      const tbody = table.querySelector('tbody');
+      if (!tbody) return;
+
+      const rows = Array.from(tbody.querySelectorAll('tr[data-searchable="true"]'));
+      if (rows.length === 0) return;
+
+      const headers = Array.from(table.querySelectorAll('thead th')).map((th) => normalizeSearchText(th.textContent));
+      const idxNome = headers.findIndex((h) => h === 'nome');
+      const idxEjc = headers.findIndex((h) => h === 'ejc');
+
+      let visiveis = 0;
+
+      rows.forEach((row) => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const nomeText = idxNome >= 0 && cells[idxNome] ? cells[idxNome].textContent : '';
+        const ejcText = idxEjc >= 0 && cells[idxEjc] ? cells[idxEjc].textContent : '';
+        const texto = normalizeSearchText(`${nomeText} ${ejcText}`);
+        const corresponde = !query || texto.includes(query);
+        row.style.display = corresponde ? '' : 'none';
+        if (corresponde) visiveis += 1;
+      });
+
+      let noResults = tbody.querySelector('.search-empty-row');
+
+      if (query && visiveis === 0) {
+        if (!noResults) {
+          noResults = document.createElement('tr');
+          noResults.className = 'search-empty-row';
+
+          const cell = document.createElement('td');
+          const colCount = table.querySelectorAll('thead th').length || 1;
+          cell.colSpan = colCount;
+          cell.textContent = 'Nenhum cadastro encontrado para a pesquisa.';
+          noResults.appendChild(cell);
+          tbody.appendChild(noResults);
+        }
+      } else if (noResults) {
+        noResults.remove();
+      }
+    }
+
+    function configurarPesquisaPorAba(inputId, tabSelector) {
+      const input = document.getElementById(inputId);
+      const tab = document.querySelector(tabSelector);
+      if (!input || !tab) return;
+
+      const tables = Array.from(tab.querySelectorAll('.table-wrap table'));
+
+      const applyFilter = () => {
+        const query = normalizeSearchText(input.value.trim());
+        tables.forEach((table) => filtrarTabela(table, query));
+      };
+
+      input.addEventListener('input', applyFilter);
+    }
+
+    function configurarBotaoLimparBusca(inputId, buttonId) {
+      const input = document.getElementById(inputId);
+      const button = document.getElementById(buttonId);
+      if (!input || !button) return;
+
+      button.addEventListener('click', () => {
+        input.value = '';
+        input.dispatchEvent(new Event('input'));
+        input.focus();
+      });
+    }
+
+    configurarPesquisaPorAba('search-encontristas', '#encontristas');
+    configurarPesquisaPorAba('search-encontreiros', '#encontreiros');
+    configurarPesquisaPorAba('search-tios', '#tios');
+    configurarPesquisaPorAba('search-aprovacoes', '#aprovacoes');
+    configurarBotaoLimparBusca('search-encontristas', 'clear-search-encontristas');
+    configurarBotaoLimparBusca('search-encontreiros', 'clear-search-encontreiros');
+    configurarBotaoLimparBusca('search-tios', 'clear-search-tios');
+    configurarBotaoLimparBusca('search-aprovacoes', 'clear-search-aprovacoes');
+
+    document.querySelectorAll('#cadastroTabs .nav-link').forEach((botao) => {
+      botao.addEventListener('shown.bs.tab', salvarAbaAtiva);
+    });
+
+    restaurarAbaAtiva();
+
+    function editarCadastro(tipo, id) {
+      const lista = tipo === 'encontrista' ? encontristas : encontreiros;
+      const cadastro = lista.find(c => String(c._id) === String(id));
+
+      if (!cadastro) {
+        appAlert('Cadastro não encontrado.', 'warning', 'Atencao');
+        return;
+      }
+
+      document.getElementById('edit_tipo').value = tipo;
+      document.getElementById('edit_id').value = id;
+      document.getElementById('edit_nomeCompleto').value = cadastro.nomeCompleto || '';
+      document.getElementById('edit_comoQuerSerChamado').value = cadastro.comoQuerSerChamado || '';
+      const generoAtual = String(cadastro.genero || '').toLowerCase();
+      document.getElementById('edit_genero').value = generoAtual === 'homem'
+        ? 'masculino'
+        : (generoAtual === 'mulher' ? 'feminino' : (generoAtual || 'outros'));
+      document.getElementById('edit_ejc').value = cadastro.ejc || '';
+      document.getElementById('edit_qualEjcPertence').value = cadastro.qualEjcPertence || '';
+      document.getElementById('edit_logradouro').value = cadastro.logradouro || '';
+      document.getElementById('edit_bairro').value = cadastro.bairro || '';
+      document.getElementById('edit_telefone').value = cadastro.telefone || '';
+      document.getElementById('edit_email').value = cadastro.email || '';
+      document.getElementById('edit_temRelacionamento').value = cadastro.temRelacionamento || '';
+      document.getElementById('edit_instagram').value = cadastro.instagram || '';
+      document.getElementById('edit_observacoes').value = cadastro.observacoes || '';
+      document.getElementById('edit_cep').value = cadastro.cep || '';
+      document.getElementById('edit_estadoCivil').value = cadastro.estadoCivil || '';
+      document.getElementById('edit_nomeMae').value = cadastro.nomeMae || '';
+      document.getElementById('edit_telefoneMae').value = cadastro.telefoneMae || '';
+      document.getElementById('edit_nomePai').value = cadastro.nomePai || '';
+      document.getElementById('edit_telefonePai').value = cadastro.telefonePai || '';
+      document.getElementById('edit_paroquiaFrequenta').value = cadastro.paroquiaFrequenta || '';
+      document.getElementById('edit_participaMovimentoIgreja').value = cadastro.participaMovimentoIgreja || '';
+      document.getElementById('edit_conhecidoInscricaoHoje').value = cadastro.conhecidoInscricaoHoje || '';
+      document.getElementById('edit_conhecidoFezEjc').value = cadastro.conhecidoFezEjc || '';
+      document.getElementById('edit_inscricaoAnterior').value = cadastro.inscricaoAnterior || '';
+      document.getElementById('edit_instrumentoMusical').value = cadastro.instrumentoMusical || '';
+      document.getElementById('edit_expectativaXixEjcCop').value = cadastro.expectativaXixEjcCop || '';
+      document.getElementById('edit_intolerante_encontrista').value = cadastro.intolerante || '';
+      const statusAtual = cadastro.statusAprovacao || (cadastro.aprovado ? 'aprovado' : 'pendente');
+      document.getElementById('edit_aprovado').value = ['aprovado', 'reprovado', 'pendente'].includes(statusAtual)
+        ? statusAtual
+        : 'pendente';
+
+      if (cadastro.dataNascimento) {
+        const data = new Date(cadastro.dataNascimento);
+        const ano = data.getUTCFullYear();
+        const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
+        const dia = String(data.getUTCDate()).padStart(2, '0');
+        document.getElementById('edit_dataNascimento').value = `${ano}-${mes}-${dia}`;
+      }
+
+      const camposEncontreiro = document.getElementById('camposEncontreiro');
+      const camposEncontrista = document.getElementById('camposEncontrista');
+      const linhasEncontreiro = [
+        'row_encontreiro_identidade',
+        'row_encontreiro_ejc_pertence',
+        'row_encontreiro_relacionamento',
+        'row_encontreiro_observacoes',
+      ];
+      const mostrarCamposEncontreiro = tipo === 'encontreiro';
+      linhasEncontreiro.forEach((idLinha) => {
+        const linha = document.getElementById(idLinha);
+        if (linha) linha.style.display = mostrarCamposEncontreiro ? '' : 'none';
+      });
+      if (camposEncontrista) {
+        camposEncontrista.style.display = tipo === 'encontrista' ? 'block' : 'none';
+      }
+      if (tipo === 'encontreiro') {
+        camposEncontreiro.style.display = 'block';
+        document.getElementById('edit_tipo_pessoa').value = cadastro.tipo || 'jovens';
+        document.getElementById('edit_tiosCategoria').value = cadastro.tiosCategoria === 'casal' ? 'casal' : 'solo';
+        document.getElementById('edit_origemTios').value = cadastro.origemTios ? 'true' : 'false';
+        document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
+        document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
+        document.getElementById('edit_intolerante').value = cadastro.intolerante || '';
+      } else {
+        camposEncontreiro.style.display = 'none';
+      }
+
+      const fotoContainer = document.getElementById('fotoAtualContainer');
+      if (cadastro.foto) {
+        fotoContainer.innerHTML = `
+          <div class="d-flex align-items-center gap-3">
+            <img src="/img/uploads/${encodeURIComponent(cadastro.foto)}?w=360&h=360&fit=cover&format=webp" class="modal-foto-preview" alt="Foto atual" loading="lazy" decoding="async">
+            <button type="button" class="btn btn-danger btn-sm" onclick="removerFoto('${tipo}', '${id}')">
+              <i class="fas fa-trash"></i> Remover Foto
+            </button>
+          </div>
+        `;
+      } else {
+        fotoContainer.innerHTML = '<p class="text-muted mb-0">Nenhuma foto cadastrada.</p>';
+      }
+
+      modalEdicao.show();
+    }
+
+    async function salvarEdicao() {
+      const formData = new FormData(document.getElementById('formEdicao'));
+      const tipo = document.getElementById('edit_tipo').value;
+      const id = document.getElementById('edit_id').value;
+
+      try {
+        const response = await fetch(`/admin/atualizar-cadastro/${tipo}/${id}`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Resposta não-JSON recebida:', await response.text());
+          await appAlert('Erro: Resposta invalida do servidor.', 'danger', 'Erro');
+          return;
+        }
+        
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Cadastro atualizado com sucesso.', 'success', 'Sucesso');
+          modalEdicao.hide();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao atualizar cadastro.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        console.error('Erro ao salvar alterações:', error);
+        await appAlert('Erro ao salvar alteracoes: ' + error.message, 'danger', 'Erro');
+      }
+    }
+
+    async function removerFoto(tipo, id) {
+      if (!await appConfirm('Deseja remover esta foto?', 'Confirmar remocao')) return;
+
+      try {
+        const response = await fetch(`/admin/remover-foto/${tipo}/${id}`, { method: 'POST' });
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          console.error('Resposta não-JSON recebida:', await response.text());
+          await appAlert('Erro: Resposta invalida do servidor.', 'danger', 'Erro');
+          return;
+        }
+        
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Foto removida com sucesso.', 'success', 'Sucesso');
+          modalEdicao.hide();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao remover foto.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        console.error('Erro ao remover foto:', error);
+        await appAlert('Erro ao remover foto: ' + error.message, 'danger', 'Erro');
+      }
+    }
+
+    async function deletarCadastro(tipo, id, nome) {
+      if (!await appConfirm(`Tem certeza que deseja deletar o cadastro de "${nome}"? Esta acao nao pode ser desfeita.`, 'Confirmar exclusao')) return;
+
+      try {
+        const response = await fetch(`/admin/deletar-cadastro/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}`, {
+          method: 'POST',
+          headers: { Accept: 'application/json' }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json')
+          ? await response.json()
+          : { success: false, error: await response.text() };
+
+        if (result.success) {
+          await appAlert('Cadastro deletado com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao deletar cadastro.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao deletar cadastro: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      }
+    }
+
+    async function transferirParaEncontreiros(id, nome) {
+      const confirmar = await appConfirm(`Transferir "${nome}" de Encontristas para Encontreiros?\n\nAo confirmar, o cadastro sai da aba Encontristas e passa para Encontreiros.`, 'Confirmar transferencia');
+      if (!confirmar) return;
+
+      try {
+        const response = await fetch(`/admin/transferir-encontrista/${encodeURIComponent(id)}`, {
+          method: 'POST',
+          headers: { Accept: 'application/json' }
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json')
+          ? await response.json()
+          : { success: false, error: await response.text() };
+
+        if (result.success) {
+          await appAlert('Transferencia realizada com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+          return;
+        }
+
+        await appAlert(result.error || 'Nao foi possivel transferir o cadastro.', 'danger', 'Erro');
+      } catch (error) {
+        await appAlert('Erro ao transferir cadastro: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      }
+    }
+
+    function getEncontristasSelecionadosTransferencia() {
+      return Array.from(document.querySelectorAll('.transfer-encontrista-check:checked'))
+        .map((input) => String(input.value || '').trim())
+        .filter(Boolean);
+    }
+
+    function atualizarTransferenciaLoteUI() {
+      const selecionados = getEncontristasSelecionadosTransferencia();
+      const botao = document.getElementById('btn-transferir-selecionados');
+      if (!botao) return;
+      botao.disabled = selecionados.length === 0;
+      botao.innerHTML = `<i class="fas fa-right-left me-1"></i>Transferir selecionados (${selecionados.length})`;
+    }
+
+    function toggleSelecionarTodosEncontristas(master, groupName) {
+      const checkboxes = Array.from(document.querySelectorAll(`tr[data-transfer-group="${groupName}"] .transfer-encontrista-check`));
+      checkboxes.forEach((checkbox) => {
+        if (checkbox.closest('tr') && checkbox.closest('tr').style.display === 'none') return;
+        checkbox.checked = !!master.checked;
+      });
+      atualizarTransferenciaLoteUI();
+    }
+
+    async function transferirSelecionadosEncontristas() {
+      const ids = getEncontristasSelecionadosTransferencia();
+      if (ids.length === 0) {
+        await appAlert('Selecione ao menos um encontrista para transferir.', 'warning', 'Nenhum selecionado');
+        return;
+      }
+
+      const confirmar = await appConfirm(
+        `Transferir ${ids.length} encontrista(s) para Encontreiros?\n\nEles serao removidos da lista de Encontristas.`,
+        'Confirmar transferencia em lote'
+      );
+      if (!confirmar) return;
+
+      try {
+        const response = await fetch('/admin/transferir-encontristas-lote', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+          body: JSON.stringify({ ids }),
+        });
+
+        const result = await response.json();
+        if (!result.success) {
+          await appAlert(result.error || 'Nao foi possivel transferir os selecionados.', 'danger', 'Erro');
+          return;
+        }
+
+        const resumo = result.resumo || {};
+        await appAlert(
+          `Transferencia concluida.\n\nTransferidos: ${resumo.transferidos || 0}\nDuplicados ignorados: ${resumo.duplicados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
+          'success',
+          'Sucesso'
+        );
+        recarregarMantendoAbaAtual();
+      } catch (error) {
+        await appAlert('Erro ao transferir selecionados: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      }
+    }
+
+    async function limparTodosEncontreiros() {
+      if (!await appConfirm('ATENCAO!\n\nIsso vai DELETAR TODOS os cadastros de Encontreiros e suas fotos.\nEsta acao NAO pode ser desfeita!\n\nVoce tem certeza?', 'Acao irreversivel')) return;
+
+      try {
+        const response = await fetch('/admin/limpar-encontreiros', { method: 'POST' });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert(`${result.deletados} encontreiros e suas fotos foram permanentemente deletados.`, 'success', 'Limpeza concluida');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao limpar encontreiros.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao limpar encontreiros.', 'danger', 'Erro');
+      }
+    }
+
+    async function cadastrarAdmin() {
+      const username = document.getElementById('admin_username').value.trim();
+      const senha = document.getElementById('admin_senha').value;
+
+      if (!username || !senha) {
+        await appAlert('Preencha usuario e senha.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/cadastrar-admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, senha })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Administrador cadastrado com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formAdmin').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao cadastrar administrador.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao cadastrar administrador.', 'danger', 'Erro');
+      }
+    }
+
+    async function cadastrarEquipe() {
+      const nome = document.getElementById('equipe_nome').value.trim();
+      const ejcId = document.getElementById('equipe_ejcId').value;
+
+      if (!nome || !ejcId) {
+        await appAlert('Informe o EJC e o nome da equipe.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/cadastrar-equipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, ejcId })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await appAlert('Equipe cadastrada com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formEquipe').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao cadastrar equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao cadastrar equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function vincularEncontreiroEquipe() {
+      const encontreiroId = document.getElementById('vinculo_encontreiro').value;
+      const equipeId = document.getElementById('vinculo_equipe').value;
+      const papel = document.getElementById('vinculo_papel').value;
+
+      if (!encontreiroId || !equipeId || !papel) {
+        await appAlert('Selecione pessoa, equipe e vinculo.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/vincular-encontreiro-equipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pessoaId: encontreiroId, equipeId, papel })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Encontreiro vinculado na equipe com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formVinculoEquipe').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao vincular equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao vincular equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarEquipe(equipeId, equipeNome) {
+      if (!await appConfirm(`Deseja deletar a equipe "${equipeNome}"? Os vinculos dessa equipe serao removidos dos encontreiros.`, 'Confirmar exclusao')) return;
+
+      try {
+        const response = await fetch(`/admin/deletar-equipe/${equipeId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Equipe deletada com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao deletar equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao deletar equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function criarEjc() {
+      const nome = document.getElementById('ejc_nome').value.trim();
+      if (!nome) {
+        await appAlert('Informe o nome do EJC.', 'warning', 'Campo obrigatorio');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/criar-ejc', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await appAlert('EJC criado com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formEjc').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao criar EJC.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao criar EJC.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarEjc(ejcId, ejcNome) {
+      if (!await appConfirm(`Deseja realmente excluir o encontro "${ejcNome}"?\n\nEsta acao remove tambem circulos, equipes e vinculos desse EJC.`, 'Confirmar exclusao')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/deletar-ejc/${ejcId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Encontro excluido com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao excluir encontro.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao excluir encontro.', 'danger', 'Erro');
+      }
+    }
+
+    async function abrirPaginaEjc() {
+      const ejcId = document.getElementById('seletor_ejc_pagina').value;
+      if (!ejcId) {
+        await appAlert('Selecione um EJC para continuar.', 'warning', 'Selecao obrigatoria');
+        return;
+      }
+      window.location.href = `/admin/encontros/${ejcId}`;
+    }
+
+    function renderVinculadosEquipe() {
+      const equipeSelecionada = document.getElementById('visualizar_equipe').value;
+      const tabela = document.getElementById('tabela-vinculados-equipe');
+      if (!tabela) return;
+
+      const tbody = tabela.querySelector('tbody');
+      if (!tbody) return;
+
+      if (!equipeSelecionada) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Selecione uma equipe para visualizar os vinculados.</td></tr>';
+        return;
+      }
+
+      const vinculados = (encontreiros || []).filter((pessoa) => {
+        const serviu = Array.isArray(pessoa.equipeServiu) && pessoa.equipeServiu.includes(equipeSelecionada);
+        const coordenou = Array.isArray(pessoa.equipeCoordenou) && pessoa.equipeCoordenou.includes(equipeSelecionada);
+        return serviu || coordenou;
+      });
+
+      if (vinculados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhuma pessoa vinculada nesta equipe.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = vinculados.map((pessoa) => {
+        const tipoTxt = pessoa.tipo === 'tios' ? 'Tios' : 'Jovens';
+        const serviuTxt = Array.isArray(pessoa.equipeServiu) ? pessoa.equipeServiu.filter((e) => e === equipeSelecionada).join(', ') : '';
+        const coordTxt = Array.isArray(pessoa.equipeCoordenou) ? pessoa.equipeCoordenou.filter((e) => e === equipeSelecionada).join(', ') : '';
+        return `<tr>
+          <td>${pessoa.nomeCompleto || '-'}</td>
+          <td>${tipoTxt}</td>
+          <td>${serviuTxt || '-'}</td>
+          <td>${coordTxt || '-'}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    async function editarAdmin(adminId, username) {
+      document.getElementById('edit_admin_id').value = adminId;
+      document.getElementById('edit_admin_username').value = username || '';
+      document.getElementById('edit_admin_senha').value = '';
+      modalEdicaoAdmin.show();
+    }
+
+    async function salvarEdicaoAdmin() {
+      const adminId = String(document.getElementById('edit_admin_id').value || '').trim();
+      const usernameTratado = String(document.getElementById('edit_admin_username').value || '').trim();
+      const novaSenha = String(document.getElementById('edit_admin_senha').value || '');
+
+      if (!adminId) {
+        await appAlert('Administrador invalido para atualizacao.', 'danger', 'Erro');
+        return;
+      }
+
+      if (!usernameTratado && !novaSenha) {
+        await appAlert('Informe ao menos um campo para atualizar.', 'warning', 'Sem alteracoes');
+        return;
+      }
+
+      if (novaSenha && novaSenha.length < 6) {
+        await appAlert('A nova senha deve ter no minimo 6 caracteres.', 'warning', 'Senha invalida');
+        return;
+      }
+
+      const payload = {};
+      if (usernameTratado) payload.username = usernameTratado;
+      if (novaSenha) payload.senha = novaSenha;
+
+      try {
+        const response = await fetch(`/admin/atualizar-admin/${encodeURIComponent(adminId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Administrador atualizado com sucesso.', 'success', 'Sucesso');
+          modalEdicaoAdmin.hide();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao atualizar administrador.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao atualizar administrador.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarAdmin(adminId, username) {
+      if (!await appConfirm(`Tem certeza que deseja deletar o administrador "${username}"? Esta acao nao pode ser desfeita.`, 'Confirmar exclusao')) return;
+      
+      try {
+        const response = await fetch(`/admin/deletar-admin/${adminId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Administrador deletado com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao deletar administrador.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao deletar administrador.', 'danger', 'Erro');
+      }
+    }
+
+    function atualizarCamposImportacao() {
+      const sourceType = document.getElementById('import_sourceType').value;
+      const dbFields = document.getElementById('import_db_fields');
+      const fileFields = document.getElementById('import_file_fields');
+      const dbEngineEl = document.getElementById('import_dbEngine');
+      const dbEngine = dbEngineEl ? dbEngineEl.value : 'mongodb';
+      const labelConnection = document.getElementById('import_connection_label');
+      const tableLabel = document.getElementById('import_table_label');
+      const sqlQueryWrap = document.getElementById('import_sqlquery_wrap');
+      const connectionInput = document.getElementById('import_connectionString');
+      const tableInput = document.getElementById('import_tableName');
+
+      if (sourceType === 'database') {
+        dbFields.style.display = 'flex';
+        fileFields.style.display = 'none';
+
+        if (dbEngine === 'mongodb') {
+          labelConnection.textContent = 'URI do MongoDB Externo *';
+          tableLabel.textContent = 'Colecao de Encontreiros';
+          connectionInput.placeholder = 'mongodb+srv://usuario:senha@cluster.exemplo.mongodb.net';
+          tableInput.value = tableInput.value || 'Encontro';
+          sqlQueryWrap.style.display = 'none';
+        } else if (dbEngine === 'postgresql') {
+          labelConnection.textContent = 'String de Conexao PostgreSQL *';
+          tableLabel.textContent = 'Tabela de Encontreiros';
+          connectionInput.placeholder = 'postgresql://usuario:senha@host:5432/banco';
+          tableInput.value = tableInput.value || 'encontro';
+          sqlQueryWrap.style.display = 'block';
+        } else {
+          labelConnection.textContent = 'String de Conexao MySQL *';
+          tableLabel.textContent = 'Tabela de Encontreiros';
+          connectionInput.placeholder = 'mysql://usuario:senha@host:3306/banco';
+          tableInput.value = tableInput.value || 'encontro';
+          sqlQueryWrap.style.display = 'block';
+        }
+      } else {
+        dbFields.style.display = 'none';
+        fileFields.style.display = 'flex';
+      }
+    }
+
+    async function importarCadastros() {
+      const sourceType = document.getElementById('import_sourceType').value;
+      const dbEngine = document.getElementById('import_dbEngine').value;
+      const connectionString = document.getElementById('import_connectionString').value.trim();
+      const databaseName = document.getElementById('import_databaseName').value.trim();
+      const tableName = document.getElementById('import_tableName').value.trim() || 'Encontro';
+      const sqlQuery = document.getElementById('import_sqlQuery').value.trim();
+      const limite = document.getElementById('import_limite').value;
+      const atualizarExistentes = document.getElementById('import_atualizarExistentes').checked;
+      const arquivoInput = document.getElementById('import_arquivo');
+      const fotoPadrao = document.getElementById('import_fotoPadrao').value.trim();
+      const resultBox = document.getElementById('import_result');
+
+      resultBox.className = 'import-result';
+      resultBox.textContent = '';
+
+      if (sourceType === 'database' && !connectionString) {
+        resultBox.className = 'import-result error';
+        resultBox.textContent = 'Informe a conexao do banco externo para continuar.';
+        return;
+      }
+
+      if (sourceType !== 'database' && (!arquivoInput.files || !arquivoInput.files[0])) {
+        resultBox.className = 'import-result error';
+        resultBox.textContent = 'Selecione um arquivo para importar.';
+        return;
+      }
+
+      if (!await appConfirm('Deseja iniciar a importacao de encontreiros agora?', 'Confirmar importacao')) return;
+
+      try {
+        const formData = new FormData();
+        formData.append('sourceType', sourceType);
+        formData.append('dbEngine', dbEngine);
+        formData.append('connectionString', connectionString);
+        formData.append('mongoUri', connectionString);
+        formData.append('databaseName', databaseName);
+        formData.append('colecaoEncontreiros', tableName);
+        formData.append('tableName', tableName);
+        formData.append('sqlQuery', sqlQuery);
+        formData.append('limite', limite);
+        formData.append('atualizarExistentes', atualizarExistentes ? 'true' : 'false');
+        formData.append('fotoPadrao', fotoPadrao);
+
+        if (sourceType !== 'database' && arquivoInput.files && arquivoInput.files[0]) {
+          formData.append('arquivo', arquivoInput.files[0]);
+        }
+
+        const response = await fetch('/admin/importar-cadastros', {
+          method: 'POST',
+          body: formData
+        });
+
+        const responseType = response.headers.get('content-type') || '';
+        const isJson = responseType.includes('application/json');
+        const result = isJson
+          ? await response.json()
+          : { success: false, error: await response.text() };
+
+        if (!result.success) {
+          resultBox.className = 'import-result error';
+          const message = (result.error || 'Erro ao importar encontreiros.').toString();
+          resultBox.textContent = message.replace(/<[^>]*>/g, '').slice(0, 300);
+          return;
+        }
+
+        const s = result.summary;
+        const origemLabel = result.sourceType === 'database' ? `${result.sourceType}/${result.dbEngine || dbEngine}` : result.sourceType;
+        const totalIgnorados = s.ignoradosExistentes + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
+        const totalPlaceholders = (s.placeholdersNome || 0) + (s.placeholdersEmail || 0);
+        const detalhePlaceholders = totalPlaceholders > 0
+          ? ` Campos preenchidos automaticamente: ${totalPlaceholders} (nome: ${s.placeholdersNome || 0}, email: ${s.placeholdersEmail || 0}).`
+          : '';
+
+        if ((s.importados + s.atualizados) === 0) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = `Nenhum cadastro foi salvo (${origemLabel}). Ignorados: ${totalIgnorados}. Verifique os dados do arquivo (tipo/foto/formato).`;
+          return;
+        }
+
+        resultBox.className = 'import-result success';
+        resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados}. Erros: ${s.erros}.${detalhePlaceholders}`;
+
+        setTimeout(() => {
+          recarregarMantendoAbaAtual();
+        }, 1800);
+      } catch (error) {
+        resultBox.className = 'import-result error';
+        resultBox.textContent = 'Falha ao executar importacao. Verifique o arquivo (formato/tamanho) e tente novamente.';
+      }
+    }
+
+    async function aprovarCadastro(tipo, id) {
+      if (!await appConfirm('Aprovar este cadastro?', 'Confirmar aprovacao')) return;
+
+      try {
+        const response = await fetch('/admin/aprovar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, id })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Cadastro aprovado com sucesso!', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao aprovar.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao aprovar cadastro.', 'danger', 'Erro');
+      }
+    }
+
+    async function reprovarCadastro(tipo, id) {
+      if (!await appConfirm('Reprovar este cadastro?', 'Confirmar reprovacao')) return;
+
+      try {
+        const response = await fetch('/admin/desaprovar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tipo, id })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Cadastro reprovado!', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao reprovar.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao reprovar cadastro.', 'danger', 'Erro');
+      }
+    }
+
+    atualizarTransferenciaLoteUI();
+    atualizarCamposImportacao();
+  </script>
+</body>
+</html>

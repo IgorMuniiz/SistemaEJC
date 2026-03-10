@@ -1,0 +1,39 @@
+{
+  "name": "ejc-registration",
+  "version": "1.0.0",
+  "description": "Modern registration site for Inscrição EJC",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.1.0",
+    "@capacitor/cli": "^8.1.0",
+    "@capacitor/core": "^8.1.0",
+    "@fortawesome/fontawesome-free": "^7.2.0",
+    "archiver": "^5.3.1",
+    "bcryptjs": "^3.0.3",
+    "bootstrap": "^5.3.8",
+    "compression": "^1.8.1",
+    "dotenv": "^17.3.1",
+    "ejs": "^4.0.1",
+    "exceljs": "^4.3.0",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "express-validator": "^7.3.1",
+    "mongoose": "^9.2.4",
+    "multer": "^2.1.1",
+    "mysql2": "^3.11.3",
+    "pdf-parse": "^1.1.1",
+    "pdfkit": "^0.13.0",
+    "pg": "^8.13.1",
+    "sharp": "^0.34.5",
+    "web-push": "^3.4.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}

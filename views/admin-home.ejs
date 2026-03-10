@@ -1,0 +1,342 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Painel administrativo do EJC COP para gerenciar inscricoes, aprovacoes e operacoes do encontro.">
+  <title>Painel de Inscrição - EJC COP</title>
+  <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
+  <style>
+    :root {
+      --primary-500: #8b5cf6;
+      --primary-600: #7c3aed;
+      --primary-700: #6d28d9;
+      --success: #10b981;
+      --success-light: #34d399;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a20 100%);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .admin-home-container {
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .admin-header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding-top: 20px;
+    }
+
+    .admin-header h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .admin-header p {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.6);
+    }
+
+    .user-info {
+      color: rgba(255, 255, 255, 0.8);
+      text-align: center;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+
+    .user-info-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 999px;
+      padding: 10px 20px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 24px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 28px;
+      margin-bottom: 40px;
+    }
+
+    .card-option {
+      background: rgba(26, 26, 32, 0.6);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 48px 32px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card-option::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .card-option:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.3), 0 0 60px rgba(102, 126, 234, 0.2);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-option:hover::before {
+      opacity: 1;
+    }
+
+    .card-option.gerenciar:hover {
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .card-icon {
+      margin-bottom: 24px;
+      width: 76px;
+      height: 76px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      color: white;
+      font-size: 2rem;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-option.encontrista .card-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .card-option.encontreiro .card-icon {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    }
+
+    .card-option.gerenciar .card-icon {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+
+    .card-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+
+    .card-description {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.65);
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+
+    .card-button {
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-top: auto;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .card-option.encontrista .card-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .card-option.encontrista .card-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+
+    .card-option.encontreiro .card-button {
+      background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      color: white;
+    }
+
+    .card-option.encontreiro .card-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+    }
+
+    .card-option.gerenciar .card-button {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+
+    .card-option.gerenciar .card-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      margin-top: 40px;
+      align-items: center;
+    }
+
+    .btn-logout {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1.5px solid rgba(239, 68, 68, 0.3);
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-logout:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #f87171;
+      color: #fff;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .admin-header h1 {
+        font-size: 2.2rem;
+      }
+
+      .admin-header p {
+        font-size: 1rem;
+      }
+
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-option {
+        padding: 36px 24px;
+      }
+
+      .card-title {
+        font-size: 1.2rem;
+      }
+
+      .footer-actions {
+        flex-direction: column;
+        gap: 12px;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="/css/admin-saas.css">
+</head>
+<body class="admin-panel">
+  <div class="admin-background"></div>
+  <div class="admin-home-container">
+    <div class="user-info-badge">
+      <i class="fas fa-user-shield"></i>
+      Logado como: <strong><%= adminUsername %></strong>
+    </div>
+
+    <div class="admin-header">
+      <h1><i class="fas fa-clipboard-list"></i> Painel Administrativo</h1>
+      <p>Escolha o tipo de cadastro que deseja realizar</p>
+    </div>
+
+    <div class="cards-grid">
+      <!-- ENCONTRISTAS -->
+      <a href="/inscricao?tipo=encontrista" class="card-option" style="text-decoration: none; color: inherit;">
+        <div class="card-icon">
+          <i class="fas fa-user"></i>
+        </div>
+        <h2 class="card-title">Encontristas</h2>
+        <p class="card-description">
+          Pessoas que desejam participar dos encontros do EJC
+        </p>
+      </a>
+
+      <!-- ENCONTREIROS -->
+      <a href="/encontro?tipo=encontreiro" class="card-option" style="text-decoration: none; color: inherit;">
+        <div class="card-icon">
+          <i class="fas fa-user-friends"></i>
+        </div>
+        <h2 class="card-title">Encontreiros</h2>
+        <p class="card-description">
+          Pessoas ou casais experientes que coordenaram encontros
+        </p>
+      </a>
+
+      <!-- GERENCIAR CADASTROS -->
+      <a href="/admin/gerenciar-cadastros" class="card-option" style="text-decoration: none; color: inherit;">
+        <div class="card-icon">
+          <i class="fas fa-users-cog"></i>
+        </div>
+        <h2 class="card-title">Gerenciar Cadastros</h2>
+        <p class="card-description">
+          Visualizar, editar e aprovar todos os cadastros do sistema
+        </p>
+        <button class="card-button">
+          <svg class="icon icon-space" viewBox="0 0 24 24" aria-hidden="true"><path d="M13.17 5.17a1 1 0 0 1 1.41 0l6 6a1 1 0 0 1 0 1.41l-6 6a1 1 0 1 1-1.41-1.41L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.42-4.41a1 1 0 0 1 0-1.42Z"/></svg>Acessar Painel
+        </button>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 32px;">
+      <a href="/admin/logout" class="logout-btn" style="text-decoration: none;">
+        <i class="fas fa-sign-out-alt"></i> Sair
+      </a>
+    </div>
+  </div>
+  
+
+</body>
+</html>

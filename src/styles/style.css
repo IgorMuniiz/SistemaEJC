@@ -1,0 +1,190 @@
+/* ============================================================================
+   EJC SISTEMA - ESTILOS FONTE
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   VARIÁVEIS CSS
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Cores */
+  --primary: #2563eb;
+  --primary-hover: #1e40af;
+  --gradient-start: #ff6d6d;
+  --gradient-end: #ffa66d;
+  
+  /* Background */
+  --bg-gradient: linear-gradient(120deg, #0f172a, #1e3a8a);
+  --bg-card: rgba(255, 255, 255, 0.10);
+  --bg-admin: rgba(255, 255, 255, 0.08);
+  --bg-admin-hover: rgba(255, 255, 255, 0.18);
+  
+  /* Cores de Texto */
+  --text-light: #fff;
+  --text-muted: #cbd5e1;
+  
+  /* Sombras */
+  --shadow-card: 0 4px 24px rgba(30, 58, 138, 0.12);
+  --shadow-btn: 0 2px 8px rgba(37, 99, 235, 0.08);
+  
+  /* Espaçamentos */
+  --spacing-sm: 6px;
+  --spacing-md: 12px;
+  --spacing-lg: 18px;
+  --spacing-xl: 24px;
+  --spacing-2xl: 28px;
+  --spacing-3xl: 48px;
+  
+  /* Bordas */
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+}
+
+/* ----------------------------------------------------------------------------
+   RESET GLOBAL
+   ---------------------------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+/* ----------------------------------------------------------------------------
+   LAYOUT BASE
+   ---------------------------------------------------------------------------- */
+body {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------------------------
+   CONTAINER PRINCIPAL
+   ---------------------------------------------------------------------------- */
+.inicio {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-3xl) var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 340px;
+}
+
+/* ----------------------------------------------------------------------------
+   ELEMENTOS DA INTERFACE
+   ---------------------------------------------------------------------------- */
+.logo {
+  width: 120px;
+  margin-bottom: var(--spacing-lg);
+}
+
+h1 {
+  color: var(--text-light);
+  font-size: 2.2rem;
+  font-weight: 700;
+  margin-bottom: var(--spacing-sm);
+}
+
+.slogan {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: var(--spacing-2xl);
+}
+
+/* ----------------------------------------------------------------------------
+   BOTÕES
+   ---------------------------------------------------------------------------- */
+.botoes {
+  display: flex;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-xl);
+}
+
+.btn {
+  background: var(--primary);
+  color: var(--text-light);
+  padding: var(--spacing-md) var(--spacing-2xl);
+  border-radius: var(--radius-sm);
+  font-size: 1rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+  box-shadow: var(--shadow-btn);
+}
+
+.btn:hover {
+  background: var(--primary-hover);
+}
+
+/* ----------------------------------------------------------------------------
+   LINK ADMIN
+   ---------------------------------------------------------------------------- */
+.admin-link {
+  color: var(--text-light);
+  opacity: 0.7;
+  font-size: 0.95rem;
+  text-decoration: none;
+  margin-top: var(--spacing-md);
+  transition: opacity 0.2s;
+}
+
+.admin-link:hover {
+  opacity: 1;
+}
+
+.admin {
+  margin-top: var(--spacing-sm);
+  padding: var(--spacing-md) 26px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: var(--bg-admin);
+  color: white;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.admin:hover {
+  background: var(--bg-admin-hover);
+}
+
+/* ----------------------------------------------------------------------------
+   COMPONENTES DE CARD
+   ---------------------------------------------------------------------------- */
+.icon2 {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+}
+
+.card-title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.card-desc {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* ----------------------------------------------------------------------------
+   RESPONSIVIDADE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 900px) {
+  .container {
+    flex-direction: column;
+  }
+  
+  .left {
+    width: 100%;
+    height: 40%;
+    padding: 50px;
+  }
+  
+  .right {
+    width: 100%;
+    height: 60%;
+  }
+}

@@ -1,0 +1,521 @@
+/* ============================================================================
+   EJC SISTEMA - ESTILOS PRINCIPAIS
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   VARIÁVEIS CSS
+   ---------------------------------------------------------------------------- */
+:root {
+  /* Cores Primárias */
+  --color-primary: #2563eb;
+  --color-primary-dark: #1e40af;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  
+  /* Cores de Texto */
+  --color-text-light: #fff;
+  --color-text-gray: #cbd5e1;
+  --color-text-dark: #333;
+  
+  /* Backgrounds */
+  --bg-gradient: linear-gradient(120deg, #0f172a, #1e3a8a);
+  --bg-card: rgba(255, 255, 255, 0.10);
+  --bg-white: #ffffff;
+  
+  /* Sombras */
+  --shadow-sm: 0 2px 8px rgba(37, 99, 235, 0.08);
+  --shadow-md: 0 4px 12px rgba(37, 99, 235, 0.15);
+  --shadow-lg: 0 4px 24px rgba(30, 58, 138, 0.12);
+  --shadow-form: 0 4px 20px rgba(0, 0, 0, 0.1);
+  
+  /* Bordas */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 18px;
+  
+  /* Espaçamentos */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 18px;
+  --spacing-lg: 24px;
+  --spacing-xl: 28px;
+  --spacing-2xl: 32px;
+  --spacing-3xl: 48px;
+  
+  /* Fontes */
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-size-sm: 0.95rem;
+  --font-size-base: 1rem;
+  --font-size-md: 1.1rem;
+  --font-size-lg: 1.8rem;
+  --font-size-xl: 2.2rem;
+  
+  /* Transições */
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+}
+
+/* ----------------------------------------------------------------------------
+   RESET E ESTILOS GLOBAIS
+   ---------------------------------------------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-family);
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg-gradient);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ----------------------------------------------------------------------------
+   PÁGINA INICIAL
+   ---------------------------------------------------------------------------- */
+.inicio {
+  background: var(--bg-card);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--spacing-3xl) var(--spacing-2xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 340px;
+}
+
+.logo {
+  width: 120px;
+  margin-bottom: var(--spacing-md);
+}
+
+h1 {
+  color: var(--color-text-light);
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-xs);
+  text-align: center;
+}
+
+.slogan {
+  color: var(--color-text-gray);
+  font-size: var(--font-size-md);
+  margin-bottom: var(--spacing-xl);
+  text-align: center;
+}
+
+/* ----------------------------------------------------------------------------
+   BOTÕES
+   ---------------------------------------------------------------------------- */
+.botoes {
+  display: flex;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn {
+  background: var(--color-primary);
+  color: var(--color-text-light);
+  padding: var(--spacing-sm) var(--spacing-xl);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+  text-decoration: none;
+  transition: all var(--transition-normal) ease;
+  box-shadow: var(--shadow-sm);
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-primary {
+  background: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background: var(--color-primary-dark);
+}
+
+.btn-success {
+  background: var(--color-success);
+}
+
+.btn-success:hover {
+  background: var(--color-success-dark);
+}
+
+.admin-link {
+  color: var(--color-text-light);
+  opacity: 0.7;
+  font-size: var(--font-size-sm);
+  text-decoration: none;
+  margin-top: var(--spacing-sm);
+  transition: opacity var(--transition-fast);
+  display: inline-block;
+}
+
+.admin-link:hover {
+  opacity: 1;
+}
+
+/* ----------------------------------------------------------------------------
+   FORMULÁRIOS - DESIGN SAAS PROFISSIONAL
+   ---------------------------------------------------------------------------- */
+#root {
+  width: 100%;
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+/* Container do formulário */
+.form-container {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  padding: 40px;
+  box-shadow: var(--shadow-form);
+}
+
+/* Card do formulário com glassmorphism */
+.form-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 24px !important;
+  padding: 0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+}
+
+.form-card .card-body {
+  padding: 48px 56px !important;
+}
+
+/* Botões de tipo de inscrição */
+.tipo-btn {
+  padding: 16px 32px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  transition: all 0.3s ease !important;
+  border: 2px solid rgba(255, 255, 255, 0.15) !important;
+}
+
+.tipo-btn:not(.btn-primary) {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.tipo-btn:not(.btn-primary):hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  transform: translateY(-2px);
+}
+
+.tipo-btn.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border-color: transparent !important;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+/* Grupos de formulário */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.mb-3 {
+  margin-bottom: 24px !important;
+}
+
+/* Labels */
+.form-label {
+  display: block;
+  margin-bottom: 10px;
+  font-weight: 600;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9) !important;
+  letter-spacing: 0.3px;
+}
+
+/* Inputs e campos */
+.form-control,
+.form-select {
+  width: 100%;
+  padding: 14px 18px !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 10px !important;
+  font-size: 15px !important;
+  color: #fff !important;
+  transition: all 0.3s ease !important;
+}
+
+.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  outline: none !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+}
+
+/* Input groups */
+.input-group-text {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  border-right: none !important;
+  color: rgba(255, 255, 255, 0.6) !important;
+  border-radius: 10px 0 0 10px !important;
+  padding: 14px 16px !important;
+}
+
+.input-group .form-control {
+  border-left: none !important;
+  border-radius: 0 10px 10px 0 !important;
+}
+
+.input-group:focus-within .input-group-text {
+  border-color: #667eea !important;
+  color: #667eea !important;
+}
+
+/* Textarea */
+textarea.form-control {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* Botões primários */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 16px 32px !important;
+  border-radius: 12px !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5) !important;
+}
+
+.btn-primary:active {
+  transform: translateY(0) !important;
+}
+
+/* Botões outline */
+.btn-outline-light,
+.btn-outline-secondary {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.15) !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  padding: 12px 24px !important;
+  border-radius: 10px !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.btn-outline-light:hover,
+.btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+  color: #fff !important;
+  transform: translateY(-1px);
+}
+
+/* Alerts */
+.alert {
+  border-radius: 12px !important;
+  border: none !important;
+  padding: 16px 20px !important;
+  margin-bottom: 24px !important;
+  font-size: 14px !important;
+}
+
+.alert-danger {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #fca5a5 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #93c5fd !important;
+  border-left: 4px solid #3b82f6 !important;
+}
+
+.alert ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+/* Badges para equipes */
+.badge {
+  padding: 8px 14px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+.badge.bg-secondary {
+  background: rgba(102, 126, 234, 0.2) !important;
+  color: #a5b4fc !important;
+  border: 1px solid rgba(102, 126, 234, 0.3) !important;
+}
+
+.btn-close-white {
+  filter: brightness(0) invert(1);
+  opacity: 0.7;
+}
+
+.btn-close-white:hover {
+  opacity: 1;
+}
+
+/* Text muted */
+.text-muted {
+  color: rgba(255, 255, 255, 0.5) !important;
+  font-size: 13px !important;
+}
+
+/* Seções do formulário */
+.form-section-title {
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 18px;
+  font-weight: 700;
+  margin-top: 32px;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.form-section-title:first-child {
+  margin-top: 0;
+}
+
+.form-section-title i {
+  color: #667eea;
+  font-size: 20px;
+}
+
+/* Grid de campos */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.form-row .mb-3 {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Loading overlay */
+.loader-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 4px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ----------------------------------------------------------------------------
+   FOOTER
+   ---------------------------------------------------------------------------- */
+footer {
+  margin-top: auto;
+  width: 100%;
+}
+
+/* ----------------------------------------------------------------------------
+   RESPONSIVIDADE
+   ---------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .inicio {
+    padding: var(--spacing-2xl) var(--spacing-lg);
+    min-width: 280px;
+  }
+
+  h1 {
+    font-size: var(--font-size-lg);
+  }
+
+  .slogan {
+    font-size: var(--font-size-base);
+  }
+
+  .botoes {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Responsividade dos formulários */
+  #root {
+    padding: 12px;
+  }
+
+  .form-card .card-body {
+    padding: 32px 24px !important;
+  }
+
+  .tipo-btn {
+    width: 100% !important;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 16px !important; /* Previne zoom no iOS */
+  }
+}
