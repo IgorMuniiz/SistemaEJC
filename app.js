@@ -13,6 +13,10 @@ const bcryptjs = require('bcryptjs');
 const compression = require('compression');
 const sharp = require('sharp');
 
+const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
+const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
+const LGPD_RETENTION_DAYS_DEFAULT = 730;
+
 // configure VAPID keys (set environment variables beforehand)
 let vapidKeys = {
   publicKey: process.env.VAPID_PUBLIC_KEY,
@@ -124,7 +128,11 @@ const cadastroSchema = new mongoose.Schema({
   instagram: { type: String },
   foto: { type: String, required: true },
   aprovado: { type: Boolean, default: false },
-  statusAprovacao: { type: String, enum: ['pendente', 'aprovado', 'reprovado'], default: 'pendente' },
+  statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
+  lgpdConsentimento: { type: Boolean, default: false },
+  lgpdConsentimentoData: { type: Date, default: null },
+  lgpdConsentimentoIp: { type: String, default: '' },
+  anonimizadoEm: { type: Date, default: null },
   dataCadastro: { type: Date, default: Date.now },
 });
 
@@ -155,7 +163,11 @@ const encontroSchema = new mongoose.Schema({
   foto: { type: String, required: true },
   observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false }, // novo campo para aprovação
-  statusAprovacao: { type: String, enum: ['pendente', 'aprovado', 'reprovado'], default: 'pendente' },
+  statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
+  lgpdConsentimento: { type: Boolean, default: false },
+  lgpdConsentimentoData: { type: Date, default: null },
+  lgpdConsentimentoIp: { type: String, default: '' },
+  anonimizadoEm: { type: Date, default: null },
   dataCadastro: { type: Date, default: Date.now },
 });
 
@@ -176,6 +188,21 @@ const adminSchema = new mongoose.Schema({
 });
 
 const Admin = mongoose.model('Admin', adminSchema);
+
+const adminAuditLogSchema = new mongoose.Schema({
+  adminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+  adminUsername: { type: String, default: '' },
+  action: { type: String, required: true },
+  targetType: { type: String, default: '' },
+  targetId: { type: String, default: '' },
+  status: { type: String, enum: ['success', 'error'], default: 'success' },
+  ip: { type: String, default: '' },
+  userAgent: { type: String, default: '' },
+  metadata: { type: Object, default: {} },
+  createdAt: { type: Date, default: Date.now },
+});
+
+const AdminAuditLog = mongoose.model('AdminAuditLog', adminAuditLogSchema);
 
 const BCRYPT_PREFIX_REGEX = /^\$2[aby]\$\d{2}\$/;
 
@@ -439,6 +466,10 @@ const normalizeApprovalStatusInput = (value) => {
   const raw = normalizeTextInput(value).toLowerCase();
   if (['aprovado', 'approved'].includes(raw)) return 'aprovado';
   if (['reprovado', 'desaprovado', 'rejected'].includes(raw)) return 'reprovado';
+  if (['pendente_contato', 'pendentecontato', 'contato_pendente', 'aguardando_contato'].includes(raw)) return 'pendente_contato';
+  if (['documentacao_pendente', 'documentacaopendente', 'doc_pendente'].includes(raw)) return 'documentacao_pendente';
+  if (['desistiu', 'desistencia', 'desistente'].includes(raw)) return 'desistiu';
+  if (['remanejado', 'remanejado_equipe', 'remanejadoequipe'].includes(raw)) return 'remanejado';
   if (['pendente', 'pending'].includes(raw)) return 'pendente';
   return '';
 };
@@ -450,6 +481,8 @@ const resolveApprovalStatus = (doc) => {
 };
 
 const normalizeTextInput = (value) => String(value || '').trim();
+
+const normalizePhoneDigits = (value) => String(value || '').replace(/\D/g, '');
 
 const normalizeStringArrayInput = (value) => {
   if (Array.isArray(value)) return value.map((item) => normalizeTextInput(item)).filter(Boolean);
@@ -535,13 +568,17 @@ const normalizeMultiField = (value) => {
 
 const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const findExistingByNameOrEmail = async (Model, nomeCompleto, email) => {
+const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = '') => {
   const nome = String(nomeCompleto || '').trim();
   const mail = String(email || '').trim();
+  const phoneDigits = normalizePhoneDigits(telefone);
 
   const filters = [];
-  if (mail) {
+  if (mail && !mail.includes('@pendente.local')) {
     filters.push({ email: new RegExp(`^${escapeRegExp(mail)}$`, 'i') });
+  }
+  if (phoneDigits) {
+    filters.push({ telefone: new RegExp(escapeRegExp(phoneDigits.split('').join('\\D*')), 'i') });
   }
   if (nome) {
     filters.push({ nomeCompleto: new RegExp(`^${escapeRegExp(nome)}$`, 'i') });
@@ -549,6 +586,32 @@ const findExistingByNameOrEmail = async (Model, nomeCompleto, email) => {
 
   if (filters.length === 0) return null;
   return Model.findOne({ $or: filters });
+};
+
+const getClientIp = (req) => {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    return String(forwarded).split(',')[0].trim();
+  }
+  return req.ip || req.connection?.remoteAddress || '';
+};
+
+const logAdminAction = async (req, payload) => {
+  try {
+    await AdminAuditLog.create({
+      adminId: req.session?.adminId || null,
+      adminUsername: req.session?.adminUsername || 'desconhecido',
+      action: payload.action,
+      targetType: payload.targetType || '',
+      targetId: payload.targetId ? String(payload.targetId) : '',
+      status: payload.status || 'success',
+      ip: getClientIp(req),
+      userAgent: String(req.headers['user-agent'] || ''),
+      metadata: payload.metadata || {},
+    });
+  } catch (err) {
+    console.error('Falha ao registrar auditoria:', err.message);
+  }
 };
 
 const formatExportValue = (value) => {
@@ -566,6 +629,93 @@ const formatDateBR = (value) => {
   const year = d.getUTCFullYear();
   return `${day}/${month}/${year}`;
 };
+
+const executeLgpdRetention = async (retentionDays = LGPD_RETENTION_DAYS_DEFAULT) => {
+  const safeDays = Number.isFinite(Number(retentionDays)) ? Math.max(30, Number(retentionDays)) : LGPD_RETENTION_DAYS_DEFAULT;
+  const cutoff = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
+  const statusElegiveis = APPROVAL_STATUSES.filter((item) => item !== 'aprovado');
+
+  const runForModel = async (Model, modelName) => {
+    const docs = await Model.find({
+      dataCadastro: { $lt: cutoff },
+      anonimizadoEm: null,
+      statusAprovacao: { $in: statusElegiveis },
+    }).select('_id').lean();
+
+    if (!docs.length) return 0;
+
+    const ops = docs.map((doc) => ({
+      updateOne: {
+        filter: { _id: doc._id },
+        update: {
+          $set: {
+            nomeCompleto: `ANONIMIZADO ${modelName}`,
+            comoQuerSerChamado: '',
+            cep: '',
+            estadoCivil: '',
+            nomeMae: '',
+            telefoneMae: '',
+            nomePai: '',
+            telefonePai: '',
+            paroquiaFrequenta: '',
+            participaMovimentoIgreja: '',
+            conhecidoInscricaoHoje: '',
+            conhecidoFezEjc: '',
+            inscricaoAnterior: '',
+            instrumentoMusical: '',
+            expectativaXixEjcCop: '',
+            logradouro: 'ANONIMIZADO',
+            bairro: 'ANONIMIZADO',
+            telefone: '',
+            intolerante: '',
+            email: `anon-${doc._id}@anon.local`,
+            instagram: '',
+            observacoes: '',
+            foto: '',
+            lgpdConsentimentoIp: '',
+            anonimizadoEm: new Date(),
+          },
+        },
+      },
+    }));
+
+    await Model.bulkWrite(ops, { ordered: false });
+    return ops.length;
+  };
+
+  const [cadastrosAnonimizados, encontrosAnonimizados] = await Promise.all([
+    runForModel(Cadastro, 'CADASTRO'),
+    runForModel(Encontro, 'ENCONTRO'),
+  ]);
+
+  return {
+    retentionDays: safeDays,
+    cutoff,
+    cadastrosAnonimizados,
+    encontrosAnonimizados,
+    totalAnonimizados: cadastrosAnonimizados + encontrosAnonimizados,
+  };
+};
+
+setTimeout(() => {
+  executeLgpdRetention().then((result) => {
+    if (result.totalAnonimizados > 0) {
+      console.log(`[LGPD] Anonimizacao automatica inicial: ${result.totalAnonimizados} registro(s).`);
+    }
+  }).catch((err) => {
+    console.error('[LGPD] Falha na anonimização automática inicial:', err.message);
+  });
+}, 20 * 1000);
+
+setInterval(() => {
+  executeLgpdRetention().then((result) => {
+    if (result.totalAnonimizados > 0) {
+      console.log(`[LGPD] Anonimizacao automatica diaria: ${result.totalAnonimizados} registro(s).`);
+    }
+  }).catch((err) => {
+    console.error('[LGPD] Falha na anonimização diária:', err.message);
+  });
+}, 24 * 60 * 60 * 1000);
 
 const truncateText = (value, max = 42) => {
   const text = String(value || '').trim();
@@ -855,6 +1005,8 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   const rightX = left + cardWidth + gap;
   const topStart = 40;
   const bottomLimit = 790;
+  const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
+  const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
 
   const drawPageTitle = () => {};
   const mmToPt = (mm) => (mm * 72) / 25.4;
@@ -1011,13 +1163,37 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   };
 
   const drawEquipeHeader = (groupName, y) => {
-    doc.font('Helvetica-Bold').fontSize(15).fillColor('#1f2f46').text(groupName, left, y, {
-      width: 515,
-      align: 'right',
+    const titleFontSize = 18;
+    const logoSize = 28;
+    const logoGap = 8;
+    const availableWidth = 515;
+    const reservedLogoWidth = hasEquipeHeaderLogo ? (logoSize + logoGap) : 0;
+    const textWidth = Math.max(120, availableWidth - reservedLogoWidth);
+    const titleText = String(groupName || '').trim() || 'Equipe';
+
+    doc.font('Helvetica-Bold').fontSize(titleFontSize);
+    const measuredTextWidth = Math.min(doc.widthOfString(titleText), textWidth);
+    const totalBlockWidth = measuredTextWidth + reservedLogoWidth;
+    const startX = left + Math.max(0, availableWidth - totalBlockWidth);
+    const logoY = y - ((logoSize - titleFontSize) / 2);
+    const textX = startX + reservedLogoWidth;
+
+    if (hasEquipeHeaderLogo) {
+      doc.image(equipeHeaderLogoPath, startX, logoY, {
+        fit: [logoSize, logoSize],
+        align: 'left',
+        valign: 'center',
+      });
+    }
+
+    doc.fillColor('#1f2f46').text(titleText, textX, y, {
+      width: textWidth,
+      align: 'left',
       lineBreak: false,
       ellipsis: true,
     });
-    return 22;
+
+    return 34;
   };
 
   drawPageTitle();
@@ -2597,7 +2773,7 @@ app.get('/inscricao', (req, res) => {
 app.get('/debug/encontreiros', checkAdminAuth, async (req, res) => {
   try {
     const total = await Encontro.countDocuments();
-    const pendentes = await Encontro.countDocuments({ $or: [{ aprovado: false }, { aprovado: null }, { aprovado: undefined }] });
+    const pendentes = await Encontro.countDocuments({ statusAprovacao: { $in: PENDING_APPROVAL_STATUSES } });
     const aprovados = await Encontro.countDocuments({ aprovado: true });
     const porTipo = await Encontro.aggregate([
       { $group: { _id: '$tipo', count: { $sum: 1 } } }
@@ -2642,6 +2818,11 @@ app.post(
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
     body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
     body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email inválido'),
+    body('lgpdConsentimento').custom((value) => {
+      const ok = value === true || value === 'true' || value === 'on' || value === '1';
+      if (!ok) throw new Error('É obrigatório aceitar os termos de privacidade (LGPD).');
+      return true;
+    }),
   ],
   async (req, res) => {
     console.log('[INFO] POST /inscricao - Requisição recebida');
@@ -2661,7 +2842,11 @@ app.post(
     }
 
     try {
-      const cadastroExistente = await findExistingByNameOrEmail(Cadastro, req.body.nomeCompleto, '');
+      const cadastroExistente = await findExistingByNameOrEmail(Cadastro, req.body.nomeCompleto, '', req.body.telefone);
+      const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
+        || req.body.lgpdConsentimento === 'on'
+        || req.body.lgpdConsentimento === '1'
+        || req.body.lgpdConsentimento === true;
 
       if (!req.file && !cadastroExistente) {
         const allErrors = [{ msg: 'Foto é obrigatória' }];
@@ -2698,6 +2883,9 @@ app.post(
         intolerante: req.body.intolerante || '',
         email: req.body.email || '',
         instagram: req.body.instagram || '',
+        lgpdConsentimento,
+        lgpdConsentimentoData: lgpdConsentimento ? new Date() : null,
+        lgpdConsentimentoIp: lgpdConsentimento ? getClientIp(req) : '',
       };
 
       let cadastro;
@@ -2766,6 +2954,11 @@ app.post(
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
     body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
     body('email').isEmail().withMessage('Email inválido'),
+    body('lgpdConsentimento').custom((value) => {
+      const ok = value === true || value === 'true' || value === 'on' || value === '1';
+      if (!ok) throw new Error('É obrigatório aceitar os termos de privacidade (LGPD).');
+      return true;
+    }),
   ],
   async (req, res) => {
     console.log('[INFO] POST /encontro - Requisição recebida');
@@ -2788,7 +2981,11 @@ app.post(
     }
 
     try {
-      const encontroExistente = await findExistingByNameOrEmail(Encontro, req.body.nomeCompleto, '');
+      const encontroExistente = await findExistingByNameOrEmail(Encontro, req.body.nomeCompleto, '', req.body.telefone);
+      const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
+        || req.body.lgpdConsentimento === 'on'
+        || req.body.lgpdConsentimento === '1'
+        || req.body.lgpdConsentimento === true;
 
       if (!req.file && !encontroExistente) {
         const allErrors = [{ msg: 'Foto é obrigatória' }];
@@ -2838,6 +3035,9 @@ app.post(
         temRelacionamento: req.body.temRelacionamento || '',
         instagram: req.body.instagram || '',
         observacoes: req.body.observacoes || '',
+        lgpdConsentimento,
+        lgpdConsentimentoData: lgpdConsentimento ? new Date() : null,
+        lgpdConsentimentoIp: lgpdConsentimento ? getClientIp(req) : '',
       };
 
       let encontro;
@@ -2948,10 +3148,10 @@ app.get('/admin/home', checkAdminAuth, (req, res) => {
 // GET /admin/dashboard - Painel de admin (rota protegida)
 app.get('/admin/dashboard', checkAdminAuth, async (req, res) => {
   try {
-    const pendentesEncontristas = await Cadastro.find({ statusAprovacao: { $in: ['pendente', null] } }).sort({ dataCadastro: -1 }).lean();
+    const pendentesEncontristas = await Cadastro.find({ statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
     const aprovadosEncontristas = await Cadastro.find({ aprovado: true }).sort({ dataCadastro: -1 }).lean();
     const reprovadosEncontristas = await Cadastro.find({ statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
-    const pendentesEncontreiros = await Encontro.find({ statusAprovacao: { $in: ['pendente', null] } }).sort({ dataCadastro: -1 }).lean();
+    const pendentesEncontreiros = await Encontro.find({ statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
     const aprovadosEncontreiros = await Encontro.find({ aprovado: true }).sort({ dataCadastro: -1 }).lean();
     const reprovadosEncontreiros = await Encontro.find({ statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
     
@@ -3000,6 +3200,13 @@ app.post('/admin/aprovar', checkAdminAuth, async (req, res) => {
     console.log(`[INFO] Aprovação: ${id} - tipo=${tipoLista}`);
 
     if (!id || !tipoLista) {
+      await logAdminAction(req, {
+        action: 'aprovar_cadastro',
+        targetType: tipoListaRaw || 'desconhecido',
+        targetId: id,
+        status: 'error',
+        metadata: { motivo: 'id_ou_tipo_invalido' },
+      });
       console.error('[ERRO] ID ou tipo inválidos');
       return res.status(400).json({ success: false, error: 'ID e tipo obrigatórios' });
     }
@@ -3029,8 +3236,21 @@ app.post('/admin/aprovar', checkAdminAuth, async (req, res) => {
     }
 
     console.log(`[INFO] Aprovado: ${result.nomeCompleto}`);
+    await logAdminAction(req, {
+      action: 'aprovar_cadastro',
+      targetType: tipoLista,
+      targetId: id,
+      metadata: { nomeCompleto: result.nomeCompleto },
+    });
     return res.json({ success: true, message: 'Aprovado com sucesso!' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'aprovar_cadastro',
+      targetType: normalizeTextInput(req.body.tipoLista || req.body.tipo),
+      targetId: normalizeTextInput(req.body.id),
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('[ERRO] Erro:', err.message);
     return res.status(500).json({ success: false, error: err.message });
   }
@@ -3048,6 +3268,13 @@ app.post('/admin/desaprovar', checkAdminAuth, async (req, res) => {
     console.log(`[INFO] Desaprovação: ${id} - tipo=${tipoLista}`);
 
     if (!id || !tipoLista) {
+      await logAdminAction(req, {
+        action: 'reprovar_cadastro',
+        targetType: tipoListaRaw || 'desconhecido',
+        targetId: id,
+        status: 'error',
+        metadata: { motivo: 'id_ou_tipo_invalido' },
+      });
       console.error('[ERRO] ID ou tipo inválidos');
       return res.status(400).json({ success: false, error: 'ID e tipo obrigatórios' });
     }
@@ -3070,10 +3297,71 @@ app.post('/admin/desaprovar', checkAdminAuth, async (req, res) => {
     }
 
     console.log(`[INFO] Desaprovado: ${result.nomeCompleto}`);
+    await logAdminAction(req, {
+      action: 'reprovar_cadastro',
+      targetType: tipoLista,
+      targetId: id,
+      metadata: { nomeCompleto: result.nomeCompleto },
+    });
     return res.json({ success: true, message: 'Desaprovado com sucesso!' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'reprovar_cadastro',
+      targetType: normalizeTextInput(req.body.tipoLista || req.body.tipo),
+      targetId: normalizeTextInput(req.body.id),
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('[ERRO] Erro:', err.message);
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/admin/alterar-status', checkAdminAuth, async (req, res) => {
+  try {
+    const id = normalizeTextInput(req.body.id);
+    const tipoListaRaw = normalizeTextInput(req.body.tipoLista || req.body.tipo).toLowerCase();
+    const statusAprovacao = normalizeApprovalStatusInput(req.body.statusAprovacao);
+
+    const tipoLista = tipoListaRaw === 'encontrista' ? 'encontrista' :
+      (['encontreiro', 'encontro', 'tios', 'casal'].includes(tipoListaRaw) ? 'encontreiro' : '');
+
+    if (!id || !tipoLista || !statusAprovacao) {
+      return res.status(400).json({ success: false, error: 'ID, tipo e status são obrigatórios.' });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID inválido.' });
+    }
+
+    const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
+    const result = await Model.findByIdAndUpdate(
+      id,
+      { aprovado: statusAprovacao === 'aprovado', statusAprovacao },
+      { new: true }
+    );
+
+    if (!result) {
+      return res.status(404).json({ success: false, error: 'Cadastro não encontrado.' });
+    }
+
+    await logAdminAction(req, {
+      action: 'alterar_status_cadastro',
+      targetType: tipoLista,
+      targetId: id,
+      metadata: { statusAprovacao, nomeCompleto: result.nomeCompleto },
+    });
+
+    return res.json({ success: true, message: 'Status atualizado com sucesso.' });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'alterar_status_cadastro',
+      targetType: normalizeTextInput(req.body.tipoLista || req.body.tipo),
+      targetId: normalizeTextInput(req.body.id),
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    return res.status(500).json({ success: false, error: 'Erro ao atualizar status.' });
   }
 });
 
@@ -3105,6 +3393,7 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
       };
     });
     const administradores = await Admin.find().sort({ dataCriacao: -1 }).select('username dataCriacao').lean();
+    const auditoriaLogs = await AdminAuditLog.find().sort({ createdAt: -1 }).limit(100).lean();
     const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao').lean();
     const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcNome nomeReferencia dataCriacao').lean();
     const encontreirosParaEquipe = await Encontro.find({ tipo: { $in: ['jovens', 'tios', 'homem', 'mulher'] } })
@@ -3117,6 +3406,7 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
       encontristas,
       encontreiros,
       administradores,
+      auditoriaLogs,
       ejcs,
       equipes,
       encontreirosParaEquipe,
@@ -3238,8 +3528,21 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, upload.single('f
     const resultado = await Model.findByIdAndUpdate(id, updateData, { new: true });
     
     console.log(`Cadastro ${tipo} atualizado com sucesso:`, id);
+    await logAdminAction(req, {
+      action: 'atualizar_cadastro',
+      targetType: tipo,
+      targetId: id,
+      metadata: { nomeCompleto: resultado?.nomeCompleto || '', statusAprovacao: updateData.statusAprovacao },
+    });
     res.json({ success: true, message: 'Cadastro atualizado com sucesso!' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'atualizar_cadastro',
+      targetType: req.params.tipo,
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('Erro ao atualizar cadastro:', err);
     res.status(500).json({ success: false, error: 'Erro ao atualizar cadastro: ' + err.message });
   }
@@ -3512,6 +3815,11 @@ app.post('/admin/limpar-encontreiros', checkAdminAuth, async (req, res) => {
     const result = await Encontro.deleteMany({});
     
     console.log(`[INFO] Limpeza concluída: ${result.deletedCount} encontreiros deletados, ${fotosDeleted} fotos removidas`);
+    await logAdminAction(req, {
+      action: 'limpar_encontreiros',
+      targetType: 'encontreiro',
+      metadata: { deletados: result.deletedCount, fotosDeletadas: fotosDeleted },
+    });
     
     res.json({ 
       success: true, 
@@ -3520,8 +3828,41 @@ app.post('/admin/limpar-encontreiros', checkAdminAuth, async (req, res) => {
       fotos: fotosDeleted
     });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'limpar_encontreiros',
+      targetType: 'encontreiro',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('[ERRO] Erro ao limpar encontreiros:', err);
     res.status(500).json({ success: false, error: 'Erro ao limpar encontreiros: ' + err.message });
+  }
+});
+
+app.post('/admin/executar-retencao-lgpd', checkAdminAuth, async (req, res) => {
+  try {
+    const days = Number.parseInt(req.body.days, 10);
+    const result = await executeLgpdRetention(days);
+
+    await logAdminAction(req, {
+      action: 'executar_retencao_lgpd',
+      targetType: 'sistema',
+      metadata: result,
+    });
+
+    return res.json({
+      success: true,
+      message: 'Política de retenção LGPD executada com sucesso.',
+      result,
+    });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'executar_retencao_lgpd',
+      targetType: 'sistema',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    return res.status(500).json({ success: false, error: 'Erro ao executar política LGPD.' });
   }
 });
 
@@ -3545,10 +3886,23 @@ app.post('/admin/cadastrar-admin', checkAdminAuth, async (req, res) => {
     }
 
     const hash = await bcryptjs.hash(senha, 10);
-    await Admin.create({ username, senha: hash });
+    const novoAdmin = await Admin.create({ username, senha: hash });
+
+    await logAdminAction(req, {
+      action: 'cadastrar_admin',
+      targetType: 'admin',
+      targetId: novoAdmin._id,
+      metadata: { username: novoAdmin.username },
+    });
 
     return res.json({ success: true, message: 'Administrador cadastrado com sucesso.' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'cadastrar_admin',
+      targetType: 'admin',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('Erro ao cadastrar administrador:', err);
     return res.status(500).json({ success: false, error: 'Erro ao cadastrar administrador.' });
   }
@@ -3615,9 +3969,22 @@ app.post('/admin/deletar-admin/:id', checkAdminAuth, async (req, res) => {
 
     await Admin.findByIdAndDelete(id);
     console.log('[INFO] Administrador deletado:', admin.username);
+    await logAdminAction(req, {
+      action: 'deletar_admin',
+      targetType: 'admin',
+      targetId: id,
+      metadata: { username: admin.username },
+    });
     
     return res.json({ success: true, message: 'Administrador deletado com sucesso.' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'deletar_admin',
+      targetType: 'admin',
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('[ERRO] Erro ao deletar administrador:', err.message);
     return res.status(500).json({ success: false, error: 'Erro ao deletar administrador: ' + err.message });
   }
@@ -3677,9 +4044,21 @@ app.post('/admin/criar-ejc', checkAdminAuth, async (req, res) => {
       return res.status(409).json({ success: false, error: 'Ja existe um EJC com este nome.' });
     }
 
-    await Ejc.create({ nome, nomeNormalizado });
+    const novoEjc = await Ejc.create({ nome, nomeNormalizado });
+    await logAdminAction(req, {
+      action: 'criar_ejc',
+      targetType: 'ejc',
+      targetId: novoEjc._id,
+      metadata: { nome: novoEjc.nome },
+    });
     return res.json({ success: true, message: 'EJC criado com sucesso.' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'criar_ejc',
+      targetType: 'ejc',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('Erro ao criar EJC:', err);
     return res.status(500).json({ success: false, error: 'Erro ao criar EJC.' });
   }
@@ -3720,8 +4099,21 @@ app.post('/admin/deletar-ejc/:id', checkAdminAuth, async (req, res) => {
     }
 
     await Ejc.findByIdAndDelete(id);
+    await logAdminAction(req, {
+      action: 'deletar_ejc',
+      targetType: 'ejc',
+      targetId: id,
+      metadata: { nome: ejc.nome, equipesRemovidas: nomesEquipes.length },
+    });
     return res.json({ success: true, message: 'EJC excluido com sucesso.' });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'deletar_ejc',
+      targetType: 'ejc',
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
     console.error('Erro ao deletar EJC:', err);
     return res.status(500).json({ success: false, error: 'Erro ao deletar EJC.' });
   }
@@ -4442,6 +4834,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async 
     importados: 0,
     atualizados: 0,
     ignoradosExistentes: 0,
+    ignoradosDuplicadosImportacao: 0,
     ignoradosSemCampos: 0,
     ignoradosSemFoto: 0,
     ignoradosTipoInvalido: 0,
@@ -4817,6 +5210,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async 
     // Em importacao por arquivo, assume "jovens" quando o tipo nao vier informado.
     const defaultTipoImportacao = sourceType === 'database' ? '' : 'jovens';
     const fallbackFotoImportacao = normalizeTextInput(fotoPadrao) || ensureImportPlaceholderImage();
+    const seenImportKeys = new Set();
 
     for (let index = 0; index < importRows.length; index += 1) {
       const rawRow = importRows[index];
@@ -4836,12 +5230,25 @@ app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async 
           summary.placeholdersEmail += 1;
         }
 
+        const dedupEmail = row.email && !String(row.email).includes('@pendente.local')
+          ? String(row.email).toLowerCase()
+          : '';
+        const dedupPhone = normalizePhoneDigits(row.telefone);
+        const dedupName = normalizeTextInput(row.nomeCompleto).toLowerCase();
+        const dedupKey = [dedupEmail || '-', dedupPhone || '-', dedupName || '-'].join('|');
+
+        if (seenImportKeys.has(dedupKey)) {
+          summary.ignoradosDuplicadosImportacao += 1;
+          continue;
+        }
+        seenImportKeys.add(dedupKey);
+
         if (!row.tipo) {
           summary.ignoradosTipoInvalido += 1;
           continue;
         }
 
-        const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email);
+        const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email, row.telefone);
 
         if (existente) {
           if (!atualizarExistentes) {
@@ -4872,6 +5279,16 @@ app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async 
       }
     }
 
+    await logAdminAction(req, {
+      action: 'importar_cadastros_encontreiros',
+      targetType: 'encontreiro',
+      metadata: {
+        sourceType,
+        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : '',
+        summary,
+      },
+    });
+
     return res.json({
       success: true,
       message: 'Importacao de encontreiros concluida.',
@@ -4880,6 +5297,15 @@ app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async 
       summary,
     });
   } catch (err) {
+    await logAdminAction(req, {
+      action: 'importar_cadastros_encontreiros',
+      targetType: 'encontreiro',
+      status: 'error',
+      metadata: {
+        erro: err.message,
+        sourceType: normalizeTextInput(req.body.sourceType),
+      },
+    });
     console.error('Erro ao importar encontreiros:', err);
     return res.status(500).json({
       success: false,

@@ -6,16 +6,24 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Bem-vindo ao EJC COP - Escolha seu tipo de inscrição" />
   <title>EJC COP - Escolha sua Inscrição</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-soft: #f7fbff;
-      --ink-main: #122942;
-      --ink-muted: #607995;
-      --line: rgba(146, 175, 205, 0.35);
-      --brand-blue: #1d63c6;
-      --brand-green: #168a5a;
-      --card-bg: rgba(255, 255, 255, 0.55);
-      --card-hover: rgba(255, 255, 255, 0.82);
+      --bg-primary: #090b14;
+      --bg-elevated: rgba(255, 255, 255, 0.045);
+      --bg-elevated-strong: rgba(255, 255, 255, 0.075);
+      --line: rgba(255, 255, 255, 0.11);
+      --line-strong: rgba(255, 255, 255, 0.2);
+      --ink-main: #f3f6ff;
+      --ink-muted: rgba(225, 233, 255, 0.75);
+      --brand-blue: #4f8fff;
+      --brand-cyan: #34d7ff;
+      --brand-green: #14b985;
+      --brand-violet: #7b61ff;
+      --shadow-soft: 0 20px 46px rgba(4, 8, 20, 0.45);
+      --shadow-glow: 0 0 42px rgba(79, 143, 255, 0.2);
     }
 
     * { box-sizing: border-box; }
@@ -27,48 +35,88 @@
 
     body {
       margin: 0;
-      font-family: 'Poppins', sans-serif;
+      font-family: 'Manrope', 'Segoe UI', sans-serif;
       color: var(--ink-main);
       min-height: 100vh;
       position: relative;
       overflow-x: hidden;
       background:
-        radial-gradient(circle at 15% 22%, #eef5ff 0%, transparent 40%),
-        radial-gradient(circle at 86% 9%, #effaf3 0%, transparent 34%),
-        #ffffff;
+        radial-gradient(circle at 12% 10%, rgba(79, 143, 255, 0.22) 0%, transparent 34%),
+        radial-gradient(circle at 88% 16%, rgba(123, 97, 255, 0.2) 0%, transparent 38%),
+        radial-gradient(circle at 48% 90%, rgba(20, 185, 133, 0.18) 0%, transparent 35%),
+        var(--bg-primary);
       padding: clamp(1rem, 2.6vw, 2.2rem);
       display: grid;
       place-items: center;
     }
 
-    .rose-rain {
+    .ambient-layer {
       position: fixed;
       inset: 0;
       pointer-events: none;
       z-index: 0;
-      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+      background-size: 58px 58px;
+      mask-image: radial-gradient(circle at 50% 50%, #000 45%, transparent 100%);
+      animation: gridDrift 24s linear infinite;
     }
 
-    .rose {
-      position: absolute;
-      top: -14vh;
-      left: var(--left);
-      font-size: var(--size);
-      opacity: 0;
-      filter: drop-shadow(0 2px 8px rgba(215, 45, 110, 0.42));
-      animation: fallRose var(--duration) linear var(--delay) infinite;
+    @keyframes gridDrift {
+      from { transform: translateY(0); }
+      to { transform: translateY(-58px); }
     }
 
-    @keyframes fallRose {
-      0% {
-        transform: translate3d(0, -8vh, 0) rotate(0deg);
-        opacity: 0;
-      }
-      12% { opacity: 1; }
-      100% {
-        transform: translate3d(var(--drift), 120vh, 0) rotate(320deg);
-        opacity: 0;
-      }
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(44px);
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.46;
+    }
+
+    .orb-a {
+      width: 280px;
+      height: 280px;
+      left: -70px;
+      top: 12%;
+      background: rgba(79, 143, 255, 0.4);
+      animation: orbA 15s ease-in-out infinite;
+    }
+
+    .orb-b {
+      width: 320px;
+      height: 320px;
+      right: -100px;
+      top: 24%;
+      background: rgba(123, 97, 255, 0.38);
+      animation: orbB 16s ease-in-out infinite;
+    }
+
+    .orb-c {
+      width: 260px;
+      height: 260px;
+      left: 38%;
+      bottom: -90px;
+      background: rgba(20, 185, 133, 0.28);
+      animation: orbC 18s ease-in-out infinite;
+    }
+
+    @keyframes orbA {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(24px, -14px) scale(1.08); }
+    }
+
+    @keyframes orbB {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(-20px, 16px) scale(1.04); }
+    }
+
+    @keyframes orbC {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(16px, -20px) scale(1.1); }
     }
 
     .home-shell {
@@ -76,9 +124,9 @@
       min-height: min(780px, calc(100vh - 3rem));
       border: 1px solid var(--line);
       border-radius: 28px;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      box-shadow: 0 24px 60px rgba(23, 52, 84, 0.16);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.03));
+      backdrop-filter: blur(20px);
+      box-shadow: var(--shadow-soft), var(--shadow-glow);
       overflow: hidden;
       position: relative;
       z-index: 2;
@@ -86,22 +134,32 @@
       grid-template-columns: 1.1fr 1fr;
     }
 
+    .home-shell::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(130deg, rgba(79, 143, 255, 0.08), transparent 44%, rgba(20, 185, 133, 0.06));
+      pointer-events: none;
+    }
+
     .hero {
       padding: clamp(1.7rem, 4vw, 3rem);
-      border-right: 1px solid rgba(157, 182, 211, 0.33);
+      border-right: 1px solid var(--line);
       background:
-        linear-gradient(175deg, rgba(255,255,255,0.58), rgba(250,253,255,0.45)),
+        linear-gradient(175deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)),
         repeating-linear-gradient(
           -45deg,
-          rgba(34, 91, 166, 0.06),
-          rgba(34, 91, 166, 0.06) 10px,
-          rgba(255, 255, 255, 0.07) 10px,
-          rgba(255, 255, 255, 0.07) 20px
+          rgba(79, 143, 255, 0.07),
+          rgba(79, 143, 255, 0.07) 10px,
+          rgba(255, 255, 255, 0.025) 10px,
+          rgba(255, 255, 255, 0.025) 20px
         );
       display: flex;
       flex-direction: column;
       justify-content: center;
       animation: revealIn 0.7s ease;
+      position: relative;
+      z-index: 1;
     }
 
     .brand-row {
@@ -118,8 +176,8 @@
       display: grid;
       place-items: center;
       color: #fff;
-      background: linear-gradient(140deg, #1f68ca, #173f7b);
-      box-shadow: 0 10px 18px rgba(28, 82, 159, 0.33);
+      background: linear-gradient(140deg, var(--brand-blue), var(--brand-violet));
+      box-shadow: 0 12px 24px rgba(79, 143, 255, 0.4);
     }
 
     .icon {
@@ -145,7 +203,7 @@
       font-size: 0.83rem;
       font-weight: 700;
       letter-spacing: 0.08em;
-      color: #4a6d91;
+      color: rgba(220, 232, 255, 0.78);
       text-transform: uppercase;
     }
 
@@ -153,13 +211,42 @@
       margin: 0 0 14px;
       line-height: 1.06;
       font-size: clamp(2.2rem, 4.8vw, 4rem);
-      font-weight: 800;
-      background: linear-gradient(120deg, #0f2a49 0%, #2268c7 52%, #1f9865 100%);
+      font-family: 'Sora', 'Manrope', sans-serif;
+      font-weight: 700;
+      background: linear-gradient(110deg, #e5eeff 0%, #7ab2ff 46%, #6ef0c7 100%);
       -webkit-background-clip: text;
       background-clip: text;
       -webkit-text-fill-color: transparent;
       letter-spacing: 0.01em;
       text-shadow: none;
+    }
+
+    .hero-subtitle {
+      margin: 0;
+      max-width: 520px;
+      font-size: 1rem;
+      line-height: 1.65;
+      color: var(--ink-muted);
+    }
+
+    .hero-metrics {
+      margin-top: 26px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .metric-chip {
+      border: 1px solid var(--line);
+      background: var(--bg-elevated);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.82rem;
+      color: rgba(232, 239, 255, 0.86);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      backdrop-filter: blur(8px);
     }
 
     .actions {
@@ -170,18 +257,20 @@
       gap: 14px;
       animation: revealIn 0.8s ease;
       background:
-        radial-gradient(circle at 12% 10%, rgba(49, 112, 201, 0.12), transparent 44%),
-        linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(250, 253, 255, 0.72));
+        radial-gradient(circle at 12% 10%, rgba(79, 143, 255, 0.18), transparent 44%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.03));
+      position: relative;
+      z-index: 1;
     }
 
     .logo-wrap {
       text-align: center;
       margin-bottom: 8px;
-      border: 1px solid rgba(145, 173, 205, 0.25);
+      border: 1px solid var(--line);
       border-radius: 16px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 251, 255, 0.84));
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
       padding: 14px 12px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
     }
 
     .welcome-brand {
@@ -191,28 +280,44 @@
       object-fit: contain;
       display: block;
       margin: 0 auto;
-      filter: drop-shadow(0 6px 12px rgba(15, 44, 75, 0.22));
+      filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.38));
     }
 
     .choice-card {
       border-radius: 16px;
-      border: 1px solid rgba(145, 173, 205, 0.28);
-      background: var(--card-bg);
-      color: #143453;
+      border: 1px solid var(--line);
+      background: var(--bg-elevated);
+      color: var(--ink-main);
       text-decoration: none;
       display: flex;
       align-items: center;
       gap: 14px;
       padding: 16px 15px;
       transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .choice-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at var(--mx, 80%) var(--my, 0%), rgba(255, 255, 255, 0.19), transparent 46%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
     }
 
     .choice-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 14px 28px rgba(29, 70, 113, 0.18);
-      border-color: rgba(152, 185, 218, 0.68);
-      background: var(--card-hover);
-      color: #102b45;
+      transform: translateY(-4px);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.3);
+      border-color: var(--line-strong);
+      background: var(--bg-elevated-strong);
+      color: #ffffff;
+    }
+
+    .choice-card:hover::after {
+      opacity: 1;
     }
 
     .choice-icon {
@@ -227,13 +332,13 @@
     }
 
     .choice-card.encontrista .choice-icon {
-      background: linear-gradient(140deg, var(--brand-blue), #1b4684);
-      box-shadow: 0 10px 17px rgba(24, 79, 153, 0.33);
+      background: linear-gradient(140deg, var(--brand-blue), var(--brand-violet));
+      box-shadow: 0 10px 17px rgba(79, 143, 255, 0.37);
     }
 
     .choice-card.encontreiro .choice-icon {
-      background: linear-gradient(140deg, var(--brand-green), #1a6547);
-      box-shadow: 0 10px 17px rgba(22, 112, 74, 0.33);
+      background: linear-gradient(140deg, var(--brand-green), #0a7861);
+      box-shadow: 0 10px 17px rgba(20, 185, 133, 0.37);
     }
 
     .choice-content {
@@ -245,19 +350,19 @@
       display: block;
       font-size: 1.04rem;
       font-weight: 800;
-      color: #183b5d;
+      color: #f0f5ff;
       margin-bottom: 1px;
     }
 
     .choice-description {
       display: block;
       font-size: 0.85rem;
-      color: #5a7591;
+      color: rgba(219, 230, 255, 0.7);
       line-height: 1.4;
     }
 
     .choice-arrow {
-      color: #5c7fa3;
+      color: rgba(220, 230, 255, 0.78);
       font-size: 1rem;
       flex: 0 0 auto;
     }
@@ -277,9 +382,9 @@
       align-items: center;
       gap: 8px;
       text-decoration: none;
-      color: #2e567e;
-      border: 1px dashed rgba(153, 186, 220, 0.7);
-      background: rgba(245, 251, 255, 0.95);
+      color: rgba(235, 241, 255, 0.86);
+      border: 1px dashed rgba(255, 255, 255, 0.27);
+      background: rgba(255, 255, 255, 0.045);
       border-radius: 999px;
       padding: 9px 14px;
       font-size: 0.85rem;
@@ -288,9 +393,9 @@
     }
 
     .admin-link a:hover {
-      background: #edf6ff;
-      color: #1d4670;
-      border-color: rgba(126, 167, 207, 0.9);
+      background: rgba(79, 143, 255, 0.14);
+      color: #ffffff;
+      border-color: rgba(79, 143, 255, 0.52);
     }
 
     @keyframes revealIn {
@@ -312,11 +417,11 @@
 
       .hero {
         border-right: none;
-        border-bottom: 1px solid #deebf8;
+        border-bottom: 1px solid var(--line);
       }
 
-      .hero-points {
-        grid-template-columns: 1fr;
+      .hero-metrics {
+        gap: 8px;
       }
     }
 
@@ -338,29 +443,20 @@
       .choice-title {
         font-size: 0.98rem;
       }
+
+      .orb-a,
+      .orb-b,
+      .orb-c {
+        opacity: 0.3;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="rose-rain" aria-hidden="true">
-    <span class="rose" style="--left: 2%; --size: 19px; --duration: 8.2s; --delay: -1.4s; --drift: 28px;">&#127801;</span>
-    <span class="rose" style="--left: 8%; --size: 24px; --duration: 9.1s; --delay: -3.7s; --drift: -22px;">&#127801;</span>
-    <span class="rose" style="--left: 14%; --size: 18px; --duration: 8.8s; --delay: -5.1s; --drift: 24px;">&#127801;</span>
-    <span class="rose" style="--left: 19%; --size: 22px; --duration: 9.6s; --delay: -2.8s; --drift: -28px;">&#127801;</span>
-    <span class="rose" style="--left: 25%; --size: 26px; --duration: 8.4s; --delay: -6.3s; --drift: 34px;">&#127801;</span>
-    <span class="rose" style="--left: 31%; --size: 19px; --duration: 9.9s; --delay: -4.6s; --drift: -20px;">&#127801;</span>
-    <span class="rose" style="--left: 37%; --size: 25px; --duration: 8.6s; --delay: -7.4s; --drift: 26px;">&#127801;</span>
-    <span class="rose" style="--left: 43%; --size: 21px; --duration: 10.1s; --delay: -1.9s; --drift: -24px;">&#127801;</span>
-    <span class="rose" style="--left: 49%; --size: 24px; --duration: 8.9s; --delay: -5.8s; --drift: 31px;">&#127801;</span>
-    <span class="rose" style="--left: 55%; --size: 18px; --duration: 9.3s; --delay: -2.2s; --drift: -17px;">&#127801;</span>
-    <span class="rose" style="--left: 61%; --size: 27px; --duration: 8.1s; --delay: -6.9s; --drift: 36px;">&#127801;</span>
-    <span class="rose" style="--left: 67%; --size: 20px; --duration: 10.4s; --delay: -3.3s; --drift: -23px;">&#127801;</span>
-    <span class="rose" style="--left: 73%; --size: 23px; --duration: 8.7s; --delay: -8.2s; --drift: 28px;">&#127801;</span>
-    <span class="rose" style="--left: 79%; --size: 19px; --duration: 9.7s; --delay: -2.7s; --drift: -30px;">&#127801;</span>
-    <span class="rose" style="--left: 85%; --size: 25px; --duration: 8.3s; --delay: -5.4s; --drift: 24px;">&#127801;</span>
-    <span class="rose" style="--left: 91%; --size: 21px; --duration: 10.2s; --delay: -7.1s; --drift: -21px;">&#127801;</span>
-    <span class="rose" style="--left: 96%; --size: 19px; --duration: 9.4s; --delay: -1.6s; --drift: 22px;">&#127801;</span>
-  </div>
+  <div class="ambient-layer" aria-hidden="true"></div>
+  <div class="orb orb-a" aria-hidden="true"></div>
+  <div class="orb orb-b" aria-hidden="true"></div>
+  <div class="orb orb-c" aria-hidden="true"></div>
 
   <main class="home-shell" role="main">
     <section class="hero">
@@ -370,6 +466,24 @@
       </div>
 
       <h1 class="hero-title">Bem-vindo ao EJC COP</h1>
+      <p class="hero-subtitle">
+        Escolha seu tipo de acesso para entrar na jornada do encontro com uma experiencia fluida, moderna e segura.
+      </p>
+
+      <div class="hero-metrics">
+        <span class="metric-chip">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2 4 5v6c0 5.2 3.4 9.9 8 11 4.6-1.1 8-5.8 8-11V5l-8-3Zm0 2.1 6 2.2V11c0 4.3-2.7 8.2-6 9.3-3.3-1.1-6-5-6-9.3V6.3l6-2.2Z"/></svg>
+          Plataforma segura
+        </span>
+        <span class="metric-chip">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v5.6l4 2.4-1 1.7L11 13.8V7h2Z"/></svg>
+          Acesso imediato
+        </span>
+        <span class="metric-chip">
+          <svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 3v14h10V5H7Z"/></svg>
+          Mobile friendly
+        </span>
+      </div>
     </section>
 
     <section class="actions">
@@ -403,5 +517,17 @@
       </div>
     </section>
   </main>
+
+  <script>
+    document.querySelectorAll('.choice-card').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', `${x}%`);
+        card.style.setProperty('--my', `${y}%`);
+      });
+    });
+  </script>
 </body>
 </html>

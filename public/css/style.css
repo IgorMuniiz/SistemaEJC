@@ -7,26 +7,27 @@
    ---------------------------------------------------------------------------- */
 :root {
   /* Cores Primárias */
-  --color-primary: #2563eb;
-  --color-primary-dark: #1e40af;
-  --color-success: #10b981;
-  --color-success-dark: #059669;
+  --color-primary: #4e8eff;
+  --color-primary-dark: #3a72da;
+  --color-success: #2dd4a6;
+  --color-success-dark: #1aa47f;
+  --color-violet: #7b67ff;
   
   /* Cores de Texto */
-  --color-text-light: #fff;
-  --color-text-gray: #cbd5e1;
-  --color-text-dark: #333;
+  --color-text-light: #f7f9ff;
+  --color-text-gray: #b9c7e8;
+  --color-text-dark: #17233d;
   
   /* Backgrounds */
-  --bg-gradient: linear-gradient(120deg, #0f172a, #1e3a8a);
-  --bg-card: rgba(255, 255, 255, 0.10);
+  --bg-gradient: linear-gradient(140deg, #070b16, #0f1730 58%, #111e34);
+  --bg-card: rgba(255, 255, 255, 0.08);
   --bg-white: #ffffff;
   
   /* Sombras */
-  --shadow-sm: 0 2px 8px rgba(37, 99, 235, 0.08);
-  --shadow-md: 0 4px 12px rgba(37, 99, 235, 0.15);
-  --shadow-lg: 0 4px 24px rgba(30, 58, 138, 0.12);
-  --shadow-form: 0 4px 20px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 6px 16px rgba(2, 6, 20, 0.22);
+  --shadow-md: 0 12px 24px rgba(8, 14, 34, 0.32);
+  --shadow-lg: 0 18px 42px rgba(4, 10, 24, 0.42);
+  --shadow-form: 0 24px 52px rgba(2, 7, 18, 0.5);
   
   /* Bordas */
   --radius-sm: 8px;
@@ -44,7 +45,8 @@
   --spacing-3xl: 48px;
   
   /* Fontes */
-  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-display: 'Sora', 'Manrope', sans-serif;
   --font-size-sm: 0.95rem;
   --font-size-base: 1rem;
   --font-size-md: 1.1rem;
@@ -73,6 +75,108 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  color: var(--color-text-light);
+  position: relative;
+  overflow-x: hidden;
+}
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(46px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+body::before {
+  width: 300px;
+  height: 300px;
+  top: 10%;
+  left: -80px;
+  background: rgba(78, 142, 255, 0.35);
+}
+
+body::after {
+  width: 340px;
+  height: 340px;
+  right: -110px;
+  top: 18%;
+  background: rgba(123, 103, 255, 0.3);
+}
+
+.portal-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.portal-grid {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px);
+  background-size: 58px 58px;
+  mask-image: radial-gradient(circle at 50% 44%, #000 42%, transparent 100%);
+  opacity: 0.6;
+  animation: portalGridDrift 24s linear infinite;
+}
+
+.portal-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(48px);
+  opacity: 0.45;
+}
+
+.portal-orb-a {
+  width: 300px;
+  height: 300px;
+  top: 8%;
+  left: -70px;
+  background: rgba(78, 142, 255, 0.32);
+  animation: portalOrbA 14s ease-in-out infinite;
+}
+
+.portal-orb-b {
+  width: 320px;
+  height: 320px;
+  top: 20%;
+  right: -90px;
+  background: rgba(123, 103, 255, 0.28);
+  animation: portalOrbB 16s ease-in-out infinite;
+}
+
+.portal-orb-c {
+  width: 260px;
+  height: 260px;
+  left: 36%;
+  bottom: -90px;
+  background: rgba(45, 212, 166, 0.24);
+  animation: portalOrbC 17s ease-in-out infinite;
+}
+
+@keyframes portalGridDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(-58px); }
+}
+
+@keyframes portalOrbA {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(22px, -14px) scale(1.08); }
+}
+
+@keyframes portalOrbB {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-18px, 14px) scale(1.04); }
+}
+
+@keyframes portalOrbC {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(14px, -18px) scale(1.08); }
 }
 
 /* ----------------------------------------------------------------------------
@@ -173,11 +277,133 @@ h1 {
 /* ----------------------------------------------------------------------------
    FORMULÁRIOS - DESIGN SAAS PROFISSIONAL
    ---------------------------------------------------------------------------- */
+
+.portal-page {
+  align-items: stretch;
+}
+
 #root {
   width: 100%;
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 20px;
+  max-width: 980px;
+  margin: 24px auto;
+  padding: 24px;
+}
+
+.portal-header {
+  max-width: 980px;
+  margin: 0 auto;
+  width: 100%;
+  position: relative;
+  padding-top: 48px;
+}
+
+.portal-header-main {
+  margin-bottom: 18px;
+}
+
+.portal-eyebrow {
+  margin-bottom: 10px;
+  color: var(--color-text-gray);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
+.portal-header h1 {
+  margin-bottom: 8px;
+  font-family: var(--font-display);
+}
+
+.portal-header .lead {
+  color: var(--color-text-gray);
+  margin-bottom: 0;
+}
+
+.portal-back-link {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  text-decoration: none;
+  color: var(--color-text-light);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 999px;
+  font-weight: 600;
+  transition: all var(--transition-normal) ease;
+}
+
+.portal-back-link:hover {
+  color: #fff;
+  transform: translateY(-1px);
+  border-color: rgba(78, 142, 255, 0.52);
+  background: rgba(78, 142, 255, 0.18);
+}
+
+.form-progress-shell {
+  margin: 0 auto;
+  max-width: 760px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 12px 14px;
+  backdrop-filter: blur(8px);
+}
+
+.form-progress-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--color-text-gray);
+  font-size: 0.86rem;
+}
+
+.form-progress-head strong {
+  color: #fff;
+}
+
+.form-progress-track {
+  width: 100%;
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.form-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%);
+  transition: width 0.35s ease;
+}
+
+.form-progress-shell small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.78rem;
+}
+
+.form-shell {
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.form-shell-body {
+  position: relative;
+}
+
+.form-shell-body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.36), transparent);
 }
 
 /* Container do formulário */
@@ -190,16 +416,29 @@ h1 {
 
 /* Card do formulário com glassmorphism */
 .form-card {
-  background: rgba(15, 23, 42, 0.85) !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04)),
+    linear-gradient(140deg, rgba(78, 142, 255, 0.1), rgba(123, 103, 255, 0.08)) !important;
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 24px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+  border-radius: 26px !important;
   padding: 0 !important;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5) !important;
+  box-shadow: var(--shadow-form) !important;
 }
 
 .form-card .card-body {
   padding: 48px 56px !important;
+}
+
+.form-card .card-title,
+.form-card h1,
+.form-card h2,
+.form-card h3,
+.form-card h4,
+.form-card h5,
+.form-card h6 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 /* Botões de tipo de inscrição */
@@ -225,9 +464,9 @@ h1 {
 }
 
 .tipo-btn.btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%) !important;
   border-color: transparent !important;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 10px 22px rgba(78, 142, 255, 0.35) !important;
 }
 
 /* Grupos de formulário */
@@ -254,8 +493,8 @@ h1 {
 .form-select {
   width: 100%;
   padding: 14px 18px !important;
-  background: rgba(255, 255, 255, 0.05) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.1) !important;
+  background: rgba(7, 15, 34, 0.55) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.16) !important;
   border-radius: 10px !important;
   font-size: 15px !important;
   color: #fff !important;
@@ -269,9 +508,9 @@ h1 {
 .form-control:focus,
 .form-select:focus {
   outline: none !important;
-  background: rgba(255, 255, 255, 0.08) !important;
-  border-color: #667eea !important;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15) !important;
+  background: rgba(9, 18, 40, 0.72) !important;
+  border-color: #4e8eff !important;
+  box-shadow: 0 0 0 4px rgba(78, 142, 255, 0.16) !important;
 }
 
 /* Input groups */
@@ -303,7 +542,7 @@ textarea.form-control {
 
 /* Botões primários */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%) !important;
   border: none !important;
   color: #fff !important;
   padding: 16px 32px !important;
@@ -311,12 +550,12 @@ textarea.form-control {
   font-weight: 600 !important;
   font-size: 16px !important;
   transition: all 0.3s ease !important;
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4) !important;
+  box-shadow: 0 10px 22px rgba(78, 142, 255, 0.38) !important;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5) !important;
+  box-shadow: 0 14px 30px rgba(78, 142, 255, 0.46) !important;
 }
 
 .btn-primary:active {
@@ -350,6 +589,17 @@ textarea.form-control {
   padding: 16px 20px !important;
   margin-bottom: 24px !important;
   font-size: 14px !important;
+}
+
+.form-alert {
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+.form-alert-title {
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .alert-danger {
@@ -403,10 +653,11 @@ textarea.form-control {
   color: rgba(255, 255, 255, 0.95);
   font-size: 18px;
   font-weight: 700;
+  font-family: var(--font-display);
   margin-top: 32px;
   margin-bottom: 20px;
   padding-bottom: 12px;
-  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  border-bottom: 2px solid rgba(78, 142, 255, 0.34);
   display: flex;
   align-items: center;
   gap: 10px;
@@ -417,7 +668,7 @@ textarea.form-control {
 }
 
 .form-section-title i {
-  color: #667eea;
+  color: #4e8eff;
   font-size: 20px;
 }
 
@@ -473,7 +724,7 @@ textarea.form-control {
   width: 60px;
   height: 60px;
   border: 4px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #667eea;
+  border-top-color: #4e8eff;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -482,12 +733,239 @@ textarea.form-control {
   to { transform: rotate(360deg); }
 }
 
+/* Tela de sucesso do app React */
+.success-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(7, 11, 22, 0.9);
+  overflow: hidden;
+  z-index: 2000;
+  padding: 20px;
+  opacity: 1;
+  transition: opacity 0.28s ease;
+}
+
+.success-screen.is-exiting {
+  opacity: 0;
+}
+
+.success-screen-bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  pointer-events: none;
+  opacity: 0.42;
+}
+
+.success-card {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 620px;
+  text-align: center;
+  padding: 44px 52px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9)),
+    linear-gradient(125deg, rgba(78, 142, 255, 0.15), rgba(123, 103, 255, 0.13));
+  box-shadow: 0 30px 80px rgba(3, 9, 24, 0.4);
+  animation: successEnter 0.55s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+.success-screen.is-exiting .success-card {
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+}
+
+.success-icon {
+  font-size: 68px;
+  margin-bottom: 16px;
+  color: #4e8eff;
+  filter: drop-shadow(0 8px 16px rgba(78, 142, 255, 0.32));
+  animation: successFloat 2.1s ease-in-out infinite;
+}
+
+.success-title {
+  margin: 0 0 10px;
+  font-family: var(--font-display);
+  font-size: clamp(1.9rem, 5vw, 2.7rem);
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.success-subtitle {
+  margin: 0 0 10px;
+  font-size: 1.08rem;
+  color: #324260;
+  font-weight: 600;
+}
+
+.success-description {
+  margin: 0 0 24px;
+  color: #5d6f90;
+  line-height: 1.65;
+}
+
+.success-note {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 22px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(78, 142, 255, 0.26);
+  background: linear-gradient(135deg, rgba(78, 142, 255, 0.1), rgba(123, 103, 255, 0.08));
+  color: #3e67b8;
+  font-weight: 600;
+}
+
+.success-action {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(78, 142, 255, 0.42);
+  transition: transform 0.24s ease, box-shadow 0.24s ease;
+}
+
+.success-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(78, 142, 255, 0.5);
+}
+
+@keyframes successEnter {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes successFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
 /* ----------------------------------------------------------------------------
    FOOTER
    ---------------------------------------------------------------------------- */
 footer {
   margin-top: auto;
   width: 100%;
+}
+
+.portal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(8, 14, 29, 0.74);
+  color: var(--color-text-gray);
+  backdrop-filter: blur(10px);
+}
+
+.portal-footer small {
+  letter-spacing: 0.02em;
+}
+
+.portal-success-page {
+  justify-content: center;
+  padding: 24px;
+}
+
+.portal-success-shell {
+  width: 100%;
+  max-width: 740px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05)),
+    linear-gradient(130deg, rgba(78, 142, 255, 0.2), rgba(123, 103, 255, 0.14));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 26px 56px rgba(4, 10, 24, 0.5);
+  padding: 40px clamp(20px, 4vw, 44px);
+  text-align: center;
+  animation: successCardEnter 0.55s ease;
+}
+
+.portal-success-icon {
+  width: 86px;
+  height: 86px;
+  margin: 0 auto 18px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 2.2rem;
+  color: #fff;
+  background: linear-gradient(135deg, #4e8eff, #2dd4a6);
+  box-shadow: 0 14px 30px rgba(45, 212, 166, 0.3);
+}
+
+.portal-success-title {
+  margin: 0 0 10px;
+  font-size: clamp(1.9rem, 4vw, 2.5rem);
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+}
+
+.portal-success-text {
+  margin: 0 auto 24px;
+  max-width: 560px;
+  color: var(--color-text-gray);
+  line-height: 1.7;
+}
+
+.portal-success-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-glass {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.btn-glass:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+@keyframes successCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ----------------------------------------------------------------------------
@@ -520,6 +998,48 @@ footer {
   /* Responsividade dos formulários */
   #root {
     padding: 12px;
+  }
+
+  .portal-header {
+    padding-top: 54px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .portal-back-link {
+    right: 12px;
+  }
+
+  .success-card {
+    padding: 30px 22px;
+    border-radius: 18px;
+  }
+
+  .success-icon {
+    font-size: 54px;
+  }
+
+  .success-description {
+    font-size: 0.95rem;
+  }
+
+  .portal-success-shell {
+    border-radius: 18px;
+    padding: 28px 18px;
+  }
+
+  .portal-success-icon {
+    width: 72px;
+    height: 72px;
+    font-size: 1.9rem;
+  }
+
+  .portal-success-actions {
+    flex-direction: column;
+  }
+
+  .portal-success-actions .btn {
+    width: 100%;
   }
 
   .form-card .card-body {

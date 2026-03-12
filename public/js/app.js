@@ -64,6 +64,7 @@ function GenericForm() {
     email: '',
     temRelacionamento: '',
     instagram: '',
+    lgpdConsentimento: false,
     foto: null,
     observacoes: '',
   });
@@ -85,6 +86,7 @@ function GenericForm() {
       email: '',
       temRelacionamento: '',
       instagram: '',
+      lgpdConsentimento: false,
       foto: null,
       observacoes: '',
     },
@@ -105,6 +107,7 @@ function GenericForm() {
       email: '',
       temRelacionamento: '',
       instagram: '',
+      lgpdConsentimento: false,
       foto: null,
       observacoes: '',
     },
@@ -113,6 +116,7 @@ function GenericForm() {
   const [tiosModo, setTiosModo] = useState('casal');
   const [errors, setErrors] = useState([]);
   const [success, setSuccess] = useState(false);
+  const [successLeaving, setSuccessLeaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -128,7 +132,11 @@ function GenericForm() {
   });
 
   const handleChange = (e) => {
-    const { name, value, options, multiple } = e.target;
+    const { name, value, options, multiple, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData((prev) => ({ ...prev, [name]: checked }));
+      return;
+    }
     if (multiple) {
       const selectedValues = Array.from(options)
         .filter((opt) => opt.selected)
@@ -144,7 +152,14 @@ function GenericForm() {
   };
 
   const handleTiosChange = (pessoa, e) => {
-    const { name, value, options, multiple } = e.target;
+    const { name, value, options, multiple, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setTiosData((prev) => ({
+        ...prev,
+        [pessoa]: { ...prev[pessoa], [name]: checked },
+      }));
+      return;
+    }
     if (multiple) {
       const selectedValues = Array.from(options)
         .filter((opt) => opt.selected)
@@ -286,184 +301,63 @@ function GenericForm() {
   };
 
   if (success) {
-    console.log('[INFO] Renderizando página de sucesso - VERSAO IMG TAG');
-    return (
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#1a1a1a',
-        overflow: 'hidden',
-        zIndex: 2000,
-        fontFamily: 'Poppins, sans-serif'
-      }}>
-        <img 
-          src="/images/tema.png" 
-          alt="tema" 
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            objectPosition: 'center',
-            zIndex: 1,
-            pointerEvents: 'none'
-          }}
-        />
-        
-        <style>{`
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateY(30px);
-            }
-            to {
-              opacity: 1;
-              transform: translateY(0);
-            }
-          }
-          
-          @keyframes pulse {
-            0%, 100% {
-              transform: scale(1);
-            }
-            50% {
-              transform: scale(1.1);
-            }
-          }
-          
-          @keyframes bounce {
-            0%, 100% {
-              transform: translateY(0);
-            }
-            50% {
-              transform: translateY(-20px);
-            }
-          }
-        `}</style>
+    console.log('[INFO] Renderizando tela de sucesso');
 
-        <div style={{
-          textAlign: 'center',
-          color: 'white',
-          padding: '40px 60px',
-          background: 'rgba(255, 255, 255, 0.98)',
-          borderRadius: '20px',
-          maxWidth: '600px',
-          width: '100%',
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-          animation: 'slideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)',
-          backdropFilter: 'blur(10px)',
-          color: '#333',
-          position: 'relative',
-          zIndex: 10
-        }}>
-          <div style={{
-            fontSize: '80px',
-            marginBottom: '20px',
-            display: 'block',
-            animation: 'bounce 2s ease-in-out infinite',
-            filter: 'drop-shadow(0 4px 8px rgba(102, 126, 234, 0.4))',
-            textShadow: '0 2px 4px rgba(0,0,0,0.2)'
-          }}>
-            OK
+    const successContent = isEncontro
+      ? (tipo === 'tios'
+          ? {
+              title: 'Inscricao dos Tios Confirmada!',
+              subtitle: tiosModo === 'casal' ? 'Cadastro de casal concluido com sucesso' : 'Cadastro de tio solo concluido com sucesso',
+              description: 'Recebemos as informacoes e sua participacao no encontro foi registrada. Em breve voce recebera os proximos passos.',
+              note: 'Dados dos tios validados e gravados no sistema',
+            }
+          : {
+              title: 'Inscricao de Encontreiro Confirmada!',
+              subtitle: 'Tudo certo com seu cadastro para o encontro',
+              description: 'Seu envio foi concluido com sucesso. Agora nossa equipe seguira com a organizacao e retornara com orientacoes.',
+              note: 'Cadastro de encontro registrado com sucesso',
+            })
+      : {
+          title: 'Inscricao Confirmada!',
+          subtitle: 'Obrigado por sua inscricao no EJC COP',
+          description: 'Seus dados foram enviados com sucesso. Aguarde a confirmacao para as proximas etapas do evento.',
+          note: 'Dados registrados no banco de dados',
+        };
+
+    return (
+      <div className={`success-screen${successLeaving ? ' is-exiting' : ''}`} role="status" aria-live="polite">
+        <img src="/images/tema.png" alt="tema" className="success-screen-bg" />
+
+        <div className="success-card">
+          <div className="success-icon" aria-hidden="true">
+            <i className="fas fa-circle-check"></i>
           </div>
-          
-          <h1 style={{
-            marginBottom: '15px',
-            fontSize: '42px',
-            fontWeight: '700',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text',
-            letterSpacing: '-0.5px'
-          }}>
-            Inscrição Confirmada!
-          </h1>
-          
-          <p style={{
-            marginBottom: '10px',
-            fontSize: '18px',
-            color: '#666',
-            fontWeight: '500'
-          }}>
-            Obrigado por sua inscrição
-          </p>
-          
-          <p style={{
-            marginBottom: '40px',
-            fontSize: '15px',
-            color: '#999',
-            lineHeight: '1.6'
-          }}>
-            Seus dados foram enviados com sucesso. Aguarde a confirmação para as próximas etapas do evento.
-          </p>
-          
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: '1fr',
-            gap: '12px',
-            marginBottom: '30px'
-          }}>
-            <div style={{
-              padding: '15px',
-              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%)',
-              borderRadius: '12px',
-              border: '1px solid rgba(102, 126, 234, 0.2)',
-              color: '#667eea',
-              fontSize: '14px'
-            }}>
-              <i className="fas fa-check-circle" style={{marginRight: '8px'}}></i>
-              Dados registrados no banco de dados
-            </div>
+
+          <h1 className="success-title">{successContent.title}</h1>
+
+          <p className="success-subtitle">{successContent.subtitle}</p>
+
+          <p className="success-description">{successContent.description}</p>
+
+          <div className="success-note">
+            <i className="fas fa-database"></i>
+            {successContent.note}
           </div>
-          
+
           <button
-            style={{
-              padding: '14px 36px',
-              fontSize: '16px',
-              fontWeight: '600',
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 8px 20px rgba(102, 126, 234, 0.4)',
-              width: '100%',
-              letterSpacing: '0.5px'
-            }}
-            onMouseEnter={(e) => {
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.boxShadow = '0 12px 28px rgba(102, 126, 234, 0.5)';
-            }}
-            onMouseLeave={(e) => {
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.boxShadow = '0 8px 20px rgba(102, 126, 234, 0.4)';
-            }}
-            onMouseDown={(e) => {
-              console.log('[INFO] Botão pressionado');
-              e.preventDefault();
-            }}
-            onClick={(e) => {
-              console.log('[INFO] Botão clicado - redirecionando para', isEncontro ? '/encontro' : '/inscricao');
+            type="button"
+            className="success-action"
+            onClick={() => {
+              if (successLeaving) return;
+              setSuccessLeaving(true);
               const url = isEncontro ? '/encontro' : '/inscricao';
-              console.log('[INFO] Redirecionando para:', url);
-              setTimeout(() => {
+              window.setTimeout(() => {
                 window.location.href = url;
-              }, 100);
+              }, 320);
             }}
           >
-            <i className="fas fa-plus-circle" style={{marginRight: '8px'}}></i>
-            Fazer nova inscrição
+            <i className="fas fa-plus-circle"></i>
+            Fazer nova inscricao
           </button>
         </div>
       </div>
@@ -1114,9 +1008,62 @@ function GenericForm() {
             rows="3"
           ></textarea>
         </div>
+        <div className="mb-3 form-check">
+          <input
+            className="form-check-input"
+            type="checkbox"
+            id={`lgpdConsentimento-${pessoa || 'unico'}`}
+            name="lgpdConsentimento"
+            checked={!!data.lgpdConsentimento}
+            onChange={handleCh}
+            required
+          />
+          <label className="form-check-label" htmlFor={`lgpdConsentimento-${pessoa || 'unico'}`}>
+            Declaro que li e autorizo o tratamento dos meus dados conforme a LGPD.
+          </label>
+        </div>
       </>
     );
   };
+
+  const getProgressState = () => {
+    const fieldsToTrack = ['nomeCompleto', 'comoQuerSerChamado', 'genero', 'dataNascimento', 'telefone', 'email'];
+
+    const countFilled = (data) => {
+      let filled = fieldsToTrack.reduce((acc, field) => {
+        const value = data[field];
+        return acc + (value && String(value).trim() !== '' ? 1 : 0);
+      }, 0);
+      if (data.foto) filled += 1;
+      if (data.lgpdConsentimento) filled += 1;
+      return filled;
+    };
+
+    if (isEncontro && tipo === 'tios') {
+      const pessoas = tiosModo === 'casal' ? ['pessoa1', 'pessoa2'] : ['pessoa1'];
+      const total = pessoas.length * (fieldsToTrack.length + 2);
+      const filled = pessoas.reduce((acc, pessoa) => acc + countFilled(tiosData[pessoa]), 0);
+      const percent = Math.max(5, Math.min(100, Math.round((filled / total) * 100)));
+      return {
+        filled,
+        total,
+        percent,
+        label: tiosModo === 'casal' ? 'Cadastro de casal' : 'Cadastro de tio solo',
+      };
+    }
+
+    const total = fieldsToTrack.length + 2;
+    const filled = countFilled(formData);
+    const percent = Math.max(5, Math.min(100, Math.round((filled / total) * 100)));
+    return {
+      filled,
+      total,
+      percent,
+      label: isEncontro ? 'Inscrição de encontro' : 'Inscrição de encontrista',
+    };
+  };
+
+  const progress = getProgressState();
 
   return (
     <>
@@ -1125,19 +1072,30 @@ function GenericForm() {
           <div className="loader" aria-hidden="true"></div>
         </div>
       )}
-      <header className="text-white mb-5" style={{position: 'relative', paddingTop: '60px'}}>
-        <a href="/" className="btn btn-outline-light" style={{position: 'absolute', top: '0', right: '0', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '10px', fontWeight: '600', transition: 'all 0.3s ease'}}>
+      <header className="portal-header mb-4">
+        <a href="/" className="portal-back-link" aria-label="Voltar para a página inicial">
           <i className="fas fa-arrow-left"></i>
           Voltar
         </a>
-        <div className="text-center">
+        <div className="portal-header-main text-center">
+          <p className="portal-eyebrow">EJC COP Digital Experience</p>
           <h1 className="display-5 fw-bold">{isEncontro ? 'Inscrição para Encontro' : 'Inscrição EJC'}</h1>
           <p className="lead">{isEncontro ? 'Forneça as informações para participar do encontro.' : 'Preencha seus dados abaixo e junte-se ao evento.'}</p>
         </div>
+        <div className="form-progress-shell" aria-label="Progresso do preenchimento">
+          <div className="form-progress-head">
+            <span>{progress.label}</span>
+            <strong>{progress.percent}%</strong>
+          </div>
+          <div className="form-progress-track" role="progressbar" aria-valuenow={progress.percent} aria-valuemin="0" aria-valuemax="100">
+            <div className="form-progress-fill" style={{ width: `${progress.percent}%` }}></div>
+          </div>
+          <small>{progress.filled} de {progress.total} pontos essenciais preenchidos</small>
+        </div>
       </header>
       <div className="container form-stage d-flex justify-content-center align-items-start" style={{minHeight: '60vh'}}>
-        <div className="card shadow-lg w-100 form-card" style={{maxWidth: '680px'}}>
-          <div className="card-body">
+        <div className="card shadow-lg w-100 form-card form-shell" style={{maxWidth: '760px'}}>
+          <div className="card-body form-shell-body">
             <>
               {isEncontro && (
                 <>
@@ -1181,7 +1139,11 @@ function GenericForm() {
 
             <form onSubmit={handleSubmit} encType="multipart/form-data" aria-busy={submitting ? 'true' : 'false'}>
               {errors.length > 0 && (
-                <div className="alert alert-danger">
+                <div className="alert alert-danger form-alert" role="alert">
+                  <div className="form-alert-title">
+                    <i className="fas fa-triangle-exclamation me-2"></i>
+                    Verifique os campos abaixo
+                  </div>
                   <ul>
                     {errors.map((e, i) => (
                       <li key={i}>{e.msg}</li>
@@ -1214,9 +1176,11 @@ function GenericForm() {
               (isEncontro && tipo === 'tios' && (
                 !tiosData.pessoa1.nomeCompleto || !tiosData.pessoa1.email || !tiosData.pessoa1.foto ||
                 !tiosData.pessoa1.genero || !tiosData.pessoa1.comoQuerSerChamado ||
-                (tiosModo === 'casal' && (!tiosData.pessoa2.nomeCompleto || !tiosData.pessoa2.email || !tiosData.pessoa2.foto || !tiosData.pessoa2.genero || !tiosData.pessoa2.comoQuerSerChamado))
+                !tiosData.pessoa1.lgpdConsentimento ||
+                (tiosModo === 'casal' && (!tiosData.pessoa2.nomeCompleto || !tiosData.pessoa2.email || !tiosData.pessoa2.foto || !tiosData.pessoa2.genero || !tiosData.pessoa2.comoQuerSerChamado || !tiosData.pessoa2.lgpdConsentimento))
               )) ||
-              (isEncontro && tipo !== 'tios' && (!formData.foto || !formData.genero || !formData.comoQuerSerChamado))
+              (isEncontro && tipo !== 'tios' && (!formData.foto || !formData.genero || !formData.comoQuerSerChamado || !formData.lgpdConsentimento)) ||
+              (!isEncontro && !formData.lgpdConsentimento)
             }
           >
             {submitting ? (

@@ -4,1024 +4,463 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Dashboard do Administrador" />
-  <title>Admin - Dashboard</title>
-    <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <meta name="description" content="Painel de Aprovação EJC Admin" />
+  <title>Aprovações — EJC Admin</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/admin-saas.css">
-  <style>
-    body {
-      background-color: #0a0a0f;
-      font-family: 'Inter', sans-serif;
-    }
-
-    .navbar-admin {
-      background: linear-gradient(120deg, #16324f 0%, #1f4f7a 50%, #2b6a99 100%);
-      box-shadow: 0 8px 24px rgba(9, 24, 39, 0.25);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-      padding: 12px 0;
-    }
-
-    .brand-wrap {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #fff;
-    }
-
-    .brand-icon {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.22);
-      font-size: 1.1rem;
-    }
-
-    .brand-title {
-      font-weight: 700;
-      font-size: 1.05rem;
-      line-height: 1.1;
-      margin: 0;
-      letter-spacing: 0.2px;
-    }
-
-    .brand-subtitle {
-      margin: 2px 0 0;
-      font-size: 0.78rem;
-      color: rgba(255, 255, 255, 0.82);
-      font-weight: 500;
-      letter-spacing: 0.15px;
-    }
-
-    .admin-user {
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 600;
-    }
-
-    .admin-badge {
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      border-radius: 999px;
-      padding: 6px 12px;
-      font-size: 0.78rem;
-      color: #fff;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .btn-logout {
-      background-color: rgba(255, 255, 255, 0.2);
-      color: white;
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      padding: 8px 20px;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      display: inline-block;
-      font-weight: 600;
-    }
-
-    .btn-logout:hover {
-      background-color: rgba(255, 255, 255, 0.3);
-      color: white;
-      transform: translateY(-1px);
-    }
-
-    .dashboard-header {
-      background: rgba(26, 26, 32, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 20px;
-      padding: 32px 40px;
-      margin-bottom: 32px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 24px;
-      flex-wrap: wrap;
-    }
-
-    .dashboard-title {
-      color: #fff;
-      font-weight: 800;
-      font-size: 2.2rem;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .dashboard-subtitle {
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 0.95rem;
-      margin: 0;
-    }
-
-    .dashboard-status {
-      background: rgba(16, 185, 129, 0.15);
-      color: #34d399;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-      padding: 10px 18px;
-      border-radius: 12px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 20px;
-      margin-bottom: 32px;
-    }
-
-    .stat-card {
-      background: rgba(26, 26, 32, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 32px;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-    }
-
-    .stat-card:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    .stat-number {
-      font-size: 2.8rem;
-      font-weight: 800;
-      margin-bottom: 8px;
-      color: #fff;
-    }
-
-    .stat-label {
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 0.95rem;
-      font-weight: 600;
-    }
-
-    .stat-pending {
-      border-left: 4px solid #f59e0b;
-    }
-
-    .stat-pending .stat-number {
-      color: #fbbf24;
-    }
-
-    .stat-approved {
-      border-left: 4px solid #10b981;
-    }
-
-    .stat-approved .stat-number {
-      color: #34d399;
-    }
-
-    .stat-rejected {
-      border-left: 4px solid #ef4444;
-    }
-
-    .stat-rejected .stat-number {
-      color: #f87171;
-    }
-
-    .section-title {
-      color: #fff;
-      font-weight: 800;
-      font-size: 1.6rem;
-      margin-bottom: 24px;
-      padding-bottom: 18px;
-      border-bottom: 2px solid rgba(102, 126, 234, 0.3);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .section-title i {
-      color: #667eea;
-      font-size: 1.4rem;
-    }
-
-    .registration-card {
-      background: rgba(26, 26, 32, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-      transition: all 0.3s ease;
-      margin-bottom: 18px;
-      border-left: 4px solid #f59e0b;
-    }
-
-    .registration-card.approved {
-      border-left-color: #10b981;
-    }
-
-    .registration-card.rejected {
-      border-left-color: #ef4444;
-    }
-
-    .registration-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-
-    .card-header-admin {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      padding: 24px;
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .card-photo {
-      width: 70px;
-      height: 70px;
-      border-radius: 12px;
-      object-fit: cover;
-      background-color: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .card-info {
-      flex: 1;
-    }
-
-    .card-name {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: #fff;
-      margin-bottom: 5px;
-    }
-
-    .card-detail {
-      font-size: 0.85rem;
-      color: rgba(255, 255, 255, 0.6);
-      margin-bottom: 3px;
-    }
-
-    .card-body-admin {
-      padding: 24px;
-    }
-
-    .detail-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 24px;
-      margin-bottom: 12px;
-    }
-
-    .detail-item {
-      font-size: 0.9rem;
-    }
-
-    .detail-label {
-      color: rgba(255, 255, 255, 0.5);
-      font-weight: 600;
-      margin-bottom: 6px;
-      font-size: 0.8rem;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .detail-value {
-      color: rgba(255, 255, 255, 0.9);
-      font-weight: 500;
-      word-break: break-word;
-    }
-
-    .card-actions {
-      padding: 24px;
-      background: rgba(255, 255, 255, 0.02);
-      border-top: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      gap: 12px;
-    }
-
-    .btn-approve, .btn-disapprove {
-      flex: 1;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-size: 0.9rem;
-      border: 1.5px solid transparent;
-    }
-
-    .btn-approve {
-      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-      color: white;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-    }
-
-    .btn-approve:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
-    }
-
-    .btn-disapprove {
-      background: rgba(239, 68, 68, 0.1);
-      color: #f87171;
-      border-color: rgba(239, 68, 68, 0.3);
-    }
-
-    .btn-disapprove:hover {
-      background: rgba(239, 68, 68, 0.2);
-      border-color: #f87171;
-      transform: translateY(-2px);
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 80px 20px;
-      color: rgba(255, 255, 255, 0.5);
-    }
-
-    .empty-state-icon {
-      font-size: 4rem;
-      margin-bottom: 20px;
-      color: rgba(255, 255, 255, 0.2);
-    }
-
-    .empty-state-title {
-      font-size: 1.4rem;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 10px;
-    }
-
-    .approval-group {
-      margin-bottom: 32px;
-      background: rgba(26, 26, 32, 0.6);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
-      overflow: hidden;
-      transition: all 0.3s ease;
-    }
-
-    .approval-group:hover {
-      border-color: rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
-    }
-
-    .approval-group-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      background: rgba(255, 255, 255, 0.03);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 18px 24px;
-    }
-
-    .approval-group-title {
-      margin: 0;
-      font-size: 1.2rem;
-      font-weight: 700;
-      color: #fff;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .approval-group-title i {
-      color: #667eea;
-    }
-
-    .approval-group-body {
-      padding: 24px;
-    }
-
-    .approval-columns {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px;
-    }
-
-    .approval-column-title {
-      margin: 0 0 18px;
-      font-size: 1rem;
-      font-weight: 700;
-      color: rgba(255, 255, 255, 0.9);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .counter-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(102, 126, 234, 0.15);
-      color: #a5b4fc;
-      border: 1px solid rgba(102, 126, 234, 0.3);
-      border-radius: 999px;
-      padding: 8px 14px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .export-group-actions {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .export-btn {
-      background: rgba(255, 255, 255, 0.05);
-      color: rgba(255, 255, 255, 0.7);
-      border: 1.5px solid rgba(255, 255, 255, 0.1);
-      border-radius: 10px;
-      padding: 8px 14px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      white-space: nowrap;
-    }
-
-    .export-btn:hover {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: #fff;
-      border-color: transparent;
-      transform: translateY(-2px);
-      text-decoration: none;
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-    }
-
-    @media (max-width: 768px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .approval-columns {
-        grid-template-columns: 1fr;
-      }
-
-      .detail-row {
-        grid-template-columns: 1fr;
-      }
-
-      .card-actions {
-        flex-direction: column;
-      }
-
-      .approval-group-header {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .export-group-actions {
-        flex-wrap: wrap;
-        width: 100%;
-      }
-
-      .export-btn {
-        font-size: 0.75rem;
-        padding: 7px 12px;
-      }
-
-      .dashboard-header {
-        padding: 24px 20px;
-        flex-direction: column;
-      }
-
-      .dashboard-title {
-        font-size: 1.8rem;
-      }
-
-      .stat-number {
-        font-size: 2.2rem;
-      }
-    }
-  </style>
 </head>
-<body class="admin-panel">
-  <div class="admin-background"></div>
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg" style="background: rgba(26, 26, 32, 0.95); backdrop-filter: blur(20px); border-bottom: 1px solid rgba(255, 255, 255, 0.08); position: sticky; top: 0; z-index: 1000;">
-    <div class="container-fluid">
-      <div class="brand-wrap">
-        <div class="card-icon" style="width: 42px; height: 42px; font-size: 1.1rem;">
-          <i class="fas fa-shield-alt"></i>
-        </div>
-        <div>
-          <p class="brand-title" style="color: var(--neutral-50); margin: 0; font-weight: 700; font-size: 1.05rem;">EJC Painel Administrativo</p>
-          <p class="brand-subtitle" style="color: var(--neutral-400); margin: 0; font-size: 0.8rem;">Gestão de inscrições e aprovações</p>
-        </div>
-      </div>
-      <div class="d-flex align-items-center gap-3">
-        <a href="/" class="btn-saas btn-saas-secondary btn-sm"><i class="fas fa-house me-1"></i>Início</a>
-        <a href="/admin/gerenciar-cadastros" class="btn-saas btn-saas-secondary btn-sm"><i class="fas fa-table-columns me-1"></i>Painel</a>
-        <span class="user-info-badge">
-          <i class="fas fa-user-circle me-2"></i><%= adminUsername %>
-        </span>
-        <a href="/admin/logout" class="logout-btn">
-          <i class="fas fa-sign-out-alt me-2"></i>Sair
-        </a>
-      </div>
-    </div>
-  </nav>
+<body class="admin-panel admin-dashboard-page">
+  <div class="db-bg" aria-hidden="true"></div>
 
-  <!-- Mensagens de Feedback -->
-  <% if (typeof mensagemSucesso !== 'undefined' && mensagemSucesso) { %>
-    <div class="container mt-3">
-      <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle me-2"></i><strong>Sucesso!</strong> <%= mensagemSucesso %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    </div>
-  <% } %>
-  <% if (typeof mensagemErro !== 'undefined' && mensagemErro) { %>
-    <div class="container mt-3">
-      <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i><strong>Erro!</strong> <%= mensagemErro %>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    </div>
-  <% } %>
-
-  <!-- Main Content -->
-  <div class="container mt-5 mb-5">
-    <!-- Header -->
-    <div class="dashboard-header">
+  <!-- ── TOPBAR ── -->
+  <header class="topbar">
+    <a class="topbar-brand" href="/admin">
+      <div class="topbar-logo"><i class="fas fa-shield-halved"></i></div>
       <div>
-        <h1 class="dashboard-title"><i class="fas fa-tasks me-2"></i>Painel de Aprova&ccedil;&atilde;o</h1>
-        <p class="dashboard-subtitle">Gerenciamento separado de inscri&ccedil;&otilde;es de encontristas e encontreiros</p>
+        <div class="topbar-name">EJC Admin</div>
+        <div class="topbar-sub">Painel Administrativo</div>
       </div>
-      <div class="d-flex gap-2 align-items-center">
-        <a href="/admin/gerenciar-cadastros" class="btn btn-primary">
-          <i class="fas fa-users-cog me-2"></i>Gerenciar Cadastros
-        </a>
-        <div class="dashboard-status">
-          <i class="fas fa-circle-check me-2"></i>Fluxo de aprova&ccedil;&atilde;o ativo
+    </a>
+    <nav class="topbar-nav">
+      <a href="/" class="topbar-link"><i class="fas fa-house"></i>Início</a>
+      <a href="/admin/gerenciar-cadastros" class="topbar-link"><i class="fas fa-table-columns"></i>Cadastros</a>
+      <span class="topbar-user"><i class="fas fa-user-circle"></i><%= adminUsername %></span>
+      <a href="/admin/logout" class="topbar-logout"><i class="fas fa-arrow-right-from-bracket"></i>Sair</a>
+    </nav>
+  </header>
+
+  <!-- ── MAIN ── -->
+  <main class="db-wrap">
+
+    <!-- Toasts -->
+    <div class="db-toast-area">
+      <% if (typeof mensagemSucesso !== 'undefined' && mensagemSucesso) { %>
+        <div class="db-toast success" role="alert">
+          <i class="fas fa-circle-check"></i>
+          <span><strong>Sucesso!</strong> <%= mensagemSucesso %></span>
+          <button class="db-toast-close" onclick="this.closest('.db-toast').remove()" aria-label="Fechar">&times;</button>
         </div>
+      <% } %>
+      <% if (typeof mensagemErro !== 'undefined' && mensagemErro) { %>
+        <div class="db-toast error" role="alert">
+          <i class="fas fa-triangle-exclamation"></i>
+          <span><strong>Erro!</strong> <%= mensagemErro %></span>
+          <button class="db-toast-close" onclick="this.closest('.db-toast').remove()" aria-label="Fechar">&times;</button>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Page Header -->
+    <div class="db-header">
+      <div>
+        <h1 class="db-header-title">Painel de Aprovação</h1>
+        <p class="db-header-sub">Gerencie inscrições de encontristas e encontreiros em tempo real</p>
+      </div>
+      <div class="db-header-actions">
+        <a href="/admin/gerenciar-cadastros" class="btn-action btn-action-primary">
+          <i class="fas fa-users-cog"></i>Gerenciar Cadastros
+        </a>
+        <span class="live-badge"><span class="live-dot"></span>Fluxo ativo</span>
       </div>
     </div>
 
     <!-- Stats -->
-    <div class="stats-grid">
-      <div class="stat-card stat-pending">
-        <div class="stat-number"><%= totalPendentesEncontristas + totalPendentesEncontreiros %></div>
-        <div class="stat-label">Pendentes Totais</div>
+    <div class="stats-row">
+      <div class="stat-tile amber-tile">
+        <div class="stat-tile-icon amber"><i class="fas fa-clock"></i></div>
+        <div>
+          <div class="stat-tile-num"><%= totalPendentesEncontristas + totalPendentesEncontreiros %></div>
+          <div class="stat-tile-lbl">Pendentes</div>
+        </div>
       </div>
-      <div class="stat-card stat-approved">
-        <div class="stat-number"><%= totalAprovadosEncontristas + totalAprovadosEncontreiros %></div>
-        <div class="stat-label">Aprovados Totais</div>
+      <div class="stat-tile green-tile">
+        <div class="stat-tile-icon green"><i class="fas fa-circle-check"></i></div>
+        <div>
+          <div class="stat-tile-num"><%= totalAprovadosEncontristas + totalAprovadosEncontreiros %></div>
+          <div class="stat-tile-lbl">Aprovados</div>
+        </div>
       </div>
-      <div class="stat-card stat-rejected">
-        <div class="stat-number"><%= totalReprovadosEncontristas + totalReprovadosEncontreiros %></div>
-        <div class="stat-label">Reprovados Totais</div>
+      <div class="stat-tile red-tile">
+        <div class="stat-tile-icon red"><i class="fas fa-circle-xmark"></i></div>
+        <div>
+          <div class="stat-tile-num"><%= totalReprovadosEncontristas + totalReprovadosEncontreiros %></div>
+          <div class="stat-tile-lbl">Reprovados</div>
+        </div>
+      </div>
+      <div class="stat-tile blue-tile">
+        <div class="stat-tile-icon blue"><i class="fas fa-users"></i></div>
+        <div>
+          <div class="stat-tile-num"><%= (totalPendentesEncontristas + totalAprovadosEncontristas + totalReprovadosEncontristas) + (totalPendentesEncontreiros + totalAprovadosEncontreiros + totalReprovadosEncontreiros) %></div>
+          <div class="stat-tile-lbl">Total Geral</div>
+        </div>
       </div>
     </div>
 
-    <section class="approval-group">
-      <div class="approval-group-header">
-        <h2 class="approval-group-title"><i class="fas fa-user me-2"></i>Inscri&ccedil;&otilde;es de Encontristas</h2>
-        <div class="counter-pill">
-          Pendentes: <%= totalPendentesEncontristas %> | Aprovados: <%= totalAprovadosEncontristas %> | Reprovados: <%= totalReprovadosEncontristas %>
+    <!-- ───────── ENCONTRISTAS ───────── -->
+    <section class="section-panel">
+      <div class="section-panel-head">
+        <h2 class="section-panel-title"><i class="fas fa-user-graduate"></i>Encontristas</h2>
+        <div class="section-meta">
+          <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontristas %> pendente(s)</span>
+          <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontristas %> aprovado(s)</span>
+          <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontristas %> reprovado(s)</span>
         </div>
-        <div class="export-group-actions">
-          <a href="/export?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
-            <i class="fas fa-file-pdf me-1"></i>PDF
-          </a>
-          <a href="/export-encontrista-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relat&oacute;rio em Excel">
-            <i class="fas fa-table me-1"></i>Relat&oacute;rio
-          </a>
-          <a href="/export-images-encontristas" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
-            <i class="fas fa-file-archive me-1"></i>Imagens
-          </a>
+        <div class="export-row">
+          <a href="/export?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
+          <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
+          <a href="/export-images-encontristas" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
       </div>
-      <div class="approval-group-body">
-        <div class="approval-columns">
-          <div>
-            <h3 class="approval-column-title">Pendentes</h3>
-            <% if (pendentesEncontristas.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao pendente</div>
-              </div>
-            <% } else { %>
-              <% pendentesEncontristas.forEach(registro => { %>
-                <div class="registration-card">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
-                    </div>
-                  </div>
-                  <div class="card-body-admin">
-                    <div class="detail-row">
-                      <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value"><%= registro.email %></div></div>
-                      <div class="detail-item"><div class="detail-label">Telefone</div><div class="detail-value"><%= registro.telefone %></div></div>
-                    </div>
-                    <div class="detail-row">
-                      <div class="detail-item"><div class="detail-label">Logradouro</div><div class="detail-value"><%= registro.logradouro %></div></div>
-                      <div class="detail-item"><div class="detail-label">Bairro</div><div class="detail-value"><%= registro.bairro %></div></div>
-                      <div class="detail-item"><div class="detail-label">Data de Nascimento</div><div class="detail-value"><%= new Date(registro.dataNascimento).toLocaleDateString('pt-BR') %></div></div>
-                    </div>
-                  </div>
-                  <div class="card-actions">
-                    <button class="btn-approve" type="button" onclick="aprovarCadastro('<%= registro._id %>', 'encontrista')"><i class="fas fa-check me-2"></i>Aprovar</button>
-                  </div>
-                </div>
-              <% }); %>
-            <% } %>
-          </div>
 
-          <div>
-            <h3 class="approval-column-title">Aprovados</h3>
-            <% if (aprovadosEncontristas.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao aprovada</div>
-              </div>
-            <% } else { %>
-              <% aprovadosEncontristas.forEach(registro => { %>
-                <div class="registration-card approved">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
+      <div class="kanban-board">
+        <!-- Pendentes -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label amber"><span class="dot"></span>Pendentes</span>
+            <span class="kanban-count"><%= pendentesEncontristas.length %></span>
+          </div>
+          <% if (pendentesEncontristas.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição pendente</p>
+            </div>
+          <% } else { %>
+            <% pendentesEncontristas.forEach(r => { %>
+              <div class="pcard amber-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
                     </div>
                   </div>
-                  <div class="card-actions">
-                    <button class="btn-disapprove" type="button" onclick="desaprovarCadastro('<%= registro._id %>', 'encontrista')"><i class="fas fa-times me-2"></i>Desaprovar</button>
-                  </div>
                 </div>
-              <% }); %>
-            <% } %>
-          </div>
+                <div class="pcard-details">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                  <div><div class="pcard-field-lbl">Logradouro</div><div class="pcard-field-val"><%= r.logradouro %></div></div>
+                  <div><div class="pcard-field-lbl">Bairro</div><div class="pcard-field-val"><%= r.bairro %></div></div>
+                  <div><div class="pcard-field-lbl">Nascimento</div><div class="pcard-field-val"><%= new Date(r.dataNascimento).toLocaleDateString('pt-BR') %></div></div>
+                </div>
+                <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-check"></i>Aprovar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
 
-          <div>
-            <h3 class="approval-column-title">Reprovados</h3>
-            <% if (reprovadosEncontristas.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao reprovada</div>
-              </div>
-            <% } else { %>
-              <% reprovadosEncontristas.forEach(registro => { %>
-                <div class="registration-card">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
+        <!-- Aprovados -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label green"><span class="dot"></span>Aprovados</span>
+            <span class="kanban-count"><%= aprovadosEncontristas.length %></span>
+          </div>
+          <% if (aprovadosEncontristas.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição aprovada</p>
+            </div>
+          <% } else { %>
+            <% aprovadosEncontristas.forEach(r => { %>
+              <div class="pcard green-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
                     </div>
                   </div>
-                  <div class="card-actions">
-                    <button class="btn-approve" type="button" onclick="aprovarCadastro('<%= registro._id %>', 'encontrista')"><i class="fas fa-check me-2"></i>Aprovar</button>
-                  </div>
                 </div>
-              <% }); %>
-            <% } %>
-          </div>
+                <div class="pcard-actions">
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-xmark"></i>Desaprovar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
 
-          <div>
-            <h3 class="approval-column-title">Reprovados</h3>
-            <% if (reprovadosEncontreiros.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao reprovada</div>
-              </div>
-            <% } else { %>
-              <% reprovadosEncontreiros.forEach(registro => { %>
-                <div class="registration-card">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-users me-2"></i><%= registro.tipo === 'tios' ? 'Tios' : 'Jovens' %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
+        <!-- Reprovados -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label red"><span class="dot"></span>Reprovados</span>
+            <span class="kanban-count"><%= reprovadosEncontristas.length %></span>
+          </div>
+          <% if (reprovadosEncontristas.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição reprovada</p>
+            </div>
+          <% } else { %>
+            <% reprovadosEncontristas.forEach(r => { %>
+              <div class="pcard red-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
                     </div>
                   </div>
-                  <div class="card-actions">
-                    <button class="btn-approve" type="button" onclick="aprovarCadastro('<%= registro._id %>', 'encontreiro')"><i class="fas fa-check me-2"></i>Aprovar</button>
-                  </div>
                 </div>
-              <% }); %>
-            <% } %>
-          </div>
+                <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-rotate-left"></i>Reativar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
         </div>
       </div>
     </section>
 
-    <section class="approval-group">
-      <div class="approval-group-header">
-        <h2 class="approval-group-title"><i class="fas fa-users me-2"></i>Inscri&ccedil;&otilde;es de Encontreiros</h2>
-        <div class="counter-pill">
-          Pendentes: <%= totalPendentesEncontreiros %> | Aprovados: <%= totalAprovadosEncontreiros %> | Reprovados: <%= totalReprovadosEncontreiros %>
+    <!-- ───────── ENCONTREIROS ───────── -->
+    <section class="section-panel">
+      <div class="section-panel-head">
+        <h2 class="section-panel-title"><i class="fas fa-people-group"></i>Encontreiros</h2>
+        <div class="section-meta">
+          <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontreiros %> pendente(s)</span>
+          <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontreiros %> aprovado(s)</span>
+          <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontreiros %> reprovado(s)</span>
         </div>
-        <div class="export-group-actions">
-          <a href="/export-encontro?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
-            <i class="fas fa-file-pdf me-1"></i>PDF
-          </a>
-          <a href="/export-encontro-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relat&oacute;rio em Excel">
-            <i class="fas fa-table me-1"></i>Relat&oacute;rio
-          </a>
-          <a href="/export-images-encontreiros" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
-            <i class="fas fa-file-archive me-1"></i>Imagens
-          </a>
+        <div class="export-row">
+          <a href="/export-encontro?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
+          <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
+          <a href="/export-images-encontreiros" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
       </div>
-      <div class="approval-group-body">
-        <div class="approval-columns">
-          <div>
-            <h3 class="approval-column-title">Pendentes</h3>
-            <% if (pendentesEncontreiros.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao pendente</div>
-              </div>
-            <% } else { %>
-              <% pendentesEncontreiros.forEach(registro => { %>
-                <div class="registration-card">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-users me-2"></i><%= registro.tipo === 'tios' ? 'Tios' : 'Jovens' %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
-                    </div>
-                  </div>
-                  <div class="card-body-admin">
-                    <div class="detail-row">
-                      <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value"><%= registro.email %></div></div>
-                      <div class="detail-item"><div class="detail-label">Telefone</div><div class="detail-value"><%= registro.telefone %></div></div>
-                    </div>
-                    <div class="detail-row">
-                      <div class="detail-item"><div class="detail-label">Logradouro</div><div class="detail-value"><%= registro.logradouro %></div></div>
-                      <div class="detail-item"><div class="detail-label">Bairro</div><div class="detail-value"><%= registro.bairro %></div></div>
-                      <div class="detail-item"><div class="detail-label">Data de Nascimento</div><div class="detail-value"><%= new Date(registro.dataNascimento).toLocaleDateString('pt-BR') %></div></div>
-                    </div>
-                  </div>
-                  <div class="card-actions">
-                    <button class="btn-approve" type="button" onclick="aprovarCadastro('<%= registro._id %>', 'encontreiro')"><i class="fas fa-check me-2"></i>Aprovar</button>
-                  </div>
-                </div>
-              <% }); %>
-            <% } %>
-          </div>
 
-          <div>
-            <h3 class="approval-column-title">Aprovados</h3>
-            <% if (aprovadosEncontreiros.length === 0) { %>
-              <div class="empty-state">
-                <div class="empty-state-icon"><i class="fas fa-inbox"></i></div>
-                <div class="empty-state-title">Nenhuma inscricao aprovada</div>
-              </div>
-            <% } else { %>
-              <% aprovadosEncontreiros.forEach(registro => { %>
-                <div class="registration-card approved">
-                  <div class="card-header-admin">
-                    <% if (registro.foto) { %>
-                      <img src="/img/uploads/<%= encodeURIComponent(registro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= registro.nomeCompleto %>" class="card-photo" />
-                    <% } else { %>
-                      <div class="card-photo" style="display: flex; align-items: center; justify-content: center;">
-                        <i class="fas fa-user" style="font-size: 2rem; color: #999;"></i>
-                      </div>
-                    <% } %>
-                    <div class="card-info">
-                      <div class="card-name"><%= registro.nomeCompleto %></div>
-                      <div class="card-detail"><i class="fas fa-church me-2"></i><%= registro.ejc %></div>
-                      <div class="card-detail"><i class="fas fa-users me-2"></i><%= registro.tipo === 'tios' ? 'Tios' : 'Jovens' %></div>
-                      <div class="card-detail"><i class="fas fa-calendar me-2"></i><%= new Date(registro.dataCadastro).toLocaleDateString('pt-BR') %></div>
+      <div class="kanban-board">
+        <!-- Pendentes -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label amber"><span class="dot"></span>Pendentes</span>
+            <span class="kanban-count"><%= pendentesEncontreiros.length %></span>
+          </div>
+          <% if (pendentesEncontreiros.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição pendente</p>
+            </div>
+          <% } else { %>
+            <% pendentesEncontreiros.forEach(r => { %>
+              <div class="pcard amber-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-users"></i><%= r.tipo === 'tios' ? 'Tios' : 'Jovens' %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
                     </div>
                   </div>
-                  <div class="card-actions">
-                    <button class="btn-disapprove" type="button" onclick="desaprovarCadastro('<%= registro._id %>', 'encontreiro')"><i class="fas fa-times me-2"></i>Desaprovar</button>
+                </div>
+                <div class="pcard-details">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                  <div><div class="pcard-field-lbl">Logradouro</div><div class="pcard-field-val"><%= r.logradouro %></div></div>
+                  <div><div class="pcard-field-lbl">Bairro</div><div class="pcard-field-val"><%= r.bairro %></div></div>
+                  <div><div class="pcard-field-lbl">Nascimento</div><div class="pcard-field-val"><%= new Date(r.dataNascimento).toLocaleDateString('pt-BR') %></div></div>
+                </div>
+                <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-check"></i>Aprovar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Aprovados -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label green"><span class="dot"></span>Aprovados</span>
+            <span class="kanban-count"><%= aprovadosEncontreiros.length %></span>
+          </div>
+          <% if (aprovadosEncontreiros.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição aprovada</p>
+            </div>
+          <% } else { %>
+            <% aprovadosEncontreiros.forEach(r => { %>
+              <div class="pcard green-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-users"></i><%= r.tipo === 'tios' ? 'Tios' : 'Jovens' %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
+                    </div>
                   </div>
                 </div>
-              <% }); %>
-            <% } %>
+                <div class="pcard-actions">
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-xmark"></i>Desaprovar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+        </div>
+
+        <!-- Reprovados -->
+        <div class="kanban-col">
+          <div class="kanban-col-head">
+            <span class="kanban-col-label red"><span class="dot"></span>Reprovados</span>
+            <span class="kanban-count"><%= reprovadosEncontreiros.length %></span>
           </div>
+          <% if (reprovadosEncontreiros.length === 0) { %>
+            <div class="empty-col">
+              <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
+              <p class="empty-col-text">Nenhuma inscrição reprovada</p>
+            </div>
+          <% } else { %>
+            <% reprovadosEncontreiros.forEach(r => { %>
+              <div class="pcard red-card">
+                <div class="pcard-top">
+                  <div class="pcard-avatar">
+                    <% if (r.foto) { %>
+                      <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
+                    <% } else { %><i class="fas fa-user"></i><% } %>
+                  </div>
+                  <div>
+                    <div class="pcard-name"><%= r.nomeCompleto %></div>
+                    <div class="pcard-meta">
+                      <span><i class="fas fa-church"></i><%= r.ejc %></span>
+                      <span><i class="fas fa-users"></i><%= r.tipo === 'tios' ? 'Tios' : 'Jovens' %></span>
+                      <span><i class="fas fa-calendar-days"></i><%= new Date(r.dataCadastro).toLocaleDateString('pt-BR') %></span>
+                    </div>
+                  </div>
+                </div>
+                <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-rotate-left"></i>Reativar</button>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
         </div>
       </div>
     </section>
-  </div>
+
+  </main>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script>
+    /* ── Modal helper ────────────────────────────────────────── */
     function ensureAppPopup() {
-      let modalElement = document.getElementById('app-popup-modal');
-      if (modalElement) {
-        return {
-          element: modalElement,
-          instance: bootstrap.Modal.getOrCreateInstance(modalElement),
-        };
-      }
-
-      modalElement = document.createElement('div');
-      modalElement.className = 'modal fade';
-      modalElement.id = 'app-popup-modal';
-      modalElement.tabIndex = -1;
-      modalElement.setAttribute('aria-hidden', 'true');
-      modalElement.innerHTML = `
+      let el = document.getElementById('app-popup-modal');
+      if (el) return { element: el, instance: bootstrap.Modal.getOrCreateInstance(el) };
+      el = document.createElement('div');
+      el.className = 'modal fade';
+      el.id = 'app-popup-modal';
+      el.tabIndex = -1;
+      el.setAttribute('aria-hidden', 'true');
+      el.innerHTML = `
         <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg">
+          <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="app-popup-title">Aviso</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body">
-              <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
+              <p id="app-popup-message" class="mb-0" style="white-space:pre-line;"></p>
             </div>
             <div class="modal-footer">
               <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
               <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
             </div>
           </div>
-        </div>
-      `;
-      document.body.appendChild(modalElement);
-
-      return {
-        element: modalElement,
-        instance: bootstrap.Modal.getOrCreateInstance(modalElement),
-      };
+        </div>`;
+      document.body.appendChild(el);
+      return { element: el, instance: bootstrap.Modal.getOrCreateInstance(el) };
     }
 
     function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary' }) {
       const { element, instance } = ensureAppPopup();
-      const titleEl = element.querySelector('#app-popup-title');
-      const messageEl = element.querySelector('#app-popup-message');
+      element.querySelector('#app-popup-title').textContent = title || 'Aviso';
+      element.querySelector('#app-popup-message').textContent = message || '';
       const confirmBtn = element.querySelector('#app-popup-confirm');
-      const cancelBtn = element.querySelector('#app-popup-cancel');
-
-      titleEl.textContent = title || 'Aviso';
-      messageEl.textContent = message || '';
+      const cancelBtn  = element.querySelector('#app-popup-cancel');
       confirmBtn.textContent = confirmText;
       confirmBtn.className = `btn btn-${tone}`;
+      cancelBtn.style.display = cancelText ? '' : 'none';
+      if (cancelText) cancelBtn.textContent = cancelText;
 
-      if (cancelText) {
-        cancelBtn.style.display = '';
-        cancelBtn.textContent = cancelText;
-      } else {
-        cancelBtn.style.display = 'none';
-      }
-
-      return new Promise((resolve) => {
+      return new Promise(resolve => {
         let resolved = false;
-
         const cleanup = () => {
           confirmBtn.removeEventListener('click', onConfirm);
           cancelBtn.removeEventListener('click', onCancel);
           element.removeEventListener('hidden.bs.modal', onHidden);
         };
-
-        const settle = (value) => {
-          if (resolved) return;
-          resolved = true;
-          cleanup();
-          resolve(value);
-        };
-
-        const onConfirm = () => {
-          settle(true);
-          instance.hide();
-        };
-
-        const onCancel = () => {
-          settle(false);
-          instance.hide();
-        };
-
-        const onHidden = () => settle(false);
-
+        const settle = v => { if (resolved) return; resolved = true; cleanup(); resolve(v); };
+        const onConfirm = () => { settle(true);  instance.hide(); };
+        const onCancel  = () => { settle(false); instance.hide(); };
+        const onHidden  = () => settle(false);
         confirmBtn.addEventListener('click', onConfirm);
         cancelBtn.addEventListener('click', onCancel);
         element.addEventListener('hidden.bs.modal', onHidden, { once: true });
-
         instance.show();
       });
     }
 
-    async function appAlert(message, tone = 'primary', title = 'Aviso') {
-      await showAppPopup({ title, message, confirmText: 'Entendi', tone });
-    }
+    const appAlert   = (msg, tone = 'primary', title = 'Aviso') =>
+      showAppPopup({ title, message: msg, confirmText: 'Entendi', tone });
+    const appConfirm = (msg, title = 'Confirmação') =>
+      showAppPopup({ title, message: msg, confirmText: 'Confirmar', cancelText: 'Cancelar', tone: 'warning' });
 
-    async function appConfirm(message, title = 'Confirmacao') {
-      return await showAppPopup({
-        title,
-        message,
-        confirmText: 'Confirmar',
-        cancelText: 'Cancelar',
-        tone: 'warning',
-      });
-    }
-
+    /* ── Actions ─────────────────────────────────────────────── */
     async function aprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovacao')) return;
-
+      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovação')) return;
       try {
-        const response = await fetch('/admin/aprovar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, tipoLista })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          await appAlert('Cadastro aprovado com sucesso.', 'success', 'Sucesso');
-          location.reload();
-        } else {
-          await appAlert('Erro: ' + (data.error || 'Falha ao aprovar'), 'danger', 'Erro');
-        }
-      } catch (error) {
-        console.error('Erro na requisicao:', error);
-        await appAlert('Erro ao aprovar: ' + error.message, 'danger', 'Erro');
-      }
+        const res  = await fetch('/admin/aprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
+        const data = await res.json();
+        if (data.success) { await appAlert('Cadastro aprovado com sucesso.', 'success', 'Sucesso'); location.reload(); }
+        else await appAlert('Erro: ' + (data.error || 'Falha ao aprovar'), 'danger', 'Erro');
+      } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }
 
     async function desaprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja DESAPROVAR este cadastro?', 'Confirmar desaprovacao')) return;
-
+      if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprovação')) return;
       try {
-        const response = await fetch('/admin/desaprovar', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id, tipoLista })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-          await appAlert('Cadastro desaprovado com sucesso.', 'success', 'Sucesso');
-          location.reload();
-        } else {
-          await appAlert('Erro: ' + (data.error || 'Falha ao desaprovar'), 'danger', 'Erro');
-        }
-      } catch (error) {
-        console.error('Erro na requisicao:', error);
-        await appAlert('Erro ao desaprovar: ' + error.message, 'danger', 'Erro');
-      }
+        const res  = await fetch('/admin/desaprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
+        const data = await res.json();
+        if (data.success) { await appAlert('Cadastro desaprovado com sucesso.', 'success', 'Sucesso'); location.reload(); }
+        else await appAlert('Erro: ' + (data.error || 'Falha ao desaprovar'), 'danger', 'Erro');
+      } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }
   </script>
 </body>
 </html>
+

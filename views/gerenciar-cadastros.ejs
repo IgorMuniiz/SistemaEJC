@@ -10,534 +10,30 @@
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
   <link rel="stylesheet" href="/css/admin-saas.css">
-  <style>
-    :root {
-      --bg-main: #f4f7fc;
-      --sidebar-bg: linear-gradient(180deg, #0f2c44 0%, #173f61 52%, #1d557f 100%);
-      --sidebar-hover: rgba(255, 255, 255, 0.12);
-      --card-bg: #ffffff;
-      --text-main: #1d2b39;
-      --text-muted: #6b7d90;
-      --brand: #1a78d6;
-      --brand-dark: #1257a0;
-      --ok: #2f9b5d;
-      --warn: #d3981f;
-    }
-
-    body {
-      margin: 0;
-      background: radial-gradient(circle at 12% 18%, #dfeeff 0%, #f4f7fc 42%, #edf2f9 100%);
-      color: var(--text-main);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      min-height: 100vh;
-    }
-
-    .admin-shell {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    .sidebar {
-      width: 78px;
-      background: var(--sidebar-bg);
-      color: #fff;
-      transition: width 0.28s ease;
-      overflow: hidden;
-      position: sticky;
-      top: 0;
-      height: 100vh;
-      box-shadow: 10px 0 30px rgba(6, 18, 29, 0.2);
-      z-index: 20;
-    }
-
-    .sidebar:hover {
-      width: 270px;
-    }
-
-    .sidebar-top {
-      padding: 20px 16px 10px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-    }
-
-    .brand-inline {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      min-height: 44px;
-      margin-bottom: 10px;
-    }
-
-    .brand-badge {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.18);
-      display: grid;
-      place-items: center;
-      font-size: 1.1rem;
-      flex: 0 0 auto;
-    }
-
-    .brand-text {
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      white-space: nowrap;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-    }
-
-    .sidebar:hover .brand-text {
-      opacity: 1;
-    }
-
-    .side-menu {
-      padding: 14px 10px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .menu-link {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      transition: background 0.2s ease, transform 0.2s ease;
-      border: none;
-      width: 100%;
-      background: transparent;
-      text-align: left;
-      cursor: pointer;
-    }
-
-    .menu-link i {
-      width: 28px;
-      text-align: center;
-      font-size: 1rem;
-      flex: 0 0 auto;
-    }
-
-    .menu-label {
-      white-space: nowrap;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .sidebar:hover .menu-label {
-      opacity: 1;
-    }
-
-    .menu-link:hover,
-    .menu-link.active {
-      background: var(--sidebar-hover);
-      transform: translateX(2px);
-      color: #fff;
-    }
-
-    .sidebar-note {
-      margin: auto 12px 16px;
-      padding: 10px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.12);
-      font-size: 0.75rem;
-      line-height: 1.35;
-      opacity: 0;
-      transition: opacity 0.2s ease;
-      text-align: center;
-    }
-
-    .sidebar:hover .sidebar-note {
-      opacity: 1;
-    }
-
-    .main-panel {
-      flex: 1;
-      padding: 24px;
-      min-width: 0;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 18px;
-      background: rgba(255, 255, 255, 0.95);
-      border: 1px solid #dce6f1;
-      border-radius: 14px;
-      padding: 16px 18px;
-      box-shadow: 0 6px 18px rgba(25, 52, 78, 0.08);
-    }
-
-    .topbar h1 {
-      margin: 0;
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: #12304b;
-    }
-
-    .topbar p {
-      margin: 3px 0 0;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .admin-pill {
-      background: #e8f2ff;
-      border: 1px solid #c7defa;
-      color: #184f85;
-      padding: 7px 12px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-
-    .content-card {
-      background: var(--card-bg);
-      border: 1px solid #dce5f1;
-      border-radius: 14px;
-      padding: 18px;
-      box-shadow: 0 6px 20px rgba(26, 49, 71, 0.08);
-    }
-
-    .nav-tabs .nav-link {
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      color: #3f5872;
-      padding: 10px 14px;
-      margin-right: 5px;
-    }
-
-    .nav-tabs .nav-link.active {
-      background: #1a78d6;
-      color: #fff;
-    }
-
-    .table-wrap {
-      margin-top: 16px;
-      border: 1px solid #e1eaf4;
-      border-radius: 12px;
-      overflow: auto;
-    }
-
-    table {
-      margin-bottom: 0 !important;
-      min-width: 850px;
-    }
-
-    thead th {
-      background: #eff5fc !important;
-      color: #29445c !important;
-      border-bottom: 1px solid #dbe5f0 !important;
-      font-size: 0.84rem;
-      letter-spacing: 0.02em;
-      text-transform: uppercase;
-    }
-
-    td {
-      vertical-align: middle;
-    }
-
-    .table-photo {
-      width: 52px;
-      height: 52px;
-      border-radius: 8px;
-      object-fit: cover;
-      border: 1px solid #dce5f2;
-    }
-
-    .status-badge {
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 0.74rem;
-    }
-
-    .status-ok {
-      background: #e7f7ee;
-      border: 1px solid #bce8cf;
-      color: var(--ok);
-    }
-
-    .status-warn {
-      background: #fff4e0;
-      border: 1px solid #f2d9aa;
-      color: var(--warn);
-    }
-
-    .btn-edit {
-      background: linear-gradient(135deg, var(--brand) 0%, #2f8fe6 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 7px 11px;
-      margin-right: 5px;
-    }
-
-    .btn-edit:hover {
-      background: linear-gradient(135deg, var(--brand-dark) 0%, #2a7bc2 100%);
-      color: #fff;
-    }
-
-    .btn-delete {
-      background: linear-gradient(135deg, #dc3545 0%, #a0252f 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 7px 11px;
-      margin-right: 5px;
-    }
-
-    .btn-delete:hover {
-      background: linear-gradient(135deg, #c82333 0%, #8a1e27 100%);
-      color: #fff;
-    }
-
-    .btn-approve {
-      background: linear-gradient(135deg, var(--ok) 0%, #1e7a47 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 7px 11px;
-      margin-right: 5px;
-    }
-
-    .btn-approve:hover {
-      background: linear-gradient(135deg, #2a8a5a 0%, #176139 100%);
-      color: #fff;
-    }
-
-    .btn-reject {
-      background: linear-gradient(135deg, var(--warn) 0%, #b8771a 100%);
-      color: #fff;
-      border: none;
-      border-radius: 10px;
-      font-weight: 700;
-      font-size: 0.78rem;
-      padding: 7px 11px;
-    }
-
-    .btn-reject:hover {
-      background: linear-gradient(135deg, #c27f1f 0%, #9d6615 100%);
-      color: #fff;
-    }
-
-    .admin-form-card {
-      border: 1px solid #dce6f2;
-      background: #f8fbff;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 14px;
-    }
-
-    .import-result {
-      margin-top: 10px;
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.86rem;
-      display: none;
-    }
-
-    .import-result.success {
-      display: block;
-      background: #e8f8ef;
-      border: 1px solid #bfe5cd;
-      color: #186a3b;
-    }
-
-    .import-result.error {
-      display: block;
-      background: #fdecec;
-      border: 1px solid #f4c5c5;
-      color: #8a1f1f;
-    }
-
-    .form-label {
-      font-weight: 700;
-      font-size: 0.84rem;
-      color: #35506a;
-    }
-
-    .modal-foto-preview {
-      max-width: 180px;
-      max-height: 180px;
-      border-radius: 10px;
-      object-fit: cover;
-      border: 1px solid #dbe4ef;
-    }
-
-    .empty-state {
-      text-align: center;
-      color: #6e8297;
-      padding: 16px;
-      font-weight: 600;
-    }
-
-    .export-group-actions {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .export-btn {
-      background: #f0f4f8;
-      color: #36526d;
-      border: 1px solid #d9e6f2;
-      border-radius: 8px;
-      padding: 6px 12px;
-      font-size: 0.78rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      white-space: nowrap;
-    }
-
-    .export-btn:hover {
-      background: #1a78d6;
-      color: #fff;
-      border-color: #1a78d6;
-      transform: translateY(-1px);
-      text-decoration: none;
-    }
-
-    .search-toolbar {
-      margin-bottom: 12px;
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-
-    .search-input-wrap {
-      position: relative;
-      width: min(420px, 100%);
-    }
-
-    .search-input-wrap i {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #6b7d90;
-      font-size: 0.9rem;
-      pointer-events: none;
-    }
-
-    .search-input {
-      width: 100%;
-      border: 1px solid #d9e5f2;
-      border-radius: 10px;
-      padding: 9px 12px 9px 34px;
-      font-size: 0.9rem;
-      color: #1d2b39;
-      background: #fff;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: #1a78d6;
-      box-shadow: 0 0 0 3px rgba(26, 120, 214, 0.14);
-    }
-
-    .search-empty-row td {
-      text-align: center;
-      color: #6e8297;
-      font-weight: 600;
-      padding: 14px;
-    }
-
-    .list-section-title {
-      margin: 14px 0 10px;
-      font-weight: 800;
-      color: #173f61;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .transfer-lote-bar {
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .checkbox-col {
-      width: 42px;
-      text-align: center;
-    }
-
-    .btn-clear-search {
-      border: 1px solid #d9e5f2;
-      background: #fff;
-      color: #35506a;
-      border-radius: 10px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      padding: 8px 12px;
-      transition: all 0.2s ease;
-    }
-
-    .btn-clear-search:hover {
-      border-color: #1a78d6;
-      color: #1a78d6;
-      background: #f4f9ff;
-    }
-
-    @media (max-width: 991px) {
-      .sidebar {
-        width: 68px;
-      }
-
-      .sidebar:hover {
-        width: 220px;
-      }
-
-      .main-panel {
-        padding: 16px;
-      }
-
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-    }
-  </style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="admin-panel admin-manager-page">
   <% const encontreirosIndividuais = (encontreiros || []).filter(function(c){ return c.tipo !== 'tios'; }); %>
   <% const tios = (encontreiros || []).filter(function(c){ return c.tipo === 'tios'; }); %>
-  <% const statusCadastro = function(c){
-    if (c && c.statusAprovacao === 'aprovado') return 'aprovado';
-    if (c && c.statusAprovacao === 'reprovado') return 'reprovado';
+  <% const statusCadastroRaw = function(c){
+    if (c && c.statusAprovacao) return c.statusAprovacao;
     if (c && c.aprovado) return 'aprovado';
     return 'pendente';
   }; %>
-  <% const encontristasAprovados = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'aprovado'; }); %>
-  <% const encontristasReprovados = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'reprovado'; }); %>
-  <% const encontristasPendentes = (encontristas || []).filter(function(c){ return statusCadastro(c) === 'pendente'; }); %>
-  <% const encontreirosAprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'aprovado'; }); %>
-  <% const encontreirosReprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'reprovado'; }); %>
-  <% const encontreirosPendentes = (encontreirosIndividuais || []).filter(function(c){ return statusCadastro(c) === 'pendente'; }); %>
+  <% const statusCadastroGrupo = function(c){
+    const raw = statusCadastroRaw(c);
+    if (raw === 'aprovado') return 'aprovado';
+    if (raw === 'reprovado' || raw === 'desistiu') return 'reprovado';
+    return 'pendente';
+  }; %>
+  <% const encontristasAprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
+  <% const encontristasReprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
+  <% const encontristasPendentes = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
+  <% const encontreirosAprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
+  <% const encontreirosReprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
+  <% const encontreirosPendentes = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
 
   <div class="admin-shell">
     <aside class="sidebar">
@@ -671,9 +167,9 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td>
-                          <% if (statusCadastro(cadastro) === 'aprovado') { %>
+                          <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
-                          <% } else if (statusCadastro(cadastro) === 'reprovado') { %>
+                          <% } else if (statusCadastroGrupo(cadastro) === 'reprovado') { %>
                             <span class="status-badge status-warn">Reprovado</span>
                           <% } else { %>
                             <span class="status-badge status-warn">Pendente</span>
@@ -868,9 +364,9 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td>
-                          <% if (statusCadastro(cadastro) === 'aprovado') { %>
+                          <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
-                          <% } else if (statusCadastro(cadastro) === 'reprovado') { %>
+                          <% } else if (statusCadastroGrupo(cadastro) === 'reprovado') { %>
                             <span class="status-badge status-warn">Reprovado</span>
                           <% } else { %>
                             <span class="status-badge status-warn">Pendente</span>
@@ -1103,7 +599,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% const encontristasPendentesAprovacoes = (encontristas || []).filter(c => statusCadastro(c) === 'pendente'); %>
+                  <% const encontristasPendentesAprovacoes = (encontristas || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
                   <% if (encontristasPendentesAprovacoes.length === 0) { %>
                     <tr><td colspan="6" class="empty-state">Todos os encontristas estão aprovados!</td></tr>
                   <% } else { %>
@@ -1152,7 +648,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% const encontreirosPendentesAprovacoes = (encontreiros || []).filter(c => statusCadastro(c) === 'pendente'); %>
+                  <% const encontreirosPendentesAprovacoes = (encontreiros || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
                   <% if (encontreirosPendentesAprovacoes.length === 0) { %>
                     <tr><td colspan="7" class="empty-state">Todos os encontreiros estão aprovados!</td></tr>
                   <% } else { %>
@@ -1196,8 +692,9 @@
           <div class="tab-pane fade" id="encontros" role="tabpanel">
             <div class="admin-form-card">
               <h5 class="mb-3"><i class="fas fa-location-arrow me-2"></i>Selecionar EJC</h5>
-              <div class="row g-3">
-                <div class="col-md-9">
+              <div class="row g-3 ejc-row">
+                <div class="col-lg-9 col-md-8">
+                  <label for="seletor_ejc_pagina" class="form-label">EJC disponível</label>
                   <select id="seletor_ejc_pagina" class="form-select">
                     <option value="">Selecione um EJC</option>
                     <% (ejcs || []).forEach(function(item) { %>
@@ -1205,8 +702,8 @@
                     <% }); %>
                   </select>
                 </div>
-                <div class="col-md-3 d-flex align-items-end">
-                  <button type="button" class="btn btn-primary w-100" onclick="abrirPaginaEjc()">
+                <div class="col-lg-3 col-md-4 d-flex align-items-end ejc-action-col">
+                  <button type="button" class="btn btn-primary w-100 btn-ejc-action" onclick="abrirPaginaEjc()">
                     <i class="fas fa-arrow-right me-1"></i>Acessar EJC
                   </button>
                 </div>
@@ -1215,13 +712,13 @@
 
             <div class="admin-form-card">
               <h5 class="mb-3"><i class="fas fa-plus-circle me-2"></i>Criar EJC</h5>
-              <form id="formEjc" class="row g-3">
-                <div class="col-md-10">
-                  <label class="form-label">Nome do EJC *</label>
+              <form id="formEjc" class="row g-3 ejc-row">
+                <div class="col-lg-9 col-md-8">
+                  <label for="ejc_nome" class="form-label">Nome do EJC *</label>
                   <input type="text" id="ejc_nome" class="form-control" placeholder="Ex: EJC São José" required>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                  <button type="button" class="btn btn-primary w-100" onclick="criarEjc()">
+                <div class="col-lg-3 col-md-4 d-flex align-items-end ejc-action-col">
+                  <button type="button" class="btn btn-primary w-100 btn-ejc-action" onclick="criarEjc()">
                     <i class="fas fa-save me-1"></i>Criar
                   </button>
                 </div>
@@ -1352,6 +849,58 @@
               <small class="text-muted">Senha mínima: 6 caracteres.</small>
             </div>
 
+            <div class="admin-form-card">
+              <h5 class="mb-3"><i class="fas fa-shield-halved me-2"></i>LGPD e Retenção</h5>
+              <div class="row g-3 align-items-end">
+                <div class="col-md-8">
+                  <label class="form-label">Retenção em dias</label>
+                  <input type="number" id="lgpd_retencao_dias" class="form-control" value="730" min="30" max="3650">
+                </div>
+                <div class="col-md-4">
+                  <button type="button" class="btn btn-outline-primary w-100" onclick="executarRetencaoLgpd()">
+                    <i class="fas fa-user-shield me-1"></i>Executar retenção
+                  </button>
+                </div>
+              </div>
+              <small class="text-muted">Anonimiza dados antigos de cadastros não aprovados conforme o prazo informado.</small>
+            </div>
+
+            <div class="table-wrap mb-3">
+              <div class="list-section-title"><i class="fas fa-clipboard-list"></i>Auditoria (últimos 100 eventos)</div>
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Admin</th>
+                    <th>Ação</th>
+                    <th>Alvo</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (!auditoriaLogs || auditoriaLogs.length === 0) { %>
+                    <tr><td colspan="5" class="empty-state">Nenhum evento de auditoria registrado.</td></tr>
+                  <% } else { %>
+                    <% auditoriaLogs.forEach(function(log) { %>
+                      <tr>
+                        <td><%= new Date(log.createdAt).toLocaleString('pt-BR') %></td>
+                        <td><%= log.adminUsername || '-' %></td>
+                        <td><%= log.action || '-' %></td>
+                        <td><%= [log.targetType, log.targetId].filter(Boolean).join(': ') || '-' %></td>
+                        <td>
+                          <% if (log.status === 'success') { %>
+                            <span class="status-badge status-ok">Sucesso</span>
+                          <% } else { %>
+                            <span class="status-badge status-warn">Erro</span>
+                          <% } %>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+
             <div class="table-wrap">
               <table class="table table-hover">
                 <thead>
@@ -1393,9 +942,9 @@
   <div class="modal fade" id="modalEdicao" tabindex="-1">
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
+        <div class="modal-header">
           <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Cadastro</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <form id="formEdicao" enctype="multipart/form-data">
@@ -1599,8 +1148,12 @@
               <label class="form-label">Status</label>
               <select class="form-select" id="edit_aprovado" name="statusAprovacao">
                 <option value="pendente">Pendente</option>
+                <option value="pendente_contato">Pendente de contato</option>
+                <option value="documentacao_pendente">Documentação pendente</option>
                 <option value="aprovado">Aprovado</option>
                 <option value="reprovado">Reprovado</option>
+                <option value="desistiu">Desistiu</option>
+                <option value="remanejado">Remanejado de equipe</option>
               </select>
             </div>
 
@@ -1633,9 +1186,9 @@
   <div class="modal fade" id="modalEdicaoAdmin" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
-        <div class="modal-header bg-primary text-white">
+        <div class="modal-header">
           <h5 class="modal-title"><i class="fas fa-user-pen me-2"></i>Editar Administrador</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="edit_admin_id">
@@ -1990,7 +1543,7 @@
       document.getElementById('edit_expectativaXixEjcCop').value = cadastro.expectativaXixEjcCop || '';
       document.getElementById('edit_intolerante_encontrista').value = cadastro.intolerante || '';
       const statusAtual = cadastro.statusAprovacao || (cadastro.aprovado ? 'aprovado' : 'pendente');
-      document.getElementById('edit_aprovado').value = ['aprovado', 'reprovado', 'pendente'].includes(statusAtual)
+      document.getElementById('edit_aprovado').value = ['aprovado', 'reprovado', 'pendente', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'].includes(statusAtual)
         ? statusAtual
         : 'pendente';
 
@@ -2628,7 +2181,7 @@
 
         const s = result.summary;
         const origemLabel = result.sourceType === 'database' ? `${result.sourceType}/${result.dbEngine || dbEngine}` : result.sourceType;
-        const totalIgnorados = s.ignoradosExistentes + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
+        const totalIgnorados = s.ignoradosExistentes + s.ignoradosDuplicadosImportacao + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
         const totalPlaceholders = (s.placeholdersNome || 0) + (s.placeholdersEmail || 0);
         const detalhePlaceholders = totalPlaceholders > 0
           ? ` Campos preenchidos automaticamente: ${totalPlaceholders} (nome: ${s.placeholdersNome || 0}, email: ${s.placeholdersEmail || 0}).`
@@ -2641,7 +2194,7 @@
         }
 
         resultBox.className = 'import-result success';
-        resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados}. Erros: ${s.erros}.${detalhePlaceholders}`;
+        resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados} (inclui ${s.ignoradosDuplicadosImportacao || 0} duplicados no arquivo). Erros: ${s.erros}.${detalhePlaceholders}`;
 
         setTimeout(() => {
           recarregarMantendoAbaAtual();
@@ -2693,6 +2246,35 @@
         }
       } catch (error) {
         await appAlert('Erro ao reprovar cadastro.', 'danger', 'Erro');
+      }
+    }
+
+    async function executarRetencaoLgpd() {
+      const days = document.getElementById('lgpd_retencao_dias').value;
+      if (!await appConfirm('Executar agora a política de retenção LGPD?', 'Confirmar retenção')) return;
+
+      try {
+        const response = await fetch('/admin/executar-retencao-lgpd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ days })
+        });
+        const result = await response.json();
+
+        if (!result.success) {
+          await appAlert(result.error || 'Erro ao executar política LGPD.', 'danger', 'Erro');
+          return;
+        }
+
+        const r = result.result || {};
+        await appAlert(
+          `Retenção concluída.\n\nCadastros anonimizados: ${r.cadastrosAnonimizados || 0}\nEncontros anonimizados: ${r.encontrosAnonimizados || 0}\nTotal: ${r.totalAnonimizados || 0}`,
+          'success',
+          'LGPD'
+        );
+        recarregarMantendoAbaAtual();
+      } catch (error) {
+        await appAlert('Erro ao executar retenção LGPD.', 'danger', 'Erro');
       }
     }
 

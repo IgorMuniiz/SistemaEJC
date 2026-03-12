@@ -7,6 +7,9 @@
   <meta name="description" content="Plataforma digital do EJC COP - Encontro de Jovens com Cristo" />
   <meta name="theme-color" content="#0a0a14" />
   <title>EJC COP - Plataforma de Gestão e Inscrições</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/ejc-home.css">
   <link rel="manifest" href="/manifest.json" />
 </head>
@@ -14,6 +17,19 @@
   <!-- Background Grid Pattern -->
   <div class="bg-grid"></div>
   <div class="bg-gradient"></div>
+  <div class="bg-particles" aria-hidden="true">
+    <span class="particle p1"></span>
+    <span class="particle p2"></span>
+    <span class="particle p3"></span>
+    <span class="particle p4"></span>
+    <span class="particle p5"></span>
+    <span class="particle p6"></span>
+    <span class="particle p7"></span>
+    <span class="particle p8"></span>
+  </div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
 
   <!-- Navigation Bar -->
   <nav class="navbar">
@@ -36,73 +52,103 @@
 
   <!-- Main Container -->
   <main class="main-container">
-    
-    <!-- Hero Section -->
     <section class="hero-section">
-      <div class="hero-badge">
-        <span class="badge-dot"></span>
-        Encontro de Jovens com Cristo
-      </div>
-      
-      <h1 class="hero-title">
-        <span class="gradient-text">Simplesmente Amar</span>
-      </h1>
-      
-      <p class="hero-description">
-        Plataforma completa para gestão de inscrições e acompanhamento do EJC COP.
-        <br />Uma experiência única de partilha, amor e encontro pessoal com Cristo.
-      </p>
-
-      <!-- CTA Cards -->
-      <div class="cta-cards">
-        
-        <!-- Card Encontrista -->
-        <a href="/inscricao" class="cta-card cta-primary">
-          <div class="cta-header">
-            <div class="cta-icon">
-              <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M15 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-4 6c3.3 0 6 2.2 6 5v1H5v-1c0-2.8 2.7-5 6-5Zm8-6v2h2v2h-2v2h-2v-2h-2v-2h2V8h2Z"/></svg>
-              </span>
-            </div>
-            <span class="cta-tag">Popular</span>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Encontro de Jovens com Cristo
           </div>
-          <h2 class="cta-title">Inscrição Encontrista</h2>
-          <p class="cta-text">
-            Registre-se para participar do próximo encontro e vivenciar uma experiência transformadora
+
+          <h1 class="hero-title">
+            <span class="gradient-text">Simplesmente Amar</span>
+            <span class="hero-title-sub">uma jornada digital para o EJC COP</span>
+          </h1>
+
+          <p class="hero-description">
+            Inscrições, organização e acompanhamento em uma experiência elegante,
+            rápida e humana para quem vive o encontro.
           </p>
-          <div class="cta-footer">
-            <span class="cta-link-text">Fazer inscrição</span>
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="m13.5 5 1.4 1.4-4.6 4.6H20v2h-9.7l4.6 4.6L13.5 19 6.5 12l7-7Z"/></svg>
-            </span>
-          </div>
-        </a>
 
-        <!-- Card Encontreiro -->
-        <a href="/encontro" class="cta-card cta-secondary">
-          <div class="cta-header">
-            <div class="cta-icon">
+          <div class="hero-actions">
+            <a href="/inscricao" class="btn-primary">
+              <span>Inscrição Encontrista</span>
               <span class="icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M16 11a3 3 0 1 0-2.2-5A5 5 0 0 1 16 11ZM8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8.5 2c-1.6 0-3 .5-4 1.3 1.5 1 2.5 2.5 2.5 4.2V20H22v-1.5c0-3-2.5-5.5-5.5-5.5ZM8 13c-3.3 0-6 2.5-6 5.5V20h12v-1.5C14 15.5 11.3 13 8 13Z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M13.17 5.17a1 1 0 0 1 1.41 0l6 6a1 1 0 0 1 0 1.41l-6 6a1 1 0 1 1-1.41-1.41L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.42-4.41a1 1 0 0 1 0-1.42Z"/></svg>
               </span>
-            </div>
+            </a>
+            <a href="/encontro" class="btn-secondary">Area do Encontreiro</a>
           </div>
-          <h2 class="cta-title">Área do Encontreiro</h2>
-          <p class="cta-text">
-            Acesse ferramentas exclusivas, materiais de apoio e gerencie suas atividades
-          </p>
-          <div class="cta-footer">
-            <span class="cta-link-text">Acessar área</span>
-            <span class="icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="m13.5 5 1.4 1.4-4.6 4.6H20v2h-9.7l4.6 4.6L13.5 19 6.5 12l7-7Z"/></svg>
-            </span>
-          </div>
-        </a>
 
+          <div class="hero-trust">
+            <span>Seguranca e privacidade</span>
+          </div>
+        </div>
+
+        <aside class="hero-panel">
+          <div class="panel-head">
+            <span>Plataforma EJC COP</span>
+            <span class="panel-live-dot">Online</span>
+          </div>
+          <div class="panel-metric-grid">
+            <article class="metric-card">
+              <span class="metric-label">Experiencia</span>
+              <strong class="metric-value">Um final de semana de amor, reflexão, amizade e encontro com Cristo, que marca profundamente a vida dos jovens.</strong>
+            </article>
+            <article class="metric-card">
+              <span class="metric-label">Identidade</span>
+              <strong class="metric-value">EJC COP</strong>
+              <small class="metric-note">Feito para refletir o projeto.</small>
+            </article>
+            <article class="metric-card metric-wide">
+              <span class="metric-label">Proposito</span>
+              <strong class="metric-value">Evangelizar e aproximar os jovens de Deus, proporcionando uma experiencia de encontro pessoal com Jesus Cristo atraves da convivencia, reflexao e espiritualidade. ✝️</strong>
+            </article>
+          </div>
+        </aside>
       </div>
     </section>
 
-    <!-- Features Section -->
+    <section class="cta-cards">
+      <a href="/inscricao" class="cta-card cta-primary">
+        <div class="cta-header">
+          <div class="cta-icon">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M15 8a4 4 0 1 1-8 0 4 4 0 0 1 8 0Zm-4 6c3.3 0 6 2.2 6 5v1H5v-1c0-2.8 2.7-5 6-5Zm8-6v2h2v2h-2v2h-2v-2h-2v-2h2V8h2Z"/></svg>
+            </span>
+          </div>
+          <span class="cta-tag">Entrada principal</span>
+        </div>
+        <h2 class="cta-title">Quero ser Encontrista</h2>
+        <p class="cta-text">Comece sua inscricao com um fluxo simples e rapido para o proximo encontro.</p>
+        <div class="cta-footer">
+          <span class="cta-link-text">Iniciar agora</span>
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M13.17 5.17a1 1 0 0 1 1.41 0l6 6a1 1 0 0 1 0 1.41l-6 6a1 1 0 1 1-1.41-1.41L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.42-4.41a1 1 0 0 1 0-1.42Z"/></svg>
+          </span>
+        </div>
+      </a>
+
+      <a href="/encontro" class="cta-card cta-secondary">
+        <div class="cta-header">
+          <div class="cta-icon">
+            <span class="icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M16 11a3 3 0 1 0-2.2-5A5 5 0 0 1 16 11ZM8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm8.5 2c-1.6 0-3 .5-4 1.3 1.5 1 2.5 2.5 2.5 4.2V20H22v-1.5c0-3-2.5-5.5-5.5-5.5ZM8 13c-3.3 0-6 2.5-6 5.5V20h12v-1.5C14 15.5 11.3 13 8 13Z"/></svg>
+            </span>
+          </div>
+          <span class="cta-tag">Equipe de servico</span>
+        </div>
+        <h2 class="cta-title">Sou Encontreiro</h2>
+        <p class="cta-text">Acesse seu espaco para atuar na preparacao e conduzir experiencias marcantes.</p>
+        <div class="cta-footer">
+          <span class="cta-link-text">Entrar na area</span>
+          <span class="icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M13.17 5.17a1 1 0 0 1 1.41 0l6 6a1 1 0 0 1 0 1.41l-6 6a1 1 0 1 1-1.41-1.41L17.59 13H4a1 1 0 1 1 0-2h13.59l-4.42-4.41a1 1 0 0 1 0-1.42Z"/></svg>
+          </span>
+        </div>
+      </a>
+    </section>
+
     <section class="features-section">
       <div class="feature-item">
         <div class="feature-icon">
@@ -110,23 +156,7 @@
             <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M12 2 4 5v6c0 5.2 3.4 9.9 8 11 4.6-1.1 8-5.8 8-11V5l-8-3Zm-1 13.2-3-3 1.4-1.4 1.6 1.6 3.6-3.6 1.4 1.4-5 5Z"/></svg>
           </span>
         </div>
-        <span class="feature-text">Plataforma Segura</span>
-      </div>
-      <div class="feature-item">
-        <div class="feature-icon">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20Zm1 5v5.6l4 2.4-1 1.7L11 13.8V7h2Z"/></svg>
-          </span>
-        </div>
-        <span class="feature-text">Disponível 24/7</span>
-      </div>
-      <div class="feature-item">
-        <div class="feature-icon">
-          <span class="icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="currentColor" focusable="false"><path d="M7 2h10a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm0 3v14h10V5H7Zm4 13h2v2h-2v-2Z"/></svg>
-          </span>
-        </div>
-        <span class="feature-text">Mobile Friendly</span>
+        <span class="feature-text">Segurança e privacidade</span>
       </div>
     </section>
 
@@ -136,5 +166,17 @@
   <footer class="main-footer">
     <p>&copy; 2026 EJC COP. Simplesmente Amar.</p>
   </footer>
+
+  <script>
+    document.querySelectorAll('.cta-card').forEach((card) => {
+      card.addEventListener('pointermove', (event) => {
+        const rect = card.getBoundingClientRect();
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        card.style.setProperty('--mx', `${x}%`);
+        card.style.setProperty('--my', `${y}%`);
+      });
+    });
+  </script>
 </body>
 </html>

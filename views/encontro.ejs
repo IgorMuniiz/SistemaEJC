@@ -7,6 +7,9 @@
   <meta name="description" content="Formulário de inscrição para Encontro" />
   <meta name="theme-color" content="#000000" />
   <title>Inscrição Encontro EJC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
@@ -14,10 +17,17 @@
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
   <link rel="stylesheet" href="/css/style.css" />
 </head>
-<body style="background-color: #000;">
+<body class="portal-page">
+  <div class="portal-ambient" aria-hidden="true">
+    <div class="portal-grid"></div>
+    <div class="portal-orb portal-orb-a"></div>
+    <div class="portal-orb portal-orb-b"></div>
+    <div class="portal-orb portal-orb-c"></div>
+  </div>
+
   <main id="root" role="main"></main>
 
-  <footer class="text-center py-3 bg-light">
+  <footer class="portal-footer text-center py-3">
     <div class="container">
       <small>© 2026 EJC - Todos os direitos reservados</small>
     </div>
@@ -27,7 +37,7 @@
   <script defer src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script defer type="text/babel" src="/js/app.js?v=20260310-1"></script>
+  <script defer type="text/babel" src="/js/app.js?v=20260310-2"></script>
   <script>
     const deferHeavyWork = (callback) => {
       if ('requestIdleCallback' in window) {
