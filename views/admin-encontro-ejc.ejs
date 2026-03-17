@@ -14,7 +14,10 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="admin-panel admin-encontro-page">
+<body class="admin-panel admin-encontro-page admin-encontro-revamp">
+  <% const totalVinculosCirculo = (vinculos || []).filter(function(v){ return v.entidadeTipo === 'circulo'; }).length; %>
+  <% const totalVinculosEquipe = (vinculos || []).filter(function(v){ return v.entidadeTipo === 'equipe'; }).length; %>
+  <% const totalPessoasVinculadas = totalVinculosCirculo + totalVinculosEquipe; %>
   <div class="page-shell">
     <aside class="sidebar">
       <div class="title"><i class="fas fa-layer-group me-2"></i>Painel do EJC</div>
@@ -37,16 +40,84 @@
     </aside>
 
     <main class="content-area">
-      <div class="topbar">
-        <div>
-          <h1>Gestao de Circulos e Equipes</h1>
-          <p>Organize os vinculados por estrutura e acompanhe os cadastros por item criado.</p>
+      <div class="topbar workspace-hero">
+        <div class="workspace-hero-main">
+          <h1 class="workspace-title-encontro">
+            <span class="workspace-title-icon" aria-hidden="true"><i class="fas fa-layer-group"></i></span>
+            <span class="workspace-title-copy">
+              <span class="workspace-title-kicker">Painel</span>
+              <span class="workspace-title-main">Gestão do EJC</span>
+            </span>
+          </h1>
+          <div class="workspace-hero-strip" aria-label="Destaques do encontro">
+            <span class="hero-strip-pill"><i class="fas fa-circle-notch"></i><%= totalVinculosCirculo %> vínculos em círculos</span>
+            <span class="hero-strip-pill"><i class="fas fa-people-group"></i><%= totalVinculosEquipe %> vínculos em equipes</span>
+            <span class="hero-strip-pill"><i class="fas fa-file-export"></i><%= totalPessoasVinculadas %> pessoas distribuídas</span>
+          </div>
+        </div>
+        <div class="workspace-stats" aria-label="Resumo da operacao">
+          <article class="workspace-stat-card">
+            <span class="stat-label">Circulos</span>
+            <strong class="stat-value"><%= (circulos || []).length %></strong>
+          </article>
+          <article class="workspace-stat-card">
+            <span class="stat-label">Equipes</span>
+            <strong class="stat-value"><%= (equipes || []).length %></strong>
+          </article>
+          <article class="workspace-stat-card">
+            <span class="stat-label">Vinculos Circulos</span>
+            <strong class="stat-value"><%= totalVinculosCirculo %></strong>
+          </article>
+          <article class="workspace-stat-card">
+            <span class="stat-label">Vinculos Equipes</span>
+            <strong class="stat-value"><%= totalVinculosEquipe %></strong>
+          </article>
         </div>
       </div>
 
+      <section class="encontro-module-grid" aria-label="Atalhos do painel EJC">
+        <button type="button" class="encontro-module-card active" data-panel-target="panel-circulos" onclick="ativarPainel('panel-circulos')">
+          <span class="encontro-module-icon"><i class="fas fa-circle-notch"></i></span>
+          <span class="encontro-module-copy">
+            <span class="encontro-module-title">Círculos</span>
+          </span>
+          <span class="encontro-module-count"><%= (circulos || []).length %></span>
+        </button>
+        <button type="button" class="encontro-module-card" data-panel-target="panel-equipes" onclick="ativarPainel('panel-equipes')">
+          <span class="encontro-module-icon"><i class="fas fa-people-group"></i></span>
+          <span class="encontro-module-copy">
+            <span class="encontro-module-title">Equipes</span>
+          </span>
+          <span class="encontro-module-count"><%= (equipes || []).length %></span>
+        </button>
+        <button type="button" class="encontro-module-card encontro-module-card-action" onclick="gerarQuadrante(this)">
+          <span class="encontro-module-icon"><i class="fas fa-file-pdf"></i></span>
+          <span class="encontro-module-copy">
+            <span class="encontro-module-title">Quadrante</span>
+          </span>
+          <span class="encontro-module-count"><%= totalPessoasVinculadas %></span>
+        </button>
+        <a class="encontro-module-card encontro-module-card-link" href="/admin/gerenciar-cadastros">
+          <span class="encontro-module-icon"><i class="fas fa-arrow-left"></i></span>
+          <span class="encontro-module-copy">
+            <span class="encontro-module-title">Voltar ao Admin</span>
+          </span>
+          <span class="encontro-module-count"><i class="fas fa-up-right-from-square"></i></span>
+        </a>
+      </section>
+
       <section id="panel-circulos" class="panel active">
-        <div class="row g-3 mb-3">
-          <div class="col-xl-3 col-lg-4">
+        <div class="panel-premium-head panel-premium-head-circulos">
+          <div>
+            <h2><i class="fas fa-circle-notch me-2"></i>Curadoria dos círculos</h2>
+          </div>
+          <div class="panel-premium-chips">
+            <span class="panel-premium-chip"><i class="fas fa-layer-group"></i><%= (circulos || []).length %> círculos</span>
+            <span class="panel-premium-chip"><i class="fas fa-link"></i><%= totalVinculosCirculo %> vínculos</span>
+          </div>
+        </div>
+        <div class="row g-3 mb-3 panel-intake-grid">
+          <div class="col-xl-3 col-lg-4 panel-create-col">
             <div class="surface create-surface-compact">
               <div class="surface-head"><span><i class="fas fa-plus-circle me-2"></i>Novo Circulo</span></div>
               <div class="surface-body">
@@ -57,64 +128,70 @@
                     <button class="btn btn-primary" onclick="criarCirculo()">Criar</button>
                   </div>
                 </div>
-                <small class="muted d-block mt-2">Apenas encontristas podem ser vinculados em circulos.</small>
               </div>
             </div>
           </div>
-          <div class="col-xl-9 col-lg-8">
+          <div class="col-xl-9 col-lg-8 panel-link-col">
             <div class="surface link-surface-wide">
               <div class="surface-head"><span><i class="fas fa-user-plus me-2"></i>Vincular Encontrista ao Circulo</span></div>
               <div class="surface-body">
-                <div class="row g-3 align-items-start link-form-grid">
-                  <div class="col-md-3 col-select-main">
-                    <label class="field-label" for="circulo_id">Circulo</label>
-                    <select id="circulo_id" class="form-select">
-                      <option value="">Selecione circulo</option>
-                      <% circulos.forEach(function(c) { %>
-                        <option value="<%= c._id %>"><%= c.nome %></option>
-                      <% }) %>
-                    </select>
-                  </div>
-                  <div class="col-md-5 col-select-people">
-                    <label class="field-label" for="encontrista_id">Encontristas</label>
-                    <div class="multi-select-panel">
-                      <div class="multi-filter-row">
-                        <div class="search-input-shell">
-                          <i class="fas fa-search search-icon" aria-hidden="true"></i>
-                          <input
-                            id="filtro_encontrista"
-                            class="form-control multi-filter-input"
-                            type="text"
-                            placeholder="Buscar encontrista..."
-                            oninput="filtrarSelectMulti('encontrista_id', this.value)">
-                        </div>
-                        <button
-                          type="button"
-                          class="btn btn-clear-mini"
-                          onclick="limparFiltroSelectMulti('filtro_encontrista', 'encontrista_id')">
-                          Limpar
-                        </button>
-                      </div>
-                      <select id="encontrista_id" class="form-select multi-select-collapsed" multiple size="1" data-expanded-size="7" onclick="expandirSelectMulti(this)" onfocus="expandirSelectMulti(this)" onblur="recolherSelectMulti(this)">
-                        <% encontristas.forEach(function(p) { %>
-                          <option value="<%= p._id %>"><%= p.nomeCompleto %></option>
+                <div class="link-bar-shell">
+                  <div class="row g-3 align-items-start link-form-grid link-form-grid-modern">
+                    <div class="col-md-3 col-select-main">
+                      <label class="field-label" for="circulo_id">Circulo</label>
+                      <select id="circulo_id" class="form-select">
+                        <option value="">Selecione circulo</option>
+                        <% circulos.forEach(function(c) { %>
+                          <option value="<%= c._id %>"><%= c.nome %></option>
                         <% }) %>
                       </select>
-                      <small class="multi-select-help">Segure Ctrl (Windows) para selecionar varios nomes.</small>
                     </div>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="field-label" for="papel_circulo">Tipo de Vinculo</label>
-                    <select id="papel_circulo" class="form-select" onchange="alternarCampoMoita()">
-                      <option value="membro">Membro</option>
-                      <option value="moita">Moita</option>
-                    </select>
-                  </div>
-                  <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontristaCirculo()">Vincular</button>
-                  </div>
-                  <div class="col-12" id="wrap_papel_moita" style="display:none;">
-                    <input id="descricao_papel_moita" class="form-control" placeholder="Qual papel esta fazendo na moita? Ex: Animacao, Acolhida, Intercessao">
+                    <div class="col-md-5 col-select-people">
+                      <label class="field-label" for="encontrista_id">Encontristas</label>
+                      <div class="multi-select-panel">
+                        <div class="multi-filter-row">
+                          <div class="search-input-shell">
+                            <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                            <input
+                              id="filtro_encontrista"
+                              class="form-control multi-filter-input"
+                              type="text"
+                              placeholder="Buscar encontrista..."
+                              oninput="filtrarSelectMulti('encontrista_id', this.value)">
+                          </div>
+                          <button
+                            type="button"
+                            class="btn btn-clear-mini"
+                            onclick="limparFiltroSelectMulti('filtro_encontrista', 'encontrista_id')">
+                            Limpar
+                          </button>
+                        </div>
+                        <button type="button" class="multi-check-toggle" onclick="toggleMultiChecklist('encontrista_id')">
+                          <span id="resumo_encontrista_id">Clique para selecionar nomes</span>
+                          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div id="lista_encontrista_id" class="multi-checklist d-none"></div>
+                        <select id="encontrista_id" class="form-select d-none" multiple size="1">
+                          <% encontristas.forEach(function(p) { %>
+                            <option value="<%= p._id %>"><%= p.nomeCompleto %></option>
+                          <% }) %>
+                        </select>
+                        <small class="multi-select-help"><span class="multi-select-count" id="contador_encontrista_id">0 selecionados</span> · Marque um por um antes de vincular.</small>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <label class="field-label" for="papel_circulo">Tipo de Vinculo</label>
+                      <select id="papel_circulo" class="form-select" onchange="alternarCampoMoita()">
+                        <option value="membro">Membro</option>
+                        <option value="moita">Moita</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end col-link-action">
+                      <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontristaCirculo()">Vincular</button>
+                    </div>
+                    <div class="col-12" id="wrap_papel_moita" style="display:none;">
+                      <input id="descricao_papel_moita" class="form-control" placeholder="Qual papel esta fazendo na moita? Ex: Animacao, Acolhida, Intercessao">
+                    </div>
                   </div>
                 </div>
               </div>
@@ -122,7 +199,7 @@
           </div>
         </div>
 
-        <div class="surface">
+        <div class="surface panel-list-surface">
           <div class="surface-head">
             <span><i class="fas fa-circle-notch me-2"></i>Circulos Criados</span>
             <span class="muted" id="count-circulos"></span>
@@ -132,8 +209,19 @@
       </section>
 
       <section id="panel-equipes" class="panel">
-        <div class="row g-3 mb-3">
-          <div class="col-xl-3 col-lg-4">
+        <div class="panel-premium-head panel-premium-head-equipes">
+          <div>
+            <p class="panel-premium-kicker">Operação do encontro</p>
+            <h2><i class="fas fa-people-group me-2"></i>Arquitetura das equipes</h2>
+            <p class="panel-premium-copy">Monte equipes, distribua jovens e tios e acompanhe coordenação e execução com uma estética mais executiva.</p>
+          </div>
+          <div class="panel-premium-chips">
+            <span class="panel-premium-chip"><i class="fas fa-people-group"></i><%= (equipes || []).length %> equipes</span>
+            <span class="panel-premium-chip"><i class="fas fa-link"></i><%= totalVinculosEquipe %> vínculos</span>
+          </div>
+        </div>
+        <div class="row g-3 mb-3 panel-intake-grid">
+          <div class="col-xl-3 col-lg-4 panel-create-col">
             <div class="surface create-surface-compact">
               <div class="surface-head"><span><i class="fas fa-plus-circle me-2"></i>Nova Equipe</span></div>
               <div class="surface-body">
@@ -144,61 +232,67 @@
                     <button class="btn btn-primary" onclick="criarEquipe()">Criar</button>
                   </div>
                 </div>
-                <small class="muted d-block mt-2">Em equipes voce pode vincular jovens/tios como membro ou coordenador.</small>
               </div>
             </div>
           </div>
-          <div class="col-xl-9 col-lg-8">
+          <div class="col-xl-9 col-lg-8 panel-link-col">
             <div class="surface link-surface-wide">
               <div class="surface-head"><span><i class="fas fa-user-plus me-2"></i>Vincular Encontreiro/Tios na Equipe</span></div>
               <div class="surface-body">
-                <div class="row g-3 align-items-start link-form-grid">
-                  <div class="col-md-3 col-select-main">
-                    <label class="field-label" for="equipe_id">Equipe</label>
-                    <select id="equipe_id" class="form-select">
-                      <option value="">Selecione equipe</option>
-                      <% equipes.forEach(function(eq) { %>
-                        <option value="<%= eq._id %>"><%= eq.nome %></option>
-                      <% }) %>
-                    </select>
-                  </div>
-                  <div class="col-md-5 col-select-people">
-                    <label class="field-label" for="encontreiro_id">Encontreiros e Tios</label>
-                    <div class="multi-select-panel">
-                      <div class="multi-filter-row">
-                        <div class="search-input-shell">
-                          <i class="fas fa-search search-icon" aria-hidden="true"></i>
-                          <input
-                            id="filtro_encontreiro"
-                            class="form-control multi-filter-input"
-                            type="text"
-                            placeholder="Buscar encontreiro/tios..."
-                            oninput="filtrarSelectMulti('encontreiro_id', this.value)">
-                        </div>
-                        <button
-                          type="button"
-                          class="btn btn-clear-mini"
-                          onclick="limparFiltroSelectMulti('filtro_encontreiro', 'encontreiro_id')">
-                          Limpar
-                        </button>
-                      </div>
-                      <select id="encontreiro_id" class="form-select multi-select-collapsed" multiple size="1" data-expanded-size="7" onclick="expandirSelectMulti(this)" onfocus="expandirSelectMulti(this)" onblur="recolherSelectMulti(this)">
-                        <% encontreiros.forEach(function(p) { %>
-                          <option value="<%= p._id %>"><%= p.nomeCompleto %> (<%= p.tipo === 'tios' ? 'Tios' : 'Jovens' %>)</option>
+                <div class="link-bar-shell">
+                  <div class="row g-3 align-items-start link-form-grid link-form-grid-modern">
+                    <div class="col-md-3 col-select-main">
+                      <label class="field-label" for="equipe_id">Equipe</label>
+                      <select id="equipe_id" class="form-select">
+                        <option value="">Selecione equipe</option>
+                        <% equipes.forEach(function(eq) { %>
+                          <option value="<%= eq._id %>"><%= eq.nome %></option>
                         <% }) %>
                       </select>
-                      <small class="multi-select-help">Segure Ctrl (Windows) para selecionar varios nomes.</small>
                     </div>
-                  </div>
-                  <div class="col-md-2">
-                    <label class="field-label" for="papel_equipe">Tipo de Vinculo</label>
-                    <select id="papel_equipe" class="form-select">
-                      <option value="membro">Membro</option>
-                      <option value="coordenador">Coordenador</option>
-                    </select>
-                  </div>
-                  <div class="col-md-2 d-flex align-items-end">
-                    <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontreiroEquipeEJC()">Vincular</button>
+                    <div class="col-md-5 col-select-people">
+                      <label class="field-label" for="encontreiro_id">Encontreiros e Tios</label>
+                      <div class="multi-select-panel">
+                        <div class="multi-filter-row">
+                          <div class="search-input-shell">
+                            <i class="fas fa-search search-icon" aria-hidden="true"></i>
+                            <input
+                              id="filtro_encontreiro"
+                              class="form-control multi-filter-input"
+                              type="text"
+                              placeholder="Buscar encontreiro/tios..."
+                              oninput="filtrarSelectMulti('encontreiro_id', this.value)">
+                          </div>
+                          <button
+                            type="button"
+                            class="btn btn-clear-mini"
+                            onclick="limparFiltroSelectMulti('filtro_encontreiro', 'encontreiro_id')">
+                            Limpar
+                          </button>
+                        </div>
+                        <button type="button" class="multi-check-toggle" onclick="toggleMultiChecklist('encontreiro_id')">
+                          <span id="resumo_encontreiro_id">Clique para selecionar nomes</span>
+                          <i class="fas fa-chevron-down" aria-hidden="true"></i>
+                        </button>
+                        <div id="lista_encontreiro_id" class="multi-checklist d-none"></div>
+                        <select id="encontreiro_id" class="form-select d-none" multiple size="1">
+                          <% encontreiros.forEach(function(p) { %>
+                            <option value="<%= p._id %>"><%= p.nomeCompleto %> (<%= p.tipo === 'tios' ? 'Tios' : 'Jovens' %>)</option>
+                          <% }) %>
+                        </select>
+                        <small class="multi-select-help"><span class="multi-select-count" id="contador_encontreiro_id">0 selecionados</span> · Marque um por um antes de vincular.</small>
+                      </div>
+                    </div>
+                    <div class="col-md-2">
+                      <label class="field-label" for="papel_equipe">Tipo de Vinculo</label>
+                      <select id="papel_equipe" class="form-select">
+                        <option value="membro">Membro</option>
+                        <option value="coordenador">Coordenador</option>
+                      </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end col-link-action">
+                      <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontreiroEquipeEJC()">Vincular</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -206,7 +300,7 @@
           </div>
         </div>
 
-        <div class="surface">
+        <div class="surface panel-list-surface">
           <div class="surface-head">
             <span><i class="fas fa-people-group me-2"></i>Equipes Criadas</span>
             <span class="muted" id="count-equipes"></span>
@@ -225,6 +319,7 @@
   <script id="dados-vinculos" type="application/json"><%- JSON.stringify(vinculos || []) %></script>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/page-transitions.js"></script>
   <script>
     const ejcId = '<%= ejc._id %>';
     const circulos = JSON.parse(document.getElementById('dados-circulos').textContent || '[]');
@@ -311,6 +406,46 @@
       `;
     }
 
+    function getCirculoTheme(nome) {
+      const normalizado = String(nome || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z\s-]/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      const palette = [
+        { theme: 'theme-amarelo', termos: ['amarelo', 'dourado', 'ouro', 'ambar', 'gold'] },
+        { theme: 'theme-azul', termos: ['azul', 'anil', 'ciano', 'cyan', 'turquesa', 'celeste'] },
+        { theme: 'theme-laranja', termos: ['laranja', 'laranjado', 'ocre', 'coral', 'marrom', 'terracota', 'bronze'] },
+        { theme: 'theme-verde', termos: ['verde', 'esmeralda', 'lima', 'limao', 'olive', 'oliva'] },
+        { theme: 'theme-vermelho', termos: ['vermelho', 'rubro', 'vinho', 'bordo', 'scarlet', 'red'] },
+        { theme: 'theme-rosa', termos: ['rosa', 'pink', 'rose', 'cor de rosa', 'rosado'] },
+        { theme: 'theme-roxo', termos: ['roxo', 'lilas', 'violeta', 'purple', 'magenta'] },
+      ];
+
+      for (const item of palette) {
+        if (item.termos.some((termo) => normalizado.includes(termo))) {
+          return item.theme;
+        }
+      }
+
+      if (['preto', 'grafite', 'black'].some((termo) => normalizado.includes(termo))) {
+        return 'theme-preto';
+      }
+
+      if (['branco', 'prata', 'silver', 'white'].some((termo) => normalizado.includes(termo))) {
+        return 'theme-branco';
+      }
+
+      if (['cinza', 'gray', 'grey'].some((termo) => normalizado.includes(termo))) {
+        return 'theme-default';
+      }
+
+      return 'theme-default';
+    }
+
     function renderListaCirculos() {
       const target = document.getElementById('lista-circulos');
       document.getElementById('count-circulos').textContent = `${circulos.length} circulo(s)`;
@@ -321,32 +456,49 @@
       }
 
       target.innerHTML = circulos.map((circulo) => {
+        const themeClass = getCirculoTheme(circulo.nome);
         const lista = vinculos.filter((v) =>
           v.entidadeTipo === 'circulo' && String(v.entidadeId) === String(circulo._id)
         );
+        const totalMoitas = lista.filter((v) => v.papel === 'moita').length;
+        const totalMembros = Math.max(lista.length - totalMoitas, 0);
 
         const rows = lista.length
           ? lista.map((v) => personRowCirculo(v, personByVinculo(v))).join('')
           : '<tr><td colspan="8" class="text-center text-muted">Nenhum vinculado neste circulo.</td></tr>';
 
         return `
-          <div class="entity-card entity-card-circulo">
+          <div class="entity-card entity-card-circulo ${themeClass}">
             <div class="entity-head">
               <div class="entity-head-main">
-                <strong>${escapeHtml(circulo.nome)}</strong>
-                <span class="pill circulo">Circulo</span>
+                <span class="entity-kicker">Círculo do encontro</span>
+                <div class="entity-title-row">
+                  <span class="entity-orb entity-orb-circulo ${themeClass}" aria-hidden="true"></span>
+                  <strong class="entity-title entity-title-circulo ${themeClass}">${escapeHtml(circulo.nome)}</strong>
+                  <span class="pill circulo ${themeClass}">Circulo</span>
+                </div>
               </div>
               <div class="d-flex align-items-center gap-2 entity-head-actions">
                 <small class="muted entity-counter">${lista.length} vinculado(s)</small>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'excel', this)">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
+                  <i class="fas fa-pen me-1"></i>Editar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
+                  <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'excel', this)">
                   <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'pdf', this)">
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'pdf', this)">
                   <i class="fas fa-file-pdf me-1"></i>PDF
                 </button>
               </div>
             </div>
             <div class="p-3">
+              <div class="entity-insights">
+                <span class="entity-insight-pill"><i class="fas fa-user"></i>${totalMembros} membros</span>
+                <span class="entity-insight-pill"><i class="fas fa-seedling"></i>${totalMoitas} moita(s)</span>
+              </div>
               <div class="table-wrap">
                 <table class="table table-sm table-hover mb-0 entity-table">
                   <thead>
@@ -383,6 +535,11 @@
         const lista = vinculos.filter((v) =>
           v.entidadeTipo === 'equipe' && String(v.entidadeId) === String(equipe._id)
         );
+        const totalCoordenadores = lista.filter((v) => v.papel === 'coordenador' || v.papel === 'coordenou').length;
+        const totalTiosEquipe = lista.filter((v) => {
+          const pessoa = personByVinculo(v);
+          return pessoa && pessoa.tipo === 'tios';
+        }).length;
 
         const rows = lista.length
           ? lista.map((v) => personRowEquipe(v, personByVinculo(v))).join('')
@@ -392,20 +549,34 @@
           <div class="entity-card entity-card-equipe">
             <div class="entity-head">
               <div class="entity-head-main">
-                <strong>${escapeHtml(equipe.nome)}</strong>
-                <span class="pill equipe">Equipe</span>
+                <span class="entity-kicker">Frente operacional</span>
+                <div class="entity-title-row">
+                  <span class="entity-orb entity-orb-equipe" aria-hidden="true"><i class="fas fa-people-group"></i></span>
+                  <strong class="entity-title entity-title-equipe">${escapeHtml(equipe.nome)}</strong>
+                  <span class="pill equipe pill-equipe-premium">Equipe</span>
+                </div>
               </div>
               <div class="d-flex align-items-center gap-2 entity-head-actions">
                 <small class="muted entity-counter">${lista.length} vinculado(s)</small>
-                <button type="button" class="btn btn-sm btn-outline-primary" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'excel', this)">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
+                  <i class="fas fa-pen me-1"></i>Editar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
+                  <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'excel', this)">
                   <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
-                <button type="button" class="btn btn-sm btn-outline-danger" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'pdf', this)">
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'pdf', this)">
                   <i class="fas fa-file-pdf me-1"></i>PDF
                 </button>
               </div>
             </div>
             <div class="p-3">
+              <div class="entity-insights">
+                <span class="entity-insight-pill"><i class="fas fa-user-tie"></i>${totalCoordenadores} coordenação</span>
+                <span class="entity-insight-pill"><i class="fas fa-heart"></i>${totalTiosEquipe} tios no apoio</span>
+              </div>
               <div class="table-wrap">
                 <table class="table table-sm table-hover mb-0 entity-table">
                   <thead>
@@ -542,6 +713,116 @@
       });
     }
 
+    function ensureAppInputPopup() {
+      let modalElement = document.getElementById('app-input-modal');
+      if (modalElement) {
+        return {
+          element: modalElement,
+          instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+        };
+      }
+
+      modalElement = document.createElement('div');
+      modalElement.className = 'modal fade';
+      modalElement.id = 'app-input-modal';
+      modalElement.tabIndex = -1;
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header">
+              <h5 class="modal-title" id="app-input-title">Editar</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+              <label for="app-input-field" id="app-input-label" class="form-label">Novo valor</label>
+              <input id="app-input-field" type="text" class="form-control" maxlength="120" autocomplete="off">
+              <small class="text-muted d-block mt-2" id="app-input-help">Confirme para salvar.</small>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" id="app-input-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="app-input-confirm">Salvar</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalElement);
+
+      return {
+        element: modalElement,
+        instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+      };
+    }
+
+    async function appPrompt({ title = 'Editar', label = 'Novo valor', value = '', placeholder = '', help = '', confirmText = 'Salvar' }) {
+      const { element, instance } = ensureAppInputPopup();
+      const titleEl = element.querySelector('#app-input-title');
+      const labelEl = element.querySelector('#app-input-label');
+      const inputEl = element.querySelector('#app-input-field');
+      const helpEl = element.querySelector('#app-input-help');
+      const cancelBtn = element.querySelector('#app-input-cancel');
+      const confirmBtn = element.querySelector('#app-input-confirm');
+
+      titleEl.textContent = title;
+      labelEl.textContent = label;
+      inputEl.value = String(value || '');
+      inputEl.placeholder = String(placeholder || '');
+      helpEl.textContent = String(help || '');
+      helpEl.style.display = help ? '' : 'none';
+      confirmBtn.textContent = confirmText;
+
+      return new Promise((resolve) => {
+        let resolved = false;
+
+        const cleanup = () => {
+          cancelBtn.removeEventListener('click', onCancel);
+          confirmBtn.removeEventListener('click', onConfirm);
+          inputEl.removeEventListener('keydown', onInputKeydown);
+          element.removeEventListener('shown.bs.modal', onShown);
+          element.removeEventListener('hidden.bs.modal', onHidden);
+        };
+
+        const settle = (val) => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(val);
+        };
+
+        const onCancel = () => {
+          settle(null);
+          instance.hide();
+        };
+
+        const onConfirm = () => {
+          settle(String(inputEl.value || ''));
+          instance.hide();
+        };
+
+        const onInputKeydown = (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onConfirm();
+          }
+        };
+
+        const onShown = () => {
+          inputEl.focus();
+          inputEl.select();
+        };
+
+        const onHidden = () => settle(null);
+
+        cancelBtn.addEventListener('click', onCancel);
+        confirmBtn.addEventListener('click', onConfirm);
+        inputEl.addEventListener('keydown', onInputKeydown);
+        element.addEventListener('shown.bs.modal', onShown, { once: true });
+        element.addEventListener('hidden.bs.modal', onHidden, { once: true });
+
+        instance.show();
+      });
+    }
+
     function abrirExportacao(entidadeTipo, entidadeId, formato, botao) {
       if (!entidadeTipo || !entidadeId || !formato) return;
 
@@ -593,14 +874,25 @@
       const targetPanel = document.getElementById(panelId);
       if (!targetPanel) return;
 
-      document.querySelectorAll('.panel').forEach((panel) => panel.classList.remove('active'));
+      document.querySelectorAll('.panel').forEach((panel) => panel.classList.remove('active', 'panel-entering'));
       targetPanel.classList.add('active');
+      targetPanel.classList.add('panel-entering');
+      window.setTimeout(() => {
+        targetPanel.classList.remove('panel-entering');
+      }, 320);
 
       document.querySelectorAll('.menu-btn').forEach((b) => b.classList.remove('active'));
       const menuButton = btn || document.querySelector(`.menu-btn[data-panel="${panelId}"]`);
       if (menuButton) menuButton.classList.add('active');
+      atualizarAtalhosPainelAtivo(panelId);
 
       salvarPainelAtivo();
+    }
+
+    function atualizarAtalhosPainelAtivo(panelId) {
+      document.querySelectorAll('.encontro-module-card[data-panel-target]').forEach((item) => {
+        item.classList.toggle('active', item.dataset.panelTarget === panelId);
+      });
     }
 
     function getPainelAtivoId() {
@@ -640,26 +932,46 @@
       window.location.href = window.location.href;
     }
 
+    function getChecklistElements(selectId) {
+      return {
+        select: document.getElementById(selectId),
+        list: document.getElementById(`lista_${selectId}`),
+      };
+    }
+
+    function closeAllChecklists(exceptSelectId = '') {
+      ['encontrista_id', 'encontreiro_id'].forEach((selectId) => {
+        if (selectId === exceptSelectId) return;
+        const { list } = getChecklistElements(selectId);
+        if (list) list.classList.add('d-none');
+      });
+    }
+
+    function toggleMultiChecklist(selectId) {
+      const { list } = getChecklistElements(selectId);
+      if (!list) return;
+
+      const willOpen = list.classList.contains('d-none');
+      closeAllChecklists(selectId);
+      if (willOpen) {
+        list.classList.remove('d-none');
+      } else {
+        list.classList.add('d-none');
+      }
+    }
+
     function filtrarSelectMulti(selectId, termo) {
-      const select = document.getElementById(selectId);
-      if (!select) return;
-
       const filtro = String(termo || '').trim().toLowerCase();
-      const options = Array.from(select.options || []);
+      const { list } = getChecklistElements(selectId);
+      if (!list) return;
 
-      // Expandir o select quando digitar
       if (filtro) {
-        expandirSelectMulti(select);
+        list.classList.remove('d-none');
       }
 
-      options.forEach((option) => {
-        if (!option.value) {
-          option.hidden = false;
-          return;
-        }
-
-        const texto = String(option.textContent || '').toLowerCase();
-        option.hidden = filtro ? !texto.includes(filtro) : false;
+      Array.from(list.querySelectorAll('.multi-check-item')).forEach((item) => {
+        const texto = String(item.getAttribute('data-text') || '');
+        item.style.display = (!filtro || texto.includes(filtro)) ? '' : 'none';
       });
     }
 
@@ -676,21 +988,88 @@
       }
     }
 
-    function expandirSelectMulti(select) {
-      if (!select) return;
-      const expandedSize = Math.max(5, Number(select.dataset.expandedSize || 7));
-      select.classList.remove('multi-select-collapsed');
-      select.size = expandedSize;
+    function initChecklistFromSelect(selectId) {
+      const { select, list } = getChecklistElements(selectId);
+      if (!select || !list) return;
+
+      const options = Array.from(select.options || []).filter((option) => option.value);
+      list.innerHTML = options.map((option) => {
+        const optionValue = escapeHtml(String(option.value || ''));
+        const optionTextRaw = String(option.textContent || '').trim();
+        const optionText = escapeHtml(optionTextRaw);
+        const checked = option.selected ? 'checked' : '';
+        return `
+          <label class="multi-check-item" data-value="${optionValue}" data-text="${escapeHtml(optionTextRaw.toLowerCase())}">
+            <input type="checkbox" value="${optionValue}" ${checked} onchange="toggleChecklistValue('${selectId}', this.value, this.checked)">
+            <span>${optionText}</span>
+          </label>
+        `;
+      }).join('');
+
+      atualizarContadorSelecao(selectId);
     }
 
-    function recolherSelectMulti(select) {
+    function toggleChecklistValue(selectId, value, checked) {
+      const { select } = getChecklistElements(selectId);
       if (!select) return;
-      setTimeout(() => {
-        if (document.activeElement === select) return;
-        select.classList.add('multi-select-collapsed');
-        select.size = 1;
-      }, 120);
+
+      const option = Array.from(select.options || []).find((item) => String(item.value) === String(value));
+      if (!option) return;
+
+      option.selected = Boolean(checked);
+      select.dispatchEvent(new Event('change'));
+      atualizarContadorSelecao(selectId);
     }
+
+    function atualizarResumoSelecao(selectId) {
+      const select = document.getElementById(selectId);
+      const resumo = document.getElementById(`resumo_${selectId}`);
+      if (!select || !resumo) return;
+
+      const selecionados = Array.from(select.selectedOptions || []);
+      if (!selecionados.length) {
+        resumo.textContent = 'Clique para selecionar nomes';
+      } else if (selecionados.length === 1) {
+        resumo.textContent = selecionados[0].textContent || '1 nome selecionado';
+      } else {
+        resumo.textContent = `${selecionados.length} nomes selecionados`;
+      }
+    }
+
+    function atualizarContadorSelecao(selectId) {
+      const select = document.getElementById(selectId);
+      const contador = document.getElementById(`contador_${selectId}`);
+      if (!select || !contador) return;
+
+      const totalSelecionados = Array.from(select.selectedOptions || [])
+        .map((option) => String(option.value || '').trim())
+        .filter(Boolean)
+        .length;
+
+      contador.textContent = totalSelecionados === 1
+        ? '1 selecionado'
+        : `${totalSelecionados} selecionados`;
+
+      atualizarResumoSelecao(selectId);
+    }
+
+    function observarContadorSelecao(selectId) {
+      const select = document.getElementById(selectId);
+      if (!select) return;
+
+      const atualizar = () => atualizarContadorSelecao(selectId);
+      select.addEventListener('change', atualizar);
+      select.addEventListener('keyup', atualizar);
+      select.addEventListener('mouseup', atualizar);
+      atualizar();
+    }
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.multi-select-panel')) return;
+      closeAllChecklists();
+    });
 
     async function removerVinculo(vinculoId) {
       if (!vinculoId) return;
@@ -731,52 +1110,158 @@
       recarregarMantendoPainelAtual();
     }
 
-    async function vincularEncontristaCirculo() {
-      const entidadeId = document.getElementById('circulo_id').value;
-      const pessoaIds = Array.from(document.getElementById('encontrista_id').selectedOptions || [])
-        .map((option) => String(option.value || '').trim())
-        .filter(Boolean);
-      const papel = document.getElementById('papel_circulo').value || 'membro';
-      const descricaoPapel = (document.getElementById('descricao_papel_moita').value || '').trim();
+    async function editarCirculo(circuloId, nomeAtual) {
+      if (!circuloId) return;
+      const novoNome = String(await appPrompt({
+        title: 'Editar circulo',
+        label: 'Nome do circulo',
+        value: nomeAtual || '',
+        placeholder: 'Digite o novo nome',
+        help: 'O nome sera atualizado neste EJC.',
+        confirmText: 'Salvar',
+      }) || '').trim();
+      if (!novoNome || novoNome === String(nomeAtual || '').trim()) return;
 
-      if (!entidadeId || pessoaIds.length === 0) return await appAlert('Selecione circulo e ao menos um encontrista.', 'warning', 'Dados incompletos');
-      if (papel === 'moita' && !descricaoPapel) {
-        return await appAlert('Informe qual papel a pessoa esta fazendo na moita.', 'warning', 'Campo obrigatorio');
-      }
-
-      const res = await fetch('/admin/vincular-encontro', {
+      const res = await fetch(`/admin/editar-circulo/${encodeURIComponent(circuloId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ejcId,
-          entidadeTipo: 'circulo',
-          entidadeId,
-          pessoaTipo: 'encontrista',
-          pessoaIds,
-          papel,
-          descricaoPapel,
-        })
+        body: JSON.stringify({ ejcId, nome: novoNome }),
       });
       const data = await res.json();
-      if (!data.success) return await appAlert(data.error || 'Erro ao vincular encontrista.', 'danger', 'Erro');
+      if (!data.success) return await appAlert(data.error || 'Erro ao editar circulo.', 'danger', 'Erro');
       recarregarMantendoPainelAtual();
     }
 
-    async function vincularEncontreiroEquipeEJC() {
-      const entidadeId = document.getElementById('equipe_id').value;
-      const pessoaIds = Array.from(document.getElementById('encontreiro_id').selectedOptions || [])
-        .map((option) => String(option.value || '').trim())
-        .filter(Boolean);
-      const papel = document.getElementById('papel_equipe').value;
-      if (!entidadeId || pessoaIds.length === 0 || !papel) return await appAlert('Selecione equipe, ao menos uma pessoa e vinculo.', 'warning', 'Dados incompletos');
-      const res = await fetch('/admin/vincular-encontro', {
+    async function excluirCirculo(circuloId, nomeCirculo) {
+      if (!circuloId) return;
+      if (!await appConfirm(`Deseja excluir o circulo \"${nomeCirculo || ''}\"? Todos os vinculos dele serao removidos.`, 'Confirmar exclusao')) return;
+
+      const res = await fetch(`/admin/excluir-circulo/${encodeURIComponent(circuloId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ejcId, entidadeTipo: 'equipe', entidadeId, pessoaTipo: 'encontreiro', pessoaIds, papel })
+        body: JSON.stringify({ ejcId }),
       });
       const data = await res.json();
-      if (!data.success) return await appAlert(data.error || 'Erro ao vincular na equipe.', 'danger', 'Erro');
+      if (!data.success) return await appAlert(data.error || 'Erro ao excluir circulo.', 'danger', 'Erro');
       recarregarMantendoPainelAtual();
+    }
+
+    async function editarEquipe(equipeId, nomeAtual) {
+      if (!equipeId) return;
+      const novoNome = String(await appPrompt({
+        title: 'Editar equipe',
+        label: 'Nome da equipe',
+        value: nomeAtual || '',
+        placeholder: 'Digite o novo nome',
+        help: 'O nome e referencias de equipe serao atualizados.',
+        confirmText: 'Salvar',
+      }) || '').trim();
+      if (!novoNome || novoNome === String(nomeAtual || '').trim()) return;
+
+      const res = await fetch(`/admin/editar-equipe/${encodeURIComponent(equipeId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ejcId, nome: novoNome }),
+      });
+      const data = await res.json();
+      if (!data.success) return await appAlert(data.error || 'Erro ao editar equipe.', 'danger', 'Erro');
+      recarregarMantendoPainelAtual();
+    }
+
+    async function excluirEquipe(equipeId, nomeEquipe) {
+      if (!equipeId) return;
+      if (!await appConfirm(`Deseja excluir a equipe \"${nomeEquipe || ''}\"? Todos os vinculos dela serao removidos.`, 'Confirmar exclusao')) return;
+
+      const res = await fetch(`/admin/excluir-equipe/${encodeURIComponent(equipeId)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ejcId }),
+      });
+      const data = await res.json();
+      if (!data.success) return await appAlert(data.error || 'Erro ao excluir equipe.', 'danger', 'Erro');
+      recarregarMantendoPainelAtual();
+    }
+
+    async function vincularEncontristaCirculo() {
+      try {
+        const entidadeId = document.getElementById('circulo_id').value;
+        const pessoaIds = Array.from(document.getElementById('encontrista_id').selectedOptions || [])
+          .map((option) => String(option.value || '').trim())
+          .filter(Boolean);
+        const papel = document.getElementById('papel_circulo').value || 'membro';
+        const descricaoPapel = (document.getElementById('descricao_papel_moita').value || '').trim();
+
+        if (!entidadeId || pessoaIds.length === 0) return await appAlert('Selecione circulo e ao menos um encontrista.', 'warning', 'Dados incompletos');
+        if (papel === 'moita' && !descricaoPapel) {
+          return await appAlert('Informe qual papel a pessoa esta fazendo na moita.', 'warning', 'Campo obrigatorio');
+        }
+
+        console.log('[VINCULAR CIRCULO]', { ejcId, entidadeId, pessoaIds, papel, descricaoPapel });
+
+        const res = await fetch('/admin/vincular-encontro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ejcId,
+            entidadeTipo: 'circulo',
+            entidadeId,
+            pessoaTipo: 'encontrista',
+            pessoaIds,
+            papel,
+            descricaoPapel,
+          })
+        });
+
+        const data = await res.json();
+        console.log('[VINCULAR CIRCULO] resposta:', res.status, data);
+        if (!res.ok || !data.success) {
+          return await appAlert(data.error || 'Erro ao vincular encontrista.', 'danger', 'Erro');
+        }
+
+        if ((Number(data.vinculados) || 0) === 0) {
+          return await appAlert(`Nenhum novo vinculo foi criado. Esses nomes podem ja estar vinculados nesse circulo. (ja vinculados: ${data.jaVinculados || 0}, nao encontrados: ${data.naoEncontrados || 0})`, 'warning', 'Sem alteracoes');
+        }
+
+        recarregarMantendoPainelAtual();
+      } catch (err) {
+        await appAlert(`Falha ao vincular encontrista: ${err.message}`, 'danger', 'Erro');
+      }
+    }
+
+    async function vincularEncontreiroEquipeEJC() {
+      try {
+        const entidadeId = document.getElementById('equipe_id').value;
+        const pessoaIds = Array.from(document.getElementById('encontreiro_id').selectedOptions || [])
+          .map((option) => String(option.value || '').trim())
+          .filter(Boolean);
+        const papel = document.getElementById('papel_equipe').value;
+
+        if (!entidadeId || pessoaIds.length === 0 || !papel) {
+          return await appAlert('Selecione equipe, ao menos uma pessoa e vinculo.', 'warning', 'Dados incompletos');
+        }
+
+        console.log('[VINCULAR EQUIPE]', { ejcId, entidadeId, pessoaIds, papel });
+
+        const res = await fetch('/admin/vincular-encontro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ejcId, entidadeTipo: 'equipe', entidadeId, pessoaTipo: 'encontreiro', pessoaIds, papel })
+        });
+
+        const data = await res.json();
+        console.log('[VINCULAR EQUIPE] resposta:', res.status, data);
+        if (!res.ok || !data.success) {
+          return await appAlert(data.error || 'Erro ao vincular na equipe.', 'danger', 'Erro');
+        }
+
+        if ((Number(data.vinculados) || 0) === 0) {
+          return await appAlert(`Nenhum novo vinculo foi criado. Esses nomes podem ja estar vinculados nessa equipe. (ja vinculados: ${data.jaVinculados || 0}, nao encontrados: ${data.naoEncontrados || 0})`, 'warning', 'Sem alteracoes');
+        }
+
+        recarregarMantendoPainelAtual();
+      } catch (err) {
+        await appAlert(`Falha ao vincular na equipe: ${err.message}`, 'danger', 'Erro');
+      }
     }
 
     function alternarCampoMoita() {
@@ -793,6 +1278,10 @@
       }
     }
 
+    initChecklistFromSelect('encontrista_id');
+    initChecklistFromSelect('encontreiro_id');
+    observarContadorSelecao('encontrista_id');
+    observarContadorSelecao('encontreiro_id');
     alternarCampoMoita();
     restaurarPainelAtivo();
     renderAll();
