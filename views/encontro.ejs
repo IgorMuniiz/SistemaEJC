@@ -9,7 +9,8 @@
   <title>Inscrição Encontro EJC</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
   <link rel="preconnect" href="https://unpkg.com" crossorigin>
   <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
@@ -25,19 +26,37 @@
     <div class="portal-orb portal-orb-c"></div>
   </div>
 
+  <% if (locals.bloqueado) { %>
+  <main role="main" style="display:flex; align-items:center; justify-content:center; min-height:70vh; padding:2rem;">
+    <div class="text-center" style="max-width:520px;">
+      <div style="font-size:3.5rem; margin-bottom:1rem;">&#128274;</div>
+      <h2 style="color:#fff; margin-bottom:1rem;">Inscri&ccedil;&otilde;es Encerradas</h2>
+      <p style="color:rgba(255,255,255,0.75); margin-bottom:1.5rem; line-height:1.6;">
+        <%= locals.motivoBloqueio || 'O formulário de inscrição para encontreiros está temporariamente indisponível.' %>
+      </p>
+      <a href="/" style="display:inline-block; border:1.5px solid rgba(255,255,255,0.6); color:#fff; padding:0.6rem 1.6rem; border-radius:8px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='transparent'">&#8592; Voltar &agrave; p&aacute;gina inicial</a>
+    </div>
+  </main>
+  <% } else { %>
   <main id="root" role="main"></main>
+  <% } %>
 
   <footer class="portal-footer text-center py-3">
     <div class="container">
-      <small>© 2026 EJC - Todos os direitos reservados</small>
+      <small>&copy; 2026 EJC - Todos os direitos reservados</small>
     </div>
   </footer>
 
+  <% if (!locals.bloqueado) { %>
+  <script>
+    window.__EJC_ATIVO__ = <%- JSON.stringify(locals.ejcAtivo || '') %>;
+  </script>
   <!-- React and dependencies -->
   <script defer src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script defer type="text/babel" src="/js/app.js?v=20260310-2"></script>
+  <script defer type="text/babel" src="/js/app.js?v=20260316-1"></script>
+  <% } %>
   <script>
     const deferHeavyWork = (callback) => {
       if ('requestIdleCallback' in window) {
@@ -69,5 +88,6 @@
     }
 
   </script>
+  <script defer src="/js/page-transitions.js"></script>
 </body>
 </html>

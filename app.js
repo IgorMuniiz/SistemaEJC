@@ -149,6 +149,7 @@ const encontroSchema = new mongoose.Schema({
   tiosCategoria: { type: String, enum: ['casal', 'solo', ''], default: '' },
   origemTios: { type: Boolean, default: false },
   tiosGrupoId: { type: String, default: '' },
+  tioParceiroId: { type: mongoose.Schema.Types.ObjectId, ref: 'Encontro', default: null },
   equipeServiu: { type: [String], default: [] },
   equipeCoordenou: { type: [String], default: [] },
   temVeiculoProprio: { type: Boolean, default: false },
@@ -184,7 +185,21 @@ const Subscription = mongoose.model('PushSubscription', subSchema);
 const adminSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
   senha: { type: String, required: true },
+  nivelAcesso: {
+    type: String,
+    enum: ['super_admin', 'coordenador', 'operador', 'consulta'],
+    default: 'super_admin',
+  },
+  permissoes: { type: [String], default: [] },
   dataCriacao: { type: Date, default: Date.now },
+  bloquearFormularioEncontrista: { type: Boolean, default: false },
+  bloquearFormularioEncontreiros: { type: Boolean, default: false },
+  dataInicioBloquearEncontrista: { type: Date, default: null },
+  dataFimBloquearEncontrista: { type: Date, default: null },
+  dataInicioBloquearEncontreiros: { type: Date, default: null },
+  dataFimBloquearEncontreiros: { type: Date, default: null },
+  motivoBloquearEncontrista: { type: String, default: '' },
+  motivoBloquearEncontreiros: { type: String, default: '' },
 });
 
 const Admin = mongoose.model('Admin', adminSchema);
@@ -203,6 +218,116 @@ const adminAuditLogSchema = new mongoose.Schema({
 });
 
 const AdminAuditLog = mongoose.model('AdminAuditLog', adminAuditLogSchema);
+
+const ADMIN_ACCESS_LEVELS = ['super_admin', 'coordenador', 'operador', 'consulta'];
+const ADMIN_PERMISSION_OPTIONS = [
+  { key: 'painel.visualizar', label: 'Visualizar painel', description: 'Permite acessar o painel administrativo.' },
+  { key: 'cadastros.visualizar', label: 'Visualizar cadastros', description: 'Permite ver listas de encontristas e encontreiros.' },
+  { key: 'cadastros.editar', label: 'Editar cadastros', description: 'Permite editar, transferir e ajustar cadastros.' },
+  { key: 'cadastros.aprovar', label: 'Aprovar cadastros', description: 'Permite aprovar/reprovar e alterar status.' },
+  { key: 'cadastros.excluir', label: 'Excluir cadastros', description: 'Permite deletar cadastros e limpezas em lote.' },
+  { key: 'encontros.gerenciar', label: 'Gerenciar encontros', description: 'Permite criar/deletar encontro, círculos e vínculos.' },
+  { key: 'equipes.gerenciar', label: 'Gerenciar equipes', description: 'Permite criar/editar/excluir equipes e vincular pessoas.' },
+  { key: 'importacao.executar', label: 'Importar dados', description: 'Permite executar importação de cadastros externos.' },
+  { key: 'bloqueio.gerenciar', label: 'Gerenciar bloqueios', description: 'Permite configurar bloqueio dos formulários.' },
+  { key: 'lgpd.executar', label: 'Executar LGPD', description: 'Permite rodar anonimização/retencão LGPD.' },
+  { key: 'admins.gerenciar', label: 'Gerenciar admins', description: 'Permite criar, editar e deletar administradores.' },
+];
+const ADMIN_PERMISSION_KEYS = ADMIN_PERMISSION_OPTIONS.map((item) => item.key);
+const ADMIN_ROLE_DEFAULT_PERMISSIONS = {
+  super_admin: [...ADMIN_PERMISSION_KEYS],
+  coordenador: [
+    'painel.visualizar',
+    'cadastros.visualizar',
+    'cadastros.editar',
+    'cadastros.aprovar',
+    'encontros.gerenciar',
+    'equipes.gerenciar',
+    'importacao.executar',
+    'bloqueio.gerenciar',
+    'lgpd.executar',
+  ],
+  operador: [
+    'painel.visualizar',
+    'cadastros.visualizar',
+    'cadastros.editar',
+    'cadastros.aprovar',
+  ],
+  consulta: [
+    'painel.visualizar',
+    'cadastros.visualizar',
+  ],
+};
+const ADMIN_LEVEL_RANK = {
+  consulta: 1,
+  operador: 2,
+  coordenador: 3,
+  super_admin: 4,
+};
+
+const normalizeAdminAccessLevel = (value, fallback = 'super_admin') => {
+  const raw = normalizeTextInput(value).toLowerCase();
+  if (ADMIN_ACCESS_LEVELS.includes(raw)) return raw;
+  return fallback;
+};
+
+const sanitizeAdminPermissions = (value) => {
+  const raw = Array.isArray(value) ? value : [value];
+  return [...new Set(
+    raw
+      .map((item) => normalizeTextInput(item))
+      .filter((item) => ADMIN_PERMISSION_KEYS.includes(item))
+  )];
+};
+
+const resolveAdminPermissions = (adminDoc) => {
+  const nivelAcesso = normalizeAdminAccessLevel(adminDoc?.nivelAcesso, 'super_admin');
+  const base = ADMIN_ROLE_DEFAULT_PERMISSIONS[nivelAcesso] || [];
+  if (nivelAcesso === 'super_admin') return [...ADMIN_PERMISSION_KEYS];
+  const extras = sanitizeAdminPermissions(adminDoc?.permissoes);
+  return [...new Set([...base, ...extras])];
+};
+
+const getAdminLevelRank = (nivelAcesso) => ADMIN_LEVEL_RANK[normalizeAdminAccessLevel(nivelAcesso, 'consulta')] || 0;
+
+const buildAdminSessionData = (adminDoc) => {
+  const nivelAcesso = normalizeAdminAccessLevel(adminDoc?.nivelAcesso, 'super_admin');
+  const permissoes = resolveAdminPermissions(adminDoc);
+  return {
+    _id: adminDoc?._id,
+    username: adminDoc?.username || '',
+    nivelAcesso,
+    permissoes,
+  };
+};
+
+const denyAdminPermission = (req, res, permissionKey) => {
+  const acceptsJson = req.xhr
+    || String(req.headers.accept || '').includes('application/json')
+    || req.method !== 'GET';
+
+  if (acceptsJson) {
+    return res.status(403).json({
+      success: false,
+      error: 'Sem permissão para executar esta ação.',
+      permission: permissionKey,
+    });
+  }
+
+  return res.status(403).send('Acesso negado: você não possui permissão para esta área.');
+};
+
+const requireAdminPermission = (permissionKey) => (req, res, next) => {
+  const permissoes = Array.isArray(req.adminUser?.permissoes) ? req.adminUser.permissoes : [];
+  if (permissoes.includes(permissionKey)) return next();
+  return denyAdminPermission(req, res, permissionKey);
+};
+
+const canManageAdminWithHierarchy = (actingAdmin, targetAdmin) => {
+  const actingRank = getAdminLevelRank(actingAdmin?.nivelAcesso);
+  const targetRank = getAdminLevelRank(targetAdmin?.nivelAcesso);
+  return actingRank > targetRank;
+};
 
 const BCRYPT_PREFIX_REGEX = /^\$2[aby]\$\d{2}\$/;
 
@@ -242,10 +367,32 @@ const validateAdminPassword = async (admin, plainPassword) => {
 const ejcSchema = new mongoose.Schema({
   nome: { type: String, required: true, trim: true },
   nomeNormalizado: { type: String, required: true, unique: true, trim: true },
+  ativo: { type: Boolean, default: false },
   dataCriacao: { type: Date, default: Date.now },
 });
 
 const Ejc = mongoose.model('Ejc', ejcSchema);
+
+let _encontroAtivoCache = null;
+let _encontroAtivoCacheTs = 0;
+const ENCONTRO_ATIVO_CACHE_TTL = 30_000; // 30 segundos
+
+const getEncontroAtivo = async () => {
+  const now = Date.now();
+  if (_encontroAtivoCache && (now - _encontroAtivoCacheTs) < ENCONTRO_ATIVO_CACHE_TTL) {
+    return _encontroAtivoCache;
+  }
+  const ativoSelecionado = await Ejc.findOne({ ativo: true }).lean();
+  const result = ativoSelecionado || await Ejc.findOne({}).sort({ dataCriacao: -1 }).lean();
+  _encontroAtivoCache = result;
+  _encontroAtivoCacheTs = now;
+  return result;
+};
+
+const invalidarCacheEncontroAtivo = () => {
+  _encontroAtivoCache = null;
+  _encontroAtivoCacheTs = 0;
+};
 
 // team schema for grouping encontreiros
 const equipeSchema = new mongoose.Schema({
@@ -287,6 +434,107 @@ const parsePositiveInt = (value, fallback, min, max) => {
   return parsed;
 };
 
+const createTiosGroupId = () => `tios-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const clearTiosCoupleLink = async (encontroId) => {
+  if (!mongoose.Types.ObjectId.isValid(encontroId)) return;
+
+  const atual = await Encontro.findById(encontroId).select('_id tipo tiosGrupoId tioParceiroId').lean();
+  if (!atual) return;
+
+  const parceiroId = atual.tioParceiroId && mongoose.Types.ObjectId.isValid(atual.tioParceiroId)
+    ? String(atual.tioParceiroId)
+    : '';
+
+  await Encontro.updateOne(
+    { _id: encontroId },
+    { $set: { tioParceiroId: null, tiosGrupoId: '', tiosCategoria: atual.tipo === 'tios' ? 'solo' : '' } }
+  );
+
+  if (parceiroId) {
+    await Encontro.updateOne(
+      { _id: parceiroId, tioParceiroId: encontroId },
+      { $set: { tioParceiroId: null, tiosGrupoId: '', tiosCategoria: 'solo' } }
+    );
+  }
+};
+
+const linkTiosCouple = async (encontroId, parceiroId, preferredGroupId = '') => {
+  if (!mongoose.Types.ObjectId.isValid(encontroId) || !mongoose.Types.ObjectId.isValid(parceiroId)) {
+    throw new Error('IDs invalidos para vinculo de tios.');
+  }
+  if (String(encontroId) === String(parceiroId)) {
+    throw new Error('Nao e possivel vincular o mesmo tio a ele proprio.');
+  }
+
+  const [encontroAtual, parceiroAtual] = await Promise.all([
+    Encontro.findById(encontroId),
+    Encontro.findById(parceiroId),
+  ]);
+
+  if (!encontroAtual || !parceiroAtual) {
+    throw new Error('Tio/Tia selecionado(a) nao encontrado(a).');
+  }
+  if (encontroAtual.tipo !== 'tios' || parceiroAtual.tipo !== 'tios') {
+    throw new Error('O vinculo de casal so pode ser feito entre tios.');
+  }
+
+  if (encontroAtual.tioParceiroId && String(encontroAtual.tioParceiroId) !== String(parceiroId)) {
+    await clearTiosCoupleLink(encontroAtual._id);
+  }
+  if (parceiroAtual.tioParceiroId && String(parceiroAtual.tioParceiroId) !== String(encontroId)) {
+    await clearTiosCoupleLink(parceiroAtual._id);
+  }
+
+  const grupoId = normalizeTextInput(preferredGroupId)
+    || normalizeTextInput(encontroAtual.tiosGrupoId)
+    || normalizeTextInput(parceiroAtual.tiosGrupoId)
+    || createTiosGroupId();
+
+  await Promise.all([
+    Encontro.updateOne(
+      { _id: encontroAtual._id },
+      { $set: { tiosCategoria: 'casal', tiosGrupoId: grupoId, tioParceiroId: parceiroAtual._id } }
+    ),
+    Encontro.updateOne(
+      { _id: parceiroAtual._id },
+      { $set: { tiosCategoria: 'casal', tiosGrupoId: grupoId, tioParceiroId: encontroAtual._id } }
+    ),
+  ]);
+
+  return grupoId;
+};
+
+app.get('/api/tios-disponiveis', async (req, res) => {
+  try {
+    const ignoreId = normalizeTextInput(req.query.ignoreId);
+    const filter = { tipo: 'tios' };
+    if (mongoose.Types.ObjectId.isValid(ignoreId)) {
+      filter._id = { $ne: ignoreId };
+    }
+
+    const tios = await Encontro.find(filter)
+      .sort({ nomeCompleto: 1 })
+      .select('nomeCompleto tiosCategoria tiosGrupoId tioParceiroId genero')
+      .lean();
+
+    return res.json({
+      success: true,
+      items: tios.map((item) => ({
+        id: String(item._id),
+        nomeCompleto: item.nomeCompleto || 'Sem nome',
+        tiosCategoria: item.tiosCategoria || 'solo',
+        tiosGrupoId: item.tiosGrupoId || '',
+        tioParceiroId: item.tioParceiroId ? String(item.tioParceiroId) : '',
+        genero: item.genero || '',
+      })),
+    });
+  } catch (err) {
+    console.error('Erro ao listar tios disponiveis:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao listar tios disponiveis.' });
+  }
+});
+
 const isSafeFilePath = (baseDir, candidatePath) => {
   const resolvedBase = path.resolve(baseDir);
   const resolvedTarget = path.resolve(candidatePath);
@@ -299,6 +547,22 @@ app.set('view engine', 'ejs');
 
 // compress text assets to reduce transfer size in Lighthouse.
 app.use(compression({ threshold: 1024 }));
+
+const setStaticCacheHeaders = (res, filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  const immutableExt = new Set([
+    '.css', '.js', '.mjs', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.mp4', '.webm'
+  ]);
+
+  if (immutableExt.has(ext)) {
+    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    return;
+  }
+
+  if (ext === '.html') {
+    res.setHeader('Cache-Control', 'public, max-age=0, must-revalidate');
+  }
+};
 
 app.get('/img/:bucket/:file', async (req, res) => {
   try {
@@ -363,15 +627,23 @@ app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '30d',
   etag: true,
   lastModified: true,
+  setHeaders: setStaticCacheHeaders,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
   maxAge: '7d',
   etag: true,
   lastModified: true,
+  setHeaders: setStaticCacheHeaders,
 }));
 // ensure manifest and service worker are available
-app.get('/manifest.json', (req,res)=>res.sendFile(path.join(__dirname,'public/manifest.json')));
-app.get('/sw.js', (req,res)=>res.sendFile(path.join(__dirname,'public/sw.js')));
+app.get('/manifest.json', (req, res) => {
+  res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+  return res.sendFile(path.join(__dirname, 'public/manifest.json'));
+});
+app.get('/sw.js', (req, res) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  return res.sendFile(path.join(__dirname, 'public/sw.js'));
+});
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
@@ -568,10 +840,11 @@ const normalizeMultiField = (value) => {
 
 const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = '') => {
+const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = '', options = {}) => {
   const nome = String(nomeCompleto || '').trim();
   const mail = String(email || '').trim();
   const phoneDigits = normalizePhoneDigits(telefone);
+  const ejcScope = normalizeTextInput(options.ejc);
 
   const filters = [];
   if (mail && !mail.includes('@pendente.local')) {
@@ -585,7 +858,13 @@ const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = 
   }
 
   if (filters.length === 0) return null;
-  return Model.findOne({ $or: filters });
+
+  const query = { $or: filters };
+  if (ejcScope) {
+    query.ejc = new RegExp(`^${escapeRegExp(ejcScope)}$`, 'i');
+  }
+
+  return Model.findOne(query);
 };
 
 const getClientIp = (req) => {
@@ -594,6 +873,47 @@ const getClientIp = (req) => {
     return String(forwarded).split(',')[0].trim();
   }
   return req.ip || req.connection?.remoteAddress || '';
+};
+
+// Função para verificar se um formulário está bloqueado
+const verificarFormularioBloqueado = async (tipo) => {
+  try {
+    const admin = await Admin.findOne().lean();
+    if (!admin) {
+      return { bloqueado: false, motivo: '' };
+    }
+
+    const agora = new Date();
+
+    if (tipo === 'encontrista') {
+      if (admin.bloquearFormularioEncontrista) {
+        const dataInicio = admin.dataInicioBloquearEncontrista ? new Date(admin.dataInicioBloquearEncontrista) : null;
+        const dataFim = admin.dataFimBloquearEncontrista ? new Date(admin.dataFimBloquearEncontrista) : null;
+        if (!dataInicio && !dataFim) {
+          return { bloqueado: true, motivo: admin.motivoBloquearEncontrista || 'Formulário de encontrista está bloqueado' };
+        }
+        if (dataInicio && agora < dataInicio) return { bloqueado: false, motivo: '' };
+        if (dataFim && agora > dataFim) return { bloqueado: false, motivo: '' };
+        return { bloqueado: true, motivo: admin.motivoBloquearEncontrista || 'Formulário de encontrista está bloqueado' };
+      }
+    } else if (tipo === 'encontreiro') {
+      if (admin.bloquearFormularioEncontreiros) {
+        const dataInicio = admin.dataInicioBloquearEncontreiros ? new Date(admin.dataInicioBloquearEncontreiros) : null;
+        const dataFim = admin.dataFimBloquearEncontreiros ? new Date(admin.dataFimBloquearEncontreiros) : null;
+        if (!dataInicio && !dataFim) {
+          return { bloqueado: true, motivo: admin.motivoBloquearEncontreiros || 'Formulário de encontreiro está bloqueado' };
+        }
+        if (dataInicio && agora < dataInicio) return { bloqueado: false, motivo: '' };
+        if (dataFim && agora > dataFim) return { bloqueado: false, motivo: '' };
+        return { bloqueado: true, motivo: admin.motivoBloquearEncontreiros || 'Formulário de encontreiro está bloqueado' };
+      }
+    }
+
+    return { bloqueado: false, motivo: '' };
+  } catch (err) {
+    console.error('Erro ao verificar bloqueio de formulário:', err);
+    return { bloqueado: false, motivo: '' };
+  }
 };
 
 const logAdminAction = async (req, payload) => {
@@ -1020,14 +1340,39 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   };
 
   const sortEquipeEntriesByTipo = (items) => {
-    return (items || [])
+    const ordered = (items || [])
       .map((entry, idx) => ({ entry, idx }))
       .sort((a, b) => {
         const orderDiff = getEquipeTipoOrder(a.entry) - getEquipeTipoOrder(b.entry);
         if (orderDiff !== 0) return orderDiff;
         return a.idx - b.idx;
-      })
-      .map((item) => item.entry);
+      });
+
+    const grouped = [];
+    const usedGroups = new Set();
+
+    ordered.forEach(({ entry }) => {
+      const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
+      const isCasal = Boolean(entry && entry.tipo === 'tios' && entry.tiosCategoria === 'casal' && grupoId);
+
+      if (!isCasal) {
+        grouped.push(entry);
+        return;
+      }
+
+      if (usedGroups.has(grupoId)) {
+        return;
+      }
+
+      usedGroups.add(grupoId);
+      const casalEntries = ordered
+        .filter((item) => normalizeTextInput(item.entry && item.entry.tiosGrupoId) === grupoId)
+        .map((item) => item.entry);
+
+      grouped.push(...casalEntries);
+    });
+
+    return grouped;
   };
 
   const drawGrid = (entries, startY, config = {}) => {
@@ -1342,7 +1687,8 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
     const equipePhotoWidth = mmToPt(24);
     const equipePhotoHeight = mmToPt(28);
     const equipeColGap = mmToPt(10);
-    const equipeRowGap = mmToPt(8);
+    // Espaçamento reduzido para caber 12 cards por folha (mantendo card height intacto).
+    const equipeRowGap = mmToPt(5);
     const equipeCardOptions = {
       photoWidth: equipePhotoWidth,
       photoHeight: equipePhotoHeight,
@@ -1553,12 +1899,29 @@ const exportImagesFromModel = async (Model, zipName, res) => {
 
 // routes
 
-// Middleware para verificar autenticação de admin
-const checkAdminAuth = (req, res, next) => {
-  if (!req.session.adminId) {
+// Middleware para verificar autenticação de admin e carregar permissões
+const checkAdminAuth = async (req, res, next) => {
+  try {
+    if (!req.session.adminId) {
+      return res.redirect('/admin/login');
+    }
+
+    const admin = await Admin.findById(req.session.adminId).select('username nivelAcesso permissoes').lean();
+    if (!admin) {
+      req.session.destroy(() => {});
+      return res.redirect('/admin/login');
+    }
+
+    const sessionData = buildAdminSessionData(admin);
+    req.adminUser = sessionData;
+    req.session.adminUsername = sessionData.username;
+    req.session.adminNivelAcesso = sessionData.nivelAcesso;
+    req.session.adminPermissoes = sessionData.permissoes;
+    return next();
+  } catch (err) {
+    console.error('Erro ao validar sessão de admin:', err);
     return res.redirect('/admin/login');
   }
-  next();
 };
 
 app.get('/', (req, res) => {
@@ -1961,6 +2324,7 @@ app.get('/export-encontro-excel', async (req, res) => {
   try {
     const Excel = require('exceljs');
     const entries = await Encontro.find({ aprovado: true }).sort({ dataCadastro: 1 }).lean();
+    const allEncontreiros = await Encontro.find().sort({ dataCadastro: 1 }).lean();
 
     const equipes = [
       'Sala',
@@ -2000,6 +2364,25 @@ app.get('/export-encontro-excel', async (req, res) => {
       return { equipe, serviram, coordenaram };
     });
 
+    const totalServiramGeral = estatisticas.reduce((sum, e) => sum + e.serviram, 0);
+    const totalCoordenaramGeral = estatisticas.reduce((sum, e) => sum + e.coordenaram, 0);
+    const mediaEventosPorPessoa = entries.length
+      ? ((totalServiramGeral + totalCoordenaramGeral) / entries.length).toFixed(2)
+      : '0.00';
+    const scoreOperacional = entries.length
+      ? (((totalServiramGeral + totalCoordenaramGeral) / (entries.length * 2)) * 100).toFixed(1)
+      : '0.0';
+    const rankingEquipes = [...estatisticas].sort((a, b) => {
+      const scoreA = a.serviram + a.coordenaram;
+      const scoreB = b.serviram + b.coordenaram;
+      return scoreB - scoreA;
+    });
+    const equipeDestaque = estatisticas.reduce((best, atual) => {
+      const scoreAtual = atual.serviram + atual.coordenaram;
+      const scoreBest = best.serviram + best.coordenaram;
+      return scoreAtual > scoreBest ? atual : best;
+    }, estatisticas[0] || { equipe: 'N/A', serviram: 0, coordenaram: 0 });
+
     // Configurar colunas
     dashboard.columns = [
       { header: '', key: 'col1', width: 2 },
@@ -2016,7 +2399,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     // Banner superior com gradiente
     dashboard.mergeCells('A1:I1');
     const bannerCell = dashboard.getCell('A1');
-    bannerCell.value = 'SISTEMA DE GESTAO EJC - ANALISE DE EQUIPES';
+    bannerCell.value = 'CENTRO ANALITICO EJC - DASHBOARD EXECUTIVO DE EQUIPES';
     bannerCell.font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Segoe UI' };
     bannerCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2545' } };
     bannerCell.alignment = { horizontal: 'center', vertical: 'middle' };
@@ -2053,6 +2436,62 @@ app.get('/export-encontro-excel', async (req, res) => {
     };
     dashboard.getRow(3).height = 24;
 
+    // KPIs executivos do dashboard
+    dashboard.mergeCells('H2:I2');
+    const kpiTopCell = dashboard.getCell('H2');
+    kpiTopCell.value = `KPIs EXECUTIVOS | Aprovados: ${entries.length} | Media por pessoa: ${mediaEventosPorPessoa}`;
+    kpiTopCell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' }, name: 'Segoe UI Semibold' };
+    kpiTopCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    kpiTopCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4ED8' } };
+    kpiTopCell.border = {
+      top: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      bottom: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      left: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      right: { style: 'thin', color: { argb: 'FF93C5FD' } },
+    };
+
+    dashboard.mergeCells('H3:I3');
+    const kpiBottomCell = dashboard.getCell('H3');
+    kpiBottomCell.value = `Equipe lider: ${equipeDestaque.equipe} | Serviram: ${totalServiramGeral} | Coordenaram: ${totalCoordenaramGeral}`;
+    kpiBottomCell.font = { bold: true, size: 10, color: { argb: 'FF0B2545' }, name: 'Segoe UI Semibold' };
+    kpiBottomCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+    kpiBottomCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE0ECFF' } };
+    kpiBottomCell.border = {
+      top: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      bottom: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      left: { style: 'thin', color: { argb: 'FF93C5FD' } },
+      right: { style: 'thin', color: { argb: 'FF93C5FD' } },
+    };
+
+    const top1 = rankingEquipes[0] || { equipe: 'N/A', serviram: 0, coordenaram: 0 };
+    const top2 = rankingEquipes[1] || { equipe: '-', serviram: 0, coordenaram: 0 };
+    const top3 = rankingEquipes[2] || { equipe: '-', serviram: 0, coordenaram: 0 };
+
+    const styleExecutiveCard = (range, text, bg, border, color) => {
+      dashboard.mergeCells(range);
+      const cell = dashboard.getCell(range.split(':')[0]);
+      cell.value = text;
+      cell.font = { bold: true, size: 10, color: { argb: color }, name: 'Segoe UI Semibold' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bg } };
+      cell.border = {
+        top: { style: 'thin', color: { argb: border } },
+        bottom: { style: 'thin', color: { argb: border } },
+        left: { style: 'thin', color: { argb: border } },
+        right: { style: 'thin', color: { argb: border } },
+      };
+    };
+
+    styleExecutiveCard('H5:I5', `SCORE OPERACIONAL\n${scoreOperacional}%`, 'FFEFF6FF', 'FF93C5FD', 'FF1E3A8A');
+    styleExecutiveCard('H6:I6', `TOP 1\n${top1.equipe} (${top1.serviram + top1.coordenaram})`, 'FFECFDF3', 'FF86EFAC', 'FF166534');
+    styleExecutiveCard('H7:I7', `TOP 2\n${top2.equipe} (${top2.serviram + top2.coordenaram})`, 'FFFFF7ED', 'FFFCD34D', 'FF92400E');
+    styleExecutiveCard('H8:I8', `TOP 3\n${top3.equipe} (${top3.serviram + top3.coordenaram})`, 'FFFFF1F2', 'FFFDA4AF', 'FF9F1239');
+
+    dashboard.getRow(5).height = 34;
+    dashboard.getRow(6).height = 34;
+    dashboard.getRow(7).height = 34;
+    dashboard.getRow(8).height = 34;
+
     // Cabeçalho da tabela de estatísticas
     const headerRow = dashboard.getRow(4);
     headerRow.height = 34;
@@ -2071,9 +2510,9 @@ app.get('/export-encontro-excel', async (req, res) => {
 
     dashboard.getCell('B4').value = 'EQUIPE';
     dashboard.getCell('C4').value = 'SERVIRAM';
-    dashboard.getCell('D4').value = 'VISUALIZACAO';
+    dashboard.getCell('D4').value = 'VISUAL EXECUTIVO';
     dashboard.getCell('E4').value = 'COORDENARAM';
-    dashboard.getCell('F4').value = 'VISUALIZACAO';
+    dashboard.getCell('F4').value = 'VISUAL EXECUTIVO';
 
     // Adicionar dados de estatísticas com design moderno
     const maxServiu = Math.max(...estatisticas.map(e => e.serviram), 1);
@@ -2085,13 +2524,21 @@ app.get('/export-encontro-excel', async (req, res) => {
       row.height = 28;
 
       // Cores alternadas mais sofisticadas
-      const bgColor = idx % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
-      const borderColor = 'FFD1E0F0';
+      const isEquipeDestaque = stat.equipe === equipeDestaque.equipe;
+      const bgColor = isEquipeDestaque
+        ? 'FFEFF6FF'
+        : (idx % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF');
+      const borderColor = isEquipeDestaque ? 'FF93C5FD' : 'FFD1E0F0';
 
       // Equipe
       const equipeCell = dashboard.getCell(`B${rowNum}`);
       equipeCell.value = stat.equipe;
-      equipeCell.font = { bold: true, size: 11, color: { argb: 'FF0B2545' }, name: 'Segoe UI' };
+      equipeCell.font = {
+        bold: true,
+        size: 11,
+        color: { argb: isEquipeDestaque ? 'FF1D4ED8' : 'FF0B2545' },
+        name: 'Segoe UI',
+      };
       equipeCell.alignment = { horizontal: 'left', vertical: 'middle', indent: 1 };
       equipeCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
 
@@ -2106,9 +2553,9 @@ app.get('/export-encontro-excel', async (req, res) => {
       // Barra visual serviu com gradiente simulado
       const barraServiuCell = dashboard.getCell(`D${rowNum}`);
       const percentServiu = (stat.serviram / maxServiu) * 100;
-      const blocosServiu = Math.max(0, Math.min(30, Math.round(percentServiu / 3.33))); // 0-30 blocos
-      const barraServiu = '#'.repeat(blocosServiu) + '-'.repeat(30 - blocosServiu);
-      barraServiuCell.value = `${barraServiu} ${percentServiu.toFixed(0)}%`;
+      const blocosServiu = Math.max(0, Math.min(30, Math.round(percentServiu / 3.33)));
+      const barraServiu = '█'.repeat(blocosServiu) + '░'.repeat(30 - blocosServiu);
+      barraServiuCell.value = `${barraServiu} ${percentServiu.toFixed(1)}%`;
       barraServiuCell.font = { size: 9, color: { argb: 'FF06BA63' }, name: 'Consolas' };
       barraServiuCell.alignment = { horizontal: 'left', vertical: 'middle' };
       barraServiuCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
@@ -2124,9 +2571,9 @@ app.get('/export-encontro-excel', async (req, res) => {
       // Barra visual coordenou com gradiente simulado
       const barraCoordCell = dashboard.getCell(`F${rowNum}`);
       const percentCoordenou = (stat.coordenaram / maxCoordenou) * 100;
-      const blocosCoordenou = Math.max(0, Math.min(30, Math.round(percentCoordenou / 3.33))); // 0-30 blocos
-      const barraCoordenou = '#'.repeat(blocosCoordenou) + '-'.repeat(30 - blocosCoordenou);
-      barraCoordCell.value = `${barraCoordenou} ${percentCoordenou.toFixed(0)}%`;
+      const blocosCoordenou = Math.max(0, Math.min(30, Math.round(percentCoordenou / 3.33)));
+      const barraCoordenou = '█'.repeat(blocosCoordenou) + '░'.repeat(30 - blocosCoordenou);
+      barraCoordCell.value = `${barraCoordenou} ${percentCoordenou.toFixed(1)}%`;
       barraCoordCell.font = { size: 9, color: { argb: 'FFFF6B35' }, name: 'Consolas' };
       barraCoordCell.alignment = { horizontal: 'left', vertical: 'middle' };
       barraCoordCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
@@ -2146,14 +2593,11 @@ app.get('/export-encontro-excel', async (req, res) => {
     const totalRowNum = 5 + equipes.length;
     dashboard.getRow(totalRowNum).height = 32;
     
-    const totalServiram = estatisticas.reduce((sum, e) => sum + e.serviram, 0);
-    const totalCoordenaram = estatisticas.reduce((sum, e) => sum + e.coordenaram, 0);
-
     dashboard.getCell(`B${totalRowNum}`).value = 'TOTAL GERAL';
-    dashboard.getCell(`C${totalRowNum}`).value = totalServiram;
-    dashboard.getCell(`D${totalRowNum}`).value = `#`.repeat(30) + ' 100%';
-    dashboard.getCell(`E${totalRowNum}`).value = totalCoordenaram;
-    dashboard.getCell(`F${totalRowNum}`).value = `#`.repeat(30) + ' 100%';
+    dashboard.getCell(`C${totalRowNum}`).value = totalServiramGeral;
+    dashboard.getCell(`D${totalRowNum}`).value = `█`.repeat(30) + ' 100.0%';
+    dashboard.getCell(`E${totalRowNum}`).value = totalCoordenaramGeral;
+    dashboard.getCell(`F${totalRowNum}`).value = `█`.repeat(30) + ' 100.0%';
 
     ['B', 'C', 'D', 'E', 'F'].forEach((col) => {
       const cell = dashboard.getCell(`${col}${totalRowNum}`);
@@ -2174,7 +2618,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     const legendRowNum = totalRowNum + 2;
     dashboard.mergeCells(`B${legendRowNum}:F${legendRowNum}`);
     const legendCell = dashboard.getCell(`B${legendRowNum}`);
-    legendCell.value = 'Legenda: # = Preenchido | - = Vazio | Verde = Serviram | Laranja = Coordenaram | Porcentagem relativa ao maximo';
+    legendCell.value = 'Legenda: █ = volume preenchido | ░ = volume livre | Verde = Serviram | Laranja = Coordenaram | percentual relativo ao maximo';
     legendCell.font = { italic: true, size: 9, color: { argb: 'FF6B7A8C' }, name: 'Segoe UI' };
     legendCell.alignment = { horizontal: 'center', vertical: 'middle' };
     legendCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFBF0' } };
@@ -2559,6 +3003,137 @@ app.get('/export-encontro-excel', async (req, res) => {
       });
     });
 
+    // Aba consolidada com todos os encontreiros do sistema
+    const allSheet = workbook.addWorksheet('Todos Encontreiros', {
+      views: [{ state: 'frozen', ySplit: 1 }],
+    });
+    allSheet.properties.tabColor = { argb: 'FF0B2545' };
+
+    allSheet.columns = [
+      { header: 'Nome', key: 'nome', width: 34 },
+      { header: 'Como quer ser chamado', key: 'comoQuerSerChamado', width: 26 },
+      { header: 'Genero', key: 'genero', width: 14 },
+      { header: 'EJC', key: 'ejc', width: 18 },
+      { header: 'A qual EJC pertence', key: 'qualEjcPertence', width: 22 },
+      { header: 'Tipo', key: 'tipo', width: 12 },
+      { header: 'Categoria Tios', key: 'tiosCategoria', width: 14 },
+      { header: 'Origem Tios', key: 'origemTios', width: 14 },
+      { header: 'Tem Veiculo Proprio', key: 'temVeiculoProprio', width: 18 },
+      { header: 'Logradouro', key: 'logradouro', width: 30 },
+      { header: 'Bairro', key: 'bairro', width: 22 },
+      { header: 'Equipes que Serviu', key: 'equipeServiu', width: 35 },
+      { header: 'Equipes que Coordenou', key: 'equipeCoordenou', width: 35 },
+      { header: 'Data de Nascimento', key: 'dataNascimento', width: 18 },
+      { header: 'Telefone', key: 'telefone', width: 18 },
+      { header: 'Intolerancias/Alergias', key: 'intolerante', width: 28 },
+      { header: 'Email', key: 'email', width: 28 },
+      { header: 'Status', key: 'statusAprovacao', width: 14 },
+      { header: 'Relacionamento', key: 'temRelacionamento', width: 28 },
+      { header: 'Instagram', key: 'instagram', width: 24 },
+      { header: 'Observacoes', key: 'observacoes', width: 34 },
+      { header: 'Data Cadastro', key: 'dataCadastro', width: 20 },
+    ];
+
+    const allHeader = allSheet.getRow(1);
+    allHeader.height = 32;
+    allHeader.eachCell((cell) => {
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2545' } };
+      cell.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Segoe UI Semibold' };
+      cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
+      cell.border = {
+        top: { style: 'medium', color: { argb: 'FF3A86FF' } },
+        bottom: { style: 'double', color: { argb: 'FF3A86FF' } },
+        left: { style: 'thin', color: { argb: 'FF0B2545' } },
+        right: { style: 'thin', color: { argb: 'FF0B2545' } },
+      };
+    });
+
+    allSheet.autoFilter = {
+      from: { row: 1, column: 1 },
+      to: { row: 1, column: 22 },
+    };
+
+    allEncontreiros.forEach((e, idx) => {
+      const tipoTexto = e.tipo === 'tios' ? 'Tios' : 'Jovens';
+      const status = resolveApprovalStatus(e);
+      const row = allSheet.addRow({
+        nome: e.nomeCompleto || '',
+        comoQuerSerChamado: e.comoQuerSerChamado || '',
+        genero: e.genero || '',
+        ejc: e.ejc || '',
+        qualEjcPertence: e.qualEjcPertence || '',
+        tipo: tipoTexto,
+        tiosCategoria: e.tipo === 'tios' ? (e.tiosCategoria === 'casal' ? 'Casal' : 'Solo') : '-',
+        origemTios: e.tipo === 'tios' ? (e.origemTios ? 'Sim' : 'Nao') : '-',
+        temVeiculoProprio: e.temVeiculoProprio ? 'Sim' : 'Nao',
+        logradouro: e.logradouro || '',
+        bairro: e.bairro || '',
+        equipeServiu: Array.isArray(e.equipeServiu) ? e.equipeServiu.join(', ') : '',
+        equipeCoordenou: Array.isArray(e.equipeCoordenou) ? e.equipeCoordenou.join(', ') : '',
+        dataNascimento: e.dataNascimento ? new Date(e.dataNascimento).toLocaleDateString('pt-BR') : '',
+        telefone: e.telefone || '',
+        intolerante: e.intolerante || '',
+        email: e.email || '',
+        statusAprovacao: status,
+        temRelacionamento: e.temRelacionamento || '',
+        instagram: e.instagram || '',
+        observacoes: e.observacoes || '',
+        dataCadastro: e.dataCadastro ? new Date(e.dataCadastro).toLocaleString('pt-BR') : '',
+      });
+
+      row.height = 24;
+      const bgColor = idx % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
+      row.eachCell((cell, colNumber) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: bgColor } };
+        cell.font = { size: 10, color: { argb: 'FF1A2332' }, name: 'Segoe UI' };
+        cell.alignment = { horizontal: 'left', vertical: 'middle', wrapText: true };
+        cell.border = {
+          top: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+          bottom: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+          left: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+          right: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+        };
+
+        if (colNumber === 18) {
+          const valor = String(cell.value || '').toLowerCase();
+          if (valor === 'aprovado') {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDCFCE7' } };
+            cell.font = { bold: true, size: 10, color: { argb: 'FF166534' }, name: 'Segoe UI Semibold' };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          } else if (valor === 'pendente') {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEF3C7' } };
+            cell.font = { bold: true, size: 10, color: { argb: 'FF92400E' }, name: 'Segoe UI Semibold' };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          } else {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFEE2E2' } };
+            cell.font = { bold: true, size: 10, color: { argb: 'FF991B1B' }, name: 'Segoe UI Semibold' };
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+        }
+      });
+    });
+
+    allSheet.addRow({});
+    const totalAprovadosAll = allEncontreiros.filter((e) => resolveApprovalStatus(e) === 'aprovado').length;
+    const totalPendentesAll = allEncontreiros.filter((e) => resolveApprovalStatus(e) === 'pendente').length;
+    const summaryAll = allSheet.addRow({
+      nome: `Total geral de encontreiros: ${allEncontreiros.length}`,
+      email: `Aprovados: ${totalAprovadosAll} | Pendentes: ${totalPendentesAll}`,
+      dataCadastro: `Gerado em: ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`,
+    });
+    summaryAll.height = 28;
+    summaryAll.eachCell((cell) => {
+      cell.font = { bold: true, size: 10, color: { argb: 'FF0B2545' }, name: 'Segoe UI Semibold' };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE8F4FF' } };
+      cell.alignment = { horizontal: 'left', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'double', color: { argb: 'FF3A86FF' } },
+        bottom: { style: 'thin', color: { argb: 'FF3A86FF' } },
+        left: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+        right: { style: 'hair', color: { argb: 'FFD1E0F0' } },
+      };
+    });
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename="EJC_Relatorio_Equipes_' + new Date().toISOString().split('T')[0] + '.xlsx"');
 
@@ -2765,8 +3340,28 @@ app.get('/export-encontrista-excel', async (req, res) => {
   }
 });
 
-app.get('/inscricao', (req, res) => {
-  res.render('inscricao', { errors: [], formData: {} });
+app.get('/inscricao', async (req, res) => {
+  try {
+    const [encontroAtivo, bloqueio] = await Promise.all([
+      getEncontroAtivo(),
+      verificarFormularioBloqueado('encontrista'),
+    ]);
+    res.render('inscricao', {
+      errors: [],
+      formData: {},
+      bloqueado: bloqueio.bloqueado,
+      motivoBloqueio: bloqueio.motivo,
+      ejcAtivo: encontroAtivo?.nome || '',
+    });
+  } catch (err) {
+    res.render('inscricao', {
+      errors: [],
+      formData: {},
+      bloqueado: false,
+      motivoBloqueio: '',
+      ejcAtivo: '',
+    });
+  }
 });
 
 // DEBUG: Endpoint temporário para verificar encontreiros
@@ -2791,12 +3386,111 @@ app.get('/debug/encontreiros', checkAdminAuth, async (req, res) => {
   }
 });
 
-app.get('/encontro', (req, res) => {
-  res.render('encontro', { errors: [], formData: {} });
+app.get('/encontro', async (req, res) => {
+  try {
+    const [encontroAtivo, bloqueio] = await Promise.all([
+      getEncontroAtivo(),
+      verificarFormularioBloqueado('encontreiro'),
+    ]);
+    res.render('encontro', {
+      errors: [],
+      formData: {},
+      bloqueado: bloqueio.bloqueado,
+      motivoBloqueio: bloqueio.motivo,
+      ejcAtivo: encontroAtivo?.nome || '',
+    });
+  } catch (err) {
+    res.render('encontro', {
+      errors: [],
+      formData: {},
+      bloqueado: false,
+      motivoBloqueio: '',
+      ejcAtivo: '',
+    });
+  }
 });
+
+app.get('/api/encontro-ativo', async (req, res) => {
+  try {
+    const encontroAtivo = await getEncontroAtivo();
+    if (!encontroAtivo) {
+      return res.status(404).json({ success: false, error: 'Nenhum encontro ativo foi criado ainda.' });
+    }
+
+    return res.json({
+      success: true,
+      ejcId: String(encontroAtivo._id),
+      ejcNome: encontroAtivo.nome,
+    });
+  } catch (err) {
+    console.error('Erro ao buscar encontro ativo:', err.message);
+    return res.status(500).json({ success: false, error: 'Erro ao carregar encontro ativo.' });
+  }
+});
+
+// Middleware para verificar bloqueio de formulário encontrista
+const middlewareVerificaBloqueoEncontrista = async (req, res, next) => {
+  try {
+    console.log('[MIDDLEWARE] Verificando bloqueio de encontrista...');
+    const bloqueio = await verificarFormularioBloqueado('encontrista');
+    console.log('[MIDDLEWARE] Resultado do bloqueio:', bloqueio);
+    
+    if (bloqueio.bloqueado) {
+      console.log('[MIDDLEWARE] Encontrista bloqueado!');
+      const isJson = req.headers.accept && req.headers.accept.includes('application/json');
+      const allErrors = [{ msg: bloqueio.motivo || 'Formulário de encontrista está bloqueado temporariamente' }];
+      
+      if (isJson) {
+        return res.status(403).json({ success: false, errors: allErrors });
+      }
+      return res.render('inscricao', {
+        errors: allErrors,
+        formData: req.body,
+        bloqueado: true,
+        motivoBloqueio: bloqueio.motivo || 'Formulário de encontrista está bloqueado temporariamente',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('[MIDDLEWARE] Erro ao verificar bloqueio:', err);
+    next();
+  }
+};
+
+// Middleware para verificar bloqueio de formulário encontreiro
+const middlewareVerificaBloqueoEncontreiro = async (req, res, next) => {
+  try {
+    console.log('[MIDDLEWARE] Verificando bloqueio de encontreiro...');
+    const bloqueio = await verificarFormularioBloqueado('encontreiro');
+    console.log('[MIDDLEWARE] Resultado do bloqueio:', bloqueio);
+    
+    if (bloqueio.bloqueado) {
+      console.log('[MIDDLEWARE] Encontreiro bloqueado!');
+      const isJson = req.headers.accept && req.headers.accept.includes('application/json');
+      const allErrors = [{ msg: bloqueio.motivo || 'Formulário de encontreiro está bloqueado temporariamente' }];
+      
+      if (isJson) {
+        return res.status(403).json({ success: false, errors: allErrors });
+      }
+      return res.render('encontro', {
+        errors: allErrors,
+        formData: req.body,
+        bloqueado: true,
+        motivoBloqueio: bloqueio.motivo || 'Formulário de encontreiro está bloqueado temporariamente',
+      });
+    }
+
+    next();
+  } catch (err) {
+    console.error('[MIDDLEWARE] Erro ao verificar bloqueio:', err);
+    next();
+  }
+};
 
 app.post(
   '/inscricao',
+  middlewareVerificaBloqueoEncontrista,
   upload.single('foto'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
@@ -2842,7 +3536,25 @@ app.post(
     }
 
     try {
-      const cadastroExistente = await findExistingByNameOrEmail(Cadastro, req.body.nomeCompleto, '', req.body.telefone);
+      const encontroAtivo = await getEncontroAtivo();
+      if (!encontroAtivo) {
+        const allErrors = [{ msg: 'Nenhum encontro ativo foi criado ainda. Aguarde a abertura do proximo EJC.' }];
+        if (isJson) {
+          return res.status(400).json({ success: false, errors: allErrors });
+        }
+        return res.render('inscricao', {
+          errors: allErrors,
+          formData: req.body,
+        });
+      }
+
+      const encontroAtivoNome = encontroAtivo.nome;
+      const cadastroExistente = await findExistingByNameOrEmail(
+        Cadastro,
+        req.body.nomeCompleto,
+        req.body.email || '',
+        req.body.telefone
+      );
       const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
@@ -2862,7 +3574,7 @@ app.post(
       const cadastroData = {
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
-        ejc: req.body.ejc || 'Nao informado',
+        ejc: encontroAtivoNome,
         cep: req.body.cep || '',
         estadoCivil: req.body.estadoCivil || '',
         nomeMae: req.body.nomeMae || '',
@@ -2883,9 +3595,12 @@ app.post(
         intolerante: req.body.intolerante || '',
         email: req.body.email || '',
         instagram: req.body.instagram || '',
+        aprovado: false,
+        statusAprovacao: 'pendente',
         lgpdConsentimento,
         lgpdConsentimentoData: lgpdConsentimento ? new Date() : null,
         lgpdConsentimentoIp: lgpdConsentimento ? getClientIp(req) : '',
+        dataCadastro: new Date(),
       };
 
       let cadastro;
@@ -2943,11 +3658,11 @@ app.post(
 
 app.post(
   '/encontro',
+  middlewareVerificaBloqueoEncontreiro,
   upload.single('foto'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
     body('genero').isIn(['masculino', 'feminino', 'outros', 'homem', 'mulher']).withMessage('Gênero inválido'),
-    body('ejc').notEmpty().withMessage('EJC é obrigatório'),
     body('tipo').isIn(['jovens', 'tios']).withMessage('Tipo inválido'),
     body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
     body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
@@ -2964,6 +3679,7 @@ app.post(
     console.log('[INFO] POST /encontro - Requisição recebida');
     console.log(`   Tipo: ${req.body.tipo}, Nome: ${req.body.nomeCompleto}, Email: ${req.body.email}`);
     console.log(`   Foto: ${req.file ? req.file.filename : 'NENHUMA'}, OrigemTios: ${req.body.origemTios}`);
+    
     const errors = validationResult(req);
     const isJson = req.headers.accept && req.headers.accept.includes('application/json');
     
@@ -2981,7 +3697,25 @@ app.post(
     }
 
     try {
-      const encontroExistente = await findExistingByNameOrEmail(Encontro, req.body.nomeCompleto, '', req.body.telefone);
+      const encontroAtivo = await getEncontroAtivo();
+      if (!encontroAtivo) {
+        const allErrors = [{ msg: 'Nenhum encontro ativo foi criado ainda. Aguarde a abertura do proximo EJC.' }];
+        if (isJson) {
+          return res.status(400).json({ success: false, errors: allErrors });
+        }
+        return res.render('encontro', {
+          errors: allErrors,
+          formData: req.body,
+        });
+      }
+
+      const encontroAtivoNome = encontroAtivo.nome;
+      const encontroExistente = await findExistingByNameOrEmail(
+        Encontro,
+        req.body.nomeCompleto,
+        req.body.email || '',
+        req.body.telefone
+      );
       const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
@@ -3015,7 +3749,7 @@ app.post(
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
         genero: normalizeGeneroEncontro(req.body.genero),
-        ejc: req.body.ejc,
+        ejc: encontroAtivoNome,
         qualEjcPertence: req.body.qualEjcPertence || '',
         tipo: tipoNormalizado,
         tiosCategoria: tipoNormalizado === 'tios' ? (normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' ? 'casal' : 'solo') : '',
@@ -3023,6 +3757,9 @@ app.post(
         tiosGrupoId: (tipoNormalizado === 'tios' && normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal')
           ? normalizeTextInput(req.body.tiosGrupoId)
           : '',
+        tioParceiroId: (tipoNormalizado === 'tios' && normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' && mongoose.Types.ObjectId.isValid(req.body.tioParceiroId))
+          ? req.body.tioParceiroId
+          : null,
         equipeServiu: normalizeMultiField(req.body.equipeServiu),
         equipeCoordenou: normalizeMultiField(req.body.equipeCoordenou),
         temVeiculoProprio: req.body.temVeiculoProprio === 'true' || req.body.temVeiculoProprio === true,
@@ -3035,9 +3772,12 @@ app.post(
         temRelacionamento: req.body.temRelacionamento || '',
         instagram: req.body.instagram || '',
         observacoes: req.body.observacoes || '',
+        aprovado: false,
+        statusAprovacao: 'pendente',
         lgpdConsentimento,
         lgpdConsentimentoData: lgpdConsentimento ? new Date() : null,
         lgpdConsentimentoIp: lgpdConsentimento ? getClientIp(req) : '',
+        dataCadastro: new Date(),
       };
 
       let encontro;
@@ -3064,6 +3804,18 @@ app.post(
       }
       console.log(`   [OK] Encontro salvo no banco: ID=${encontro._id}, Tipo=${encontro.tipo}, Aprovado=${encontro.aprovado}, Foto=${encontro.foto}`);
 
+      if (encontro.tipo === 'tios') {
+        if (encontro.tiosCategoria === 'casal' && encontro.tioParceiroId) {
+          const grupoIdSincronizado = await linkTiosCouple(encontro._id, encontro.tioParceiroId, encontro.tiosGrupoId);
+          if (grupoIdSincronizado !== encontro.tiosGrupoId) {
+            encontro = await Encontro.findById(encontro._id);
+          }
+        } else if (encontro.tiosCategoria !== 'casal') {
+          await clearTiosCoupleLink(encontro._id);
+          encontro = await Encontro.findById(encontro._id);
+        }
+      }
+
       const payload = JSON.stringify({
         title: 'Nova inscrição para Encontro',
         body: `${encontro.nomeCompleto} confirmou presença.`
@@ -3077,7 +3829,7 @@ app.post(
 
       if (isJson) {
         console.log(`[INFO] Encontro salvo com sucesso - ID: ${encontro._id}, Tipo: ${encontro.tipo}, Aprovado: ${encontro.aprovado}`);
-        return res.json({ success: true, created, updated: !created });
+        return res.json({ success: true, created, updated: !created, id: String(encontro._id) });
       } else {
         return res.render('success');
       }
@@ -3131,8 +3883,11 @@ app.post('/admin/login', async (req, res) => {
       return res.render('admin-login', { error: 'Usuário ou senha incorretos' });
     }
 
-    req.session.adminId = admin._id;
-    req.session.adminUsername = admin.username;
+    const sessionData = buildAdminSessionData(admin);
+    req.session.adminId = sessionData._id;
+    req.session.adminUsername = sessionData.username;
+    req.session.adminNivelAcesso = sessionData.nivelAcesso;
+    req.session.adminPermissoes = sessionData.permissoes;
     res.redirect('/admin/gerenciar-cadastros');
   } catch (err) {
     console.error('Login error:', err);
@@ -3141,12 +3896,12 @@ app.post('/admin/login', async (req, res) => {
 });
 
 // GET /admin/home - Compatibilidade: redireciona para painel de gestão
-app.get('/admin/home', checkAdminAuth, (req, res) => {
+app.get('/admin/home', checkAdminAuth, requireAdminPermission('painel.visualizar'), (req, res) => {
   return res.redirect('/admin/gerenciar-cadastros');
 });
 
 // GET /admin/dashboard - Painel de admin (rota protegida)
-app.get('/admin/dashboard', checkAdminAuth, async (req, res) => {
+app.get('/admin/dashboard', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
   try {
     const pendentesEncontristas = await Cadastro.find({ statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
     const aprovadosEncontristas = await Cadastro.find({ aprovado: true }).sort({ dataCadastro: -1 }).lean();
@@ -3188,14 +3943,175 @@ app.get('/admin/dashboard', checkAdminAuth, async (req, res) => {
   }
 });
 
+function normalizeApprovalTargetType(rawValue) {
+  const tipoListaRaw = String(rawValue || '').trim().toLowerCase();
+  if (tipoListaRaw === 'encontrista') return 'encontrista';
+  if (['encontreiro', 'encontro', 'tios', 'casal'].includes(tipoListaRaw)) return 'encontreiro';
+  return '';
+}
+
+function getApprovalUpdatePayload(action) {
+  if (action === 'aprovar') {
+    return {
+      update: { aprovado: true, statusAprovacao: 'aprovado' },
+      logAction: 'aprovar_cadastro',
+      successMessage: 'Aprovado com sucesso!',
+      pastTenseLabel: 'Aprovado',
+    };
+  }
+
+  if (action === 'desaprovar') {
+    return {
+      update: { aprovado: false, statusAprovacao: 'reprovado' },
+      logAction: 'reprovar_cadastro',
+      successMessage: 'Desaprovado com sucesso!',
+      pastTenseLabel: 'Desaprovado',
+    };
+  }
+
+  return null;
+}
+
+async function applyApprovalUpdateToMany({ ids, tipoLista, action }) {
+  const config = getApprovalUpdatePayload(action);
+
+  if (!config) {
+    return {
+      success: false,
+      statusCode: 400,
+      error: 'Ação inválida',
+    };
+  }
+
+  const uniqueIds = [...new Set((Array.isArray(ids) ? ids : [ids])
+    .map((item) => String(item || '').trim())
+    .filter(Boolean))];
+
+  if (uniqueIds.length === 0) {
+    return {
+      success: false,
+      statusCode: 400,
+      error: 'Nenhum cadastro selecionado',
+    };
+  }
+
+  const invalidIds = uniqueIds.filter((id) => !mongoose.Types.ObjectId.isValid(id));
+  if (invalidIds.length > 0) {
+    return {
+      success: false,
+      statusCode: 400,
+      error: 'Há IDs inválidos na seleção',
+      invalidIds,
+    };
+  }
+
+  const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
+  const documentos = await Model.find({ _id: { $in: uniqueIds } }).select('_id nomeCompleto').lean();
+  const encontrados = documentos.map((doc) => String(doc._id));
+  const missingIds = uniqueIds.filter((id) => !encontrados.includes(id));
+
+  if (documentos.length === 0) {
+    return {
+      success: false,
+      statusCode: 404,
+      error: 'Nenhum cadastro encontrado para atualizar',
+      missingIds,
+    };
+  }
+
+  await Model.updateMany(
+    { _id: { $in: encontrados } },
+    { $set: config.update }
+  );
+
+  return {
+    success: true,
+    updatedCount: encontrados.length,
+    missingCount: missingIds.length,
+    missingIds,
+    nomes: documentos.map((doc) => doc.nomeCompleto).filter(Boolean),
+    config,
+  };
+}
+
+app.post('/admin/aprovacao-lote', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
+  const tipoListaRaw = req.body.tipoLista || req.body.tipo;
+  const tipoLista = normalizeApprovalTargetType(tipoListaRaw);
+  const action = String(req.body.action || req.body.acao || '').trim().toLowerCase();
+  const ids = Array.isArray(req.body.ids) ? req.body.ids : [];
+  const config = getApprovalUpdatePayload(action);
+
+  try {
+    if (!tipoLista) {
+      return res.status(400).json({ success: false, error: 'Tipo inválido para atualização em lote' });
+    }
+
+    if (!config) {
+      return res.status(400).json({ success: false, error: 'Ação inválida para atualização em lote' });
+    }
+
+    const result = await applyApprovalUpdateToMany({ ids, tipoLista, action });
+
+    if (!result.success) {
+      await logAdminAction(req, {
+        action: `${config.logAction}_lote`,
+        targetType: tipoLista,
+        status: 'error',
+        metadata: {
+          erro: result.error,
+          totalRecebido: ids.length,
+          invalidIds: result.invalidIds,
+          missingIds: result.missingIds,
+        },
+      });
+
+      return res.status(result.statusCode || 400).json({
+        success: false,
+        error: result.error,
+        invalidIds: result.invalidIds,
+        missingIds: result.missingIds,
+      });
+    }
+
+    await logAdminAction(req, {
+      action: `${config.logAction}_lote`,
+      targetType: tipoLista,
+      metadata: {
+        totalAtualizado: result.updatedCount,
+        totalNaoEncontrado: result.missingCount,
+        ids: ids,
+        nomes: result.nomes,
+      },
+    });
+
+    return res.json({
+      success: true,
+      message: `${result.updatedCount} cadastro(s) atualizado(s) com sucesso!`,
+      updatedCount: result.updatedCount,
+      missingCount: result.missingCount,
+      missingIds: result.missingIds,
+    });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: `${config ? config.logAction : 'atualizar_cadastro'}_lote`,
+      targetType: normalizeTextInput(tipoListaRaw),
+      status: 'error',
+      metadata: {
+        erro: err.message,
+        totalRecebido: ids.length,
+      },
+    });
+    console.error('[ERRO] Erro na atualização em lote:', err.message);
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /admin/aprovar - Aprovar um cadastro
-app.post('/admin/aprovar', checkAdminAuth, async (req, res) => {
+app.post('/admin/aprovar', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
     const id = String(req.body.id || '').trim();
     const tipoListaRaw = String(req.body.tipoLista || req.body.tipo || '').trim().toLowerCase();
-
-    const tipoLista = tipoListaRaw === 'encontrista' ? 'encontrista' :
-      (['encontreiro', 'encontro', 'tios', 'casal'].includes(tipoListaRaw) ? 'encontreiro' : '');
+    const tipoLista = normalizeApprovalTargetType(tipoListaRaw);
 
     console.log(`[INFO] Aprovação: ${id} - tipo=${tipoLista}`);
 
@@ -3257,13 +4173,11 @@ app.post('/admin/aprovar', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/desaprovar - Desaprovar um cadastro
-app.post('/admin/desaprovar', checkAdminAuth, async (req, res) => {
+app.post('/admin/desaprovar', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
     const id = String(req.body.id || '').trim();
     const tipoListaRaw = String(req.body.tipoLista || req.body.tipo || '').trim().toLowerCase();
-
-    const tipoLista = tipoListaRaw === 'encontrista' ? 'encontrista' :
-      (['encontreiro', 'encontro', 'tios', 'casal'].includes(tipoListaRaw) ? 'encontreiro' : '');
+    const tipoLista = normalizeApprovalTargetType(tipoListaRaw);
 
     console.log(`[INFO] Desaprovação: ${id} - tipo=${tipoLista}`);
 
@@ -3317,7 +4231,7 @@ app.post('/admin/desaprovar', checkAdminAuth, async (req, res) => {
   }
 });
 
-app.post('/admin/alterar-status', checkAdminAuth, async (req, res) => {
+app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
     const id = normalizeTextInput(req.body.id);
     const tipoListaRaw = normalizeTextInput(req.body.tipoLista || req.body.tipo).toLowerCase();
@@ -3366,7 +4280,7 @@ app.post('/admin/alterar-status', checkAdminAuth, async (req, res) => {
 });
 
 // GET /admin/gerenciar-cadastros - Página de gestão de cadastros
-app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
+app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
   try {
     const encontristas = await Cadastro.find().sort({ dataCadastro: -1 }).lean();
     const encontreirosRaw = await Encontro.find().sort({ dataCadastro: -1 }).lean();
@@ -3392,9 +4306,15 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
         tiosCategoria,
       };
     });
-    const administradores = await Admin.find().sort({ dataCriacao: -1 }).select('username dataCriacao').lean();
+    const administradoresRaw = await Admin.find().sort({ dataCriacao: -1 }).select('username dataCriacao nivelAcesso permissoes').lean();
+    const administradores = administradoresRaw.map((adminDoc) => ({
+      ...adminDoc,
+      nivelAcesso: normalizeAdminAccessLevel(adminDoc?.nivelAcesso, 'super_admin'),
+      permissoesEfetivas: resolveAdminPermissions(adminDoc),
+    }));
     const auditoriaLogs = await AdminAuditLog.find().sort({ createdAt: -1 }).limit(100).lean();
-    const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao').lean();
+    const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao ativo').lean();
+    const encontroAtivo = await getEncontroAtivo();
     const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcNome nomeReferencia dataCriacao').lean();
     const encontreirosParaEquipe = await Encontro.find({ tipo: { $in: ['jovens', 'tios', 'homem', 'mulher'] } })
       .sort({ nomeCompleto: 1 })
@@ -3403,11 +4323,16 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
 
     res.render('gerenciar-cadastros', {
       adminUsername: req.session.adminUsername,
+      adminNivelAcesso: req.adminUser?.nivelAcesso || 'super_admin',
+      adminPermissoes: req.adminUser?.permissoes || [],
+      adminPermissionOptions: ADMIN_PERMISSION_OPTIONS,
+      adminRoleDefaultPermissions: ADMIN_ROLE_DEFAULT_PERMISSIONS,
       encontristas,
       encontreiros,
       administradores,
       auditoriaLogs,
       ejcs,
+      encontroAtivoNome: encontroAtivo?.nome || '',
       equipes,
       encontreirosParaEquipe,
     });
@@ -3417,8 +4342,166 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, async (req, res) => {
   }
 });
 
+// GET /admin/config-bloqueio - Obter configurações de bloqueio de formulários
+app.get('/admin/config-bloqueio', checkAdminAuth, requireAdminPermission('bloqueio.gerenciar'), async (req, res) => {
+  try {
+    const admin = await Admin.findOne().select(
+      'bloquearFormularioEncontrista bloquearFormularioEncontreiros ' +
+      'dataInicioBloquearEncontrista dataFimBloquearEncontrista ' +
+      'dataInicioBloquearEncontreiros dataFimBloquearEncontreiros ' +
+      'motivoBloquearEncontrista motivoBloquearEncontreiros'
+    ).lean();
+    
+    console.log('[CONFIG-BLOQUEIO-GET] Admin encontrado:', admin);
+
+    res.json({
+      success: true,
+      bloquearEncontrista: admin?.bloquearFormularioEncontrista === true,
+      bloquearEncontreiros: admin?.bloquearFormularioEncontreiros === true,
+      dataInicioEncontrista: admin?.dataInicioBloquearEncontrista || null,
+      dataFimEncontrista: admin?.dataFimBloquearEncontrista || null,
+      dataInicioEncontreiros: admin?.dataInicioBloquearEncontreiros || null,
+      dataFimEncontreiros: admin?.dataFimBloquearEncontreiros || null,
+      motivoEncontrista: admin?.motivoBloquearEncontrista || '',
+      motivoEncontreiros: admin?.motivoBloquearEncontreiros || '',
+    });
+  } catch (err) {
+    console.error('Erro ao obter configurações de bloqueio:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// GET /debug/status-bloqueio - Verificar status do bloqueio (para debug)
+app.get('/debug/status-bloqueio', async (req, res) => {
+  try {
+    const admin = await Admin.findOne().lean();
+    const statusEncontrista = await verificarFormularioBloqueado('encontrista');
+    const statusEncontreiro = await verificarFormularioBloqueado('encontreiro');
+    
+    res.json({
+      admin,
+      statusEncontrista,
+      statusEncontreiro,
+      agora: new Date(),
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /debug/testar-bloqueio - Testar bloqueio (para debug)
+app.post('/debug/testar-bloqueio', async (req, res) => {
+  try {
+    const { tipo } = req.body;
+    console.log(`[DEBUG-TESTE] Testando bloqueio para: ${tipo}`);
+    const resultado = await verificarFormularioBloqueado(tipo);
+    res.json(resultado);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST /debug/ativar-bloqueio - Ativar bloqueio via API (para teste/debug SEM autenticação)
+app.post('/debug/ativar-bloqueio', async (req, res) => {
+  try {
+    const {
+      tipo,
+      ativar,
+      motivo,
+    } = req.body;
+
+    console.log(`[DEBUG-ATIVAR] Recebido: tipo=${tipo}, ativar=${ativar}, motivo=${motivo}`);
+
+    if (!['encontrista', 'encontreiro'].includes(tipo)) {
+      return res.status(400).json({ success: false, error: 'Tipo inválido' });
+    }
+
+    const updateData = {};
+    
+    if (tipo === 'encontrista') {
+      updateData.bloquearFormularioEncontrista = ativar === true || ativar === 'true';
+      updateData.motivoBloquearEncontrista = motivo || `Formulário ${tipo} bloqueado`;
+    } else {
+      updateData.bloquearFormularioEncontreiros = ativar === true || ativar === 'true';
+      updateData.motivoBloquearEncontreiros = motivo || `Formulário ${tipo} bloqueado`;
+    }
+
+    let admin = await Admin.findOne();
+    if (!admin) {
+      admin = new Admin(updateData);
+    } else {
+      Object.assign(admin, updateData);
+    }
+    await admin.save();
+
+    console.log(`[DEBUG-ATIVAR] Salvo com sucesso`);
+    res.json({ success: true, message: 'Bloqueio alterado' });
+  } catch (err) {
+    console.error('Erro ao alterar bloqueio:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// POST /admin/atualizar-config-bloqueio - Atualizar configurações de bloqueio
+app.post('/admin/atualizar-config-bloqueio', checkAdminAuth, requireAdminPermission('bloqueio.gerenciar'), async (req, res) => {
+  try {
+    const {
+      bloquearEncontrista,
+      bloquearEncontreiros,
+      dataInicioEncontrista,
+      dataFimEncontrista,
+      dataInicioEncontreiros,
+      dataFimEncontreiros,
+      motivoEncontrista,
+      motivoEncontreiros,
+    } = req.body;
+
+    console.log('[CONFIG-BLOQUEIO] Recebido:', {
+      bloquearEncontrista,
+      bloquearEncontreiros,
+      dataInicioEncontrista,
+      dataFimEncontrista,
+      dataInicioEncontreiros,
+      dataFimEncontreiros,
+      motivoEncontrista,
+      motivoEncontreiros,
+    });
+
+    const updateData = {
+      bloquearFormularioEncontrista: bloquearEncontrista === true || bloquearEncontrista === 'true',
+      bloquearFormularioEncontreiros: bloquearEncontreiros === true || bloquearEncontreiros === 'true',
+      dataInicioBloquearEncontrista: (dataInicioEncontrista && String(dataInicioEncontrista).trim()) ? new Date(dataInicioEncontrista) : null,
+      dataFimBloquearEncontrista: (dataFimEncontrista && String(dataFimEncontrista).trim()) ? new Date(dataFimEncontrista) : null,
+      dataInicioBloquearEncontreiros: (dataInicioEncontreiros && String(dataInicioEncontreiros).trim()) ? new Date(dataInicioEncontreiros) : null,
+      dataFimBloquearEncontreiros: (dataFimEncontreiros && String(dataFimEncontreiros).trim()) ? new Date(dataFimEncontreiros) : null,
+      motivoBloquearEncontrista: String(motivoEncontrista || '').trim(),
+      motivoBloquearEncontreiros: String(motivoEncontreiros || '').trim(),
+    };
+
+    console.log('[CONFIG-BLOQUEIO] Dados a salvar:', updateData);
+
+    // Encontrar e atualizar configuração (ou criar se não existir)
+    let admin = await Admin.findOne();
+    if (!admin) {
+      console.log('[CONFIG-BLOQUEIO] Nenhum Admin encontrado. Criando novo...');
+      admin = new Admin(updateData);
+    } else {
+      console.log('[CONFIG-BLOQUEIO] Admin encontrado. Atualizando...');
+      Object.assign(admin, updateData);
+    }
+    await admin.save();
+
+    console.log('[CONFIG-BLOQUEIO] Salvo com sucesso:', admin);
+
+    res.json({ success: true, message: 'Configurações de bloqueio atualizadas com sucesso' });
+  } catch (err) {
+    console.error('Erro ao atualizar configurações de bloqueio:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // POST /admin/atualizar-cadastro/:tipo/:id - Atualizar cadastro
-app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, upload.single('foto'), async (req, res) => {
+app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), upload.single('foto'), async (req, res) => {
   try {
     const { tipo, id } = req.params;
     
@@ -3504,6 +4587,9 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, upload.single('f
       } else {
         updateData.tiosGrupoId = '';
       }
+      updateData.tioParceiroId = (updateData.tipo === 'tios' && updateData.tiosCategoria === 'casal' && mongoose.Types.ObjectId.isValid(req.body.tioParceiroId))
+        ? req.body.tioParceiroId
+        : null;
       updateData.equipeServiu = req.body.equipeServiu ? req.body.equipeServiu.split(',').map(e => e.trim()).filter(e => e) : [];
       updateData.equipeCoordenou = req.body.equipeCoordenou ? req.body.equipeCoordenou.split(',').map(e => e.trim()).filter(e => e) : [];
       updateData.temVeiculoProprio = req.body.temVeiculoProprio === 'true' || req.body.temVeiculoProprio === true;
@@ -3526,6 +4612,23 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, upload.single('f
     }
 
     const resultado = await Model.findByIdAndUpdate(id, updateData, { new: true });
+
+    if (tipo === 'encontreiro') {
+      const categoriaAtualAnterior = normalizeTextInput(cadastroAtual.tiosCategoria).toLowerCase();
+      const parceiroAnterior = cadastroAtual.tioParceiroId ? String(cadastroAtual.tioParceiroId) : '';
+      const categoriaAtualNova = normalizeTextInput(resultado?.tiosCategoria).toLowerCase();
+      const parceiroNovo = resultado?.tioParceiroId ? String(resultado.tioParceiroId) : '';
+
+      if (cadastroAtual.tipo === 'tios' && (categoriaAtualAnterior === 'casal' || parceiroAnterior)) {
+        if (resultado?.tipo !== 'tios' || categoriaAtualNova !== 'casal' || parceiroAnterior !== parceiroNovo) {
+          await clearTiosCoupleLink(id);
+        }
+      }
+
+      if (resultado?.tipo === 'tios' && categoriaAtualNova === 'casal' && parceiroNovo) {
+        await linkTiosCouple(resultado._id, parceiroNovo, resultado.tiosGrupoId);
+      }
+    }
     
     console.log(`Cadastro ${tipo} atualizado com sucesso:`, id);
     await logAdminAction(req, {
@@ -3549,7 +4652,7 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, upload.single('f
 });
 
 // POST /admin/remover-foto/:tipo/:id - Remover foto de um cadastro
-app.post('/admin/remover-foto/:tipo/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/remover-foto/:tipo/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
     const { tipo, id } = req.params;
     
@@ -3600,7 +4703,7 @@ app.post('/admin/remover-foto/:tipo/:id', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/deletar-cadastro/:tipo/:id - Deletar um cadastro e sua foto
-app.post('/admin/deletar-cadastro/:tipo/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/deletar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPermission('cadastros.excluir'), async (req, res) => {
   try {
     const { tipo, id } = req.params;
     if (!['encontrista', 'encontreiro'].includes(tipo)) {
@@ -3642,7 +4745,7 @@ app.post('/admin/deletar-cadastro/:tipo/:id', checkAdminAuth, async (req, res) =
 });
 
 // POST /admin/transferir-encontrista/:id - Move um encontrista para a lista de encontreiros
-app.post('/admin/transferir-encontrista/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -3707,7 +4810,7 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, async (req, res) =
 });
 
 // POST /admin/transferir-encontristas-lote - Move varios encontristas para encontreiros
-app.post('/admin/transferir-encontristas-lote', checkAdminAuth, async (req, res) => {
+app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
     const idsRecebidos = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
     const idsUnicos = [...new Set(idsRecebidos.map((id) => String(id || '').trim()).filter(Boolean))];
@@ -3793,7 +4896,7 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, async (req, res)
 });
 
 // POST /admin/limpar-encontreiros - Deletar TODOS os encontreiros e suas fotos
-app.post('/admin/limpar-encontreiros', checkAdminAuth, async (req, res) => {
+app.post('/admin/limpar-encontreiros', checkAdminAuth, requireAdminPermission('cadastros.excluir'), async (req, res) => {
   try {
     console.log('[INFO] LIMPEZA TOTAL DE ENCONTREIROS INICIADA');
     
@@ -3839,7 +4942,7 @@ app.post('/admin/limpar-encontreiros', checkAdminAuth, async (req, res) => {
   }
 });
 
-app.post('/admin/executar-retencao-lgpd', checkAdminAuth, async (req, res) => {
+app.post('/admin/executar-retencao-lgpd', checkAdminAuth, requireAdminPermission('lgpd.executar'), async (req, res) => {
   try {
     const days = Number.parseInt(req.body.days, 10);
     const result = await executeLgpdRetention(days);
@@ -3867,10 +4970,12 @@ app.post('/admin/executar-retencao-lgpd', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/cadastrar-admin - Criar novo acesso de administrador
-app.post('/admin/cadastrar-admin', checkAdminAuth, async (req, res) => {
+app.post('/admin/cadastrar-admin', checkAdminAuth, requireAdminPermission('admins.gerenciar'), async (req, res) => {
   try {
     const username = String(req.body.username || '').trim().toLowerCase();
     const senha = String(req.body.senha || '');
+    const nivelAcesso = normalizeAdminAccessLevel(req.body.nivelAcesso, 'coordenador');
+    const permissoesExtras = sanitizeAdminPermissions(req.body.permissoes);
 
     if (!username || !senha) {
       return res.status(400).json({ success: false, error: 'Usuário e senha são obrigatórios.' });
@@ -3885,14 +4990,28 @@ app.post('/admin/cadastrar-admin', checkAdminAuth, async (req, res) => {
       return res.status(409).json({ success: false, error: 'Este usuário já existe.' });
     }
 
+    const actingRank = getAdminLevelRank(req.adminUser?.nivelAcesso);
+    const desiredRank = getAdminLevelRank(nivelAcesso);
+    if (req.adminUser?.nivelAcesso !== 'super_admin' && desiredRank >= actingRank) {
+      return res.status(403).json({ success: false, error: 'Você só pode criar administradores em níveis inferiores ao seu.' });
+    }
+
+    if (req.adminUser?.nivelAcesso !== 'super_admin') {
+      const actingPerms = new Set(req.adminUser?.permissoes || []);
+      const hasEscalation = permissoesExtras.some((perm) => !actingPerms.has(perm));
+      if (hasEscalation) {
+        return res.status(403).json({ success: false, error: 'Você não pode conceder permissões que não possui.' });
+      }
+    }
+
     const hash = await bcryptjs.hash(senha, 10);
-    const novoAdmin = await Admin.create({ username, senha: hash });
+    const novoAdmin = await Admin.create({ username, senha: hash, nivelAcesso, permissoes: permissoesExtras });
 
     await logAdminAction(req, {
       action: 'cadastrar_admin',
       targetType: 'admin',
       targetId: novoAdmin._id,
-      metadata: { username: novoAdmin.username },
+      metadata: { username: novoAdmin.username, nivelAcesso: novoAdmin.nivelAcesso, permissoes: resolveAdminPermissions(novoAdmin) },
     });
 
     return res.json({ success: true, message: 'Administrador cadastrado com sucesso.' });
@@ -3909,11 +5028,14 @@ app.post('/admin/cadastrar-admin', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/atualizar-admin/:id - Atualizar administrador
-app.post('/admin/atualizar-admin/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/atualizar-admin/:id', checkAdminAuth, requireAdminPermission('admins.gerenciar'), async (req, res) => {
   try {
     const { id } = req.params;
     const username = String(req.body.username || '').trim().toLowerCase();
     const senha = String(req.body.senha || '');
+    const nivelAcessoInformado = normalizeTextInput(req.body.nivelAcesso);
+    const nivelAcesso = nivelAcessoInformado ? normalizeAdminAccessLevel(nivelAcessoInformado, 'consulta') : '';
+    const permissoesExtras = req.body.permissoes !== undefined ? sanitizeAdminPermissions(req.body.permissoes) : null;
 
     if (!id) {
       return res.status(400).json({ success: false, error: 'ID do administrador não fornecido.' });
@@ -3922,6 +5044,16 @@ app.post('/admin/atualizar-admin/:id', checkAdminAuth, async (req, res) => {
     const admin = await Admin.findById(id);
     if (!admin) {
       return res.status(404).json({ success: false, error: 'Administrador não encontrado.' });
+    }
+
+    const isSelfUpdate = String(admin._id) === String(req.adminUser?._id);
+    const canManageTarget = canManageAdminWithHierarchy(req.adminUser, admin);
+    if (!isSelfUpdate && !canManageTarget) {
+      return res.status(403).json({ success: false, error: 'Você não possui hierarquia para alterar este administrador.' });
+    }
+
+    if (isSelfUpdate && (nivelAcesso || permissoesExtras !== null) && req.adminUser?.nivelAcesso !== 'super_admin') {
+      return res.status(403).json({ success: false, error: 'Você não pode alterar seu próprio nível/permissões.' });
     }
 
     if (username) {
@@ -3937,6 +5069,26 @@ app.post('/admin/atualizar-admin/:id', checkAdminAuth, async (req, res) => {
       admin.username = username;
     }
 
+    if (nivelAcesso) {
+      const actingRank = getAdminLevelRank(req.adminUser?.nivelAcesso);
+      const desiredRank = getAdminLevelRank(nivelAcesso);
+      if (req.adminUser?.nivelAcesso !== 'super_admin' && desiredRank >= actingRank) {
+        return res.status(403).json({ success: false, error: 'Nível informado é igual ou superior ao seu.' });
+      }
+      admin.nivelAcesso = nivelAcesso;
+    }
+
+    if (permissoesExtras !== null) {
+      if (req.adminUser?.nivelAcesso !== 'super_admin') {
+        const actingPerms = new Set(req.adminUser?.permissoes || []);
+        const hasEscalation = permissoesExtras.some((perm) => !actingPerms.has(perm));
+        if (hasEscalation) {
+          return res.status(403).json({ success: false, error: 'Você não pode conceder permissões que não possui.' });
+        }
+      }
+      admin.permissoes = permissoesExtras;
+    }
+
     // Se a senha foi fornecida e não está vazia, atualiza
     if (senha && senha.length > 0) {
       if (senha.length < 6) {
@@ -3946,6 +5098,13 @@ app.post('/admin/atualizar-admin/:id', checkAdminAuth, async (req, res) => {
     }
 
     await admin.save();
+    if (isSelfUpdate) {
+      const sessionData = buildAdminSessionData(admin);
+      req.adminUser = sessionData;
+      req.session.adminUsername = sessionData.username;
+      req.session.adminNivelAcesso = sessionData.nivelAcesso;
+      req.session.adminPermissoes = sessionData.permissoes;
+    }
     return res.json({ success: true, message: 'Administrador atualizado com sucesso.' });
   } catch (err) {
     console.error('[ERRO] Erro ao atualizar administrador:', err.message);
@@ -3954,7 +5113,7 @@ app.post('/admin/atualizar-admin/:id', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/deletar-admin/:id - Deletar administrador
-app.post('/admin/deletar-admin/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/deletar-admin/:id', checkAdminAuth, requireAdminPermission('admins.gerenciar'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -3965,6 +5124,21 @@ app.post('/admin/deletar-admin/:id', checkAdminAuth, async (req, res) => {
     const admin = await Admin.findById(id);
     if (!admin) {
       return res.status(404).json({ success: false, error: 'Administrador não encontrado.' });
+    }
+
+    if (String(admin._id) === String(req.adminUser?._id)) {
+      return res.status(400).json({ success: false, error: 'Você não pode deletar seu próprio usuário logado.' });
+    }
+
+    if (!canManageAdminWithHierarchy(req.adminUser, admin)) {
+      return res.status(403).json({ success: false, error: 'Você não possui hierarquia para deletar este administrador.' });
+    }
+
+    if (admin.nivelAcesso === 'super_admin') {
+      const totalSuperAdmins = await Admin.countDocuments({ nivelAcesso: 'super_admin' });
+      if (totalSuperAdmins <= 1) {
+        return res.status(400).json({ success: false, error: 'Não é permitido remover o último super administrador.' });
+      }
     }
 
     await Admin.findByIdAndDelete(id);
@@ -3991,7 +5165,7 @@ app.post('/admin/deletar-admin/:id', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/cadastrar-equipe - Cadastrar nova equipe
-app.post('/admin/cadastrar-equipe', checkAdminAuth, async (req, res) => {
+app.post('/admin/cadastrar-equipe', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
   try {
     const nome = normalizeTextInput(req.body.nome);
     const ejcId = normalizeTextInput(req.body.ejcId);
@@ -4030,7 +5204,7 @@ app.post('/admin/cadastrar-equipe', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/criar-ejc - Cadastrar novo EJC
-app.post('/admin/criar-ejc', checkAdminAuth, async (req, res) => {
+app.post('/admin/criar-ejc', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const nome = normalizeTextInput(req.body.nome);
 
@@ -4044,12 +5218,13 @@ app.post('/admin/criar-ejc', checkAdminAuth, async (req, res) => {
       return res.status(409).json({ success: false, error: 'Ja existe um EJC com este nome.' });
     }
 
-    const novoEjc = await Ejc.create({ nome, nomeNormalizado });
+    const totalExistentes = await Ejc.countDocuments({});
+    const novoEjc = await Ejc.create({ nome, nomeNormalizado, ativo: totalExistentes === 0 });
     await logAdminAction(req, {
       action: 'criar_ejc',
       targetType: 'ejc',
       targetId: novoEjc._id,
-      metadata: { nome: novoEjc.nome },
+      metadata: { nome: novoEjc.nome, ativo: novoEjc.ativo === true },
     });
     return res.json({ success: true, message: 'EJC criado com sucesso.' });
   } catch (err) {
@@ -4064,8 +5239,46 @@ app.post('/admin/criar-ejc', checkAdminAuth, async (req, res) => {
   }
 });
 
+// POST /admin/definir-ejc-ativo/:id - Define manualmente qual EJC e o encontro ativo
+app.post('/admin/definir-ejc-ativo/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID de EJC invalido.' });
+    }
+
+    const ejc = await Ejc.findById(id).lean();
+    if (!ejc) {
+      return res.status(404).json({ success: false, error: 'EJC nao encontrado.' });
+    }
+
+    await Ejc.updateMany({ ativo: true }, { $set: { ativo: false } });
+    await Ejc.updateOne({ _id: id }, { $set: { ativo: true } });
+    invalidarCacheEncontroAtivo();
+
+    await logAdminAction(req, {
+      action: 'definir_ejc_ativo',
+      targetType: 'ejc',
+      targetId: id,
+      metadata: { nome: ejc.nome },
+    });
+
+    return res.json({ success: true, message: `Encontro ativo definido para ${ejc.nome}.` });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'definir_ejc_ativo',
+      targetType: 'ejc',
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    console.error('Erro ao definir EJC ativo:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao definir encontro ativo.' });
+  }
+});
+
 // POST /admin/deletar-ejc/:id - Remove EJC e estruturas vinculadas (circulos/equipes/vinculos)
-app.post('/admin/deletar-ejc/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/deletar-ejc/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -4120,7 +5333,7 @@ app.post('/admin/deletar-ejc/:id', checkAdminAuth, async (req, res) => {
 });
 
 // GET /admin/encontros/:ejcId - Tela dedicada de encontro por EJC
-app.get('/admin/encontros/:ejcId', checkAdminAuth, async (req, res) => {
+app.get('/admin/encontros/:ejcId', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const { ejcId } = req.params;
     if (!mongoose.Types.ObjectId.isValid(ejcId)) {
@@ -4146,6 +5359,8 @@ app.get('/admin/encontros/:ejcId', checkAdminAuth, async (req, res) => {
 
     res.render('admin-encontro-ejc', {
       adminUsername: req.session.adminUsername,
+      adminNivelAcesso: req.adminUser?.nivelAcesso || 'super_admin',
+      adminPermissoes: req.adminUser?.permissoes || [],
       ejc,
       circulos,
       equipes,
@@ -4160,7 +5375,7 @@ app.get('/admin/encontros/:ejcId', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/criar-circulo - Criar circulo para um EJC
-app.post('/admin/criar-circulo', checkAdminAuth, async (req, res) => {
+app.post('/admin/criar-circulo', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const nome = normalizeTextInput(req.body.nome);
     const ejcId = normalizeTextInput(req.body.ejcId);
@@ -4184,9 +5399,196 @@ app.post('/admin/criar-circulo', checkAdminAuth, async (req, res) => {
   }
 });
 
-// POST /admin/vincular-encontro - Vincular pessoa em circulo/equipe de um EJC
-app.post('/admin/vincular-encontro', checkAdminAuth, async (req, res) => {
+// POST /admin/editar-circulo/:id - Editar nome de circulo dentro do EJC
+app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
+    const { id } = req.params;
+    const ejcId = normalizeTextInput(req.body.ejcId);
+    const nome = normalizeTextInput(req.body.nome);
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Dados invalidos para editar circulo.' });
+    }
+    if (!nome) {
+      return res.status(400).json({ success: false, error: 'Nome do circulo e obrigatorio.' });
+    }
+
+    const ejc = await Ejc.findById(ejcId).lean();
+    if (!ejc) {
+      return res.status(404).json({ success: false, error: 'EJC nao encontrado.' });
+    }
+
+    const circulo = await Circulo.findOne({ _id: id, ejcId });
+    if (!circulo) {
+      return res.status(404).json({ success: false, error: 'Circulo nao encontrado neste EJC.' });
+    }
+
+    const nomeNormalizado = `${ejc.nome}::${nome}`.toLowerCase();
+    const duplicado = await Circulo.findOne({ nomeNormalizado, _id: { $ne: id } }).lean();
+    if (duplicado) {
+      return res.status(409).json({ success: false, error: 'Ja existe esse circulo neste EJC.' });
+    }
+
+    circulo.nome = nome;
+    circulo.nomeNormalizado = nomeNormalizado;
+    await circulo.save();
+    return res.json({ success: true, message: 'Circulo atualizado com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao editar circulo:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao editar circulo.' });
+  }
+});
+
+// POST /admin/excluir-circulo/:id - Excluir circulo e vinculos associados
+app.post('/admin/excluir-circulo/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ejcId = normalizeTextInput(req.body.ejcId);
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Dados invalidos para excluir circulo.' });
+    }
+
+    const circulo = await Circulo.findOne({ _id: id, ejcId }).lean();
+    if (!circulo) {
+      return res.status(404).json({ success: false, error: 'Circulo nao encontrado neste EJC.' });
+    }
+
+    await VinculoEncontro.deleteMany({
+      ejcId,
+      entidadeTipo: 'circulo',
+      entidadeId: id,
+    });
+    await Circulo.deleteOne({ _id: id, ejcId });
+
+    return res.json({ success: true, message: 'Circulo excluido com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao excluir circulo:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao excluir circulo.' });
+  }
+});
+
+// POST /admin/editar-equipe/:id - Editar nome de equipe dentro do EJC
+app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ejcId = normalizeTextInput(req.body.ejcId);
+    const nome = normalizeTextInput(req.body.nome);
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Dados invalidos para editar equipe.' });
+    }
+    if (!nome) {
+      return res.status(400).json({ success: false, error: 'Nome da equipe e obrigatorio.' });
+    }
+
+    const ejc = await Ejc.findById(ejcId).lean();
+    if (!ejc) {
+      return res.status(404).json({ success: false, error: 'EJC nao encontrado.' });
+    }
+
+    let equipe = await Equipe.findOne({ _id: id, ejcId });
+    if (!equipe) {
+      const equipeLegada = await Equipe.findById(id);
+      if (equipeLegada && !equipeLegada.ejcId) {
+        equipeLegada.ejcId = ejcId;
+        await equipeLegada.save();
+        equipe = equipeLegada;
+      }
+    }
+
+    if (!equipe) {
+      return res.status(404).json({ success: false, error: 'Equipe nao encontrada neste EJC.' });
+    }
+
+    const nomeReferenciaNovo = `${ejc.nome} - ${nome}`;
+    const nomeNormalizadoNovo = `${ejc.nome}::${nome}`.toLowerCase();
+    const duplicado = await Equipe.findOne({ nomeNormalizado: nomeNormalizadoNovo, _id: { $ne: id } }).lean();
+    if (duplicado) {
+      return res.status(409).json({ success: false, error: 'Ja existe essa equipe neste EJC.' });
+    }
+
+    const nomeReferenciaAntigo = normalizeTextInput(equipe.nomeReferencia || equipe.nome);
+    equipe.nome = nome;
+    equipe.ejcNome = ejc.nome;
+    equipe.nomeReferencia = nomeReferenciaNovo;
+    equipe.nomeNormalizado = nomeNormalizadoNovo;
+    equipe.ejcId = ejcId;
+    await equipe.save();
+
+    if (nomeReferenciaAntigo && nomeReferenciaAntigo !== nomeReferenciaNovo) {
+      await Encontro.updateMany(
+        { equipeServiu: nomeReferenciaAntigo },
+        { $set: { 'equipeServiu.$': nomeReferenciaNovo } }
+      );
+      await Encontro.updateMany(
+        { equipeCoordenou: nomeReferenciaAntigo },
+        { $set: { 'equipeCoordenou.$': nomeReferenciaNovo } }
+      );
+    }
+
+    return res.json({ success: true, message: 'Equipe atualizada com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao editar equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao editar equipe.' });
+  }
+});
+
+// POST /admin/excluir-equipe/:id - Excluir equipe e vinculos associados
+app.post('/admin/excluir-equipe/:id', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const ejcId = normalizeTextInput(req.body.ejcId);
+
+    if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Dados invalidos para excluir equipe.' });
+    }
+
+    let equipe = await Equipe.findOne({ _id: id, ejcId }).lean();
+    if (!equipe) {
+      const equipeLegada = await Equipe.findById(id).lean();
+      if (equipeLegada && !equipeLegada.ejcId) {
+        await Equipe.updateOne({ _id: id }, { $set: { ejcId } });
+        equipe = { ...equipeLegada, ejcId };
+      }
+    }
+
+    if (!equipe) {
+      return res.status(404).json({ success: false, error: 'Equipe nao encontrada neste EJC.' });
+    }
+
+    const nomeReferencia = normalizeTextInput(equipe.nomeReferencia || equipe.nome);
+
+    await VinculoEncontro.deleteMany({
+      ejcId,
+      entidadeTipo: 'equipe',
+      entidadeId: id,
+    });
+
+    if (nomeReferencia) {
+      await Encontro.updateMany(
+        {},
+        {
+          $pull: {
+            equipeServiu: nomeReferencia,
+            equipeCoordenou: nomeReferencia,
+          },
+        }
+      );
+    }
+
+    await Equipe.deleteOne({ _id: id });
+    return res.json({ success: true, message: 'Equipe excluida com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao excluir equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao excluir equipe.' });
+  }
+});
+
+// POST /admin/vincular-encontro - Vincular pessoa em circulo/equipe de um EJC
+app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    console.log('[VINCULAR] body recebido:', JSON.stringify(req.body));
     const ejcId = normalizeTextInput(req.body.ejcId);
     const entidadeTipo = normalizeTextInput(req.body.entidadeTipo).toLowerCase();
     const entidadeId = normalizeTextInput(req.body.entidadeId);
@@ -4240,19 +5642,41 @@ app.post('/admin/vincular-encontro', checkAdminAuth, async (req, res) => {
       }
     }
 
-    const entidade = entidadeTipo === 'circulo'
+    let entidade = entidadeTipo === 'circulo'
       ? await Circulo.findOne({ _id: entidadeId, ejcId })
       : await Equipe.findOne({ _id: entidadeId, ejcId });
-    if (!entidade) return res.status(404).json({ success: false, error: 'Entidade não encontrada neste EJC.' });
+
+    console.log('[VINCULAR] entidade encontrada (1a tentativa):', entidade ? entidade._id : null);
+
+    // Fallback para equipes legadas sem ejcId preenchido.
+    if (!entidade && entidadeTipo === 'equipe') {
+      const equipeLegada = await Equipe.findById(entidadeId);
+      console.log('[VINCULAR] equipe legada (fallback):', equipeLegada ? { id: equipeLegada._id, ejcId: equipeLegada.ejcId } : null);
+      if (equipeLegada && !equipeLegada.ejcId) {
+        equipeLegada.ejcId = ejcId;
+        await equipeLegada.save();
+        entidade = equipeLegada;
+      }
+    }
+
+    if (!entidade) {
+      console.log('[VINCULAR] entidade nao encontrada para ejcId:', ejcId, 'entidadeId:', entidadeId);
+      return res.status(404).json({ success: false, error: 'Entidade não encontrada neste EJC.' });
+    }
 
     const ModelPessoa = pessoaTipo === 'encontrista' ? Cadastro : Encontro;
     const pessoas = await ModelPessoa.find({ _id: { $in: pessoaIds } });
+    console.log('[VINCULAR] pessoas encontradas:', pessoas.length, 'de', pessoaIds.length, 'solicitadas');
     const pessoasMap = new Map(pessoas.map((p) => [String(p._id), p]));
 
     let vinculados = 0;
+    let jaVinculados = 0;
+    let naoEncontrados = 0;
+
     for (const pessoaId of pessoaIds) {
       const pessoa = pessoasMap.get(String(pessoaId));
       if (!pessoa) {
+        naoEncontrados += 1;
         continue;
       }
 
@@ -4276,6 +5700,8 @@ app.post('/admin/vincular-encontro', checkAdminAuth, async (req, res) => {
           descricaoPapel: papel === 'moita' ? descricaoPapel : '',
         });
         vinculados += 1;
+      } else {
+        jaVinculados += 1;
       }
 
       if (entidadeTipo === 'equipe' && pessoaTipo === 'encontreiro') {
@@ -4290,16 +5716,16 @@ app.post('/admin/vincular-encontro', checkAdminAuth, async (req, res) => {
       }
     }
 
-    return res.json({ success: true, vinculados });
+    return res.json({ success: true, vinculados, jaVinculados, naoEncontrados });
   } catch (err) {
-    console.error('Erro ao vincular encontro:', err);
+    console.error('[VINCULAR] Erro ao vincular encontro:', err);
     return res.status(500).json({ success: false, error: 'Erro ao vincular.' });
   }
 });
 
 // GET /admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato
 // Exporta vinculados de um circulo/equipe em Excel ou PDF.
-app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', checkAdminAuth, async (req, res) => {
+app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const ejcId = normalizeTextInput(req.params.ejcId);
     const entidadeTipo = normalizeTextInput(req.params.entidadeTipo).toLowerCase();
@@ -4620,7 +6046,53 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
 
 // GET /admin/encontros/:ejcId/export/quadrante/pdf
 // Exporta um unico PDF com todos os circulos e equipes do EJC.
-app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, async (req, res) => {
+app.get('/admin/encontros/:ejcId/quadrante/editor', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    const ejcId = normalizeTextInput(req.params.ejcId);
+
+    if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).send('EJC invalido para abrir o editor de quadrante.');
+    }
+
+    const ejc = await Ejc.findById(ejcId).lean();
+    if (!ejc) {
+      return res.status(404).send('EJC nao encontrado.');
+    }
+
+    const [circulos, equipes] = await Promise.all([
+      Circulo.find({ ejcId }).sort({ nome: 1 }).select('nome').lean(),
+      Equipe.find({ ejcId }).sort({ nome: 1 }).select('nome').lean(),
+    ]);
+
+    const quadranteSources = [
+      ...circulos.map((item) => ({
+        id: `circulo-${String(item._id)}`,
+        tipo: 'circulo',
+        nome: item.nome || 'Circulo sem nome',
+        url: `/admin/encontros/${encodeURIComponent(ejcId)}/export/circulo/${encodeURIComponent(String(item._id))}/pdf`,
+      })),
+      ...equipes.map((item) => ({
+        id: `equipe-${String(item._id)}`,
+        tipo: 'equipe',
+        nome: item.nome || 'Equipe sem nome',
+        url: `/admin/encontros/${encodeURIComponent(ejcId)}/export/equipe/${encodeURIComponent(String(item._id))}/pdf`,
+      })),
+    ];
+
+    return res.render('admin-quadrante-editor', {
+      adminUsername: req.session.adminUsername,
+      adminNivelAcesso: req.adminUser?.nivelAcesso || 'super_admin',
+      adminPermissoes: req.adminUser?.permissoes || [],
+      ejc,
+      quadranteSources,
+    });
+  } catch (err) {
+    console.error('Erro ao abrir editor de quadrante:', err);
+    return res.status(500).send('Erro ao abrir editor de quadrante.');
+  }
+});
+
+app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const ejcId = normalizeTextInput(req.params.ejcId);
 
@@ -4712,7 +6184,7 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, async (r
 });
 
 // POST /admin/remover-vinculo/:id - Remove vinculo de pessoa em circulo/equipe
-app.post('/admin/remover-vinculo/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/remover-vinculo/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -4742,7 +6214,7 @@ app.post('/admin/remover-vinculo/:id', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/deletar-equipe/:id - Deletar equipe e limpar vinculos
-app.post('/admin/deletar-equipe/:id', checkAdminAuth, async (req, res) => {
+app.post('/admin/deletar-equipe/:id', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
   try {
     const { id } = req.params;
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -4776,7 +6248,7 @@ app.post('/admin/deletar-equipe/:id', checkAdminAuth, async (req, res) => {
 });
 
 // POST /admin/vincular-encontreiro-equipe - Vincular encontreiro em equipe
-app.post('/admin/vincular-encontreiro-equipe', checkAdminAuth, async (req, res) => {
+app.post('/admin/vincular-encontreiro-equipe', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
   try {
     const encontreiroId = normalizeTextInput(req.body.encontreiroId || req.body.pessoaId);
     const equipeId = normalizeTextInput(req.body.equipeId);
@@ -4828,7 +6300,7 @@ app.post('/admin/vincular-encontreiro-equipe', checkAdminAuth, async (req, res) 
 });
 
 // POST /admin/importar-cadastros - Importar somente cadastros de encontreiros
-app.post('/admin/importar-cadastros', checkAdminAuth, importUploadSingle, async (req, res) => {
+app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
   const summary = {
     totalLidos: 0,
     importados: 0,

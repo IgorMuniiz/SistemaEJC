@@ -116,6 +116,19 @@
           <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontristas" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
+        <div class="batch-toolbar" data-batch-scope="encontrista">
+          <span class="batch-counter">0 selecionado(s)</span>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontrista','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
+          <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontrista','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
+          <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontrista','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontrista')"><i class="fas fa-check-double"></i>Todos</button>
+          <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar</button>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
+          <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+        </div>
       </div>
 
       <div class="kanban-board">
@@ -132,8 +145,12 @@
             </div>
           <% } else { %>
             <% pendentesEncontristas.forEach(r => { %>
-              <div class="pcard amber-card">
+              <div class="pcard amber-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -175,8 +192,12 @@
             </div>
           <% } else { %>
             <% aprovadosEncontristas.forEach(r => { %>
-              <div class="pcard green-card">
+              <div class="pcard green-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -211,8 +232,12 @@
             </div>
           <% } else { %>
             <% reprovadosEncontristas.forEach(r => { %>
-              <div class="pcard red-card">
+              <div class="pcard red-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -250,6 +275,19 @@
           <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontreiros" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
+        <div class="batch-toolbar" data-batch-scope="encontreiro">
+          <span class="batch-counter">0 selecionado(s)</span>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontreiro','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
+          <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontreiro','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
+          <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontreiro','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontreiro')"><i class="fas fa-check-double"></i>Todos</button>
+          <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar</button>
+          <span class="batch-separator"></span>
+          <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
+          <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+        </div>
       </div>
 
       <div class="kanban-board">
@@ -266,8 +304,12 @@
             </div>
           <% } else { %>
             <% pendentesEncontreiros.forEach(r => { %>
-              <div class="pcard amber-card">
+              <div class="pcard amber-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -310,8 +352,12 @@
             </div>
           <% } else { %>
             <% aprovadosEncontreiros.forEach(r => { %>
-              <div class="pcard green-card">
+              <div class="pcard green-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -347,8 +393,12 @@
             </div>
           <% } else { %>
             <% reprovadosEncontreiros.forEach(r => { %>
-              <div class="pcard red-card">
+              <div class="pcard red-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
                 <div class="pcard-top">
+                  <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
+                    <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
+                    <span></span>
+                  </label>
                   <div class="pcard-avatar">
                     <% if (r.foto) { %>
                       <img src="/img/uploads/<%= encodeURIComponent(r.foto) %>?w=100&h=100&fit=cover&format=webp" loading="lazy" decoding="async" alt="<%= r.nomeCompleto %>" />
@@ -387,16 +437,16 @@
       el.tabIndex = -1;
       el.setAttribute('aria-hidden', 'true');
       el.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-dialog modal-dialog-centered app-popup-dialog">
+          <div class="modal-content app-popup-content app-popup-tone-primary">
+            <div class="modal-header app-popup-header">
               <h5 class="modal-title" id="app-popup-title">Aviso</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space:pre-line;"></p>
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-popup-footer">
               <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
               <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
             </div>
@@ -412,8 +462,13 @@
       element.querySelector('#app-popup-message').textContent = message || '';
       const confirmBtn = element.querySelector('#app-popup-confirm');
       const cancelBtn  = element.querySelector('#app-popup-cancel');
+      const contentEl  = element.querySelector('.app-popup-content');
       confirmBtn.textContent = confirmText;
       confirmBtn.className = `btn btn-${tone}`;
+      if (contentEl) {
+        contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
+        contentEl.classList.add(`app-popup-tone-${tone}`);
+      }
       cancelBtn.style.display = cancelText ? '' : 'none';
       if (cancelText) cancelBtn.textContent = cancelText;
 
@@ -440,6 +495,110 @@
     const appConfirm = (msg, title = 'Confirmação') =>
       showAppPopup({ title, message: msg, confirmText: 'Confirmar', cancelText: 'Cancelar', tone: 'warning' });
 
+    function obterCheckboxesLote(scope) {
+      return Array.from(document.querySelectorAll(`.batch-checkbox[data-batch-scope="${scope}"]`));
+    }
+
+    function atualizarInterfaceLote(scope) {
+      const checkboxes = obterCheckboxesLote(scope);
+      const selecionados = checkboxes.filter((checkbox) => checkbox.checked);
+      const toolbar = document.querySelector(`.batch-toolbar[data-batch-scope="${scope}"]`);
+
+      checkboxes.forEach((checkbox) => {
+        const card = checkbox.closest('.selectable-card');
+        if (card) {
+          card.classList.toggle('is-selected', checkbox.checked);
+        }
+      });
+
+      if (!toolbar) return;
+
+      const counter = toolbar.querySelector('.batch-counter');
+      const actionButtons = toolbar.querySelectorAll('[data-batch-action]');
+      if (counter) {
+        counter.textContent = `${selecionados.length} selecionado(s)`;
+      }
+
+      actionButtons.forEach((button) => {
+        button.disabled = selecionados.length === 0;
+      });
+    }
+
+    const STATUS_CARD_CLASS = {
+      pendente: 'amber-card',
+      aprovado: 'green-card',
+      reprovado: 'red-card',
+    };
+
+    function selecionarTodosLote(scope) {
+      obterCheckboxesLote(scope).forEach((checkbox) => {
+        checkbox.checked = true;
+      });
+      atualizarInterfaceLote(scope);
+    }
+
+    function limparSelecaoLote(scope) {
+      obterCheckboxesLote(scope).forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      atualizarInterfaceLote(scope);
+    }
+
+    function selecionarPorStatusLote(scope, status) {
+      const cardClass = STATUS_CARD_CLASS[status];
+      obterCheckboxesLote(scope).forEach((checkbox) => {
+        const card = checkbox.closest('.selectable-card');
+        checkbox.checked = card ? card.classList.contains(cardClass) : false;
+      });
+      atualizarInterfaceLote(scope);
+    }
+
+    async function executarAcaoLote(scope, action) {
+      const selecionados = obterCheckboxesLote(scope)
+        .filter((checkbox) => checkbox.checked)
+        .map((checkbox) => checkbox.dataset.batchId);
+
+      if (selecionados.length === 0) {
+        await appAlert('Selecione pelo menos um cadastro para continuar.', 'warning', 'Nenhuma seleção');
+        return;
+      }
+
+      const verbo = action === 'aprovar' ? 'aprovar' : 'reprovar';
+      const confirmacao = await appConfirm(`Tem certeza que deseja ${verbo} ${selecionados.length} cadastro(s) de uma vez?`, `Confirmar ${verbo} em lote`);
+      if (!confirmacao) return;
+
+      try {
+        const res = await fetch('/admin/aprovacao-lote', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids: selecionados, tipoLista: scope, action })
+        });
+        const data = await res.json();
+
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Falha ao processar atualização em lote');
+        }
+
+        const complemento = data.missingCount > 0
+          ? ` ${data.missingCount} cadastro(s) não foram encontrados.`
+          : '';
+
+        await appAlert(`${data.updatedCount} cadastro(s) atualizados com sucesso.${complemento}`, 'success', 'Sucesso');
+        location.reload();
+      } catch (e) {
+        await appAlert('Erro: ' + e.message, 'danger', 'Erro');
+      }
+    }
+
+    document.addEventListener('change', (event) => {
+      if (!event.target.classList.contains('batch-checkbox')) return;
+      atualizarInterfaceLote(event.target.dataset.batchScope);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      ['encontrista', 'encontreiro'].forEach(atualizarInterfaceLote);
+    });
+
     /* ── Actions ─────────────────────────────────────────────── */
     async function aprovarCadastro(id, tipoLista) {
       if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovação')) return;
@@ -461,6 +620,7 @@
       } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }
   </script>
+  <script src="/js/page-transitions.js"></script>
 </body>
 </html>
 

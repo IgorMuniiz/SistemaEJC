@@ -2098,6 +2098,78 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       --bs-gutter-x: 1.25rem;
       --bs-gutter-y: 1.1rem;
     }
+
+    /* ── PERMISSION PILLS ────────────────────────────────────── */
+    body.admin-panel.admin-manager-page .admin-perm-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 4px 0;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill {
+      position: relative;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill-label {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(99, 102, 241, .22);
+      background: rgba(15, 23, 42, .55);
+      color: rgba(148, 163, 184, .9);
+      font-size: .8rem;
+      font-weight: 600;
+      line-height: 1.3;
+      transition: border-color .18s, background .18s, color .18s, box-shadow .18s;
+      user-select: none;
+      min-width: 148px;
+      max-width: 220px;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill-label:hover {
+      border-color: rgba(99, 102, 241, .5);
+      background: rgba(30, 35, 70, .75);
+      color: rgba(226, 232, 240, 1);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, .1);
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill-name {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-check-icon {
+      font-size: .65rem;
+      opacity: 0;
+      color: rgba(129, 140, 248, 1);
+      transition: opacity .15s;
+      flex-shrink: 0;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill-label small {
+      font-size: .71rem;
+      font-weight: 400;
+      color: rgba(100, 116, 139, .85);
+      margin-top: 3px;
+      transition: color .18s;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill input[type="checkbox"]:checked + .admin-perm-pill-label {
+      border-color: rgba(99, 102, 241, .75);
+      background: linear-gradient(135deg, rgba(79, 70, 229, .32) 0%, rgba(129, 140, 248, .18) 100%);
+      color: rgba(199, 210, 254, 1);
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, .35), 0 0 14px rgba(99, 102, 241, .14);
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill input[type="checkbox"]:checked + .admin-perm-pill-label .admin-perm-check-icon {
+      opacity: 1;
+    }
+    body.admin-panel.admin-manager-page .admin-perm-pill input[type="checkbox"]:checked + .admin-perm-pill-label small {
+      color: rgba(165, 180, 252, .8);
+    }
     body.admin-panel.admin-manager-page #import_db_fields.row.g-3,
     body.admin-panel.admin-manager-page #import_file_fields.row.g-3 {
       --bs-gutter-y: 0.95rem;
@@ -3591,22 +3663,94 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       }
     }
 
+    /* ── MODAL EDITAR ADMIN (fixed overlay, mesmo padrão do editor principal) ── */
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 25000 !important;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(4, 9, 20, 0.82);
+      backdrop-filter: blur(10px);
+      overflow-y: auto;
+      padding: 16px;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin.show {
+      display: flex !important;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-dialog {
+      width: min(540px, calc(100vw - 24px));
+      max-width: min(540px, calc(100vw - 24px));
+      margin: auto;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-content {
+      background: rgba(13, 22, 41, 0.98);
+      border: 1px solid rgba(99, 102, 241, .22);
+      border-radius: 16px;
+      box-shadow: 0 24px 64px rgba(0, 0, 0, .6), 0 0 0 1px rgba(99, 102, 241, .1);
+      color: rgba(226, 232, 240, .95);
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-header {
+      border-bottom: 1px solid rgba(99, 102, 241, .18);
+      padding: 18px 20px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, .18) 0%, rgba(99, 102, 241, .08) 100%);
+      border-radius: 16px 16px 0 0;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-title { color: rgba(199, 210, 254, 1); font-weight: 700; }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .btn-close { filter: invert(1) opacity(.7); }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-body { padding: 20px; }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .modal-footer {
+      border-top: 1px solid rgba(99, 102, 241, .18);
+      padding: 14px 20px;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .form-label { color: rgba(199, 210, 254, .9); font-weight: 700; font-size: .82rem; }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .form-control,
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .form-select {
+      background: rgba(8, 14, 28, .98) !important;
+      border: 1px solid rgba(99, 102, 241, .22) !important;
+      color: rgba(226, 232, 240, .98) !important;
+      border-radius: 8px;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .form-control:focus,
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .form-select:focus {
+      border-color: rgba(99, 102, 241, .6) !important;
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, .15) !important;
+    }
+    body.admin-panel.admin-manager-page #modalEdicaoAdmin .text-muted { color: rgba(100, 116, 139, .9) !important; }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+      position: fixed;
+      inset: 0;
+      z-index: 24000;
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 16px;
+      background: rgba(4, 9, 20, 0.82);
+      backdrop-filter: blur(10px);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.show {
+      display: flex !important;
+    }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .modal-dialog {
-      max-width: min(1080px, calc(100vw - 20px));
-      margin: clamp(8px, 2vh, 20px) auto;
-      height: calc(100vh - 16px);
-      height: calc(100dvh - 16px);
+      width: min(1080px, calc(100vw - 24px));
+      max-width: min(1080px, calc(100vw - 24px));
+      margin: auto 0;
+      height: min(920px, calc(100dvh - 24px));
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal {
       display: flex;
       flex-direction: column;
       overflow: hidden;
       border-radius: 24px !important;
-      border: 1px solid rgba(148, 163, 184, 0.2) !important;
+      border: 1px solid rgba(120, 146, 255, 0.22) !important;
       background:
-        radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 28%),
-        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(7, 13, 26, 0.98)) !important;
-      box-shadow: 0 28px 70px rgba(2, 6, 23, 0.48);
+        radial-gradient(circle at top left, rgba(79, 70, 229, 0.22), transparent 30%),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 24%),
+        linear-gradient(180deg, rgba(11, 18, 34, 0.995), rgba(6, 12, 24, 0.995)) !important;
+      box-shadow: 0 36px 90px rgba(2, 6, 23, 0.58);
       height: 100%;
       max-height: none;
     }
@@ -3657,15 +3801,17 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       max-height: none;
       overflow-y: auto;
       overscroll-behavior: contain;
+      background: linear-gradient(180deg, rgba(8, 14, 28, 0.96), rgba(7, 12, 24, 0.98));
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-body form {
       padding: 14px;
+      min-width: 0;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.is-encontreiro-view .modal-dialog {
-      max-width: min(1320px, calc(100vw - 14px));
-      height: calc(100vh - 10px);
-      height: calc(100dvh - 10px);
-      margin: 6px auto;
+      width: min(1320px, calc(100vw - 24px));
+      max-width: min(1320px, calc(100vw - 24px));
+      height: min(960px, calc(100dvh - 24px));
+      margin: auto 0;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.is-encontreiro-view .edit-modal-header {
       padding: 10px 14px 8px;
@@ -3768,9 +3914,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       gap: 10px;
       margin-bottom: 10px;
       padding: 10px 12px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
+      border: 1px solid rgba(120, 146, 255, 0.18);
       border-radius: 20px;
-      background: linear-gradient(145deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.34));
+      background: linear-gradient(145deg, rgba(17, 27, 49, 0.92), rgba(10, 18, 34, 0.82));
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-identity h6 {
       margin: 6px 0 4px;
@@ -3815,8 +3961,8 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-meta-card {
       padding: 10px;
       border-radius: 12px;
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      background: linear-gradient(180deg, rgba(8, 15, 30, 0.6), rgba(15, 23, 42, 0.42));
+      border: 1px solid rgba(120, 146, 255, 0.16);
+      background: linear-gradient(180deg, rgba(15, 25, 48, 0.9), rgba(9, 17, 32, 0.86));
       min-height: 64px;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-meta-label {
@@ -3838,20 +3984,21 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.45fr) minmax(280px, .8fr);
-      gap: 10px;
+      gap: 12px;
       align-items: start;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-main-column,
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-side-column {
       display: grid;
       gap: 10px;
+      min-width: 0;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-card {
       padding: 12px;
       border-radius: 20px;
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.58), rgba(8, 15, 30, 0.46));
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(120, 146, 255, 0.16);
+      background: linear-gradient(180deg, rgba(13, 22, 41, 0.94), rgba(9, 16, 30, 0.92));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 8px 24px rgba(2, 6, 23, 0.24);
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-head {
       display: flex;
@@ -3886,9 +4033,39 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-field-hint {
       display: block;
       margin-top: 7px;
-      color: rgba(148, 163, 184, 0.88);
+      color: rgba(177, 193, 224, 0.84);
       font-size: .74rem;
       line-height: 1.45;
+    }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-label {
+      color: rgba(240, 245, 255, 0.96);
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select {
+      background: rgba(11, 20, 38, 0.98) !important;
+      border: 1px solid rgba(126, 156, 255, 0.16) !important;
+      color: rgba(246, 249, 255, 0.98) !important;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control::placeholder {
+      color: rgba(161, 177, 208, 0.74) !important;
+    }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control:focus,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select:focus {
+      background: rgba(13, 23, 43, 1) !important;
+      border-color: rgba(120, 146, 255, 0.55) !important;
+      box-shadow: 0 0 0 0.22rem rgba(87, 112, 255, 0.18) !important;
+    }
+
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select option {
+      color: #eef4ff;
+      background: #10182b;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-final-question-col {
       display: flex;
@@ -3932,8 +4109,8 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       justify-items: start;
       padding: 10px;
       border-radius: 16px;
-      border: 1px solid rgba(148, 163, 184, 0.14);
-      background: rgba(8, 15, 30, 0.44);
+      border: 1px solid rgba(120, 146, 255, 0.16);
+      background: rgba(10, 18, 34, 0.82);
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-photo-actions {
       display: grid;
@@ -3980,6 +4157,16 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       min-height: 112px;
       resize: vertical;
     }
+    @media (max-width: 1280px) {
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-grid {
+        grid-template-columns: 1fr;
+      }
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-side-column {
+        grid-template-columns: 1fr 1fr;
+        align-items: start;
+      }
+    }
+
     @media (max-width: 1100px) {
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-hero,
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-grid {
@@ -3989,13 +4176,19 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-side-column .edit-side-card + .edit-side-card {
         position: static;
       }
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-side-column {
+        grid-template-columns: 1fr;
+      }
     }
     @media (max-width: 767px) {
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+        padding: 8px;
+      }
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .modal-dialog {
-        max-width: calc(100vw - 12px);
-        margin: 8px auto;
-        height: calc(100vh - 12px);
-        height: calc(100dvh - 12px);
+        max-width: calc(100vw - 16px);
+        width: calc(100vw - 16px);
+        margin: 0;
+        height: calc(100dvh - 16px);
       }
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header {
         padding: 12px 12px 10px;
@@ -4043,7 +4236,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
 
     @media (max-height: 860px) {
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .modal-dialog {
-        margin: 6px auto;
+        margin: 0;
       }
       body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header {
         padding: 12px 14px 10px;

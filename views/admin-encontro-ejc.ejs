@@ -18,19 +18,20 @@
   <% const totalVinculosCirculo = (vinculos || []).filter(function(v){ return v.entidadeTipo === 'circulo'; }).length; %>
   <% const totalVinculosEquipe = (vinculos || []).filter(function(v){ return v.entidadeTipo === 'equipe'; }).length; %>
   <% const totalPessoasVinculadas = totalVinculosCirculo + totalVinculosEquipe; %>
+  <% const adminPermissoesLista = Array.isArray(adminPermissoes) ? adminPermissoes : []; %>
   <div class="page-shell">
     <aside class="sidebar">
       <div class="title"><i class="fas fa-layer-group me-2"></i>Painel do EJC</div>
       <div class="subtitle"><%= ejc.nome %></div>
 
-      <button type="button" class="menu-btn active" data-panel="panel-circulos" onclick="ativarPainel('panel-circulos', this)">
+      <button type="button" class="menu-btn active" data-panel="panel-circulos" data-required-permission="encontros.gerenciar" onclick="ativarPainel('panel-circulos', this)">
         <i class="fas fa-circle-notch me-2"></i>Círculos
       </button>
-      <button type="button" class="menu-btn" data-panel="panel-equipes" onclick="ativarPainel('panel-equipes', this)">
+      <button type="button" class="menu-btn" data-panel="panel-equipes" data-required-permission="equipes.gerenciar" onclick="ativarPainel('panel-equipes', this)">
         <i class="fas fa-people-group me-2"></i>Equipes
       </button>
 
-      <button type="button" class="menu-btn" onclick="gerarQuadrante(this)">
+      <button type="button" class="menu-btn" data-required-permission="encontros.gerenciar" onclick="gerarQuadrante(this)">
         <i class="fas fa-file-pdf me-2"></i>Gerar Quadrante
       </button>
 
@@ -76,21 +77,21 @@
       </div>
 
       <section class="encontro-module-grid" aria-label="Atalhos do painel EJC">
-        <button type="button" class="encontro-module-card active" data-panel-target="panel-circulos" onclick="ativarPainel('panel-circulos')">
+        <button type="button" class="encontro-module-card active" data-panel-target="panel-circulos" data-required-permission="encontros.gerenciar" onclick="ativarPainel('panel-circulos')">
           <span class="encontro-module-icon"><i class="fas fa-circle-notch"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Círculos</span>
           </span>
           <span class="encontro-module-count"><%= (circulos || []).length %></span>
         </button>
-        <button type="button" class="encontro-module-card" data-panel-target="panel-equipes" onclick="ativarPainel('panel-equipes')">
+        <button type="button" class="encontro-module-card" data-panel-target="panel-equipes" data-required-permission="equipes.gerenciar" onclick="ativarPainel('panel-equipes')">
           <span class="encontro-module-icon"><i class="fas fa-people-group"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Equipes</span>
           </span>
           <span class="encontro-module-count"><%= (equipes || []).length %></span>
         </button>
-        <button type="button" class="encontro-module-card encontro-module-card-action" onclick="gerarQuadrante(this)">
+        <button type="button" class="encontro-module-card encontro-module-card-action" data-required-permission="encontros.gerenciar" onclick="gerarQuadrante(this)">
           <span class="encontro-module-icon"><i class="fas fa-file-pdf"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Quadrante</span>
@@ -106,7 +107,7 @@
         </a>
       </section>
 
-      <section id="panel-circulos" class="panel active">
+      <section id="panel-circulos" class="panel active" data-required-permission="encontros.gerenciar">
         <div class="panel-premium-head panel-premium-head-circulos">
           <div>
             <h2><i class="fas fa-circle-notch me-2"></i>Curadoria dos círculos</h2>
@@ -208,7 +209,7 @@
         </div>
       </section>
 
-      <section id="panel-equipes" class="panel">
+      <section id="panel-equipes" class="panel" data-required-permission="equipes.gerenciar">
         <div class="panel-premium-head panel-premium-head-equipes">
           <div>
             <p class="panel-premium-kicker">Operação do encontro</p>
@@ -330,6 +331,34 @@
 
     const mapEncontristas = Object.fromEntries(encontristas.map((p) => [String(p._id), p]));
     const mapEncontreiros = Object.fromEntries(encontreiros.map((p) => [String(p._id), p]));
+    const currentAdminPermissions = <%- JSON.stringify(adminPermissoesLista || []) %>;
+
+    function hasPermission(permissionKey) {
+      if (!permissionKey) return true;
+      return currentAdminPermissions.includes(permissionKey);
+    }
+
+    function ensurePermission(permissionKey, message) {
+      if (hasPermission(permissionKey)) return true;
+      appAlert(message || 'Voce nao possui permissao para esta acao.', 'warning', 'Acesso negado');
+      return false;
+    }
+
+    function getPrimeiroPainelDisponivelId() {
+      const painels = ['panel-circulos', 'panel-equipes'];
+      return painels.find((id) => {
+        const panel = document.getElementById(id);
+        return panel && panel.style.display !== 'none';
+      }) || 'panel-circulos';
+    }
+
+    function aplicarPermissoesNaPagina() {
+      document.querySelectorAll('[data-required-permission]').forEach((node) => {
+        const permissionKey = node.getAttribute('data-required-permission');
+        if (hasPermission(permissionKey)) return;
+        node.style.display = 'none';
+      });
+    }
 
     function escapeHtml(value) {
       return String(value || '')
@@ -361,6 +390,10 @@
       const tipo = isMoita ? 'Moita' : personTipoLabel(vinculo, pessoa);
       const tipoClass = isMoita ? 'moita' : vinculo.pessoaTipo;
       const papel = isMoita ? (vinculo.descricaoPapel || '-') : 'Membro';
+      const podeRemover = hasPermission('encontros.gerenciar');
+      const acaoRemover = podeRemover
+        ? `<button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
+        : '<span class="text-muted small">Sem permissao</span>';
       return `
         <tr>
           <td>${foto}</td>
@@ -370,11 +403,7 @@
           <td>${escapeHtml(pessoa?.telefone || '-')}</td>
           <td>${escapeHtml(pessoa?.email || '-')}</td>
           <td>${escapeHtml(pessoa?.ejc || '-')}</td>
-          <td>
-            <button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')">
-              <i class="fas fa-trash me-1"></i>Remover
-            </button>
-          </td>
+          <td>${acaoRemover}</td>
         </tr>
       `;
     }
@@ -388,6 +417,10 @@
       const papel = (vinculo.papel === 'coordenador' || vinculo.papel === 'coordenou')
         ? 'Coordenador'
         : 'Membro';
+      const podeRemover = hasPermission('equipes.gerenciar');
+      const acaoRemover = podeRemover
+        ? `<button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
+        : '<span class="text-muted small">Sem permissao</span>';
       return `
         <tr>
           <td>${foto}</td>
@@ -397,11 +430,7 @@
           <td>${escapeHtml(pessoa?.telefone || '-')}</td>
           <td>${escapeHtml(pessoa?.email || '-')}</td>
           <td>${escapeHtml(pessoa?.ejc || '-')}</td>
-          <td>
-            <button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')">
-              <i class="fas fa-trash me-1"></i>Remover
-            </button>
-          </td>
+          <td>${acaoRemover}</td>
         </tr>
       `;
     }
@@ -467,6 +496,23 @@
           ? lista.map((v) => personRowCirculo(v, personByVinculo(v))).join('')
           : '<tr><td colspan="8" class="text-center text-muted">Nenhum vinculado neste circulo.</td></tr>';
 
+        const podeGerenciarCirculo = hasPermission('encontros.gerenciar');
+        const acoesCirculo = podeGerenciarCirculo
+          ? `
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
+                  <i class="fas fa-pen me-1"></i>Editar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
+                  <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'excel', this)">
+                  <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'pdf', this)">
+                  <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+          `
+          : '<span class="text-muted small">Sem permissao para gerenciar circulos</span>';
         return `
           <div class="entity-card entity-card-circulo ${themeClass}">
             <div class="entity-head">
@@ -480,18 +526,7 @@
               </div>
               <div class="d-flex align-items-center gap-2 entity-head-actions">
                 <small class="muted entity-counter">${lista.length} vinculado(s)</small>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
-                  <i class="fas fa-pen me-1"></i>Editar
-                </button>
-                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
-                  <i class="fas fa-trash me-1"></i>Excluir
-                </button>
-                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'excel', this)">
-                  <i class="fas fa-file-excel me-1"></i>Excel
-                </button>
-                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'pdf', this)">
-                  <i class="fas fa-file-pdf me-1"></i>PDF
-                </button>
+                ${acoesCirculo}
               </div>
             </div>
             <div class="p-3">
@@ -545,6 +580,23 @@
           ? lista.map((v) => personRowEquipe(v, personByVinculo(v))).join('')
           : '<tr><td colspan="8" class="text-center text-muted">Nenhum vinculado nesta equipe.</td></tr>';
 
+        const podeGerenciarEquipe = hasPermission('equipes.gerenciar');
+        const acoesEquipe = podeGerenciarEquipe
+          ? `
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
+                  <i class="fas fa-pen me-1"></i>Editar
+                </button>
+                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
+                  <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'excel', this)">
+                  <i class="fas fa-file-excel me-1"></i>Excel
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'pdf', this)">
+                  <i class="fas fa-file-pdf me-1"></i>PDF
+                </button>
+          `
+          : '<span class="text-muted small">Sem permissao para gerenciar equipes</span>';
         return `
           <div class="entity-card entity-card-equipe">
             <div class="entity-head">
@@ -558,18 +610,7 @@
               </div>
               <div class="d-flex align-items-center gap-2 entity-head-actions">
                 <small class="muted entity-counter">${lista.length} vinculado(s)</small>
-                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="editarEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
-                  <i class="fas fa-pen me-1"></i>Editar
-                </button>
-                <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
-                  <i class="fas fa-trash me-1"></i>Excluir
-                </button>
-                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'excel', this)">
-                  <i class="fas fa-file-excel me-1"></i>Excel
-                </button>
-                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-pdf" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'pdf', this)">
-                  <i class="fas fa-file-pdf me-1"></i>PDF
-                </button>
+                ${acoesEquipe}
               </div>
             </div>
             <div class="p-3">
@@ -824,6 +865,7 @@
     }
 
     function abrirExportacao(entidadeTipo, entidadeId, formato, botao) {
+      if (!ensurePermission(entidadeTipo === 'circulo' ? 'encontros.gerenciar' : 'equipes.gerenciar')) return;
       if (!entidadeTipo || !entidadeId || !formato) return;
 
       let restoreTimer = null;
@@ -849,6 +891,7 @@
     }
 
     function gerarQuadrante(botao) {
+      if (!ensurePermission('encontros.gerenciar')) return;
       let restoreTimer = null;
       if (botao) {
         botao.disabled = true;
@@ -856,8 +899,8 @@
         botao.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Gerando...';
       }
 
-      const url = `/admin/encontros/${encodeURIComponent(ejcId)}/export/quadrante/pdf`;
-      window.open(url, '_blank');
+      const url = `/admin/encontros/${encodeURIComponent(ejcId)}/quadrante/editor`;
+      window.location.href = url;
 
       restoreTimer = setTimeout(() => {
         if (botao) {
@@ -872,7 +915,7 @@
 
     function ativarPainel(panelId, btn) {
       const targetPanel = document.getElementById(panelId);
-      if (!targetPanel) return;
+      if (!targetPanel || targetPanel.style.display === 'none') return;
 
       document.querySelectorAll('.panel').forEach((panel) => panel.classList.remove('active', 'panel-entering'));
       targetPanel.classList.add('active');
@@ -917,14 +960,16 @@
       const url = new URL(window.location.href);
       const painelNaUrl = String(url.searchParams.get('painel') || '').trim();
       const painelNoStorage = String(localStorage.getItem(getPainelStorageKey()) || '').trim();
-      const painelDesejado = painelNaUrl || painelNoStorage || 'panel-circulos';
+      const painelFallback = getPrimeiroPainelDisponivelId();
+      const painelDesejado = painelNaUrl || painelNoStorage || painelFallback;
+      const painelEl = document.getElementById(painelDesejado);
 
-      if (document.getElementById(painelDesejado)) {
+      if (painelEl && painelEl.style.display !== 'none') {
         ativarPainel(painelDesejado);
         return;
       }
 
-      ativarPainel('panel-circulos');
+      ativarPainel(painelFallback);
     }
 
     function recarregarMantendoPainelAtual() {
@@ -1073,6 +1118,9 @@
 
     async function removerVinculo(vinculoId) {
       if (!vinculoId) return;
+      const vinculo = vinculos.find((item) => String(item._id) === String(vinculoId));
+      const permissaoNecessaria = vinculo?.entidadeTipo === 'equipe' ? 'equipes.gerenciar' : 'encontros.gerenciar';
+      if (!ensurePermission(permissaoNecessaria)) return;
       if (!await appConfirm('Deseja remover este vinculo?', 'Confirmar remocao')) return;
 
       const res = await fetch(`/admin/remover-vinculo/${encodeURIComponent(vinculoId)}`, {
@@ -1085,6 +1133,7 @@
     }
 
     async function criarCirculo() {
+      if (!ensurePermission('encontros.gerenciar')) return;
       const nome = document.getElementById('circulo_nome').value.trim();
       if (!nome) return await appAlert('Informe o nome do circulo.', 'warning', 'Campo obrigatorio');
       const res = await fetch('/admin/criar-circulo', {
@@ -1098,6 +1147,7 @@
     }
 
     async function criarEquipe() {
+      if (!ensurePermission('equipes.gerenciar')) return;
       const nome = document.getElementById('equipe_nome').value.trim();
       if (!nome) return await appAlert('Informe o nome da equipe.', 'warning', 'Campo obrigatorio');
       const res = await fetch('/admin/cadastrar-equipe', {
@@ -1111,6 +1161,7 @@
     }
 
     async function editarCirculo(circuloId, nomeAtual) {
+      if (!ensurePermission('encontros.gerenciar')) return;
       if (!circuloId) return;
       const novoNome = String(await appPrompt({
         title: 'Editar circulo',
@@ -1133,6 +1184,7 @@
     }
 
     async function excluirCirculo(circuloId, nomeCirculo) {
+      if (!ensurePermission('encontros.gerenciar')) return;
       if (!circuloId) return;
       if (!await appConfirm(`Deseja excluir o circulo \"${nomeCirculo || ''}\"? Todos os vinculos dele serao removidos.`, 'Confirmar exclusao')) return;
 
@@ -1147,6 +1199,7 @@
     }
 
     async function editarEquipe(equipeId, nomeAtual) {
+      if (!ensurePermission('equipes.gerenciar')) return;
       if (!equipeId) return;
       const novoNome = String(await appPrompt({
         title: 'Editar equipe',
@@ -1169,6 +1222,7 @@
     }
 
     async function excluirEquipe(equipeId, nomeEquipe) {
+      if (!ensurePermission('equipes.gerenciar')) return;
       if (!equipeId) return;
       if (!await appConfirm(`Deseja excluir a equipe \"${nomeEquipe || ''}\"? Todos os vinculos dela serao removidos.`, 'Confirmar exclusao')) return;
 
@@ -1183,6 +1237,7 @@
     }
 
     async function vincularEncontristaCirculo() {
+      if (!ensurePermission('encontros.gerenciar')) return;
       try {
         const entidadeId = document.getElementById('circulo_id').value;
         const pessoaIds = Array.from(document.getElementById('encontrista_id').selectedOptions || [])
@@ -1229,6 +1284,7 @@
     }
 
     async function vincularEncontreiroEquipeEJC() {
+      if (!ensurePermission('equipes.gerenciar')) return;
       try {
         const entidadeId = document.getElementById('equipe_id').value;
         const pessoaIds = Array.from(document.getElementById('encontreiro_id').selectedOptions || [])
@@ -1283,6 +1339,7 @@
     observarContadorSelecao('encontrista_id');
     observarContadorSelecao('encontreiro_id');
     alternarCampoMoita();
+    aplicarPermissoesNaPagina();
     restaurarPainelAtivo();
     renderAll();
   </script>

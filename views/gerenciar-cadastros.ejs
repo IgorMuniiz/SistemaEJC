@@ -14,7 +14,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
-<body class="admin-panel admin-manager-page">
+<body class="admin-panel admin-manager-page admin-manager-revamp">
   <% const encontreirosIndividuais = (encontreiros || []).filter(function(c){ return c.tipo !== 'tios'; }); %>
   <% const tios = (encontreiros || []).filter(function(c){ return c.tipo === 'tios'; }); %>
   <% const statusCadastroRaw = function(c){
@@ -34,6 +34,17 @@
   <% const encontreirosAprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
   <% const encontreirosReprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
   <% const encontreirosPendentes = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
+  <% const totalCadastrosVisiveis = (encontristas || []).length + (encontreirosIndividuais || []).length + (tios || []).length; %>
+  <% const totalPendencias = (encontristasPendentes || []).length + (encontreirosPendentes || []).length; %>
+  <% const pendenciasCriticasMenu = totalPendencias >= 12; %>
+  <% const pendenciasAtencaoMenu = !pendenciasCriticasMenu && totalPendencias >= 6; %>
+  <% const pendenciasClasseMenu = pendenciasCriticasMenu ? 'is-critical' : (pendenciasAtencaoMenu ? 'is-attention' : 'is-normal'); %>
+  <% const pendenciasTituloMenu = pendenciasCriticasMenu ? 'Fila critica de aprovacoes' : (pendenciasAtencaoMenu ? 'Fila em atencao' : 'Fila sob controle'); %>
+  <% const adminPermissoesLista = Array.isArray(adminPermissoes) ? adminPermissoes : []; %>
+  <% const adminPermissionOptionsList = Array.isArray(adminPermissionOptions) ? adminPermissionOptions : []; %>
+  <% const adminRoleDefaults = adminRoleDefaultPermissions || {}; %>
+  <% const adminNivelAtual = adminNivelAcesso || 'super_admin'; %>
+  <% const podeGerenciarAdmins = adminPermissoesLista.includes('admins.gerenciar'); %>
 
   <div class="admin-shell">
     <aside class="sidebar">
@@ -45,58 +56,142 @@
       </div>
 
       <nav class="side-menu">
-        <button type="button" class="menu-link" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
-        <button type="button" class="menu-link" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
-        <button type="button" class="menu-link" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
-        <button type="button" class="menu-link" onclick="abrirAba('aprovacoes-tab')"><i class="fas fa-check-circle"></i><span class="menu-label">Aprovações</span></button>
-        <button type="button" class="menu-link" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
-        <button type="button" class="menu-link" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
-        <a href="/admin/logout" class="menu-link"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
-      </nav>
+          <button type="button" class="menu-link" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
+          <button type="button" class="menu-link" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
+          <button type="button" class="menu-link" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
+          <button type="button" class="menu-link menu-link-aprovacoes" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')" title="<%= pendenciasTituloMenu %>">
+            <i class="fas fa-check-circle"></i>
+            <span class="menu-label">Aprovações</span>
+            <span class="menu-alert-counter <%= pendenciasClasseMenu %>"><%= totalPendencias %></span>
+          </button>
+          <button type="button" class="menu-link" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
+          <button type="button" class="menu-link" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
+          <a href="/admin/logout" class="menu-link"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
+        </nav>
 
-      <div class="sidebar-note">
-        Passe o mouse para expandir
-      </div>
-    </aside>
-
-    <main class="main-panel">
-      <header class="topbar">
-        <div>
-          <h1><i class="fas fa-users-cog me-2"></i>Painel de Gestão</h1>
-          <p>Gerencie cadastros, aprovações e administradores do sistema.</p>
+        <div class="sidebar-note">
+          Passe o mouse para expandir
         </div>
-        <div class="admin-pill"><i class="fas fa-user-circle me-2"></i><%= adminUsername %></div>
-      </header>
+      </aside>
 
-      <section class="content-card">
+      <main class="main-panel">
+        <header class="topbar workspace-hero-manager <%= pendenciasCriticasMenu ? 'is-critical' : (pendenciasAtencaoMenu ? 'is-attention' : '') %>">
+          <div class="workspace-hero-main">
+            <h1 class="workspace-title">
+              <span class="workspace-title-icon" aria-hidden="true"><i class="fas fa-users-cog"></i></span>
+              <span class="workspace-title-copy">
+                <span class="workspace-title-kicker">Painel</span>
+                <span class="workspace-title-main">Gestão Administrativa</span>
+              </span>
+            </h1>
+            <div class="workspace-hero-strip" aria-label="Destaques da gestão">
+              <span class="hero-strip-pill"><i class="fas fa-bullseye"></i>Encontro ativo: <strong><%= encontroAtivoNome || 'Nenhum definido' %></strong></span>
+              <span class="hero-strip-pill"><i class="fas fa-circle-check"></i><%= encontristasAprovados.length %> encontristas aprovados</span>
+              <span class="hero-strip-pill"><i class="fas fa-user-group"></i><%= encontreirosAprovados.length %> encontreiros liberados</span>
+              <span class="hero-strip-pill"><i class="fas fa-heart"></i><%= (tios || []).length %> tios em apoio</span>
+            </div>
+          </div>
+          <div class="manager-stats" aria-label="Resumo da gestão">
+            <article class="workspace-stat-card">
+              <span class="stat-label">Cadastros</span>
+              <strong class="stat-value"><%= totalCadastrosVisiveis %></strong>
+            </article>
+            <article class="workspace-stat-card">
+              <span class="stat-label">Pendências</span>
+              <strong class="stat-value"><%= totalPendencias %></strong>
+            </article>
+            <article class="workspace-stat-card">
+              <span class="stat-label">Encontros</span>
+              <strong class="stat-value"><%= (ejcs || []).length %></strong>
+            </article>
+            <article class="workspace-stat-card">
+              <span class="stat-label">Admins</span>
+              <strong class="stat-value"><%= (administradores || []).length %></strong>
+            </article>
+          </div>
+          <div class="admin-pill hero-admin-pill"><span class="hero-admin-avatar"><i class="fas fa-user-shield"></i></span><span class="hero-admin-meta"><small>Logado como</small><strong><%= adminUsername %></strong><small>Nivel: <%= adminNivelAtual %></small></span></div>
+        </header>
+
+        <section class="manager-module-grid" aria-label="Atalhos da gestão">
+          <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')">
+            <span class="manager-module-icon"><i class="fas fa-user"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Encontristas</span>
+              <span class="manager-module-subtitle">Cadastros e acompanhamento individual</span>
+            </span>
+            <span class="manager-module-count"><%= (encontristas || []).length %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')">
+            <span class="manager-module-icon"><i class="fas fa-user-group"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Encontreiros</span>
+              <span class="manager-module-subtitle">Equipes de serviço e apoio jovem</span>
+            </span>
+            <span class="manager-module-count"><%= (encontreirosIndividuais || []).length %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')">
+            <span class="manager-module-icon"><i class="fas fa-heart"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Tios</span>
+              <span class="manager-module-subtitle">Apoio pastoral e serviço no encontro</span>
+            </span>
+            <span class="manager-module-count"><%= (tios || []).length %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')">
+            <span class="manager-module-icon"><i class="fas fa-check-circle"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Aprovações</span>
+              <span class="manager-module-subtitle">Triagem, status e decisão dos cadastros</span>
+            </span>
+            <span class="manager-module-count"><%= totalPendencias %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')">
+            <span class="manager-module-icon"><i class="fas fa-calendar-days"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Encontros</span>
+              <span class="manager-module-subtitle">Criação e manutenção dos eventos EJC</span>
+            </span>
+            <span class="manager-module-count"><%= (ejcs || []).length %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')">
+            <span class="manager-module-icon"><i class="fas fa-user-shield"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Administradores</span>
+              <span class="manager-module-subtitle">Permissões, bloqueios e importações</span>
+            </span>
+            <span class="manager-module-count"><%= (administradores || []).length %></span>
+          </button>
+        </section>
+
+        <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="encontristas-tab" data-bs-toggle="tab" data-bs-target="#encontristas" type="button">
+            <button class="nav-link active" id="encontristas-tab" data-bs-toggle="tab" data-bs-target="#encontristas" data-required-permission="cadastros.visualizar" type="button">
               <i class="fas fa-user me-1"></i>Encontristas (<%= encontristas.length %>)
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="encontreiros-tab" data-bs-toggle="tab" data-bs-target="#encontreiros" type="button">
+            <button class="nav-link" id="encontreiros-tab" data-bs-toggle="tab" data-bs-target="#encontreiros" data-required-permission="cadastros.visualizar" type="button">
               <i class="fas fa-user-group me-1"></i>Encontreiros (<%= encontreirosIndividuais.length %>)
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tios-tab" data-bs-toggle="tab" data-bs-target="#tios" type="button">
+            <button class="nav-link" id="tios-tab" data-bs-toggle="tab" data-bs-target="#tios" data-required-permission="cadastros.visualizar" type="button">
               <i class="fas fa-heart me-1"></i>Tios (<%= tios.length %>)
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="aprovacoes-tab" data-bs-toggle="tab" data-bs-target="#aprovacoes" type="button">
+            <button class="nav-link" id="aprovacoes-tab" data-bs-toggle="tab" data-bs-target="#aprovacoes" data-required-permission="cadastros.aprovar" type="button">
               <i class="fas fa-check-circle me-1"></i>Aprovações
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="encontros-tab" data-bs-toggle="tab" data-bs-target="#encontros" type="button">
+            <button class="nav-link" id="encontros-tab" data-bs-toggle="tab" data-bs-target="#encontros" data-required-permission="encontros.gerenciar" type="button">
               <i class="fas fa-calendar-days me-1"></i>Encontros
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" type="button">
+            <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" data-required-permission="admins.gerenciar" type="button">
               <i class="fas fa-user-shield me-1"></i>Administradores (<%= administradores.length %>)
             </button>
           </li>
@@ -104,15 +199,26 @@
 
         <div class="tab-content" id="cadastroTabsContent">
           <!-- TAB: ENCONTRISTAS -->
-          <div class="tab-pane fade show active" id="encontristas" role="tabpanel">
+          <div class="tab-pane fade show active" id="encontristas" data-required-permission="cadastros.visualizar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Area Encontristas</p>
+                <h5><i class="fas fa-user me-2"></i>Gestao de Encontristas</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Total: <%= (encontristas || []).length %></span>
+                <span class="tab-chip tab-chip-ok">Aprovados: <%= encontristasAprovados.length %></span>
+                <span class="tab-chip tab-chip-pending">Pendentes: <%= encontristasPendentes.length %></span>
+              </div>
+            </div>
             <div class="export-group-actions mb-3">
-              <a href="/export?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+              <a href="/export?format=pdf" class="btn btn-sm btn-outline-secondary export-btn export-btn-pdf" target="_blank" rel="noreferrer" title="Exportar como PDF">
                 <i class="fas fa-file-pdf me-1"></i>PDF
               </a>
-              <a href="/export-encontrista-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
+              <a href="/export-encontrista-excel" class="btn btn-sm btn-outline-secondary export-btn export-btn-report" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
                 <i class="fas fa-table me-1"></i>Relatório
               </a>
-              <a href="/export-images-encontristas" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+              <a href="/export-images-encontristas" class="btn btn-sm btn-outline-secondary export-btn export-btn-image" target="_blank" rel="noreferrer" title="Exportar Imagens">
                 <i class="fas fa-file-archive me-1"></i>Imagens
               </a>
             </div>
@@ -125,21 +231,28 @@
             <div class="search-toolbar">
               <div class="search-input-wrap">
                 <i class="fas fa-search"></i>
-                <input id="search-encontristas" class="search-input" type="text" placeholder="Pesquisar encontristas por nome ou EJC">
+                <input id="search-encontristas" class="search-input" type="text" placeholder="Pesquisar encontristas por nome">
               </div>
               <button id="clear-search-encontristas" type="button" class="btn-clear-search">
                 <i class="fas fa-eraser me-1"></i>Limpar busca
               </button>
             </div>
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-circle-check text-success"></i>Encontristas aprovados (<%= encontristasAprovados.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-approved">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Resultado positivo</p>
+                  <h5><i class="fas fa-circle-check me-2"></i>Encontristas aprovados</h5>
+                  <p class="admin-card-subtitle">Cadastros liberados para seguir no fluxo, com acesso rápido a edição, transferência e exclusão.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontristasAprovados.length %> aprovados</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'aprovado')" title="Selecionar todos aprovados"></th>
                     <th>Foto</th>
                     <th>Nome</th>
-                    <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Status</th>
@@ -148,7 +261,7 @@
                 </thead>
                 <tbody>
                   <% if (encontristasAprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista aprovado.</td></tr>
+                    <tr><td colspan="7" class="empty-state">Nenhum encontrista aprovado.</td></tr>
                   <% } else { %>
                     <% encontristasAprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="aprovado">
@@ -163,7 +276,6 @@
                           <% } %>
                         </td>
                         <td><%= cadastro.nomeCompleto %></td>
-                        <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td>
@@ -191,17 +303,25 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
 
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-circle-xmark text-warning"></i>Encontristas reprovados (<%= encontristasReprovados.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-rejected">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Revisão encerrada</p>
+                  <h5><i class="fas fa-circle-xmark me-2"></i>Encontristas reprovados</h5>
+                  <p class="admin-card-subtitle">Registros que não avançaram no processo e permanecem disponíveis para reavaliação administrativa.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontristasReprovados.length %> reprovados</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'reprovado')" title="Selecionar todos reprovados"></th>
                     <th>Foto</th>
                     <th>Nome</th>
-                    <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Status</th>
@@ -210,7 +330,7 @@
                 </thead>
                 <tbody>
                   <% if (encontristasReprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista reprovado.</td></tr>
+                    <tr><td colspan="7" class="empty-state">Nenhum encontrista reprovado.</td></tr>
                   <% } else { %>
                     <% encontristasReprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="reprovado">
@@ -225,7 +345,6 @@
                           <% } %>
                         </td>
                         <td><%= cadastro.nomeCompleto %></td>
-                        <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><span class="status-badge status-warn">Reprovado</span></td>
@@ -245,17 +364,25 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
 
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-hourglass-half text-secondary"></i>Encontristas pendentes (<%= encontristasPendentes.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-pending">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Aguardando ação</p>
+                  <h5><i class="fas fa-hourglass-half me-2"></i>Encontristas pendentes</h5>
+                  <p class="admin-card-subtitle">Cadastros em aberto que ainda exigem conferência, decisão ou eventual transferência para encontreiros.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontristasPendentes.length %> pendentes</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th class="checkbox-col"><input type="checkbox" onchange="toggleSelecionarTodosEncontristas(this, 'pendente')" title="Selecionar todos pendentes"></th>
                     <th>Foto</th>
                     <th>Nome</th>
-                    <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Status</th>
@@ -264,7 +391,7 @@
                 </thead>
                 <tbody>
                   <% if (encontristasPendentes.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista pendente.</td></tr>
+                    <tr><td colspan="7" class="empty-state">Nenhum encontrista pendente.</td></tr>
                   <% } else { %>
                     <% encontristasPendentes.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="pendente">
@@ -279,7 +406,6 @@
                           <% } %>
                         </td>
                         <td><%= cadastro.nomeCompleto %></td>
-                        <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><span class="status-badge status-warn">Pendente</span></td>
@@ -299,19 +425,31 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
           <!-- TAB: ENCONTREIROS -->
-          <div class="tab-pane fade" id="encontreiros" role="tabpanel">
+          <div class="tab-pane fade" id="encontreiros" data-required-permission="cadastros.visualizar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Area Encontreiros</p>
+                <h5><i class="fas fa-user-group me-2"></i>Gestao de Encontreiros</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Total: <%= (encontreirosIndividuais || []).length %></span>
+                <span class="tab-chip tab-chip-ok">Aprovados: <%= encontreirosAprovados.length %></span>
+                <span class="tab-chip tab-chip-pending">Pendentes: <%= encontreirosPendentes.length %></span>
+              </div>
+            </div>
             <div class="export-group-actions mb-3">
-              <a href="/export-encontro?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+              <a href="/export-encontro?format=pdf" class="btn btn-sm btn-outline-secondary export-btn export-btn-pdf" target="_blank" rel="noreferrer" title="Exportar como PDF">
                 <i class="fas fa-file-pdf me-1"></i>PDF
               </a>
-              <a href="/export-encontro-excel" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
+              <a href="/export-encontro-excel" class="btn btn-sm btn-outline-secondary export-btn export-btn-report" target="_blank" rel="noreferrer" title="Exportar Relatório em Excel">
                 <i class="fas fa-table me-1"></i>Relatório
               </a>
-              <a href="/export-images-encontreiros" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+              <a href="/export-images-encontreiros" class="btn btn-sm btn-outline-secondary export-btn export-btn-image" target="_blank" rel="noreferrer" title="Exportar Imagens">
                 <i class="fas fa-file-archive me-1"></i>Imagens
               </a>
             </div>
@@ -324,8 +462,16 @@
                 <i class="fas fa-eraser me-1"></i>Limpar busca
               </button>
             </div>
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-circle-check text-success"></i>Encontreiros aprovados (<%= encontreirosAprovados.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-approved manager-status-card-encontreiros">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Equipe ativa</p>
+                  <h5><i class="fas fa-circle-check me-2"></i>Encontreiros aprovados</h5>
+                  <p class="admin-card-subtitle">Participantes já liberados para atuar nas frentes de serviço, com leitura rápida por tipo e edição.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontreirosAprovados.length %> aprovados</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -385,10 +531,19 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
 
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-circle-xmark text-warning"></i>Encontreiros reprovados (<%= encontreirosReprovados.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-rejected manager-status-card-encontreiros">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Fluxo interrompido</p>
+                  <h5><i class="fas fa-circle-xmark me-2"></i>Encontreiros reprovados</h5>
+                  <p class="admin-card-subtitle">Registros não aprovados que continuam acessíveis para conferência histórica e ajustes administrativos.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontreirosReprovados.length %> reprovados</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -440,10 +595,19 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
 
-            <div class="table-wrap">
-              <div class="list-section-title"><i class="fas fa-hourglass-half text-secondary"></i>Encontreiros pendentes (<%= encontreirosPendentes.length %>)</div>
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-pending manager-status-card-encontreiros">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Em triagem</p>
+                  <h5><i class="fas fa-hourglass-half me-2"></i>Encontreiros pendentes</h5>
+                  <p class="admin-card-subtitle">Cadastros aguardando definição, com leitura organizada entre jovens e tios dentro do mesmo painel.</p>
+                </div>
+                <span class="admin-card-badge"><%= encontreirosPendentes.length %> pendentes</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -495,6 +659,7 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
 
             <div style="margin-top: 20px; text-align: center;">
@@ -505,12 +670,22 @@
           </div>
 
           <!-- TAB: TIOS -->
-          <div class="tab-pane fade" id="tios" role="tabpanel">
+          <div class="tab-pane fade" id="tios" data-required-permission="cadastros.visualizar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Area Tios</p>
+                <h5><i class="fas fa-heart me-2"></i>Gestao de Tios</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Total: <%= (tios || []).length %></span>
+                <span class="tab-chip tab-chip-soft">Categorias: Solo e Casal</span>
+              </div>
+            </div>
             <div class="export-group-actions mb-3">
-              <a href="/export-tios?format=pdf" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar como PDF">
+              <a href="/export-tios?format=pdf" class="btn btn-sm btn-outline-secondary export-btn export-btn-pdf" target="_blank" rel="noreferrer" title="Exportar como PDF">
                 <i class="fas fa-file-pdf me-1"></i>PDF
               </a>
-              <a href="/export-images-tios" class="btn btn-sm btn-outline-secondary export-btn" target="_blank" rel="noreferrer" title="Exportar Imagens">
+              <a href="/export-images-tios" class="btn btn-sm btn-outline-secondary export-btn export-btn-image" target="_blank" rel="noreferrer" title="Exportar Imagens">
                 <i class="fas fa-file-archive me-1"></i>Imagens
               </a>
             </div>
@@ -525,7 +700,16 @@
               </button>
             </div>
 
-            <div class="table-wrap">
+            <div class="admin-form-card admin-config-card manager-status-card manager-status-card-tios">
+              <div class="admin-card-head manager-status-card-head">
+                <div>
+                  <p class="admin-card-kicker">Apoio pastoral</p>
+                  <h5><i class="fas fa-heart me-2"></i>Tios cadastrados</h5>
+                  <p class="admin-card-subtitle">Visualize os casais e tios solo com um bloco mais limpo, organizado e consistente com o restante da gestão.</p>
+                </div>
+                <span class="admin-card-badge"><%= tios.length %> cadastros</span>
+              </div>
+              <div class="table-wrap manager-table-shell">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -569,15 +753,62 @@
                   <% } %>
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
           <!-- TAB: APROVACOES -->
-          <div class="tab-pane fade" id="aprovacoes" role="tabpanel">
-            <div class="admin-form-card">
-              <h5 class="mb-2"><i class="fas fa-hourglass-half me-2"></i>Encontristas Pendentes de Aprovação</h5>
+          <div class="tab-pane fade" id="aprovacoes" data-required-permission="cadastros.aprovar" role="tabpanel">
+            <% const encontristasPendentesAprovacoes = (encontristas || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
+            <% const encontreirosPendentesAprovacoes = (encontreiros || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
+            <% const totalPendentesAprovacoes = encontristasPendentesAprovacoes.length + encontreirosPendentesAprovacoes.length; %>
+            <% const filaCriticaAprovacoes = totalPendentesAprovacoes >= 12; %>
+            <% const filaAtencaoAprovacoes = !filaCriticaAprovacoes && totalPendentesAprovacoes >= 6; %>
+            <div class="tab-workspace-head approval-workspace-head <%= filaCriticaAprovacoes ? 'approval-queue-critical' : (filaAtencaoAprovacoes ? 'approval-queue-attention' : '') %>">
+              <div>
+                <p class="tab-kicker">Area Aprovações</p>
+                <h5><i class="fas fa-check-circle me-2"></i>Central de Aprovação</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Fila total: <%= totalPendentesAprovacoes %></span>
+                <% if (filaCriticaAprovacoes) { %>
+                  <span class="tab-chip tab-chip-alert">Fila critica</span>
+                <% } else if (filaAtencaoAprovacoes) { %>
+                  <span class="tab-chip tab-chip-alert">Fila em atenção</span>
+                <% } %>
+                <span class="tab-chip tab-chip-pending">Encontristas: <%= encontristasPendentesAprovacoes.length %></span>
+                <span class="tab-chip tab-chip-soft">Encontreiros: <%= encontreirosPendentesAprovacoes.length %></span>
+              </div>
             </div>
-            <div class="search-toolbar">
+
+            <div class="approval-overview">
+              <article class="approval-metric-card <%= filaCriticaAprovacoes ? 'approval-metric-card-critical' : (filaAtencaoAprovacoes ? 'approval-metric-card-attention' : '') %>">
+                <span class="approval-metric-icon approval-metric-icon-pending"><i class="fas fa-hourglass-half"></i></span>
+                <div>
+                  <span class="approval-metric-label">Aguardando triagem</span>
+                  <strong class="approval-metric-value"><%= totalPendentesAprovacoes %></strong>
+                  <p class="approval-metric-note">Cadastros prontos para análise manual.</p>
+                </div>
+              </article>
+              <article class="approval-metric-card">
+                <span class="approval-metric-icon approval-metric-icon-ok"><i class="fas fa-user"></i></span>
+                <div>
+                  <span class="approval-metric-label">Encontristas pendentes</span>
+                  <strong class="approval-metric-value"><%= encontristasPendentesAprovacoes.length %></strong>
+                  <p class="approval-metric-note">Revise dados e libere a participação no encontro.</p>
+                </div>
+              </article>
+              <article class="approval-metric-card">
+                <span class="approval-metric-icon approval-metric-icon-info"><i class="fas fa-user-group"></i></span>
+                <div>
+                  <span class="approval-metric-label">Encontreiros pendentes</span>
+                  <strong class="approval-metric-value"><%= encontreirosPendentesAprovacoes.length %></strong>
+                  <p class="approval-metric-note">Mantenha a fila organizada por perfil e edição.</p>
+                </div>
+              </article>
+            </div>
+
+            <div class="search-toolbar approval-search-toolbar">
               <div class="search-input-wrap">
                 <i class="fas fa-search"></i>
                 <input id="search-aprovacoes" class="search-input" type="text" placeholder="Pesquisar aprovações por nome ou EJC">
@@ -586,7 +817,16 @@
                 <i class="fas fa-eraser me-1"></i>Limpar busca
               </button>
             </div>
-            <div class="table-wrap">
+
+            <section class="approval-section">
+              <div class="approval-section-head">
+                <div>
+                  <p class="approval-section-kicker">Fila principal</p>
+                  <h6><i class="fas fa-hourglass-half me-2"></i>Encontristas pendentes de aprovação</h6>
+                </div>
+                <span class="tab-chip tab-chip-pending">Pendentes: <%= encontristasPendentesAprovacoes.length %></span>
+              </div>
+            <div class="table-wrap approval-table-wrap">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -599,7 +839,6 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% const encontristasPendentesAprovacoes = (encontristas || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
                   <% if (encontristasPendentesAprovacoes.length === 0) { %>
                     <tr><td colspan="6" class="empty-state">Todos os encontristas estão aprovados!</td></tr>
                   <% } else { %>
@@ -616,7 +855,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
-                        <td>
+                        <td class="approval-actions-cell">
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
                           </button>
@@ -630,11 +869,17 @@
                 </tbody>
               </table>
             </div>
+            </section>
 
-            <div class="admin-form-card" style="margin-top: 24px;">
-              <h5 class="mb-2"><i class="fas fa-hourglass-half me-2"></i>Encontreiros Pendentes de Aprovação</h5>
-            </div>
-            <div class="table-wrap">
+            <section class="approval-section">
+              <div class="approval-section-head">
+                <div>
+                  <p class="approval-section-kicker">Fila de serviço</p>
+                  <h6><i class="fas fa-hourglass-half me-2"></i>Encontreiros pendentes de aprovação</h6>
+                </div>
+                <span class="tab-chip tab-chip-soft">Pendentes: <%= encontreirosPendentesAprovacoes.length %></span>
+              </div>
+            <div class="table-wrap approval-table-wrap">
               <table class="table table-hover">
                 <thead>
                   <tr>
@@ -648,7 +893,6 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <% const encontreirosPendentesAprovacoes = (encontreiros || []).filter(c => statusCadastroGrupo(c) === 'pendente'); %>
                   <% if (encontreirosPendentesAprovacoes.length === 0) { %>
                     <tr><td colspan="7" class="empty-state">Todos os encontreiros estão aprovados!</td></tr>
                   <% } else { %>
@@ -672,7 +916,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
-                        <td>
+                        <td class="approval-actions-cell">
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
                           </button>
@@ -686,10 +930,21 @@
                 </tbody>
               </table>
             </div>
+            </section>
           </div>
 
           <!-- TAB: ENCONTROS -->
-          <div class="tab-pane fade" id="encontros" role="tabpanel">
+          <div class="tab-pane fade" id="encontros" data-required-permission="encontros.gerenciar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Area Encontros</p>
+                <h5><i class="fas fa-calendar-days me-2"></i>Gestao de Encontros</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">EJCs: <%= (ejcs || []).length %></span>
+                <span class="tab-chip tab-chip-soft">Acesso e criacao rapidos</span>
+              </div>
+            </div>
             <div class="admin-form-card">
               <h5 class="mb-3"><i class="fas fa-location-arrow me-2"></i>Selecionar EJC</h5>
               <div class="row g-3 ejc-row">
@@ -698,7 +953,7 @@
                   <select id="seletor_ejc_pagina" class="form-select">
                     <option value="">Selecione um EJC</option>
                     <% (ejcs || []).forEach(function(item) { %>
-                      <option value="<%= item._id %>"><%= item.nome %></option>
+                      <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
                     <% }); %>
                   </select>
                 </div>
@@ -725,24 +980,47 @@
               </form>
             </div>
 
+            <div class="admin-form-card mb-3">
+              <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <h5 class="mb-0"><i class="fas fa-bullseye me-2"></i>Encontro Ativo</h5>
+                <% if (encontroAtivoNome) { %>
+                  <span class="status-badge status-ok"><%= encontroAtivoNome %></span>
+                <% } else { %>
+                  <span class="status-badge">Nenhum encontro ativo definido</span>
+                <% } %>
+              </div>
+              <p class="text-muted mb-0 mt-2">Novas inscricoes sao vinculadas automaticamente ao encontro ativo.</p>
+            </div>
+
             <div class="table-wrap mb-3">
               <table class="table table-hover">
                 <thead>
                   <tr>
                     <th>Nome do EJC</th>
+                    <th>Status</th>
                     <th>Data de Criação</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (!ejcs || ejcs.length === 0) { %>
-                    <tr><td colspan="3" class="empty-state">Nenhum EJC cadastrado.</td></tr>
+                    <tr><td colspan="4" class="empty-state">Nenhum EJC cadastrado.</td></tr>
                   <% } else { %>
                     <% ejcs.forEach(function(item) { %>
                       <tr>
                         <td><strong><%= item.nome %></strong></td>
+                        <td>
+                          <% if (item.ativo) { %>
+                            <span class="status-badge status-ok">Ativo</span>
+                          <% } else { %>
+                            <span class="status-badge">Inativo</span>
+                          <% } %>
+                        </td>
                         <td><%= new Date(item.dataCriacao).toLocaleDateString('pt-BR') %></td>
                         <td>
+                          <button class="btn btn-edit" onclick="definirEjcAtivo('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')" <%= item.ativo ? 'disabled' : '' %>>
+                            <i class="fas fa-bullseye me-1"></i><%= item.ativo ? 'Encontro ativo' : 'Definir como ativo' %>
+                          </button>
                           <button class="btn btn-delete" onclick="deletarEjc('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')">
                             <i class="fas fa-trash me-1"></i>Excluir Encontro
                           </button>
@@ -756,9 +1034,117 @@
           </div>
 
           <!-- TAB: ADMINISTRADORES -->
-          <div class="tab-pane fade" id="admins" role="tabpanel">
-            <div class="admin-form-card">
-              <h5 class="mb-3"><i class="fas fa-file-import me-2"></i>Importar Apenas Encontreiros</h5>
+          <div class="tab-pane fade" id="admins" data-required-permission="admins.gerenciar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Area Administradores</p>
+                <h5><i class="fas fa-user-shield me-2"></i>Gestao de Administradores e Importacao</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Admins: <%= (administradores || []).length %></span>
+                <span class="tab-chip tab-chip-soft">Importacao segura</span>
+              </div>
+            </div>
+            <div class="admin-form-card admin-config-card admin-block-card" data-required-permission="bloqueio.gerenciar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Disponibilidade</p>
+                  <h5><i class="fas fa-ban me-2"></i>Controle de Formulários</h5>
+                  <p class="admin-card-subtitle">Gerencie bloqueios temporários com período e mensagem exibida ao usuário final.</p>
+                </div>
+                <span class="admin-card-badge">Bloqueio temporário</span>
+              </div>
+              <div class="row g-3 admin-block-grid">
+                <!-- Controle encontrista -->
+                <div class="col-md-6">
+                  <div class="card border-light admin-mini-panel admin-mini-panel-encontrista">
+                    <div class="card-body">
+                      <div class="admin-mini-panel-head">
+                        <div>
+                          <h6 class="card-title mb-1"><i class="fas fa-user-graduate me-2"></i>Formulário Encontrista</h6>
+                          <p class="admin-mini-panel-subtitle">Controle de abertura, período e justificativa para inscrições de encontristas.</p>
+                        </div>
+                      </div>
+                      <div class="form-check form-switch mb-3 admin-switch-row">
+                        <input class="form-check-input" type="checkbox" id="bloquear_encontrista" onchange="atualizarCamposEncontrista()">
+                        <label class="form-check-label" for="bloquear_encontrista">
+                          Bloquear formulário encontrista
+                        </label>
+                      </div>
+                      <div id="campos-encontrista" style="display:none;" class="row g-2 admin-block-fields">
+                        <div class="col-12">
+                          <label class="form-label">Data/Hora de Início (opcional)</label>
+                          <input type="datetime-local" id="data_inicio_encontrista" class="form-control">
+                          <small class="text-muted">Deixe em branco para bloquear imediatamente</small>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Data/Hora de Término (opcional)</label>
+                          <input type="datetime-local" id="data_fim_encontrista" class="form-control">
+                          <small class="text-muted">Deixe em branco para bloqueio indefinido</small>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Motivo (para exibir ao usuário)</label>
+                          <textarea id="motivo_encontrista" class="form-control" rows="2" placeholder="Ex: Inscrições encerradas para esta etapa"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Controle encontreiro -->
+                <div class="col-md-6">
+                  <div class="card border-light admin-mini-panel admin-mini-panel-encontreiros">
+                    <div class="card-body">
+                      <div class="admin-mini-panel-head">
+                        <div>
+                          <h6 class="card-title mb-1"><i class="fas fa-users me-2"></i>Formulário Encontreiros</h6>
+                          <p class="admin-mini-panel-subtitle">Defina janelas de bloqueio e observações para o formulário de encontreiros.</p>
+                        </div>
+                      </div>
+                      <div class="form-check form-switch mb-3 admin-switch-row">
+                        <input class="form-check-input" type="checkbox" id="bloquear_encontreiros" onchange="atualizarCamposEncontreiros()">
+                        <label class="form-check-label" for="bloquear_encontreiros">
+                          Bloquear formulário encontreiros
+                        </label>
+                      </div>
+                      <div id="campos-encontreiros" style="display:none;" class="row g-2 admin-block-fields">
+                        <div class="col-12">
+                          <label class="form-label">Data/Hora de Início (opcional)</label>
+                          <input type="datetime-local" id="data_inicio_encontreiros" class="form-control">
+                          <small class="text-muted">Deixe em branco para bloquear imediatamente</small>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Data/Hora de Término (opcional)</label>
+                          <input type="datetime-local" id="data_fim_encontreiros" class="form-control">
+                          <small class="text-muted">Deixe em branco para bloqueio indefinido</small>
+                        </div>
+                        <div class="col-12">
+                          <label class="form-label">Motivo (para exibir ao usuário)</label>
+                          <textarea id="motivo_encontreiros" class="form-control" rows="2" placeholder="Ex: Inscrições encerradas para esta etapa"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <button type="button" class="btn btn-primary w-100 admin-primary-action" onclick="salvarConfiguracoesBloqueio()">
+                    <i class="fas fa-save me-1"></i>Salvar Configurações de Bloqueio
+                  </button>
+                </div>
+              </div>
+              <div id="bloqueio-resultado" class="mt-3"></div>
+            </div>
+
+            <div class="admin-form-card admin-config-card admin-import-card" data-required-permission="importacao.executar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Integração</p>
+                  <h5><i class="fas fa-file-import me-2"></i>Importar Apenas Encontreiros</h5>
+                  <p class="admin-card-subtitle">Traga dados externos com mais segurança, padronização e controle de volume.</p>
+                </div>
+                <span class="admin-card-badge">Importação segura</span>
+              </div>
               <form id="formImportacao" class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">Origem da Importacao *</label>
@@ -820,117 +1206,177 @@
                 </div>
 
                 <div class="col-md-6 d-flex align-items-end">
-                  <button type="button" class="btn btn-primary w-100" onclick="importarCadastros()">
+                  <button type="button" class="btn btn-primary w-100 admin-primary-action" onclick="importarCadastros()">
                     <i class="fas fa-file-import me-1"></i>Importar Encontreiros
                   </button>
                 </div>
               </form>
-              <small class="text-muted">Formatos aceitos: MongoDB, PostgreSQL, MySQL, Excel (.xlsx/.xls/.xlsm) e PDF.</small>
+              <small class="text-muted admin-helper-note">Formatos aceitos: MongoDB, PostgreSQL, MySQL, Excel (.xlsx/.xls/.xlsm) e PDF.</small>
               <div id="import_result" class="import-result"></div>
             </div>
 
-            <div class="admin-form-card">
-              <h5 class="mb-3"><i class="fas fa-user-plus me-2"></i>Cadastrar Novo Administrador</h5>
+            <div class="admin-form-card admin-config-card admin-admins-card" data-required-permission="admins.gerenciar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Acesso</p>
+                  <h5><i class="fas fa-user-plus me-2"></i>Cadastrar Novo Administrador</h5>
+                  <p class="admin-card-subtitle">Crie acessos administrativos com credenciais mínimas e fluxo direto de cadastro.</p>
+                </div>
+                <span class="admin-card-badge">Gestão de credenciais</span>
+              </div>
               <form id="formAdmin" class="row g-3">
-                <div class="col-md-5">
+                <div class="col-lg-3 col-md-6">
                   <label class="form-label">Usuário *</label>
                   <input type="text" id="admin_username" class="form-control" required>
                 </div>
-                <div class="col-md-5">
+                <div class="col-lg-3 col-md-6">
                   <label class="form-label">Senha *</label>
                   <input type="password" id="admin_senha" class="form-control" minlength="6" required>
                 </div>
-                <div class="col-md-2 d-flex align-items-end">
-                  <button type="button" class="btn btn-primary w-100" onclick="cadastrarAdmin()">
+                <div class="col-lg-3 col-md-6">
+                  <label class="form-label">Nível hierárquico *</label>
+                  <select id="admin_nivel" class="form-select" <%= podeGerenciarAdmins ? '' : 'disabled' %>>
+                    <option value="consulta">Consulta</option>
+                    <option value="operador">Operador</option>
+                    <option value="coordenador" selected>Coordenador</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+                <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                  <button type="button" class="btn btn-primary w-100 admin-primary-action" onclick="cadastrarAdmin()">
                     <i class="fas fa-save me-1"></i>Salvar
                   </button>
                 </div>
+                <div class="col-12">
+                  <label class="form-label">Permissões extras</label>
+                  <div id="admin_permissions" class="admin-perm-pill-group">
+                    <% adminPermissionOptionsList.forEach(function(option) { %>
+                      <div class="admin-perm-pill">
+                        <input class="admin-perm-item" type="checkbox" id="perm-new-<%= option.key %>" value="<%= option.key %>">
+                        <label class="admin-perm-pill-label" for="perm-new-<%= option.key %>">
+                          <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i><%= option.label %></span>
+                          <small><%= option.description %></small>
+                        </label>
+                      </div>
+                    <% }); %>
+                  </div>
+                </div>
               </form>
-              <small class="text-muted">Senha mínima: 6 caracteres.</small>
+              <small class="text-muted admin-helper-note">Senha mínima: 6 caracteres. O nível define o acesso base e você pode complementar com permissões extras.</small>
             </div>
 
-            <div class="admin-form-card">
-              <h5 class="mb-3"><i class="fas fa-shield-halved me-2"></i>LGPD e Retenção</h5>
+            <div class="admin-form-card admin-config-card admin-lgpd-card" data-required-permission="lgpd.executar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Conformidade</p>
+                  <h5><i class="fas fa-shield-halved me-2"></i>LGPD e Retenção</h5>
+                  <p class="admin-card-subtitle">Defina a janela de retenção e execute a anonimização de dados antigos com segurança.</p>
+                </div>
+                <span class="admin-card-badge">Proteção de dados</span>
+              </div>
               <div class="row g-3 align-items-end">
                 <div class="col-md-8">
                   <label class="form-label">Retenção em dias</label>
                   <input type="number" id="lgpd_retencao_dias" class="form-control" value="730" min="30" max="3650">
                 </div>
                 <div class="col-md-4">
-                  <button type="button" class="btn btn-outline-primary w-100" onclick="executarRetencaoLgpd()">
+                  <button type="button" class="btn btn-outline-primary w-100 admin-secondary-action" onclick="executarRetencaoLgpd()">
                     <i class="fas fa-user-shield me-1"></i>Executar retenção
                   </button>
                 </div>
               </div>
-              <small class="text-muted">Anonimiza dados antigos de cadastros não aprovados conforme o prazo informado.</small>
+              <small class="text-muted admin-helper-note">Anonimiza dados antigos de cadastros não aprovados conforme o prazo informado.</small>
             </div>
 
-            <div class="table-wrap mb-3">
-              <div class="list-section-title"><i class="fas fa-clipboard-list"></i>Auditoria (últimos 100 eventos)</div>
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Admin</th>
-                    <th>Ação</th>
-                    <th>Alvo</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (!auditoriaLogs || auditoriaLogs.length === 0) { %>
-                    <tr><td colspan="5" class="empty-state">Nenhum evento de auditoria registrado.</td></tr>
-                  <% } else { %>
-                    <% auditoriaLogs.forEach(function(log) { %>
-                      <tr>
-                        <td><%= new Date(log.createdAt).toLocaleString('pt-BR') %></td>
-                        <td><%= log.adminUsername || '-' %></td>
-                        <td><%= log.action || '-' %></td>
-                        <td><%= [log.targetType, log.targetId].filter(Boolean).join(': ') || '-' %></td>
-                        <td>
-                          <% if (log.status === 'success') { %>
-                            <span class="status-badge status-ok">Sucesso</span>
-                          <% } else { %>
-                            <span class="status-badge status-warn">Erro</span>
-                          <% } %>
-                        </td>
-                      </tr>
-                    <% }); %>
-                  <% } %>
-                </tbody>
-              </table>
+            <div class="admin-form-card admin-config-card admin-table-card mb-3" data-required-permission="admins.gerenciar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Rastreabilidade</p>
+                  <h5><i class="fas fa-clipboard-list me-2"></i>Auditoria</h5>
+                  <p class="admin-card-subtitle">Acompanhe os últimos 100 eventos administrativos para revisão, conferência e histórico operacional.</p>
+                </div>
+                <span class="admin-card-badge">Últimos 100 eventos</span>
+              </div>
+              <div class="table-wrap admin-table-shell">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Admin</th>
+                      <th>Ação</th>
+                      <th>Alvo</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (!auditoriaLogs || auditoriaLogs.length === 0) { %>
+                      <tr><td colspan="5" class="empty-state">Nenhum evento de auditoria registrado.</td></tr>
+                    <% } else { %>
+                      <% auditoriaLogs.forEach(function(log) { %>
+                        <tr>
+                          <td><%= new Date(log.createdAt).toLocaleString('pt-BR') %></td>
+                          <td><%= log.adminUsername || '-' %></td>
+                          <td><%= log.action || '-' %></td>
+                          <td><%= [log.targetType, log.targetId].filter(Boolean).join(': ') || '-' %></td>
+                          <td>
+                            <% if (log.status === 'success') { %>
+                              <span class="status-badge status-ok">Sucesso</span>
+                            <% } else { %>
+                              <span class="status-badge status-warn">Erro</span>
+                            <% } %>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
             </div>
 
-            <div class="table-wrap">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Usuário</th>
-                    <th>Data de Criação</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <% if (administradores.length === 0) { %>
-                    <tr><td colspan="3" class="empty-state">Nenhum administrador cadastrado.</td></tr>
-                  <% } else { %>
-                    <% administradores.forEach(function(admin) { %>
-                      <tr>
-                        <td><strong><%= admin.username %></strong></td>
-                        <td><%= new Date(admin.dataCriacao).toLocaleDateString('pt-BR') %></td>
-                        <td>
-                          <button class="btn btn-edit" onclick="editarAdmin('<%= admin._id %>', '<%= admin.username %>')">
-                            <i class="fas fa-edit me-1"></i>Editar
-                          </button>
-                          <button class="btn btn-delete" onclick="deletarAdmin('<%= admin._id %>', '<%= admin.username %>')">
-                            <i class="fas fa-trash me-1"></i>Deletar
-                          </button>
-                        </td>
-                      </tr>
-                    <% }); %>
-                  <% } %>
-                </tbody>
-              </table>
+            <div class="admin-form-card admin-config-card admin-table-card" data-required-permission="admins.gerenciar">
+              <div class="admin-card-head">
+                <div>
+                  <p class="admin-card-kicker">Equipe de acesso</p>
+                  <h5><i class="fas fa-user-shield me-2"></i>Administradores Cadastrados</h5>
+                  <p class="admin-card-subtitle">Visualize, edite e mantenha a lista de acessos administrativos do sistema organizada.</p>
+                </div>
+                <span class="admin-card-badge">Admins: <%= (administradores || []).length %></span>
+              </div>
+              <div class="table-wrap admin-table-shell">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Usuário</th>
+                      <th>Nível</th>
+                      <th>Permissões</th>
+                      <th>Data de Criação</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% if (administradores.length === 0) { %>
+                      <tr><td colspan="5" class="empty-state">Nenhum administrador cadastrado.</td></tr>
+                    <% } else { %>
+                      <% administradores.forEach(function(admin) { %>
+                        <tr>
+                          <td><strong><%= admin.username %></strong></td>
+                          <td><span class="status-badge"><%= admin.nivelAcesso || 'super_admin' %></span></td>
+                          <td><small><%= (admin.permissoesEfetivas || []).join(', ') %></small></td>
+                          <td><%= new Date(admin.dataCriacao).toLocaleDateString('pt-BR') %></td>
+                          <td>
+                            <button type="button" class="btn btn-edit js-edit-admin" data-admin-id="<%= admin._id %>" onclick="editarAdmin('<%= admin._id %>', '<%= (admin.username || '').replace(/'/g, '\\\'') %>', '<%= admin.nivelAcesso || 'super_admin' %>', '<%= (admin.permissoes || []).join(',').replace(/'/g, '\\\'') %>')" title="<%= podeGerenciarAdmins ? 'Editar administrador' : 'Voce nao possui permissao para editar administradores' %>">
+                              <i class="fas fa-edit me-1"></i>Editar
+                            </button>
+                            <button type="button" class="btn btn-delete js-delete-admin" data-admin-id="<%= admin._id %>" onclick="deletarAdmin('<%= admin._id %>', '<%= (admin.username || '').replace(/'/g, '\\\'') %>')" title="<%= podeGerenciarAdmins ? 'Deletar administrador' : 'Voce nao possui permissao para deletar administradores' %>">
+                              <i class="fas fa-trash me-1"></i>Deletar
+                            </button>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -939,244 +1385,363 @@
   </div>
 
   <!-- MODAL DE EDICAO -->
-  <div class="modal fade" id="modalEdicao" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-edit"></i> Editar Cadastro</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+  <div class="modal fade edit-cadastro-shell" id="modalEdicao" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content edit-cadastro-modal">
+        <div class="modal-header edit-modal-header">
+          <div>
+            <p class="edit-modal-kicker">Central de edição</p>
+            <h5 class="modal-title"><i class="fas fa-pen-to-square me-2"></i><span id="edit_modal_title">Editar Cadastro</span></h5>
+            <p class="edit-modal-subtitle" id="edit_modal_subtitle">Revise os dados principais, ajuste as informações obrigatórias e salve sem sair da gestão.</p>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body edit-modal-body">
           <form id="formEdicao" enctype="multipart/form-data">
             <input type="hidden" id="edit_tipo" name="tipo_cadastro">
             <input type="hidden" id="edit_id" name="id_cadastro">
 
-            <div class="row mb-3">
-              <div class="col-md-8">
-                <label class="form-label">Nome Completo *</label>
-                <input type="text" class="form-control" id="edit_nomeCompleto" name="nomeCompleto" required>
+            <section class="edit-modal-hero">
+              <div class="edit-modal-identity">
+                <span class="edit-type-badge" id="edit_tipo_badge">Cadastro</span>
+                <h6 id="edit_resumo_nome">Cadastro selecionado</h6>
+                <p id="edit_resumo_contexto">Atualize o cadastro mantendo os dados claros, completos e prontos para aprovação.</p>
               </div>
-              <div class="col-md-4">
-                <label class="form-label">EJC *</label>
-                <input type="text" class="form-control" id="edit_ejc" name="ejc" required>
+              <div class="edit-modal-meta">
+                <article class="edit-meta-card" id="row_meta_ejc">
+                  <span class="edit-meta-label">EJC</span>
+                  <strong class="edit-meta-value" id="edit_resumo_ejc">-</strong>
+                </article>
+                <article class="edit-meta-card">
+                  <span class="edit-meta-label">Status</span>
+                  <strong class="edit-meta-value" id="edit_resumo_status">Pendente</strong>
+                </article>
+                <article class="edit-meta-card">
+                  <span class="edit-meta-label">Contato rápido</span>
+                  <strong class="edit-meta-value" id="edit_resumo_contato">-</strong>
+                </article>
               </div>
-            </div>
+            </section>
 
-            <div class="row mb-3" id="row_encontreiro_identidade">
-              <div class="col-md-6">
-                <label class="form-label">Como quer ser chamado</label>
-                <input type="text" class="form-control" id="edit_comoQuerSerChamado" name="comoQuerSerChamado">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Gênero</label>
-                <select class="form-select" id="edit_genero" name="genero">
-                  <option value="outros">Outros</option>
-                  <option value="masculino">Masculino</option>
-                  <option value="feminino">Feminino</option>
-                </select>
-              </div>
-            </div>
+            <div class="edit-modal-grid">
+              <div class="edit-main-column">
+                <section class="edit-section-card">
+                  <div class="edit-section-head">
+                    <div>
+                      <span class="edit-section-kicker">Base do cadastro</span>
+                      <h6>Identificação principal</h6>
+                    </div>
+                    <p>Campos essenciais para localizar e reconhecer rapidamente o inscrito.</p>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-lg-8">
+                      <label class="form-label">Nome Completo *</label>
+                      <input type="text" class="form-control" id="edit_nomeCompleto" name="nomeCompleto" required>
+                    </div>
+                    <div class="col-lg-4" id="row_base_ejc">
+                      <label class="form-label">EJC *</label>
+                      <input type="text" class="form-control" id="edit_ejc" name="ejc" required>
+                    </div>
+                  </div>
+                </section>
 
-            <div class="row mb-3" id="row_encontreiro_ejc_pertence">
-              <div class="col-md-12">
-                <label class="form-label">A qual EJC pertence</label>
-                <input type="text" class="form-control" id="edit_qualEjcPertence" name="qualEjcPertence">
-              </div>
-            </div>
+                <section class="edit-section-card" id="row_encontreiro_identidade">
+                  <div class="edit-section-head compact">
+                    <div>
+                      <span class="edit-section-kicker">Perfil pessoal</span>
+                      <h6>Identidade complementar</h6>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-lg-6">
+                      <label class="form-label">Como quer ser chamado</label>
+                      <input type="text" class="form-control" id="edit_comoQuerSerChamado" name="comoQuerSerChamado">
+                    </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Gênero</label>
+                      <select class="form-select" id="edit_genero" name="genero">
+                        <option value="outros">Outros</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="feminino">Feminino</option>
+                      </select>
+                    </div>
+                  </div>
+                </section>
 
-            <div class="row mb-3">
-              <div class="col-md-8">
-                <label class="form-label">Logradouro *</label>
-                <input type="text" class="form-control" id="edit_logradouro" name="logradouro" required>
-              </div>
-              <div class="col-md-4">
-                <label class="form-label">Bairro *</label>
-                <input type="text" class="form-control" id="edit_bairro" name="bairro" required>
-              </div>
-            </div>
+                <section class="edit-section-card" id="row_encontreiro_ejc_pertence">
+                  <div class="edit-section-head compact">
+                    <div>
+                      <span class="edit-section-kicker">Histórico EJC</span>
+                      <h6>Vínculo com outros encontros</h6>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label">A qual EJC pertence</label>
+                      <input type="text" class="form-control" id="edit_qualEjcPertence" name="qualEjcPertence">
+                    </div>
+                  </div>
+                </section>
 
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Telefone *</label>
-                <input type="text" class="form-control" id="edit_telefone" name="telefone" required>
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Email *</label>
-                <input type="email" class="form-control" id="edit_email" name="email" required>
-              </div>
-            </div>
+                <section class="edit-section-card">
+                  <div class="edit-section-head">
+                    <div>
+                      <span class="edit-section-kicker">Contato</span>
+                      <h6>Localização e comunicação</h6>
+                    </div>
+                    <p>Informações usadas no acompanhamento da inscrição e no contato com a equipe.</p>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-lg-8">
+                      <label class="form-label">Logradouro *</label>
+                      <input type="text" class="form-control" id="edit_logradouro" name="logradouro" required>
+                    </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">Bairro *</label>
+                      <input type="text" class="form-control" id="edit_bairro" name="bairro" required>
+                    </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Telefone *</label>
+                      <input type="text" class="form-control" id="edit_telefone" name="telefone" required>
+                    </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Email *</label>
+                      <input type="email" class="form-control" id="edit_email" name="email" required>
+                    </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Instagram</label>
+                      <input type="text" class="form-control" id="edit_instagram" name="instagram">
+                    </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Data de Nascimento *</label>
+                      <input type="date" class="form-control" id="edit_dataNascimento" name="dataNascimento" required>
+                    </div>
+                  </div>
+                </section>
 
-            <div class="row mb-3">
-              <div class="col-md-6">
-                <label class="form-label">Instagram</label>
-                <input type="text" class="form-control" id="edit_instagram" name="instagram">
-              </div>
-              <div class="col-md-6">
-                <label class="form-label">Data de Nascimento *</label>
-                <input type="date" class="form-control" id="edit_dataNascimento" name="dataNascimento" required>
-              </div>
-            </div>
-
-            <div id="camposEncontrista" style="display: none;">
-              <div class="row mb-3">
-                <div class="col-md-4">
-                  <label class="form-label">CEP</label>
-                  <input type="text" class="form-control" id="edit_cep" name="cep">
+                <div id="camposEncontrista" style="display: none;">
+                  <section class="edit-section-card edit-variant-encontrista">
+                    <div class="edit-section-head">
+                      <div>
+                        <span class="edit-section-kicker">Jornada do encontrista</span>
+                        <h6>Dados pessoais e familiares</h6>
+                      </div>
+                      <p>Organize os registros que ajudam na recepção, no acompanhamento e no suporte da coordenação.</p>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-lg-4">
+                        <label class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="edit_cep" name="cep">
+                      </div>
+                      <div class="col-lg-8">
+                        <label class="form-label">Estado Civil</label>
+                        <input type="text" class="form-control" id="edit_estadoCivil" name="estadoCivil">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Nome da Mãe</label>
+                        <input type="text" class="form-control" id="edit_nomeMae" name="nomeMae">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Telefone da Mãe</label>
+                        <input type="text" class="form-control" id="edit_telefoneMae" name="telefoneMae">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Nome do Pai</label>
+                        <input type="text" class="form-control" id="edit_nomePai" name="nomePai">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Telefone do Pai</label>
+                        <input type="text" class="form-control" id="edit_telefonePai" name="telefonePai">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Paróquia que frequenta</label>
+                        <input type="text" class="form-control" id="edit_paroquiaFrequenta" name="paroquiaFrequenta">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Participa de movimento da igreja</label>
+                        <input type="text" class="form-control" id="edit_participaMovimentoIgreja" name="participaMovimentoIgreja">
+                      </div>
+                      <div class="col-lg-6 edit-final-question-col">
+                        <div class="edit-final-question-box">
+                        <label class="form-label">Conhecido na inscrição de hoje</label>
+                        <input type="text" class="form-control edit-final-question-input" id="edit_conhecidoInscricaoHoje" name="conhecidoInscricaoHoje" placeholder="Ex: Nome do conhecido">
+                        <small class="edit-field-hint">Se não houver, deixe vazio ou informe Nao.</small>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 edit-final-question-col">
+                        <div class="edit-final-question-box">
+                        <label class="form-label">Conhecido que já fez EJC</label>
+                        <input type="text" class="form-control edit-final-question-input" id="edit_conhecidoFezEjc" name="conhecidoFezEjc" placeholder="Ex: Nome de quem já fez">
+                        <small class="edit-field-hint">Use este campo para facilitar contato e referência.</small>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 edit-final-question-col">
+                        <div class="edit-final-question-box">
+                        <label class="form-label">Inscrição anterior</label>
+                        <input type="text" class="form-control edit-final-question-input" id="edit_inscricaoAnterior" name="inscricaoAnterior" placeholder="Ex: EJC 2023 ou Nao">
+                        <small class="edit-field-hint">Registre edição anterior de forma curta e objetiva.</small>
+                        </div>
+                      </div>
+                      <div class="col-lg-6 edit-final-question-col">
+                        <div class="edit-final-question-box">
+                        <label class="form-label">Instrumento musical / canto</label>
+                        <input type="text" class="form-control edit-final-question-input" id="edit_instrumentoMusical" name="instrumentoMusical" placeholder="Ex: Violão, canto, teclado ou Nao">
+                        <small class="edit-field-hint">Informe habilidade principal para apoio na organização.</small>
+                        </div>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Expectativa para o EJC</label>
+                        <textarea class="form-control" id="edit_expectativaXixEjcCop" name="expectativaXixEjcCop" rows="4"></textarea>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Intolerâncias / restrições alimentares</label>
+                        <input type="text" class="form-control" id="edit_intolerante_encontrista" name="intolerante_encontrista">
+                      </div>
+                    </div>
+                  </section>
                 </div>
-                <div class="col-md-8">
-                  <label class="form-label">Estado Civil</label>
-                  <input type="text" class="form-control" id="edit_estadoCivil" name="estadoCivil">
+
+                <section class="edit-section-card" id="row_encontreiro_relacionamento">
+                  <div class="edit-section-head compact">
+                    <div>
+                      <span class="edit-section-kicker">Vínculo pessoal</span>
+                      <h6>Relacionamentos informados</h6>
+                    </div>
+                  </div>
+                  <div class="row g-3">
+                    <div class="col-12">
+                      <label class="form-label">Tem relacionamento com algum encontreiro ou encontrista?</label>
+                      <input type="text" class="form-control" id="edit_temRelacionamento" name="temRelacionamento">
+                    </div>
+                  </div>
+                </section>
+
+                <div id="camposEncontreiro" style="display: none;">
+                  <section class="edit-section-card edit-variant-encontreiro">
+                    <div class="edit-section-head">
+                      <div>
+                        <span class="edit-section-kicker">Atuação no encontro</span>
+                        <h6>Perfil de serviço</h6>
+                      </div>
+                      <p>Defina o papel, histórico de equipes e observações operacionais do encontreiro.</p>
+                    </div>
+                    <div class="row g-3">
+                      <div class="col-lg-4">
+                        <label class="form-label">Tipo</label>
+                        <select class="form-select" id="edit_tipo_pessoa" name="tipo">
+                          <option value="jovens">Jovens</option>
+                          <option value="tios">Tios</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Categoria Tios</label>
+                        <select class="form-select" id="edit_tiosCategoria" name="tiosCategoria">
+                          <option value="solo">Tio Solo</option>
+                          <option value="casal">Casal</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Origem Tios</label>
+                        <select class="form-select" id="edit_origemTios" name="origemTios">
+                          <option value="false">Não</option>
+                          <option value="true">Sim</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">Tio(a) com a(o)?</label>
+                        <select class="form-select" id="edit_tioComParceiro">
+                          <option value="false">Não</option>
+                          <option value="true">Sim</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-8" id="wrap_edit_tioParceiroId" style="display:none;">
+                        <label class="form-label">Vincular com qual tio/tia?</label>
+                        <select class="form-select" id="edit_tioParceiroId" name="tioParceiroId">
+                          <option value="">Selecione</option>
+                        </select>
+                        <small class="edit-field-hint">Esse vínculo faz o casal sair lado a lado no PDF das equipes e no quadrante.</small>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Equipe Serviu</label>
+                        <textarea class="form-control" id="edit_equipeServiu" name="equipeServiu" rows="3"></textarea>
+                        <small class="edit-field-hint">Use vírgulas para separar mais de uma equipe.</small>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Equipe Coordenou</label>
+                        <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="3"></textarea>
+                        <small class="edit-field-hint">Mantenha o histórico objetivo para facilitar consultas futuras.</small>
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Intolerâncias / alergias</label>
+                        <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="3"></textarea>
+                      </div>
+                    </div>
+                  </section>
                 </div>
               </div>
 
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Nome da Mae</label>
-                  <input type="text" class="form-control" id="edit_nomeMae" name="nomeMae">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Telefone da Mae</label>
-                  <input type="text" class="form-control" id="edit_telefoneMae" name="telefoneMae">
-                </div>
-              </div>
+              <aside class="edit-side-column">
+                <section class="edit-section-card edit-side-card">
+                  <div class="edit-section-head compact">
+                    <div>
+                      <span class="edit-section-kicker">Operação</span>
+                      <h6>Status e mídia</h6>
+                    </div>
+                  </div>
+                  <div class="edit-side-stack">
+                    <div>
+                      <label class="form-label">Status</label>
+                      <select class="form-select" id="edit_aprovado" name="statusAprovacao">
+                        <option value="pendente">Pendente</option>
+                        <option value="pendente_contato">Pendente de contato</option>
+                        <option value="documentacao_pendente">Documentação pendente</option>
+                        <option value="aprovado">Aprovado</option>
+                        <option value="reprovado">Reprovado</option>
+                        <option value="desistiu">Desistiu</option>
+                        <option value="remanejado">Remanejado de equipe</option>
+                      </select>
+                    </div>
 
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Nome do Pai</label>
-                  <input type="text" class="form-control" id="edit_nomePai" name="nomePai">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Telefone do Pai</label>
-                  <input type="text" class="form-control" id="edit_telefonePai" name="telefonePai">
-                </div>
-              </div>
+                    <div>
+                      <label class="form-label">Foto Atual</label>
+                      <div id="fotoAtualContainer" class="edit-photo-shell"></div>
+                    </div>
 
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Paroquia que frequenta</label>
-                  <input type="text" class="form-control" id="edit_paroquiaFrequenta" name="paroquiaFrequenta">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Participa de movimento da igreja</label>
-                  <input type="text" class="form-control" id="edit_participaMovimentoIgreja" name="participaMovimentoIgreja">
-                </div>
-              </div>
+                    <div>
+                      <label class="form-label">Nova Foto (JPG ou PNG)</label>
+                      <input type="file" class="form-control" id="edit_foto" name="foto" accept="image/jpeg,image/png">
+                    </div>
+                  </div>
+                </section>
 
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Conhecido na inscricao de hoje</label>
-                  <input type="text" class="form-control" id="edit_conhecidoInscricaoHoje" name="conhecidoInscricaoHoje">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Conhecido que ja fez EJC</label>
-                  <input type="text" class="form-control" id="edit_conhecidoFezEjc" name="conhecidoFezEjc">
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Inscricao anterior</label>
-                  <input type="text" class="form-control" id="edit_inscricaoAnterior" name="inscricaoAnterior">
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Instrumento musical / canto</label>
-                  <input type="text" class="form-control" id="edit_instrumentoMusical" name="instrumentoMusical">
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Expectativa para o EJC</label>
-                <textarea class="form-control" id="edit_expectativaXixEjcCop" name="expectativaXixEjcCop" rows="3"></textarea>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Intolerancias / Restricoes alimentares</label>
-                <input type="text" class="form-control" id="edit_intolerante_encontrista" name="intolerante_encontrista">
-              </div>
-            </div>
-
-            <div class="row mb-3" id="row_encontreiro_relacionamento">
-              <div class="col-md-12">
-                <label class="form-label">Tem relacionamento com algum encontreiro ou encontrista?</label>
-                <input type="text" class="form-control" id="edit_temRelacionamento" name="temRelacionamento">
-              </div>
-            </div>
-
-            <div id="camposEncontreiro" style="display: none;">
-              <div class="row mb-3">
-                <div class="col-md-4">
-                  <label class="form-label">Tipo</label>
-                  <select class="form-select" id="edit_tipo_pessoa" name="tipo">
-                    <option value="jovens">Jovens</option>
-                    <option value="tios">Tios</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Categoria Tios</label>
-                  <select class="form-select" id="edit_tiosCategoria" name="tiosCategoria">
-                    <option value="solo">Tio Solo</option>
-                    <option value="casal">Casal</option>
-                  </select>
-                </div>
-                <div class="col-md-4">
-                  <label class="form-label">Origem Tios</label>
-                  <select class="form-select" id="edit_origemTios" name="origemTios">
-                    <option value="false">Não</option>
-                    <option value="true">Sim</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="row mb-3">
-                <div class="col-md-6">
-                  <label class="form-label">Equipe Serviu (separado por vírgulas)</label>
-                  <textarea class="form-control" id="edit_equipeServiu" name="equipeServiu" rows="2"></textarea>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label">Equipe Coordenou (separado por vírgulas)</label>
-                  <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="2"></textarea>
-                </div>
-              </div>
-
-              <div class="mb-3">
-                <label class="form-label">Intolerâncias/Alergias</label>
-                <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="2"></textarea>
-              </div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Status</label>
-              <select class="form-select" id="edit_aprovado" name="statusAprovacao">
-                <option value="pendente">Pendente</option>
-                <option value="pendente_contato">Pendente de contato</option>
-                <option value="documentacao_pendente">Documentação pendente</option>
-                <option value="aprovado">Aprovado</option>
-                <option value="reprovado">Reprovado</option>
-                <option value="desistiu">Desistiu</option>
-                <option value="remanejado">Remanejado de equipe</option>
-              </select>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Foto Atual</label>
-              <div id="fotoAtualContainer"></div>
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label">Nova Foto (JPG ou PNG)</label>
-              <input type="file" class="form-control" id="edit_foto" name="foto" accept="image/jpeg,image/png">
-            </div>
-
-            <div class="mb-3" id="row_encontreiro_observacoes">
-              <label class="form-label">Observações</label>
-              <textarea class="form-control" id="edit_observacoes" name="observacoes" rows="3"></textarea>
+                <section class="edit-section-card edit-side-card" id="row_encontreiro_observacoes">
+                  <div class="edit-section-head compact">
+                    <div>
+                      <span class="edit-section-kicker">Coordenação</span>
+                      <h6>Observações internas</h6>
+                    </div>
+                  </div>
+                  <div class="edit-side-stack">
+                    <div>
+                      <label class="form-label">Observações</label>
+                      <textarea class="form-control" id="edit_observacoes" name="observacoes" rows="7"></textarea>
+                    </div>
+                    <div class="edit-inline-actions" id="row_encontreiro_actions">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="button" class="btn btn-primary" onclick="salvarEdicao()">
+                        <i class="fas fa-save me-1"></i>Salvar Alterações
+                      </button>
+                    </div>
+                  </div>
+                </section>
+              </aside>
             </div>
           </form>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer edit-modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="button" class="btn btn-primary" onclick="salvarEdicao()">
-            <i class="fas fa-save"></i> Salvar Alterações
+            <i class="fas fa-save me-1"></i>Salvar Alterações
           </button>
         </div>
       </div>
@@ -1200,6 +1765,29 @@
             <label class="form-label">Nova senha (opcional)</label>
             <input type="password" class="form-control" id="edit_admin_senha" minlength="6" placeholder="Deixe em branco para manter a atual">
           </div>
+          <div class="mb-3 mt-3">
+            <label class="form-label">Nível hierárquico</label>
+            <select id="edit_admin_nivel" class="form-select">
+              <option value="consulta">Consulta</option>
+              <option value="operador">Operador</option>
+              <option value="coordenador">Coordenador</option>
+              <option value="super_admin">Super Admin</option>
+            </select>
+          </div>
+          <div class="mb-1">
+            <label class="form-label">Permissões extras</label>
+            <div id="edit_admin_permissions" class="admin-perm-pill-group">
+              <% adminPermissionOptionsList.forEach(function(option) { %>
+                <div class="admin-perm-pill">
+                  <input class="admin-perm-item-edit" type="checkbox" id="perm-edit-<%= option.key %>" value="<%= option.key %>">
+                  <label class="admin-perm-pill-label" for="perm-edit-<%= option.key %>">
+                    <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i><%= option.label %></span>
+                    <small><%= option.description %></small>
+                  </label>
+                </div>
+              <% }); %>
+            </div>
+          </div>
           <small class="text-muted">Se informar senha, ela deve ter no minimo 6 caracteres.</small>
         </div>
         <div class="modal-footer">
@@ -1213,47 +1801,274 @@
   </div>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/page-transitions.js"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
   <script id="equipes-data" type="application/json"><%- JSON.stringify(equipes || []) %></script>
   <script id="encontreiros-equipe-data" type="application/json"><%- JSON.stringify(encontreirosParaEquipe || []) %></script>
+  <script id="administradores-data" type="application/json"><%- JSON.stringify(administradores || []) %></script>
+  <script id="admin-role-defaults-data" type="application/json"><%- JSON.stringify(adminRoleDefaults || {}) %></script>
   <script>
     const encontristas = JSON.parse(document.getElementById('encontristas-data').textContent || '[]');
     const encontreiros = JSON.parse(document.getElementById('encontreiros-data').textContent || '[]');
     const ejcs = JSON.parse(document.getElementById('ejcs-data').textContent || '[]');
     const equipes = JSON.parse(document.getElementById('equipes-data').textContent || '[]');
     const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
+    const administradoresData = JSON.parse(document.getElementById('administradores-data').textContent || '[]');
+    const adminRoleDefaults = JSON.parse(document.getElementById('admin-role-defaults-data').textContent || '{}');
+    const currentAdminPermissions = <%- JSON.stringify(adminPermissoesLista || []) %>;
+    const adminUsernameAtual = <%- JSON.stringify(adminUsername || '') %>;
+    const currentAdminLevel = <%- JSON.stringify(adminNivelAtual || 'super_admin') %>;
 
-    let modalEdicao = new bootstrap.Modal(document.getElementById('modalEdicao'));
-    let modalEdicaoAdmin = new bootstrap.Modal(document.getElementById('modalEdicaoAdmin'));
+    function hasPermission(permissionKey) {
+      if (String(currentAdminLevel || '').toLowerCase() === 'super_admin') return true;
+      if (!permissionKey) return true;
+      return currentAdminPermissions.includes(permissionKey);
+    }
+
+    function ensurePermission(permissionKey, message) {
+      if (hasPermission(permissionKey)) return true;
+      // Mostrar alerta sem bloquear (fire and forget)
+      appAlert(message || 'Você não possui permissão para esta ação.', 'warning', 'Acesso negado').catch(err => console.error('[ensurePermission] erro ao mostrar alerta:', err));
+      return false;
+    }
+
+    function getPrimeiraAbaDisponivelId() {
+      const tabButtons = Array.from(document.querySelectorAll('#cadastroTabs .nav-link'));
+      const firstVisible = tabButtons.find((item) => item.style.display !== 'none');
+      if (!firstVisible || !firstVisible.id) return 'encontristas';
+      return firstVisible.id.replace(/-tab$/, '');
+    }
+
+    function aplicarPermissoesNoPainel() {
+      document.querySelectorAll('[data-required-permission]').forEach((node) => {
+        const permissionKey = node.getAttribute('data-required-permission');
+        if (hasPermission(permissionKey)) return;
+        node.style.display = 'none';
+      });
+    }
+
+    const modalEdicaoElement = document.getElementById('modalEdicao');
+    const modalEdicaoAdminElement = document.getElementById('modalEdicaoAdmin');
+    function createFixedEditorModalController(element) {
+      if (!element) {
+        return {
+          show() {},
+          hide() {},
+        };
+      }
+
+      let hideTimer = null;
+
+      const emit = (eventName) => {
+        element.dispatchEvent(new Event(eventName));
+      };
+
+      const lockScroll = () => {
+        const scrollY = window.scrollY;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.dataset.scrollY = scrollY;
+      };
+
+      const unlockScroll = () => {
+        const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.left = '';
+        document.body.style.right = '';
+        delete document.body.dataset.scrollY;
+        window.scrollTo(0, scrollY);
+      };
+
+      const show = () => {
+        if (hideTimer) {
+          clearTimeout(hideTimer);
+          hideTimer = null;
+        }
+        emit('show.bs.modal');
+        lockScroll();
+        element.style.display = 'flex';
+        requestAnimationFrame(() => {
+          element.classList.add('show');
+          emit('shown.bs.modal');
+        });
+      };
+
+      const hide = () => {
+        if (!element.classList.contains('show') && element.style.display === 'none') return;
+        emit('hide.bs.modal');
+        element.classList.remove('show');
+        unlockScroll();
+        hideTimer = window.setTimeout(() => {
+          element.style.display = 'none';
+          emit('hidden.bs.modal');
+        }, 180);
+      };
+
+      element.style.display = 'none';
+      element.querySelectorAll('[data-bs-dismiss="modal"]').forEach((button) => {
+        button.addEventListener('click', () => hide());
+      });
+      element.addEventListener('click', (event) => {
+        if (event.target === element) hide();
+      });
+
+      return { show, hide };
+    }
+
+    let modalEdicao = createFixedEditorModalController(modalEdicaoElement);
+    let modalEdicaoAdmin = createFixedEditorModalController(modalEdicaoAdminElement);
+    let scrollPaginaAntesModal = 0;
+
+    function abrirModalEdicaoAdminSeguro() {
+      if (!modalEdicaoAdminElement) return;
+      modalEdicaoAdmin.show();
+    }
+
+
+    function popularParceirosTiosSelect(cadastroIdAtual, parceiroIdAtual) {
+      const select = document.getElementById('edit_tioParceiroId');
+      if (!select) return;
+
+      const opcoes = encontreiros
+        .filter((item) => item && item.tipo === 'tios' && String(item._id) !== String(cadastroIdAtual || ''))
+        .sort((a, b) => String(a.nomeCompleto || '').localeCompare(String(b.nomeCompleto || ''), 'pt-BR'));
+
+      select.innerHTML = `<option value="">Selecione</option>${opcoes.map((item) => {
+        const nome = String(item.nomeCompleto || 'Sem nome')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
+        const detalhe = item.tioParceiroId ? ' • ja vinculado(a)' : '';
+        return `<option value="${String(item._id)}">${nome}${detalhe}</option>`;
+      }).join('')}`;
+
+      select.value = parceiroIdAtual ? String(parceiroIdAtual) : '';
+    }
+
+    function atualizarCamposParceiroTios() {
+      const tipo = document.getElementById('edit_tipo_pessoa');
+      const categoria = document.getElementById('edit_tiosCategoria');
+      const casal = document.getElementById('edit_tioComParceiro');
+      const wrap = document.getElementById('wrap_edit_tioParceiroId');
+      const parceiro = document.getElementById('edit_tioParceiroId');
+      if (!tipo || !categoria || !casal || !wrap || !parceiro) return;
+
+      const isTio = tipo.value === 'tios';
+      const usaParceiro = isTio && casal.value === 'true';
+      if (usaParceiro) {
+        categoria.value = 'casal';
+      } else if (isTio && categoria.value === 'casal') {
+        categoria.value = 'solo';
+      }
+
+      wrap.style.display = usaParceiro ? '' : 'none';
+      if (!usaParceiro) {
+        parceiro.value = '';
+      }
+    }
+
+    function ajustarEditorEncontreiroSemRolagem() {
+      if (!modalEdicaoElement) return;
+
+      const modalBody = modalEdicaoElement.querySelector('.edit-modal-body');
+      const form = document.getElementById('formEdicao');
+      if (!modalBody || !form) return;
+
+      form.style.transform = '';
+      form.style.transformOrigin = '';
+      modalBody.style.overflowY = 'scroll';
+      modalBody.style.overflowX = 'hidden';
+    }
+
+    function travarScrollFundo() {
+      scrollPaginaAntesModal = window.scrollY || window.pageYOffset || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollPaginaAntesModal}px`;
+      document.body.style.left = '0';
+      document.body.style.right = '0';
+      document.body.style.width = '100%';
+    }
+
+    function liberarScrollFundo() {
+      const topo = document.body.style.top || '0px';
+      const scrollRestaurar = Math.abs(parseInt(topo, 10)) || scrollPaginaAntesModal || 0;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+      document.body.style.right = '';
+      document.body.style.width = '';
+      window.scrollTo(0, scrollRestaurar);
+    }
+
+    modalEdicaoElement.addEventListener('show.bs.modal', () => {
+      travarScrollFundo();
+    });
+
+    modalEdicaoElement.addEventListener('shown.bs.modal', () => {
+      const modalBody = modalEdicaoElement.querySelector('.edit-modal-body');
+      const modalContent = modalEdicaoElement.querySelector('.edit-cadastro-modal');
+      if (modalBody) modalBody.scrollTop = 0;
+      if (modalContent) modalContent.scrollTop = 0;
+      ajustarEditorEncontreiroSemRolagem();
+      requestAnimationFrame(ajustarEditorEncontreiroSemRolagem);
+      setTimeout(ajustarEditorEncontreiroSemRolagem, 120);
+      setTimeout(ajustarEditorEncontreiroSemRolagem, 320);
+    });
+
+    modalEdicaoElement.addEventListener('hidden.bs.modal', () => {
+      modalEdicaoElement.classList.remove('is-encontreiro-view');
+      ajustarEditorEncontreiroSemRolagem();
+      liberarScrollFundo();
+    });
+
+    window.addEventListener('resize', () => {
+      if (modalEdicaoElement.classList.contains('show')) {
+        ajustarEditorEncontreiroSemRolagem();
+      }
+    });
+
+    let useNativeDialogs = false;
 
     function ensureAppPopup() {
+      console.log('[ensureAppPopup] verificando se modal existe...');
       let modalElement = document.getElementById('app-popup-modal');
       if (modalElement) {
+        console.log('[ensureAppPopup] modal encontrado, retornando instância');
         return {
           element: modalElement,
           instance: bootstrap.Modal.getOrCreateInstance(modalElement),
         };
       }
 
+      console.log('[ensureAppPopup] criando novo modal...');
       modalElement = document.createElement('div');
       modalElement.className = 'modal fade';
       modalElement.id = 'app-popup-modal';
       modalElement.tabIndex = -1;
       modalElement.setAttribute('aria-hidden', 'true');
       modalElement.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header">
+        <div class="modal-dialog modal-dialog-centered app-popup-dialog">
+          <div class="modal-content border-0 shadow-lg app-popup-content app-popup-tone-primary">
+            <div class="modal-header app-popup-header">
               <h5 class="modal-title" id="app-popup-title">Aviso</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
               <input id="app-popup-input" type="text" class="form-control mt-3" style="display:none;" />
             </div>
-            <div class="modal-footer">
+            <div class="modal-footer app-popup-footer">
               <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
               <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
             </div>
@@ -1261,121 +2076,239 @@
         </div>
       `;
       document.body.appendChild(modalElement);
+      console.log('[ensureAppPopup] modal criado e adicionado ao DOM');
 
-      return {
-        element: modalElement,
-        instance: bootstrap.Modal.getOrCreateInstance(modalElement),
-      };
+      if (typeof bootstrap === 'undefined') {
+        console.error('[ensureAppPopup] ERRO: bootstrap não está carregado! Usando diálogos nativos.');
+        useNativeDialogs = true;
+        throw new Error('Bootstrap não está carregado');
+      }
+
+      try {
+        const instance = bootstrap.Modal.getOrCreateInstance(modalElement);
+        console.log('[ensureAppPopup] instância bootstrap criada:', instance);
+        
+        return {
+          element: modalElement,
+          instance,
+        };
+      } catch (e) {
+        console.error('[ensureAppPopup] erro ao criar instância Bootstrap:', e);
+        useNativeDialogs = true;
+        throw e;
+      }
     }
 
     function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary', inputValue = null, inputPlaceholder = '' }) {
-      const { element, instance } = ensureAppPopup();
-      const titleEl = element.querySelector('#app-popup-title');
-      const messageEl = element.querySelector('#app-popup-message');
-      const inputEl = element.querySelector('#app-popup-input');
-      const confirmBtn = element.querySelector('#app-popup-confirm');
-      const cancelBtn = element.querySelector('#app-popup-cancel');
+      console.log('[showAppPopup] iniciado com:', { title, message, confirmText, cancelText, tone, inputValue });
+      
+      // Criar um timeout para evitar travamento infinito
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('showAppPopup timeout - modal não respondeu em 5 segundos'));
+        }, 5000);
+      });
 
-      titleEl.textContent = title || 'Aviso';
-      messageEl.textContent = message || '';
-      confirmBtn.textContent = confirmText;
-      confirmBtn.className = `btn btn-${tone}`;
+      const popupPromise = (async () => {
+        try {
+          const { element, instance } = ensureAppPopup();
+          const titleEl = element.querySelector('#app-popup-title');
+          const messageEl = element.querySelector('#app-popup-message');
+          const inputEl = element.querySelector('#app-popup-input');
+          const confirmBtn = element.querySelector('#app-popup-confirm');
+          const cancelBtn = element.querySelector('#app-popup-cancel');
+          const contentEl = element.querySelector('.app-popup-content');
 
-      if (cancelText) {
-        cancelBtn.style.display = '';
-        cancelBtn.textContent = cancelText;
-      } else {
-        cancelBtn.style.display = 'none';
-      }
+          console.log('[showAppPopup] elementos encontrados:', { titleEl, messageEl, inputEl, confirmBtn, cancelBtn, contentEl });
 
-      const isPrompt = inputValue !== null;
-      inputEl.style.display = isPrompt ? '' : 'none';
-      inputEl.value = isPrompt ? String(inputValue) : '';
-      inputEl.placeholder = inputPlaceholder || '';
-
-      return new Promise((resolve) => {
-        let resolved = false;
-
-        const cleanup = () => {
-          confirmBtn.removeEventListener('click', onConfirm);
-          cancelBtn.removeEventListener('click', onCancel);
-          element.removeEventListener('hidden.bs.modal', onHidden);
-          inputEl.removeEventListener('keydown', onInputKeyDown);
-        };
-
-        const settle = (value) => {
-          if (resolved) return;
-          resolved = true;
-          cleanup();
-          resolve(value);
-        };
-
-        const onConfirm = () => {
-          settle(isPrompt ? inputEl.value : true);
-          instance.hide();
-        };
-
-        const onCancel = () => {
-          settle(isPrompt ? null : false);
-          instance.hide();
-        };
-
-        const onHidden = () => settle(isPrompt ? null : false);
-
-        const onInputKeyDown = (event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            onConfirm();
+          titleEl.textContent = title || 'Aviso';
+          messageEl.textContent = message || '';
+          confirmBtn.textContent = confirmText;
+          confirmBtn.className = `btn btn-${tone}`;
+          if (contentEl) {
+            contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
+            contentEl.classList.add(`app-popup-tone-${tone}`);
           }
-        };
 
-        confirmBtn.addEventListener('click', onConfirm);
-        cancelBtn.addEventListener('click', onCancel);
-        element.addEventListener('hidden.bs.modal', onHidden, { once: true });
-        inputEl.addEventListener('keydown', onInputKeyDown);
+          if (cancelText) {
+            cancelBtn.style.display = '';
+            cancelBtn.textContent = cancelText;
+          } else {
+            cancelBtn.style.display = 'none';
+          }
 
-        instance.show();
-        if (isPrompt) {
-          setTimeout(() => inputEl.focus(), 50);
+          const isPrompt = inputValue !== null;
+          inputEl.style.display = isPrompt ? '' : 'none';
+          inputEl.value = isPrompt ? String(inputValue) : '';
+          inputEl.placeholder = inputPlaceholder || '';
+
+          console.log('[showAppPopup] modal configurado, criando Promise...');
+
+          return new Promise((resolve) => {
+            let resolved = false;
+
+            const cleanup = () => {
+              confirmBtn.removeEventListener('click', onConfirm);
+              cancelBtn.removeEventListener('click', onCancel);
+              element.removeEventListener('hidden.bs.modal', onHidden);
+              inputEl.removeEventListener('keydown', onInputKeyDown);
+              console.log('[showAppPopup] cleanup executado');
+            };
+
+            const settle = (value) => {
+              if (resolved) {
+                console.log('[showAppPopup] settle já foi chamado, ignorando valor:', value);
+                return;
+              }
+              resolved = true;
+              console.log('[showAppPopup] settle com valor:', value);
+              cleanup();
+              
+              // Tenta fechar o modal de forma segura
+              try {
+                instance.hide();
+              } catch (e) {
+                console.error('[showAppPopup] erro ao hide modal:', e);
+              }
+              
+              resolve(value);
+            };
+
+            const onConfirm = () => {
+              console.log('[showAppPopup] onConfirm disparado');
+              settle(isPrompt ? inputEl.value : true);
+            };
+
+            const onCancel = () => {
+              console.log('[showAppPopup] onCancel disparado');
+              settle(isPrompt ? null : false);
+            };
+
+            const onHidden = () => {
+              console.log('[showAppPopup] onHidden disparado');
+              settle(isPrompt ? null : false);
+            };
+
+            const onInputKeyDown = (event) => {
+              if (event.key === 'Enter') {
+                console.log('[showAppPopup] Enter pressionado no input');
+                event.preventDefault();
+                onConfirm();
+              }
+            };
+
+            confirmBtn.addEventListener('click', onConfirm);
+            cancelBtn.addEventListener('click', onCancel);
+            element.addEventListener('hidden.bs.modal', onHidden, { once: true });
+            inputEl.addEventListener('keydown', onInputKeyDown);
+
+            console.log('[showAppPopup] listeners adicionados, mostrando modal...');
+            try {
+              console.log('[showAppPopup] chamando instance.show()...');
+              instance.show();
+              console.log('[showAppPopup] modal.show() chamado com sucesso');
+            } catch (e) {
+              console.error('[showAppPopup] erro ao show modal:', e);
+              settle(isPrompt ? null : false);
+            }
+
+            if (isPrompt) {
+              setTimeout(() => {
+                console.log('[showAppPopup] focando input...');
+                inputEl.focus();
+              }, 50);
+            }
+          });
+        } catch (error) {
+          console.error('[showAppPopup] ERRO NA FUNÇÃO:', error);
+          throw error;
         }
+      })();
+
+      // Executar com timeout
+      return Promise.race([popupPromise, timeoutPromise]).catch(err => {
+        console.error('[showAppPopup] Promise rejeitada:', err);
+        useNativeDialogs = true;
+        throw err;
       });
     }
 
     async function appAlert(message, tone = 'primary', title = 'Aviso') {
-      await showAppPopup({ title, message, confirmText: 'Entendi', tone });
+      console.log('[appAlert] chamado com:', { message, tone, title });
+      if (useNativeDialogs) {
+        console.log('[appAlert] usando native alert');
+        window.alert(`${title}\n\n${message}`);
+        return;
+      }
+      try {
+        await showAppPopup({ title, message, confirmText: 'Entendi', tone });
+      } catch (e) {
+        console.error('[appAlert] erro ao mostrar popup:', e);
+        useNativeDialogs = true;
+        window.alert(`${title}\n\n${message}`);
+      }
     }
 
     async function appConfirm(message, title = 'Confirmacao') {
-      return await showAppPopup({
-        title,
-        message,
-        confirmText: 'Confirmar',
-        cancelText: 'Cancelar',
-        tone: 'warning',
-      });
+      console.log('[appConfirm] chamado com:', { message, title });
+      if (useNativeDialogs) {
+        console.log('[appConfirm] usando native confirm');
+        return window.confirm(`${title}\n\n${message}`);
+      }
+      try {
+        return await showAppPopup({
+          title,
+          message,
+          confirmText: 'Confirmar',
+          cancelText: 'Cancelar',
+          tone: 'warning',
+        });
+      } catch (e) {
+        console.error('[appConfirm] erro ao mostrar popup:', e);
+        useNativeDialogs = true;
+        return window.confirm(`${title}\n\n${message}`);
+      }
     }
 
     async function appPrompt(message, defaultValue = '', title = 'Informe um valor') {
-      return await showAppPopup({
-        title,
-        message,
-        confirmText: 'Salvar',
-        cancelText: 'Cancelar',
-        tone: 'primary',
-        inputValue: defaultValue,
-      });
+      console.log('[appPrompt] chamado com:', { message, defaultValue, title });
+      if (useNativeDialogs) {
+        console.log('[appPrompt] usando native prompt');
+        return window.prompt(`${title}\n\n${message}`, defaultValue);
+      }
+      try {
+        return await showAppPopup({
+          title,
+          message,
+          confirmText: 'Salvar',
+          cancelText: 'Cancelar',
+          tone: 'primary',
+          inputValue: defaultValue,
+        });
+      } catch (e) {
+        console.error('[appPrompt] erro ao mostrar popup:', e);
+        useNativeDialogs = true;
+        return window.prompt(`${title}\n\n${message}`, defaultValue);
+      }
     }
 
     function abrirAba(tabId) {
       const tabButton = document.getElementById(tabId);
-      if (tabButton) {
+      if (tabButton && tabButton.style.display !== 'none') {
+        atualizarNavegacaoAtiva(tabId);
         bootstrap.Tab.getOrCreateInstance(tabButton).show();
       }
     }
 
+    function atualizarNavegacaoAtiva(tabButtonId) {
+      document.querySelectorAll('[data-tab-target]').forEach((item) => {
+        item.classList.toggle('active', item.dataset.tabTarget === tabButtonId);
+      });
+    }
+
     function getAbaAtivaId() {
       const ativa = document.querySelector('#cadastroTabs .nav-link.active');
-      if (!ativa || !ativa.id) return 'encontristas';
+      if (!ativa || !ativa.id || ativa.style.display === 'none') return getPrimeiraAbaDisponivelId();
       return ativa.id.replace(/-tab$/, '');
     }
 
@@ -1392,15 +2325,22 @@
       const url = new URL(window.location.href);
       const abaNaUrl = url.searchParams.get('tab');
       const abaNoStorage = localStorage.getItem('admin_gerenciar_cadastros_aba_ativa');
-      const abaDesejada = abaNaUrl || abaNoStorage || 'encontristas';
+      const fallbackAba = getPrimeiraAbaDisponivelId();
+      const abaDesejada = abaNaUrl || abaNoStorage || fallbackAba;
       const botao = document.getElementById(`${abaDesejada}-tab`);
 
-      if (!botao) {
+      if (!botao || botao.style.display === 'none') {
+        const fallbackButton = document.getElementById(`${fallbackAba}-tab`);
+        if (fallbackButton && fallbackButton.style.display !== 'none') {
+          bootstrap.Tab.getOrCreateInstance(fallbackButton).show();
+          atualizarNavegacaoAtiva(`${fallbackAba}-tab`);
+        }
         salvarAbaAtiva();
         return;
       }
 
       bootstrap.Tab.getOrCreateInstance(botao).show();
+      atualizarNavegacaoAtiva(`${abaDesejada}-tab`);
       salvarAbaAtiva();
     }
 
@@ -1497,10 +2437,53 @@
     configurarBotaoLimparBusca('search-aprovacoes', 'clear-search-aprovacoes');
 
     document.querySelectorAll('#cadastroTabs .nav-link').forEach((botao) => {
-      botao.addEventListener('shown.bs.tab', salvarAbaAtiva);
+      botao.addEventListener('shown.bs.tab', (event) => {
+        salvarAbaAtiva();
+        if (event && event.target && event.target.id) {
+          atualizarNavegacaoAtiva(event.target.id);
+        }
+      });
     });
 
+    aplicarPermissoesNoPainel();
     restaurarAbaAtiva();
+
+    function formatarStatusCadastro(status) {
+      const rotulos = {
+        pendente: 'Pendente',
+        pendente_contato: 'Pendente de contato',
+        documentacao_pendente: 'Documentação pendente',
+        aprovado: 'Aprovado',
+        reprovado: 'Reprovado',
+        desistiu: 'Desistiu',
+        remanejado: 'Remanejado de equipe',
+      };
+
+      return rotulos[status] || 'Pendente';
+    }
+
+    function atualizarResumoEdicao(cadastro, tipo, statusAtual) {
+      const titulo = tipo === 'encontrista' ? 'Editar Encontrista' : 'Editar Encontreiro';
+      const subtitulo = tipo === 'encontrista'
+        ? 'Ajuste dados pessoais, familiares e informações pastorais com uma leitura mais organizada.'
+        : 'Revise perfil de serviço, vínculo com EJC e observações operacionais sem sair da gestão.';
+      const badge = document.getElementById('edit_tipo_badge');
+      const contatoRapido = cadastro.telefone || cadastro.email || 'Sem contato informado';
+      const contextoBase = cadastro.comoQuerSerChamado
+        ? `Também atende por ${cadastro.comoQuerSerChamado}.`
+        : 'Use este painel para manter o cadastro consistente e pronto para operação.';
+
+      document.getElementById('edit_modal_title').textContent = titulo;
+      document.getElementById('edit_modal_subtitle').textContent = subtitulo;
+      document.getElementById('edit_resumo_nome').textContent = cadastro.nomeCompleto || 'Cadastro sem nome';
+      document.getElementById('edit_resumo_contexto').textContent = contextoBase;
+      document.getElementById('edit_resumo_ejc').textContent = cadastro.ejc || 'Não informado';
+      document.getElementById('edit_resumo_status').textContent = formatarStatusCadastro(statusAtual);
+      document.getElementById('edit_resumo_contato').textContent = contatoRapido;
+
+      badge.textContent = tipo === 'encontrista' ? 'Encontrista' : 'Encontreiro';
+      badge.className = `edit-type-badge ${tipo === 'encontrista' ? 'is-encontrista' : 'is-encontreiro'}`;
+    }
 
     function editarCadastro(tipo, id) {
       const lista = tipo === 'encontrista' ? encontristas : encontreiros;
@@ -1546,6 +2529,7 @@
       document.getElementById('edit_aprovado').value = ['aprovado', 'reprovado', 'pendente', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'].includes(statusAtual)
         ? statusAtual
         : 'pendente';
+      atualizarResumoEdicao(cadastro, tipo, statusAtual);
 
       if (cadastro.dataNascimento) {
         const data = new Date(cadastro.dataNascimento);
@@ -1553,15 +2537,20 @@
         const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
         const dia = String(data.getUTCDate()).padStart(2, '0');
         document.getElementById('edit_dataNascimento').value = `${ano}-${mes}-${dia}`;
+      } else {
+        document.getElementById('edit_dataNascimento').value = '';
       }
 
       const camposEncontreiro = document.getElementById('camposEncontreiro');
       const camposEncontrista = document.getElementById('camposEncontrista');
+      const rowBaseEJc = document.getElementById('row_base_ejc');
+      const rowMetaEJc = document.getElementById('row_meta_ejc');
       const linhasEncontreiro = [
         'row_encontreiro_identidade',
         'row_encontreiro_ejc_pertence',
         'row_encontreiro_relacionamento',
         'row_encontreiro_observacoes',
+        'row_encontreiro_actions',
       ];
       const mostrarCamposEncontreiro = tipo === 'encontreiro';
       linhasEncontreiro.forEach((idLinha) => {
@@ -1571,11 +2560,20 @@
       if (camposEncontrista) {
         camposEncontrista.style.display = tipo === 'encontrista' ? 'block' : 'none';
       }
+      if (rowBaseEJc) {
+        rowBaseEJc.style.display = tipo === 'encontrista' ? 'none' : '';
+      }
+      if (rowMetaEJc) {
+        rowMetaEJc.style.display = tipo === 'encontrista' ? 'none' : '';
+      }
       if (tipo === 'encontreiro') {
         camposEncontreiro.style.display = 'block';
         document.getElementById('edit_tipo_pessoa').value = cadastro.tipo || 'jovens';
         document.getElementById('edit_tiosCategoria').value = cadastro.tiosCategoria === 'casal' ? 'casal' : 'solo';
         document.getElementById('edit_origemTios').value = cadastro.origemTios ? 'true' : 'false';
+        document.getElementById('edit_tioComParceiro').value = cadastro.tioParceiroId ? 'true' : 'false';
+        popularParceirosTiosSelect(id, cadastro.tioParceiroId || '');
+        atualizarCamposParceiroTios();
         document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
         document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
         document.getElementById('edit_intolerante').value = cadastro.intolerante || '';
@@ -1583,18 +2581,29 @@
         camposEncontreiro.style.display = 'none';
       }
 
+      modalEdicaoElement.classList.toggle('is-encontreiro-view', tipo === 'encontreiro');
+
       const fotoContainer = document.getElementById('fotoAtualContainer');
+      document.getElementById('edit_foto').value = '';
       if (cadastro.foto) {
         fotoContainer.innerHTML = `
-          <div class="d-flex align-items-center gap-3">
+          <div class="edit-photo-card">
             <img src="/img/uploads/${encodeURIComponent(cadastro.foto)}?w=360&h=360&fit=cover&format=webp" class="modal-foto-preview" alt="Foto atual" loading="lazy" decoding="async">
-            <button type="button" class="btn btn-danger btn-sm" onclick="removerFoto('${tipo}', '${id}')">
-              <i class="fas fa-trash"></i> Remover Foto
-            </button>
+            <div class="edit-photo-actions">
+              <span class="edit-photo-caption">Foto atual vinculada ao cadastro.</span>
+              <button type="button" class="btn btn-danger btn-sm" onclick="removerFoto('${tipo}', '${id}')">
+                <i class="fas fa-trash me-1"></i>Remover Foto
+              </button>
+            </div>
           </div>
         `;
       } else {
-        fotoContainer.innerHTML = '<p class="text-muted mb-0">Nenhuma foto cadastrada.</p>';
+        fotoContainer.innerHTML = '<div class="edit-photo-empty"><i class="fas fa-image"></i><span>Nenhuma foto cadastrada.</span></div>';
+      }
+
+      const fotoPreview = fotoContainer.querySelector('.modal-foto-preview');
+      if (fotoPreview && !fotoPreview.complete) {
+        fotoPreview.addEventListener('load', ajustarEditorEncontreiroSemRolagem, { once: true });
       }
 
       modalEdicao.show();
@@ -1660,6 +2669,10 @@
         await appAlert('Erro ao remover foto: ' + error.message, 'danger', 'Erro');
       }
     }
+
+    document.getElementById('edit_tipo_pessoa')?.addEventListener('change', atualizarCamposParceiroTios);
+    document.getElementById('edit_tiosCategoria')?.addEventListener('change', atualizarCamposParceiroTios);
+    document.getElementById('edit_tioComParceiro')?.addEventListener('change', atualizarCamposParceiroTios);
 
     async function deletarCadastro(tipo, id, nome) {
       if (!await appConfirm(`Tem certeza que deseja deletar o cadastro de "${nome}"? Esta acao nao pode ser desfeita.`, 'Confirmar exclusao')) return;
@@ -1795,9 +2808,37 @@
       }
     }
 
+    function getCheckedAdminPermissions(selector) {
+      const nodes = document.querySelectorAll(selector);
+      return Array.from(nodes)
+        .filter((node) => node.checked)
+        .map((node) => String(node.value || '').trim())
+        .filter(Boolean);
+    }
+
+    function setCheckedAdminPermissions(selector, permissions) {
+      const selected = new Set(Array.isArray(permissions) ? permissions : []);
+      const nodes = document.querySelectorAll(selector);
+      nodes.forEach((node) => {
+        node.checked = selected.has(String(node.value || '').trim());
+      });
+    }
+
+    function applyRoleDefaultPermissions(levelSelectorId, checkboxSelector) {
+      const levelNode = document.getElementById(levelSelectorId);
+      if (!levelNode) return;
+
+      const level = String(levelNode.value || '').trim();
+      const defaults = Array.isArray(adminRoleDefaults[level]) ? adminRoleDefaults[level] : [];
+      setCheckedAdminPermissions(checkboxSelector, defaults);
+    }
+
     async function cadastrarAdmin() {
+      if (!ensurePermission('admins.gerenciar')) return;
       const username = document.getElementById('admin_username').value.trim();
       const senha = document.getElementById('admin_senha').value;
+      const nivelAcesso = document.getElementById('admin_nivel').value;
+      const permissoes = getCheckedAdminPermissions('#admin_permissions .admin-perm-item');
 
       if (!username || !senha) {
         await appAlert('Preencha usuario e senha.', 'warning', 'Dados incompletos');
@@ -1808,7 +2849,7 @@
         const response = await fetch('/admin/cadastrar-admin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, senha })
+          body: JSON.stringify({ username, senha, nivelAcesso, permissoes })
         });
         const result = await response.json();
 
@@ -1825,6 +2866,7 @@
     }
 
     async function cadastrarEquipe() {
+      if (!ensurePermission('equipes.gerenciar')) return;
       const nome = document.getElementById('equipe_nome').value.trim();
       const ejcId = document.getElementById('equipe_ejcId').value;
 
@@ -1854,6 +2896,7 @@
     }
 
     async function vincularEncontreiroEquipe() {
+      if (!ensurePermission('equipes.gerenciar')) return;
       const encontreiroId = document.getElementById('vinculo_encontreiro').value;
       const equipeId = document.getElementById('vinculo_equipe').value;
       const papel = document.getElementById('vinculo_papel').value;
@@ -1884,6 +2927,7 @@
     }
 
     async function deletarEquipe(equipeId, equipeNome) {
+      if (!ensurePermission('equipes.gerenciar')) return;
       if (!await appConfirm(`Deseja deletar a equipe "${equipeNome}"? Os vinculos dessa equipe serao removidos dos encontreiros.`, 'Confirmar exclusao')) return;
 
       try {
@@ -1905,6 +2949,7 @@
     }
 
     async function criarEjc() {
+      if (!ensurePermission('encontros.gerenciar')) return;
       const nome = document.getElementById('ejc_nome').value.trim();
       if (!nome) {
         await appAlert('Informe o nome do EJC.', 'warning', 'Campo obrigatorio');
@@ -1932,6 +2977,7 @@
     }
 
     async function deletarEjc(ejcId, ejcNome) {
+      if (!ensurePermission('encontros.gerenciar')) return;
       if (!await appConfirm(`Deseja realmente excluir o encontro "${ejcNome}"?\n\nEsta acao remove tambem circulos, equipes e vinculos desse EJC.`, 'Confirmar exclusao')) {
         return;
       }
@@ -1954,7 +3000,32 @@
       }
     }
 
+    async function definirEjcAtivo(ejcId, ejcNome) {
+      if (!ensurePermission('encontros.gerenciar')) return;
+      if (!await appConfirm(`Definir "${ejcNome}" como encontro ativo?\n\nAs novas inscricoes serao vinculadas a este encontro.`, 'Confirmar encontro ativo')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/definir-ejc-ativo/${ejcId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert(result.message || 'Encontro ativo atualizado com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao definir encontro ativo.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao definir encontro ativo.', 'danger', 'Erro');
+      }
+    }
+
     async function abrirPaginaEjc() {
+      if (!ensurePermission('encontros.gerenciar')) return;
       const ejcId = document.getElementById('seletor_ejc_pagina').value;
       if (!ejcId) {
         await appAlert('Selecione um EJC para continuar.', 'warning', 'Selecao obrigatoria');
@@ -2000,24 +3071,56 @@
       }).join('');
     }
 
-    async function editarAdmin(adminId, username) {
-      document.getElementById('edit_admin_id').value = adminId;
-      document.getElementById('edit_admin_username').value = username || '';
-      document.getElementById('edit_admin_senha').value = '';
-      modalEdicaoAdmin.show();
+    async function editarAdmin(adminId, username, nivelAcesso, permissoesCsv) {
+      try {
+        if (!hasPermission('admins.gerenciar')) {
+          await showAlert('Você não possui permissão para editar administradores.', 'Acesso Negado');
+          return;
+        }
+
+        let permissoesArray = [];
+        if (!username) {
+          const adminSelecionado = administradoresData.find((item) => String(item && item._id) === String(adminId));
+          username = adminSelecionado && adminSelecionado.username ? adminSelecionado.username : '';
+          nivelAcesso = adminSelecionado && adminSelecionado.nivelAcesso ? adminSelecionado.nivelAcesso : 'super_admin';
+          permissoesArray = adminSelecionado && Array.isArray(adminSelecionado.permissoes) ? adminSelecionado.permissoes : [];
+        } else {
+          permissoesArray = String(permissoesCsv || '').split(',').map((s) => s.trim()).filter(Boolean);
+        }
+
+        // Preenche o formulário do modal
+        const idField = document.getElementById('edit_admin_id');
+        const usernameField = document.getElementById('edit_admin_username');
+        const senhaField = document.getElementById('edit_admin_senha');
+        const nivelField = document.getElementById('edit_admin_nivel');
+        if (idField) idField.value = adminId;
+        if (usernameField) usernameField.value = username || '';
+        if (senhaField) senhaField.value = '';
+        if (nivelField) nivelField.value = nivelAcesso || 'super_admin';
+        setCheckedAdminPermissions('#edit_admin_permissions .admin-perm-item-edit', permissoesArray);
+
+        abrirModalEdicaoAdminSeguro();
+      } catch (error) {
+        console.error('[editarAdmin] ERRO:', error);
+        await showAlert('Erro ao abrir editor de administrador: ' + error.message, 'Erro');
+      }
     }
 
     async function salvarEdicaoAdmin() {
+      if (!ensurePermission('admins.gerenciar')) return;
       const adminId = String(document.getElementById('edit_admin_id').value || '').trim();
       const usernameTratado = String(document.getElementById('edit_admin_username').value || '').trim();
       const novaSenha = String(document.getElementById('edit_admin_senha').value || '');
+      const nivelAcesso = String(document.getElementById('edit_admin_nivel').value || '').trim();
+      const permissoes = getCheckedAdminPermissions('#edit_admin_permissions .admin-perm-item-edit');
+      const usernameAtualNoCampo = String(document.getElementById('edit_admin_username').value || '').trim();
 
       if (!adminId) {
         await appAlert('Administrador invalido para atualizacao.', 'danger', 'Erro');
         return;
       }
 
-      if (!usernameTratado && !novaSenha) {
+      if (!usernameAtualNoCampo && !novaSenha && !nivelAcesso && permissoes.length === 0) {
         await appAlert('Informe ao menos um campo para atualizar.', 'warning', 'Sem alteracoes');
         return;
       }
@@ -2030,6 +3133,8 @@
       const payload = {};
       if (usernameTratado) payload.username = usernameTratado;
       if (novaSenha) payload.senha = novaSenha;
+      if (nivelAcesso) payload.nivelAcesso = nivelAcesso;
+      payload.permissoes = permissoes;
 
       try {
         const response = await fetch(`/admin/atualizar-admin/${encodeURIComponent(adminId)}`, {
@@ -2052,23 +3157,46 @@
     }
 
     async function deletarAdmin(adminId, username) {
-      if (!await appConfirm(`Tem certeza que deseja deletar o administrador "${username}"? Esta acao nao pode ser desfeita.`, 'Confirmar exclusao')) return;
-      
       try {
+        console.log('[deletarAdmin] 1. iniciado com:', { adminId, username });
+        if (!hasPermission('admins.gerenciar')) {
+          console.log('[deletarAdmin] 2. permissao negada');
+          await showAlert('Você não possui permissão para deletar administradores.', 'Acesso Negado');
+          return;
+        }
+        
+        console.log('[deletarAdmin] 3. permissao OK');
+        if (!username) {
+          const adminSelecionado = administradoresData.find((item) => String(item && item._id) === String(adminId));
+          console.log('[deletarAdmin] 4. adminSelecionado:', adminSelecionado);
+          username = adminSelecionado && adminSelecionado.username ? adminSelecionado.username : 'desconhecido';
+        }
+        
+        console.log('[deletarAdmin] 5. pedindo confirmação com username:', username);
+        if (!await showDangerConfirm(`Tem certeza que deseja deletar o administrador "${username}"?\n\nEsta ação não pode ser desfeita.`, 'Confirmar Exclusão')) {
+          console.log('[deletarAdmin] usuário cancelou a confirmação');
+          return;
+        }
+        
+        console.log('[deletarAdmin] 6. confirmação recebida, enviando POST para /admin/deletar-admin/');
         const response = await fetch(`/admin/deletar-admin/${adminId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' }
         });
+        console.log('[deletarAdmin] 7. resposta recebida, status:', response.status);
         const result = await response.json();
+        console.log('[deletarAdmin] 8. resultado JSON:', result);
 
         if (result.success) {
-          await appAlert('Administrador deletado com sucesso.', 'success', 'Sucesso');
+          await showAlert('Administrador deletado com sucesso!', 'Sucesso');
+          console.log('[deletarAdmin] 9. recarregando...');
           recarregarMantendoAbaAtual();
         } else {
-          await appAlert(result.error || 'Erro ao deletar administrador.', 'danger', 'Erro');
+          await showAlert('Erro ao deletar administrador: ' + (result.error || 'erro desconhecido'), 'Erro');
         }
       } catch (error) {
-        await appAlert('Erro ao deletar administrador.', 'danger', 'Erro');
+        console.error('[deletarAdmin] ERRO CAPTURADO:', error);
+        await showAlert('Erro ao deletar administrador: ' + error.message, 'Erro');
       }
     }
 
@@ -2114,6 +3242,7 @@
     }
 
     async function importarCadastros() {
+      if (!ensurePermission('importacao.executar')) return;
       const sourceType = document.getElementById('import_sourceType').value;
       const dbEngine = document.getElementById('import_dbEngine').value;
       const connectionString = document.getElementById('import_connectionString').value.trim();
@@ -2206,6 +3335,7 @@
     }
 
     async function aprovarCadastro(tipo, id) {
+      if (!ensurePermission('cadastros.aprovar')) return;
       if (!await appConfirm('Aprovar este cadastro?', 'Confirmar aprovacao')) return;
 
       try {
@@ -2228,6 +3358,7 @@
     }
 
     async function reprovarCadastro(tipo, id) {
+      if (!ensurePermission('cadastros.aprovar')) return;
       if (!await appConfirm('Reprovar este cadastro?', 'Confirmar reprovacao')) return;
 
       try {
@@ -2250,6 +3381,7 @@
     }
 
     async function executarRetencaoLgpd() {
+      if (!ensurePermission('lgpd.executar')) return;
       const days = document.getElementById('lgpd_retencao_dias').value;
       if (!await appConfirm('Executar agora a política de retenção LGPD?', 'Confirmar retenção')) return;
 
@@ -2280,6 +3412,438 @@
 
     atualizarTransferenciaLoteUI();
     atualizarCamposImportacao();
+
+    // Funções para Bloqueio de Formulários
+    async function carregarConfiguracoesBloqueio() {
+      if (!hasPermission('bloqueio.gerenciar')) return;
+      try {
+        console.log('[BLOQUEIO-UI] Carregando configurações...');
+        const response = await fetch('/admin/config-bloqueio');
+        const data = await response.json();
+        
+        console.log('[BLOQUEIO-UI] Dados recebidos:', data);
+        
+        if (data.success) {
+          // Atualizar encontrista
+          document.getElementById('bloquear_encontrista').checked = data.bloquearEncontrista === true;
+          document.getElementById('data_inicio_encontrista').value = data.dataInicioEncontrista 
+            ? new Date(data.dataInicioEncontrista).toISOString().slice(0, 16)
+            : '';
+          document.getElementById('data_fim_encontrista').value = data.dataFimEncontrista
+            ? new Date(data.dataFimEncontrista).toISOString().slice(0, 16)
+            : '';
+          document.getElementById('motivo_encontrista').value = data.motivoEncontrista || '';
+          
+          // Atualizar encontreiros
+          document.getElementById('bloquear_encontreiros').checked = data.bloquearEncontreiros === true;
+          document.getElementById('data_inicio_encontreiros').value = data.dataInicioEncontreiros
+            ? new Date(data.dataInicioEncontreiros).toISOString().slice(0, 16)
+            : '';
+          document.getElementById('data_fim_encontreiros').value = data.dataFimEncontreiros
+            ? new Date(data.dataFimEncontreiros).toISOString().slice(0, 16)
+            : '';
+          document.getElementById('motivo_encontreiros').value = data.motivoEncontreiros || '';
+
+          // Atualizar visibilidade dos campos
+          atualizarCamposEncontrista();
+          atualizarCamposEncontreiros();
+          
+          console.log('[BLOQUEIO-UI] Configurações carregadas com sucesso');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações de bloqueio:', error);
+      }
+    }
+
+    function atualizarCamposEncontrista() {
+      const checked = document.getElementById('bloquear_encontrista')?.checked || false;
+      const camposDiv = document.getElementById('campos-encontrista');
+      if (camposDiv) {
+        camposDiv.style.display = checked ? 'flex' : 'none';
+      }
+    }
+
+    function atualizarCamposEncontreiros() {
+      const checked = document.getElementById('bloquear_encontreiros')?.checked || false;
+      const camposDiv = document.getElementById('campos-encontreiros');
+      if (camposDiv) {
+        camposDiv.style.display = checked ? 'flex' : 'none';
+      }
+    }
+
+    async function salvarConfiguracoesBloqueio() {
+      if (!ensurePermission('bloqueio.gerenciar')) return;
+      try {
+        const payload = {
+          bloquearEncontrista: document.getElementById('bloquear_encontrista').checked,
+          bloquearEncontreiros: document.getElementById('bloquear_encontreiros').checked,
+          dataInicioEncontrista: document.getElementById('data_inicio_encontrista').value || '',
+          dataFimEncontrista: document.getElementById('data_fim_encontrista').value || '',
+          dataInicioEncontreiros: document.getElementById('data_inicio_encontreiros').value || '',
+          dataFimEncontreiros: document.getElementById('data_fim_encontreiros').value || '',
+          motivoEncontrista: document.getElementById('motivo_encontrista').value || '',
+          motivoEncontreiros: document.getElementById('motivo_encontreiros').value || '',
+        };
+
+        console.log('[BLOQUEIO-UI] Salvando:', payload);
+
+        const response = await fetch('/admin/atualizar-config-bloqueio', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await response.json();
+        const resultDiv = document.getElementById('bloqueio-resultado');
+        
+        console.log('[BLOQUEIO-UI] Resposta do servidor:', data);
+        
+        if (data.success) {
+          resultDiv.innerHTML = '<div class="alert alert-success" role="alert"><i class="fas fa-check-circle me-2"></i>Configurações salvas com sucesso!</div>';
+          setTimeout(() => { resultDiv.innerHTML = ''; }, 3000);
+        } else {
+          resultDiv.innerHTML = '<div class="alert alert-danger" role="alert"><i class="fas fa-exclamation-triangle me-2"></i>Erro ao salvar: ' + (data.error || 'Desconhecido') + '</div>';
+        }
+      } catch (error) {
+        console.error('Erro ao salvar configurações:', error);
+        document.getElementById('bloqueio-resultado').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fas fa-exclamation-triangle me-2"></i>Erro na requisição</div>';
+      }
+    }
+
+    // Carregar configurações sempre que a página iniciar (independente da aba ativa)
+    applyRoleDefaultPermissions('admin_nivel', '#admin_permissions .admin-perm-item');
+    const adminNivelNode = document.getElementById('admin_nivel');
+    if (adminNivelNode) {
+      adminNivelNode.addEventListener('change', () => {
+        applyRoleDefaultPermissions('admin_nivel', '#admin_permissions .admin-perm-item');
+      });
+    }
+
+    carregarConfiguracoesBloqueio();
+
+    // Recarregar quando a aba de admins for clicada (garante atualização ao trocar de aba)
+    const adminsTab = document.getElementById('admins-tab') || document.querySelector('[data-bs-target="#admins"]');
+    if (adminsTab) {
+      adminsTab.addEventListener('shown.bs.tab', function() {
+        carregarConfiguracoesBloqueio();
+      });
+    }
+
+    document.addEventListener('click', (event) => {
+      const editBtn = event.target.closest('.js-edit-admin');
+      if (editBtn) {
+        event.preventDefault();
+        editarAdmin(editBtn.getAttribute('data-admin-id'));
+        return;
+      }
+
+      const deleteBtn = event.target.closest('.js-delete-admin');
+      if (deleteBtn) {
+        event.preventDefault();
+        deletarAdmin(deleteBtn.getAttribute('data-admin-id'));
+      }
+    });
+
+    // ===== MODAL CUSTOMIZADO BONITO E RESPONSIVO =====
+    function createBeautifulDialog() {
+      let overlay = document.getElementById('beautiful-dialog-overlay');
+      if (overlay) return overlay;
+
+      const html = `
+        <style id="beautiful-dialog-style">
+          @keyframes dialog-pop-in {
+            from {
+              opacity: 0;
+              transform: translateY(22px) scale(0.98);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+
+          #beautiful-dialog-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 30000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            background: rgba(7, 12, 24, 0.72);
+            backdrop-filter: blur(6px);
+          }
+
+          #beautiful-dialog-overlay.visible {
+            display: flex;
+          }
+
+          #beautiful-dialog-card {
+            width: min(560px, calc(100vw - 24px));
+            max-height: calc(100vh - 24px);
+            background: #0f1627;
+            border: 1px solid rgba(137, 160, 255, 0.25);
+            border-radius: 16px;
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            animation: dialog-pop-in 0.22s ease-out;
+          }
+
+          #beautiful-dialog-header {
+            background: linear-gradient(135deg, #2b4ad9 0%, #6a4bc0 100%);
+            color: #f8fbff;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+          }
+
+          #beautiful-dialog-title {
+            margin: 0;
+            font-size: 1.35rem;
+            font-weight: 700;
+          }
+
+          #beautiful-dialog-close {
+            background: transparent;
+            color: #e8eeff;
+            border: none;
+            font-size: 30px;
+            line-height: 1;
+            cursor: pointer;
+            opacity: 0.9;
+            padding: 0;
+            width: 34px;
+            height: 34px;
+          }
+
+          #beautiful-dialog-close:hover {
+            opacity: 1;
+          }
+
+          #beautiful-dialog-body {
+            padding: 22px 20px 14px;
+            color: #e6eeff;
+            font-size: 1.08rem;
+            line-height: 1.6;
+            background: #0f1627;
+            overflow-y: auto;
+          }
+
+          #beautiful-dialog-input-wrap {
+            padding: 0 20px 14px;
+            background: #0f1627;
+            display: none;
+          }
+
+          #beautiful-dialog-input {
+            width: 100%;
+            border: 1px solid rgba(126, 156, 255, 0.38);
+            background: #0b1322;
+            color: #f4f7ff;
+            border-radius: 12px;
+            padding: 12px 14px;
+            font-size: 1.05rem;
+            outline: none;
+          }
+
+          #beautiful-dialog-input:focus {
+            border-color: #8ea7ff;
+            box-shadow: 0 0 0 4px rgba(97, 125, 255, 0.22);
+          }
+
+          #beautiful-dialog-footer {
+            padding: 16px 20px 20px;
+            background: #0f1627;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            border-top: 1px solid rgba(137, 160, 255, 0.2);
+          }
+
+          .beautiful-dialog-btn {
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            padding: 10px 20px;
+            cursor: pointer;
+            min-width: 110px;
+          }
+
+          #beautiful-dialog-cancel {
+            background: #121a2c;
+            color: #dce7ff;
+            border: 1px solid rgba(143, 166, 255, 0.35);
+            display: none;
+          }
+
+          #beautiful-dialog-confirm {
+            background: linear-gradient(135deg, #5176ff 0%, #8057d8 100%);
+            color: #ffffff;
+            box-shadow: 0 10px 22px rgba(76, 110, 255, 0.36);
+          }
+
+          #beautiful-dialog-confirm.danger {
+            background: linear-gradient(135deg, #e45a6a 0%, #b73b53 100%);
+            box-shadow: 0 10px 22px rgba(228, 90, 106, 0.34);
+          }
+
+          @media (max-width: 640px) {
+            #beautiful-dialog-card {
+              width: calc(100vw - 16px);
+              max-height: calc(100vh - 16px);
+            }
+
+            #beautiful-dialog-title {
+              font-size: 1.15rem;
+            }
+
+            #beautiful-dialog-body {
+              font-size: 1rem;
+            }
+
+            .beautiful-dialog-btn {
+              flex: 1;
+              min-width: 96px;
+            }
+          }
+        </style>
+
+        <div id="beautiful-dialog-overlay" aria-hidden="true">
+          <div id="beautiful-dialog-card" role="dialog" aria-modal="true" aria-labelledby="beautiful-dialog-title">
+            <div id="beautiful-dialog-header">
+              <h3 id="beautiful-dialog-title">Aviso</h3>
+              <button type="button" id="beautiful-dialog-close" aria-label="Fechar">×</button>
+            </div>
+            <div id="beautiful-dialog-body"></div>
+            <div id="beautiful-dialog-input-wrap">
+              <input type="text" id="beautiful-dialog-input" autocomplete="off" />
+            </div>
+            <div id="beautiful-dialog-footer">
+              <button type="button" id="beautiful-dialog-cancel" class="beautiful-dialog-btn">Cancelar</button>
+              <button type="button" id="beautiful-dialog-confirm" class="beautiful-dialog-btn">OK</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = html;
+      while (wrapper.firstChild) {
+        document.body.appendChild(wrapper.firstChild);
+      }
+
+      overlay = document.getElementById('beautiful-dialog-overlay');
+      return overlay;
+    }
+
+    function showBeautifulDialog({ title, message, isPrompt = false, defaultValue = '', isDanger = false, confirmText = 'OK', cancelText = null }) {
+      const overlay = createBeautifulDialog();
+      const titleEl = document.getElementById('beautiful-dialog-title');
+      const bodyEl = document.getElementById('beautiful-dialog-body');
+      const inputWrap = document.getElementById('beautiful-dialog-input-wrap');
+      const inputEl = document.getElementById('beautiful-dialog-input');
+      const confirmBtn = document.getElementById('beautiful-dialog-confirm');
+      const cancelBtn = document.getElementById('beautiful-dialog-cancel');
+      const closeBtn = document.getElementById('beautiful-dialog-close');
+
+      if (!overlay || !titleEl || !bodyEl || !inputWrap || !inputEl || !confirmBtn || !cancelBtn || !closeBtn) {
+        return Promise.reject(new Error('Dialog elements unavailable'));
+      }
+
+      titleEl.textContent = title || 'Aviso';
+      bodyEl.textContent = message || '';
+      inputEl.value = String(defaultValue || '');
+
+      inputWrap.style.display = isPrompt ? 'block' : 'none';
+      cancelBtn.style.display = cancelText ? 'inline-block' : 'none';
+      if (cancelText) cancelBtn.textContent = cancelText;
+      confirmBtn.textContent = confirmText || 'OK';
+
+      if (isDanger) {
+        confirmBtn.classList.add('danger');
+      } else {
+        confirmBtn.classList.remove('danger');
+      }
+
+      overlay.classList.add('visible');
+      overlay.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+
+      if (isPrompt) {
+        setTimeout(() => {
+          inputEl.focus();
+          inputEl.select();
+        }, 10);
+      }
+
+      return new Promise((resolve) => {
+        let settled = false;
+
+        const cleanup = () => {
+          if (settled) return;
+          settled = true;
+          overlay.classList.remove('visible');
+          overlay.setAttribute('aria-hidden', 'true');
+          document.body.style.overflow = '';
+
+          confirmBtn.removeEventListener('click', onConfirm);
+          cancelBtn.removeEventListener('click', onCancel);
+          closeBtn.removeEventListener('click', onCancel);
+          overlay.removeEventListener('click', onOverlayClick);
+          document.removeEventListener('keydown', onKeyDown);
+        };
+
+        const finish = (value) => {
+          cleanup();
+          resolve(value);
+        };
+
+        const onConfirm = () => finish(isPrompt ? inputEl.value : true);
+        const onCancel = () => finish(isPrompt ? null : false);
+        const onOverlayClick = (event) => {
+          if (event.target === overlay) onCancel();
+        };
+        const onKeyDown = (event) => {
+          if (event.key === 'Escape') {
+            onCancel();
+            return;
+          }
+          if (isPrompt && event.key === 'Enter') {
+            event.preventDefault();
+            onConfirm();
+          }
+        };
+
+        confirmBtn.addEventListener('click', onConfirm);
+        cancelBtn.addEventListener('click', onCancel);
+        closeBtn.addEventListener('click', onCancel);
+        overlay.addEventListener('click', onOverlayClick);
+        document.addEventListener('keydown', onKeyDown);
+      });
+    }
+
+    // Substituir funções de diálogo
+    async function showAlert(message, title = 'Aviso') {
+      return showBeautifulDialog({ title, message, isPrompt: false });
+    }
+
+    async function showConfirm(message, title = 'Confirmação') {
+      return showBeautifulDialog({ title, message, isPrompt: false, cancelText: 'Cancelar' });
+    }
+
+    async function showPrompt(message, defaultValue = '', title = 'Digite um valor') {
+      return showBeautifulDialog({ title, message, isPrompt: true, defaultValue, confirmText: 'Salvar', cancelText: 'Cancelar' });
+    }
+
+    async function showDangerConfirm(message, title = 'Confirmar exclusão') {
+      return showBeautifulDialog({ title, message, isPrompt: false, cancelText: 'Cancelar', isDanger: true, confirmText: 'Deletar' });
+    }
   </script>
 </body>
 </html>

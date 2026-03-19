@@ -9,8 +9,11 @@
   <title>EJC COP - Plataforma de Gestão e Inscrições</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/css/ejc-home.css">
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
+  <link rel="preload" href="/css/ejc-home.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/css/ejc-home.css"></noscript>
+  <link rel="preload" as="image" href="/img/images/tema.png?w=1280&h=720&fit=inside&format=webp&q=68" imagesrcset="/img/images/tema.png?w=960&h=540&fit=inside&format=webp&q=68 960w, /img/images/tema.png?w=1280&h=720&fit=inside&format=webp&q=68 1280w" imagesizes="100vw" fetchpriority="low">
   <link rel="manifest" href="/manifest.json" />
 </head>
 <body>
@@ -52,7 +55,7 @@
 
   <!-- Main Container -->
   <main class="main-container">
-    <section class="hero-section">
+    <section class="hero-section scroll-reveal reveal-up" data-reveal>
       <div class="hero-grid">
         <div class="hero-copy">
           <div class="hero-badge">
@@ -109,7 +112,28 @@
       </div>
     </section>
 
-    <section class="cta-cards">
+    <section class="studio-reel scroll-reveal reveal-up" data-reveal>
+      <div class="studio-reel-head">
+        <p class="studio-reel-kicker">Tema Visual do Encontro</p>
+        <h2 class="studio-reel-title">Atmosfera do EJC em movimento</h2>
+      </div>
+      <div class="studio-reel-frame" data-video-parallax>
+        <video
+          class="studio-reel-video"
+          autoplay
+          loop
+          muted
+          playsinline
+          preload="none"
+          poster="/img/images/tema.png?w=1280&h=720&fit=inside&format=webp&q=68"
+          aria-label="Video tema do EJC COP"
+        >
+          <source src="/images/video%20tema.mp4" type="video/mp4" />
+        </video>
+      </div>
+    </section>
+
+    <section class="cta-cards scroll-reveal reveal-stagger" data-reveal>
       <a href="/inscricao" class="cta-card cta-primary">
         <div class="cta-header">
           <div class="cta-icon">
@@ -149,7 +173,7 @@
       </a>
     </section>
 
-    <section class="features-section">
+    <section class="features-section scroll-reveal reveal-up" data-reveal>
       <div class="feature-item">
         <div class="feature-icon">
           <span class="icon" aria-hidden="true">
@@ -177,6 +201,53 @@
         card.style.setProperty('--my', `${y}%`);
       });
     });
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const revealElements = document.querySelectorAll('[data-reveal]');
+
+    if (!prefersReducedMotion && revealElements.length) {
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        });
+      }, {
+        rootMargin: '0px 0px -12% 0px',
+        threshold: 0.16,
+      });
+
+      revealElements.forEach((el) => revealObserver.observe(el));
+    } else {
+      revealElements.forEach((el) => el.classList.add('is-visible'));
+    }
+
+    const videoFrame = document.querySelector('[data-video-parallax]');
+    if (videoFrame && !prefersReducedMotion) {
+      let ticking = false;
+      const updateVideoShift = () => {
+        const rect = videoFrame.getBoundingClientRect();
+        const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+        const travel = (viewportHeight - rect.top) / (viewportHeight + rect.height);
+        const progress = Math.max(0, Math.min(1, travel));
+        const shiftY = (progress - 0.5) * 22;
+        const scale = 1.03 + progress * 0.04;
+        videoFrame.style.setProperty('--video-shift-y', `${shiftY.toFixed(2)}px`);
+        videoFrame.style.setProperty('--video-scale', scale.toFixed(3));
+        ticking = false;
+      };
+
+      const requestUpdate = () => {
+        if (ticking) return;
+        ticking = true;
+        window.requestAnimationFrame(updateVideoShift);
+      };
+
+      requestUpdate();
+      window.addEventListener('scroll', requestUpdate, { passive: true });
+      window.addEventListener('resize', requestUpdate);
+    }
   </script>
+  <script defer src="/js/page-transitions.js"></script>
 </body>
 </html>
