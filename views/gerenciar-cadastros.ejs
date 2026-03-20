@@ -34,8 +34,24 @@
   <% const encontreirosAprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
   <% const encontreirosReprovados = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
   <% const encontreirosPendentes = (encontreirosIndividuais || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
+  <% const tiosAprovados = (tios || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
+  <% const tiosReprovados = (tios || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
+  <% const tiosPendentes = (tios || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
   <% const totalCadastrosVisiveis = (encontristas || []).length + (encontreirosIndividuais || []).length + (tios || []).length; %>
   <% const totalPendencias = (encontristasPendentes || []).length + (encontreirosPendentes || []).length; %>
+  <% const totalAprovadosGeral = (encontristasAprovados || []).length + (encontreirosAprovados || []).length + (tiosAprovados || []).length; %>
+  <% const totalReprovadosGeral = (encontristasReprovados || []).length + (encontreirosReprovados || []).length + (tiosReprovados || []).length; %>
+  <% const totalPendenciasGeral = (encontristasPendentes || []).length + (encontreirosPendentes || []).length + (tiosPendentes || []).length; %>
+  <% const taxaAprovacaoGeral = totalCadastrosVisiveis ? Math.round((totalAprovadosGeral / totalCadastrosVisiveis) * 100) : 0; %>
+  <% const taxaPendenciaGeral = totalCadastrosVisiveis ? Math.round((totalPendenciasGeral / totalCadastrosVisiveis) * 100) : 0; %>
+  <% const taxaReprovacaoGeral = totalCadastrosVisiveis ? Math.round((totalReprovadosGeral / totalCadastrosVisiveis) * 100) : 0; %>
+  <% const atividadeRecente = [
+    ...((encontristas || []).map(function(item){ return Object.assign({}, item, { __tipoPainel: 'Encontrista' }); })),
+    ...((encontreirosIndividuais || []).map(function(item){ return Object.assign({}, item, { __tipoPainel: 'Encontreiro' }); })),
+    ...((tios || []).map(function(item){ return Object.assign({}, item, { __tipoPainel: 'Tio' }); }))
+  ].sort(function(a, b){
+    return new Date(b.dataCadastro || 0).getTime() - new Date(a.dataCadastro || 0).getTime();
+  }).slice(0, 8); %>
   <% const pendenciasCriticasMenu = totalPendencias >= 12; %>
   <% const pendenciasAtencaoMenu = !pendenciasCriticasMenu && totalPendencias >= 6; %>
   <% const pendenciasClasseMenu = pendenciasCriticasMenu ? 'is-critical' : (pendenciasAtencaoMenu ? 'is-attention' : 'is-normal'); %>
@@ -56,6 +72,7 @@
       </div>
 
       <nav class="side-menu">
+          <button type="button" class="menu-link" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
           <button type="button" class="menu-link" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
           <button type="button" class="menu-link" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
           <button type="button" class="menu-link" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
@@ -113,6 +130,14 @@
         </header>
 
         <section class="manager-module-grid" aria-label="Atalhos da gestão">
+          <button type="button" class="manager-module-card" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')">
+            <span class="manager-module-icon"><i class="fas fa-chart-line"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Principal</span>
+              <span class="manager-module-subtitle">Visão executiva e operação em tempo real</span>
+            </span>
+            <span class="manager-module-count"><%= totalCadastrosVisiveis %></span>
+          </button>
           <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')">
             <span class="manager-module-icon"><i class="fas fa-user"></i></span>
             <span class="manager-module-copy">
@@ -166,7 +191,12 @@
         <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="encontristas-tab" data-bs-toggle="tab" data-bs-target="#encontristas" data-required-permission="cadastros.visualizar" type="button">
+            <button class="nav-link active" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" data-required-permission="painel.visualizar" type="button">
+              <i class="fas fa-chart-line me-1"></i>Principal
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="encontristas-tab" data-bs-toggle="tab" data-bs-target="#encontristas" data-required-permission="cadastros.visualizar" type="button">
               <i class="fas fa-user me-1"></i>Encontristas (<%= encontristas.length %>)
             </button>
           </li>
@@ -198,8 +228,98 @@
         </ul>
 
         <div class="tab-content" id="cadastroTabsContent">
+          <!-- TAB: PRINCIPAL -->
+          <div class="tab-pane fade show active" id="principal" data-required-permission="painel.visualizar" role="tabpanel">
+            <div class="tab-workspace-head tab-workspace-head-principal">
+              <div>
+                <p class="tab-kicker">Painel Executivo</p>
+                <h5><i class="fas fa-gauge-high me-2"></i>Dashboard Premium do Sistema</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Total operacional: <%= totalCadastrosVisiveis %></span>
+                <span class="tab-chip tab-chip-ok">Aprovação: <%= taxaAprovacaoGeral %>%</span>
+                <span class="tab-chip tab-chip-pending">Pendências: <%= totalPendenciasGeral %></span>
+              </div>
+            </div>
+
+            <div class="principal-kpi-grid">
+              <article class="principal-kpi-card principal-kpi-card-primary">
+                <span class="principal-kpi-label">Cadastros Monitorados</span>
+                <strong class="principal-kpi-value"><%= totalCadastrosVisiveis %></strong>
+                <small class="principal-kpi-meta">Encontristas, encontreiros e tios em uma única visão</small>
+              </article>
+              <article class="principal-kpi-card principal-kpi-card-success">
+                <span class="principal-kpi-label">Aprovados</span>
+                <strong class="principal-kpi-value"><%= totalAprovadosGeral %></strong>
+                <small class="principal-kpi-meta"><%= taxaAprovacaoGeral %>% do volume total</small>
+              </article>
+              <article class="principal-kpi-card principal-kpi-card-warning">
+                <span class="principal-kpi-label">Pendentes</span>
+                <strong class="principal-kpi-value"><%= totalPendenciasGeral %></strong>
+                <small class="principal-kpi-meta"><%= taxaPendenciaGeral %>% aguardando decisão</small>
+              </article>
+              <article class="principal-kpi-card principal-kpi-card-danger">
+                <span class="principal-kpi-label">Reprovados</span>
+                <strong class="principal-kpi-value"><%= totalReprovadosGeral %></strong>
+                <small class="principal-kpi-meta"><%= taxaReprovacaoGeral %>% fora do fluxo ativo</small>
+              </article>
+            </div>
+
+            <div class="principal-ops-grid">
+              <section class="principal-panel-card">
+                <div class="principal-panel-head">
+                  <h6><i class="fas fa-filter-circle-dollar me-2"></i>Funil Operacional</h6>
+                  <span>Atualizado em tempo real</span>
+                </div>
+                <div class="principal-funnel-list">
+                  <div class="principal-funnel-item">
+                    <div class="principal-funnel-row"><strong>Aprovados</strong><span><%= totalAprovadosGeral %> registro(s)</span></div>
+                    <div class="principal-funnel-bar"><span style="width: <%= taxaAprovacaoGeral %>%;"></span></div>
+                  </div>
+                  <div class="principal-funnel-item">
+                    <div class="principal-funnel-row"><strong>Pendentes</strong><span><%= totalPendenciasGeral %> registro(s)</span></div>
+                    <div class="principal-funnel-bar"><span class="is-pending" style="width: <%= taxaPendenciaGeral %>%;"></span></div>
+                  </div>
+                  <div class="principal-funnel-item">
+                    <div class="principal-funnel-row"><strong>Reprovados</strong><span><%= totalReprovadosGeral %> registro(s)</span></div>
+                    <div class="principal-funnel-bar"><span class="is-rejected" style="width: <%= taxaReprovacaoGeral %>%;"></span></div>
+                  </div>
+                </div>
+
+                <div class="principal-quick-actions">
+                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('aprovacoes-tab')"><i class="fas fa-check-circle me-1"></i>Ir para Aprovações</button>
+                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days me-1"></i>Ir para Encontros</button>
+                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield me-1"></i>Ir para Admins</button>
+                </div>
+              </section>
+
+              <section class="principal-panel-card">
+                <div class="principal-panel-head">
+                  <h6><i class="fas fa-bolt me-2"></i>Atividade Recente</h6>
+                  <span>Últimos cadastros</span>
+                </div>
+                <div class="principal-timeline">
+                  <% if (!atividadeRecente.length) { %>
+                    <p class="principal-timeline-empty">Sem movimentações recentes no momento.</p>
+                  <% } else { %>
+                    <% atividadeRecente.forEach(function(item){ %>
+                      <article class="principal-timeline-item">
+                        <div class="principal-timeline-avatar"><i class="fas fa-user"></i></div>
+                        <div class="principal-timeline-copy">
+                          <strong><%= item.nomeCompleto || 'Cadastro sem nome' %></strong>
+                          <span><%= item.__tipoPainel %> • <%= item.dataCadastro ? new Date(item.dataCadastro).toLocaleDateString('pt-BR') : 'Sem data' %></span>
+                        </div>
+                        <span class="principal-timeline-status <%= statusCadastroGrupo(item) === 'aprovado' ? 'is-ok' : (statusCadastroGrupo(item) === 'reprovado' ? 'is-bad' : 'is-pending') %>"><%= statusCadastroGrupo(item) %></span>
+                      </article>
+                    <% }); %>
+                  <% } %>
+                </div>
+              </section>
+            </div>
+          </div>
+
           <!-- TAB: ENCONTRISTAS -->
-          <div class="tab-pane fade show active" id="encontristas" data-required-permission="cadastros.visualizar" role="tabpanel">
+          <div class="tab-pane fade" id="encontristas" data-required-permission="cadastros.visualizar" role="tabpanel">
             <div class="tab-workspace-head">
               <div>
                 <p class="tab-kicker">Area Encontristas</p>
@@ -2234,14 +2354,12 @@
     }
 
     async function appAlert(message, tone = 'primary', title = 'Aviso') {
-      console.log('[appAlert] chamado com:', { message, tone, title });
       if (useNativeDialogs) {
-        console.log('[appAlert] usando native alert');
         window.alert(`${title}\n\n${message}`);
         return;
       }
       try {
-        await showAppPopup({ title, message, confirmText: 'Entendi', tone });
+        await showBeautifulDialog({ title, message, confirmText: 'Entendi', isDanger: tone === 'danger' });
       } catch (e) {
         console.error('[appAlert] erro ao mostrar popup:', e);
         useNativeDialogs = true;
@@ -2250,18 +2368,15 @@
     }
 
     async function appConfirm(message, title = 'Confirmacao') {
-      console.log('[appConfirm] chamado com:', { message, title });
       if (useNativeDialogs) {
-        console.log('[appConfirm] usando native confirm');
         return window.confirm(`${title}\n\n${message}`);
       }
       try {
-        return await showAppPopup({
+        return await showBeautifulDialog({
           title,
           message,
           confirmText: 'Confirmar',
           cancelText: 'Cancelar',
-          tone: 'warning',
         });
       } catch (e) {
         console.error('[appConfirm] erro ao mostrar popup:', e);
@@ -3564,12 +3679,16 @@
 
           #beautiful-dialog-overlay {
             position: fixed;
-            inset: 0;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
             z-index: 30000;
             display: none;
             align-items: center;
             justify-content: center;
             padding: 12px;
+            box-sizing: border-box;
             background: rgba(7, 12, 24, 0.72);
             backdrop-filter: blur(6px);
           }
@@ -3581,6 +3700,7 @@
           #beautiful-dialog-card {
             width: min(560px, calc(100vw - 24px));
             max-height: calc(100vh - 24px);
+            margin: auto;
             background: #0f1627;
             border: 1px solid rgba(137, 160, 255, 0.25);
             border-radius: 16px;
@@ -3735,7 +3855,7 @@
       const wrapper = document.createElement('div');
       wrapper.innerHTML = html;
       while (wrapper.firstChild) {
-        document.body.appendChild(wrapper.firstChild);
+        document.documentElement.appendChild(wrapper.firstChild);
       }
 
       overlay = document.getElementById('beautiful-dialog-overlay');
@@ -3773,6 +3893,7 @@
 
       overlay.classList.add('visible');
       overlay.setAttribute('aria-hidden', 'false');
+      const prevBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
 
       if (isPrompt) {
@@ -3790,7 +3911,7 @@
           settled = true;
           overlay.classList.remove('visible');
           overlay.setAttribute('aria-hidden', 'true');
-          document.body.style.overflow = '';
+          document.body.style.overflow = prevBodyOverflow;
 
           confirmBtn.removeEventListener('click', onConfirm);
           cancelBtn.removeEventListener('click', onCancel);

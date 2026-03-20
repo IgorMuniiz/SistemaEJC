@@ -219,6 +219,78 @@ body {
   gap: var(--space-3);
 }
 
+/* ----------------------------------------------------------------------------
+   UX PREMIUM LAYER
+   ---------------------------------------------------------------------------- */
+:root {
+  --ux-ring: rgba(138, 215, 204, 0.84);
+  --ux-ring-shadow: 0 0 0 1px rgba(138, 215, 204, 0.5), 0 0 0 6px rgba(63, 143, 183, 0.22);
+}
+
+::selection {
+  background: rgba(138, 215, 204, 0.35);
+  color: #ffffff;
+}
+
+a,
+button,
+.btn,
+input,
+select,
+textarea,
+[role='button'] {
+  transition: box-shadow var(--tr-fast), border-color var(--tr-fast), transform var(--tr-fast), background-color var(--tr-fast);
+}
+
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible {
+  outline: none;
+  box-shadow: var(--ux-ring-shadow) !important;
+  border-color: var(--ux-ring) !important;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(138, 215, 204, 0.74) rgba(255, 255, 255, 0.12);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(138, 215, 204, 0.9), rgba(213, 159, 102, 0.85));
+  border-radius: 999px;
+  border: 2px solid rgba(8, 15, 31, 0.6);
+}
+
 .nav-logo-img {
   width: 34px;
   height: 34px;

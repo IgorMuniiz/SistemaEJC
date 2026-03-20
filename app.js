@@ -1405,6 +1405,15 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
     let pendingLeftEntry = null;
 
     entries.forEach((entry) => {
+      // Garante que tio casal comece sempre em col=0 para ficar lado a lado com o parceiro.
+      // Se o primeiro do par chegaria em col=1 (numero impar de entradas anteriores),
+      // e o entry atual NAO e o parceiro esperado do pendingLeftEntry, força nova linha.
+      if (col === 1 && isTiosCasal(entry) && !(pendingLeftEntry && isCasalPair(pendingLeftEntry, entry))) {
+        y += rowHeight + rowGap;
+        col = 0;
+        pendingLeftEntry = null;
+      }
+
       if (y + rowHeight > bottomLimit) {
         doc.addPage();
         drawPageTitle();

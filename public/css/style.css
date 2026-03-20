@@ -1341,3 +1341,96 @@ footer {
     font-size: 16px !important; /* Previne zoom no iOS */
   }
 }
+
+/* ----------------------------------------------------------------------------
+   UX PREMIUM LAYER
+   ---------------------------------------------------------------------------- */
+:root {
+  --ux-ring: rgba(125, 211, 252, 0.72);
+  --ux-ring-shadow: 0 0 0 1px rgba(125, 211, 252, 0.45), 0 0 0 6px rgba(56, 189, 248, 0.2);
+}
+
+::selection {
+  background: rgba(78, 142, 255, 0.35);
+  color: #ffffff;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a,
+button,
+.btn,
+input,
+select,
+textarea,
+[role='button'] {
+  transition: box-shadow var(--transition-fast) ease, border-color var(--transition-fast) ease, transform var(--transition-fast) ease, background-color var(--transition-fast) ease;
+}
+
+a:focus-visible,
+button:focus-visible,
+.btn:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role='button']:focus-visible {
+  outline: none;
+  box-shadow: var(--ux-ring-shadow) !important;
+  border-color: var(--ux-ring) !important;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn:disabled,
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.form-control,
+.form-select,
+textarea,
+input[type='text'],
+input[type='email'],
+input[type='tel'],
+input[type='number'],
+input[type='date'] {
+  border-radius: 12px;
+}
+
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+  color: rgba(202, 216, 247, 0.62);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(123, 103, 255, 0.7) rgba(255, 255, 255, 0.12);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(78, 142, 255, 0.9), rgba(123, 103, 255, 0.85));
+  border-radius: 999px;
+  border: 2px solid rgba(8, 15, 31, 0.6);
+}

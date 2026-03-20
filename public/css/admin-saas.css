@@ -1,4 +1,4 @@
-/* ============================================================================
+﻿/* ============================================================================
    EJC ADMIN PANEL - PROFESSIONAL SAAS DESIGN
    Design System v1.0
    ============================================================================ */
@@ -1040,7 +1040,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
    CONSOLIDATED FROM admin-dashboard-page.css
    Scoped to body.admin-panel.admin-dashboard-page
    ============================================================================ */
-﻿/* ── PAGE TOKENS ─────────────────────────────────────────── */
+´╗┐/* ÔöÇÔöÇ PAGE TOKENS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page {
       --accent: #6366f1;
       --accent-light: #818cf8;
@@ -1068,7 +1068,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       --radius-pill: 999px;
       --transition: 180ms cubic-bezier(.4,0,.2,1);
     }
-    /* ── RESET & BASE ───────────────────────────────────────── */
+    /* ÔöÇÔöÇ RESET & BASE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page *, body.admin-panel.admin-dashboard-page *::before, body.admin-panel.admin-dashboard-page *::after { box-sizing: border-box; }
     body.admin-panel.admin-dashboard-page {
       background: var(--surface-0);
@@ -1077,14 +1077,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       min-height: 100vh;
       overflow-x: hidden;
     }
-    /* ── AMBIENT GLOW ───────────────────────────────────────── */
+    /* ÔöÇÔöÇ AMBIENT GLOW ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .db-bg {
       position: fixed; inset: 0; pointer-events: none; z-index: 0;
       background:
         radial-gradient(ellipse 70% 45% at 15% 20%, rgba(99,102,241,.12) 0%, transparent 60%),
         radial-gradient(ellipse 55% 40% at 85% 70%, rgba(168,85,247,.08) 0%, transparent 60%);
     }
-    /* ── TOPBAR ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ TOPBAR ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .topbar {
       position: sticky; top: 0; z-index: 100;
       background: rgba(13,13,20,.92);
@@ -1140,13 +1140,13 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: rgba(239,68,68,.22); color: #fecaca;
       border-color: var(--red); box-shadow: 0 0 14px rgba(239,68,68,.2);
     }
-    /* ── LAYOUT WRAPPER ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ LAYOUT WRAPPER ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .db-wrap {
       position: relative; z-index: 1;
       max-width: 1680px; margin: 0 auto;
       padding: 32px 28px 64px;
     }
-    /* ── TOAST / ALERTS ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ TOAST / ALERTS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .db-toast-area { margin-bottom: 20px; }
     body.admin-panel.admin-dashboard-page .db-toast {
       display: flex; align-items: flex-start; gap: 13px;
@@ -1165,7 +1165,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: 1rem;
     }
     body.admin-panel.admin-dashboard-page .db-toast-close:hover { opacity: 1; }
-    /* ── PAGE HEADER ────────────────────────────────────────── */
+    /* ÔöÇÔöÇ PAGE HEADER ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .db-header {
       display: flex; align-items: flex-start; justify-content: space-between;
       flex-wrap: wrap; gap: 20px; margin-bottom: 32px;
@@ -1211,7 +1211,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       0%, 100% { opacity: 1; transform: scale(1); }
       50%       { opacity: .5; transform: scale(.7); }
     }
-    /* ── STATS GRID ─────────────────────────────────────────── */
+    /* ÔöÇÔöÇ STATS GRID ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .stats-row {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -1246,7 +1246,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-dashboard-page .stat-tile.green-tile .stat-tile-num { color: var(--green); }
     body.admin-panel.admin-dashboard-page .stat-tile.red-tile   .stat-tile-num { color: var(--red); }
     body.admin-panel.admin-dashboard-page .stat-tile.blue-tile  .stat-tile-num { color: var(--accent-light); }
-    /* ── SECTION PANEL ──────────────────────────────────────── */
+    /* ÔöÇÔöÇ SECTION PANEL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .section-panel {
       background: var(--surface-1);
       border: 1px solid var(--border-sub);
@@ -1348,7 +1348,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       display: block; width: 1px; min-height: 28px; align-self: center;
       background: var(--border-main); flex-shrink: 0;
     }
-    /* ── KANBAN COLUMNS ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ KANBAN COLUMNS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .kanban-board {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -1380,7 +1380,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-radius: var(--radius-pill); background: var(--surface-3);
       color: var(--text-3); border: 1px solid var(--border-sub);
     }
-    /* ── PERSON CARD ────────────────────────────────────────── */
+    /* ÔöÇÔöÇ PERSON CARD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .pcard {
       background: var(--surface-2);
       border: 1px solid var(--border-sub);
@@ -1486,7 +1486,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: rgba(239,68,68,.22); box-shadow: 0 4px 14px rgba(239,68,68,.2);
       transform: translateY(-1px);
     }
-    /* ── EMPTY STATE ────────────────────────────────────────── */
+    /* ÔöÇÔöÇ EMPTY STATE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .empty-col {
       text-align: center; padding: 40px 12px;
     }
@@ -1497,7 +1497,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       color: var(--text-3); font-size: 1.2rem;
     }
     body.admin-panel.admin-dashboard-page .empty-col-text { font-size: .8rem; color: var(--text-3); }
-    /* ── MODAL OVERRIDE ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ MODAL OVERRIDE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-dashboard-page .modal-content {
       background: var(--surface-2) !important;
       border: 1px solid var(--border-main) !important;
@@ -1565,7 +1565,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: #020617;
     }
     body.admin-panel.admin-dashboard-page .btn-close { filter: invert(1); opacity: .6; }
-    /* ── RESPONSIVE ─────────────────────────────────────────── */
+    /* ÔöÇÔöÇ RESPONSIVE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     @media (max-width: 1100px) {
       body.admin-panel.admin-dashboard-page .kanban-board { grid-template-columns: 1fr 1fr; }
       body.admin-panel.admin-dashboard-page .kanban-col:nth-child(2) { border-right: none; }
@@ -1596,7 +1596,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
    CONSOLIDATED FROM gerenciar-cadastros-page.css
    Scoped to body.admin-panel.admin-manager-page
    ============================================================================ */
-﻿/* ── TOKENS ─────────────────────────────────────────────── */
+´╗┐/* ÔöÇÔöÇ TOKENS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page {
       --s0: #0d0d14;
       --s1: #13131c;
@@ -1626,7 +1626,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       --r: 12px;
       --rt: 200ms cubic-bezier(.4,0,.2,1);
     }
-    /* ── BASE ───────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ BASE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page *, body.admin-panel.admin-manager-page *::before, body.admin-panel.admin-manager-page *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body.admin-panel.admin-manager-page {
       font-family: 'Manrope', system-ui, sans-serif;
@@ -1644,14 +1644,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
         radial-gradient(ellipse 50% 35% at 80% 70%, rgba(168,85,247,.07) 0%,transparent 55%);
     }
 
-    /* ── LAYOUT ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ LAYOUT ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .admin-shell {
       display: flex;
       min-height: 100vh;
       position: relative; z-index: 1;
     }
 
-    /* ── SIDEBAR ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ SIDEBAR ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .sidebar {
       width: var(--sidebar-w);
       background: var(--s1);
@@ -1727,7 +1727,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-manager-page .sidebar:hover .sidebar-note { opacity: 1; }
 
-    /* ── MAIN PANEL ─────────────────────────────────────────── */
+    /* ÔöÇÔöÇ MAIN PANEL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .main-panel { flex: 1; padding: 24px; min-width: 0; }
 
     body.admin-panel.admin-manager-page .topbar {
@@ -1752,14 +1752,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: .82rem; font-weight: 700; white-space: nowrap;
     }
 
-    /* ── CONTENT CARD ────────────────────────────────────────── */
+    /* ÔöÇÔöÇ CONTENT CARD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .content-card {
       background: var(--s1); border: 1px solid var(--border-sub);
       border-radius: 16px; padding: 20px;
       box-shadow: 0 8px 32px rgba(0,0,0,.25);
     }
 
-    /* ── TABS ────────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ TABS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .nav-tabs {
       border-bottom: 1px solid var(--border-sub) !important;
       gap: 4px; flex-wrap: wrap;
@@ -1777,7 +1777,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 2px 12px var(--accent-glow);
     }
 
-    /* ── TABLES ──────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ TABLES ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .table-wrap {
       margin-top: 14px;
       border: 1px solid rgba(203, 213, 225, 0.2);
@@ -1860,7 +1860,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 2px 8px rgba(2, 6, 23, 0.28);
     }
 
-    /* ── STATUS BADGES ───────────────────────────────────────── */
+    /* ÔöÇÔöÇ STATUS BADGES ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .status-badge {
       padding: 5px 11px; border-radius: 999px; font-weight: 700; font-size: .74rem;
     }
@@ -1868,7 +1868,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page .status-warn { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
     body.admin-panel.admin-manager-page .status-red { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
 
-    /* ── ACTION BUTTONS ──────────────────────────────────────── */
+    /* ÔöÇÔöÇ ACTION BUTTONS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .btn-edit {
       background: rgba(99,102,241,.18); color: var(--accent-light);
       border: 1px solid rgba(99,102,241,.3); border-radius: 9px;
@@ -1901,7 +1901,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-manager-page .btn-reject:hover { background: var(--amber); color: #0a0a0f; border-color: var(--amber); }
 
-    /* ── FORM CARDS / INPUTS ─────────────────────────────────── */
+    /* ÔöÇÔöÇ FORM CARDS / INPUTS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .admin-form-card {
       border: 1px solid var(--border-main); background: var(--s2);
       border-radius: var(--r); padding: 18px; margin-bottom: 16px;
@@ -2099,7 +2099,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       --bs-gutter-y: 1.1rem;
     }
 
-    /* ── PERMISSION PILLS ────────────────────────────────────── */
+    /* ÔöÇÔöÇ PERMISSION PILLS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .admin-perm-pill-group {
       display: flex;
       flex-wrap: wrap;
@@ -2257,7 +2257,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-color: var(--accent);
     }
 
-    /* ── MODAL OVERRIDES ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ MODAL OVERRIDES ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .modal-content {
       background: var(--s2) !important; border: 1px solid var(--border-main) !important;
       border-radius: 16px !important;
@@ -2336,7 +2336,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       object-fit: cover; border: 2px solid var(--border-main);
     }
 
-    /* ── MISC ────────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ MISC ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-manager-page .empty-state { text-align: center; color: var(--t3); padding: 20px; font-weight: 600; }
 
     body.admin-panel.admin-manager-page .export-group-actions {
@@ -3663,7 +3663,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       }
     }
 
-    /* ── MODAL EDITAR ADMIN (fixed overlay, mesmo padrão do editor principal) ── */
+    /* ÔöÇÔöÇ MODAL EDITAR ADMIN (fixed overlay, mesmo padr├úo do editor principal) ÔöÇÔöÇ */
     body.admin-panel.admin-manager-page #modalEdicaoAdmin {
       position: fixed !important;
       inset: 0 !important;
@@ -4274,7 +4274,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
    CONSOLIDATED FROM admin-encontro-ejc-page.css
    Scoped to body.admin-panel.admin-encontro-page
    ============================================================================ */
-﻿/* ── TOKENS ───────────────────────────────────────────── */
+´╗┐/* ÔöÇÔöÇ TOKENS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page {
       --s0: #0d0d14; --s1: #13131c; --s2: #1b1b28; --s3: #232334; --s4: #2c2c42;
       --border-sub: rgba(255,255,255,.06);
@@ -4289,7 +4289,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       --r: 12px;
       --rt: 200ms cubic-bezier(.4,0,.2,1);
     }
-    /* ── BASE ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ BASE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page *, body.admin-panel.admin-encontro-page *::before, body.admin-panel.admin-encontro-page *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body.admin-panel.admin-encontro-page {
       font-family: 'Manrope', system-ui, sans-serif;
@@ -4302,14 +4302,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
         radial-gradient(ellipse 60% 40% at 10% 10%, rgba(99,102,241,.1) 0%,transparent 55%),
         radial-gradient(ellipse 50% 35% at 85% 75%, rgba(168,85,247,.07) 0%,transparent 55%);
     }
-    /* ── LAYOUT ────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ LAYOUT ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .page-shell {
       display: grid;
       grid-template-columns: 260px minmax(0,1fr);
       min-height: 100vh;
       position: relative; z-index: 1;
     }
-    /* ── SIDEBAR ───────────────────────────────────────────── */
+    /* ÔöÇÔöÇ SIDEBAR ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .sidebar {
       background: var(--s1);
       border-right: 1px solid var(--border-sub);
@@ -4352,7 +4352,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: var(--s4) !important; color: var(--t1) !important;
       border-color: var(--border-hi) !important;
     }
-    /* ── CONTENT AREA ──────────────────────────────────────── */
+    /* ÔöÇÔöÇ CONTENT AREA ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .content-area { padding: 28px; }
     body.admin-panel.admin-encontro-page .topbar {
       display: flex; justify-content: space-between; align-items: center;
@@ -4372,7 +4372,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: .9rem;
       font-weight: 500;
     }
-    /* ── PANELS ────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ PANELS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .panel {
       display: none;
       opacity: 0;
@@ -4406,7 +4406,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       from { opacity: 0; transform: translateY(5px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    /* ── SURFACE CARDS ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ SURFACE CARDS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .surface {
       background: var(--s1); border: 1px solid var(--border-sub);
       border-radius: 16px; box-shadow: 0 8px 28px rgba(0,0,0,.28);
@@ -4428,7 +4428,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .surface.link-surface-wide .surface-head {
       padding: 12px 16px;
     }
-    /* ── ENTITY (Círculo / Equipe) CARD ────────────────────── */
+    /* ÔöÇÔöÇ ENTITY (C├¡rculo / Equipe) CARD ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .entity-card {
       border: 1px solid rgba(203, 213, 225, 0.22);
       border-radius: 13px;
@@ -4521,7 +4521,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .entity-card .p-3 {
       padding: 12px 12px 13px !important;
     }
-    /* ── TABLE ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ TABLE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .table-wrap {
       overflow: auto;
       border: 1px solid rgba(203, 213, 225, 0.22);
@@ -4587,7 +4587,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border: 2px solid rgba(191, 219, 254, 0.4);
       box-shadow: 0 2px 8px rgba(2, 6, 23, 0.28);
     }
-    /* ── FORMS / INPUTS ────────────────────────────────────── */
+    /* ÔöÇÔöÇ FORMS / INPUTS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .form-control, body.admin-panel.admin-encontro-page .form-select {
       background: rgba(15, 23, 42, 0.58) !important;
       color: var(--t1) !important;
@@ -4633,7 +4633,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       text-transform: uppercase;
       margin-bottom: 8px;
     }
-    /* ── MULTI-SELECT PANEL ────────────────────────────────── */
+    /* ÔöÇÔöÇ MULTI-SELECT PANEL ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .multi-select-panel {
       border: 1px solid rgba(203, 213, 225, 0.32);
       border-radius: var(--r);
@@ -4721,7 +4721,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       color: var(--t3); font-size: .8rem; pointer-events: none;
     }
     body.admin-panel.admin-encontro-page .search-input-shell .multi-filter-input { padding-left: 30px; min-height: 36px; border-radius: 9px !important; font-size: .86rem; }
-    /* ── SMALL BUTTONS ─────────────────────────────────────── */
+    /* ÔöÇÔöÇ SMALL BUTTONS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .btn-clear-mini {
       min-height: 34px; border-radius: 8px; padding: 0 9px;
       font-size: .76rem; font-weight: 600;
@@ -4730,7 +4730,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page .btn-clear-mini:hover { color: var(--t1) !important; border-color: var(--border-hi) !important; background: var(--s4) !important; }
     body.admin-panel.admin-encontro-page .link-action-btn { min-height: 40px; font-weight: 600; font-size: .82rem; border-radius: 8px; padding: 0 11px; white-space: nowrap; }
-    /* ── CREATE FORM WRAP ──────────────────────────────────── */
+    /* ÔöÇÔöÇ CREATE FORM WRAP ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .create-form-wrap {
       border: 1px solid rgba(203, 213, 225, 0.28);
       border-radius: var(--r);
@@ -4834,7 +4834,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.34);
       transform: translateY(-1px);
     }
-    /* ── PILLS ─────────────────────────────────────────────── */
+    /* ÔöÇÔöÇ PILLS ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .muted { color: var(--t3); font-size: .88rem; }
     body.admin-panel.admin-encontro-page .pill {
       display: inline-block; border-radius: 999px;
@@ -4846,7 +4846,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .pill.encontreiro { background: var(--amber-dim);  color: var(--amber);         border: 1px solid var(--amber-border); }
     body.admin-panel.admin-encontro-page .pill.moita { background: rgba(20,184,166,.13); color: #2dd4bf;              border: 1px solid rgba(20,184,166,.25); }
     body.admin-panel.admin-encontro-page .pill.tios { background: var(--red-dim);       color: var(--red);           border: 1px solid var(--red-border); }
-    /* ── BOOTSTRAP OVERRIDES ───────────────────────────────── */
+    /* ÔöÇÔöÇ BOOTSTRAP OVERRIDES ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page .btn-primary {
       background: linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%) !important;
       border-color: rgba(147, 197, 253, 0.42) !important;
@@ -4866,11 +4866,11 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .btn-outline-danger:hover { background: var(--red-dim) !important; border-color: var(--red) !important; }
     body.admin-panel.admin-encontro-page .btn-danger-soft { border: 1px solid var(--red-border); background: var(--red-dim); color: var(--red); border-radius: 9px; }
     body.admin-panel.admin-encontro-page .btn-danger-soft:hover { background: var(--red); color: #fff; }
-    /* ── SCROLLBAR ─────────────────────────────────────────── */
+    /* ÔöÇÔöÇ SCROLLBAR ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     body.admin-panel.admin-encontro-page ::-webkit-scrollbar { width: 6px; height: 6px; }
     body.admin-panel.admin-encontro-page ::-webkit-scrollbar-track { background: var(--s1); }
     body.admin-panel.admin-encontro-page ::-webkit-scrollbar-thumb { background: var(--s4); border-radius: 99px; }
-    /* ── RESPONSIVE ────────────────────────────────────────── */
+    /* ÔöÇÔöÇ RESPONSIVE ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ */
     @media (max-width: 992px) {
       body.admin-panel.admin-encontro-page .page-shell { grid-template-columns: 1fr; }
       body.admin-panel.admin-encontro-page .sidebar { position: relative; height: auto; }
@@ -5790,4 +5790,231 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
         justify-content: flex-start;
       }
     }
+
+/* ----------------------------------------------------------------------------
+   ADMIN MANAGER - TAB PRINCIPAL (DASHBOARD PREMIUM)
+   ---------------------------------------------------------------------------- */
+body.admin-panel.admin-manager-page.admin-manager-revamp .tab-workspace-head-principal {
+  margin-bottom: 16px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.76), rgba(15, 23, 42, 0.42));
+  padding: 14px;
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.26);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card-primary { border-color: rgba(59, 130, 246, 0.45); }
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card-success { border-color: rgba(16, 185, 129, 0.45); }
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card-warning { border-color: rgba(245, 158, 11, 0.5); }
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card-danger { border-color: rgba(239, 68, 68, 0.46); }
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-label {
+  display: block;
+  font-size: 0.76rem;
+  color: rgba(226, 232, 240, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 8px;
+  font-weight: 700;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-value {
+  display: block;
+  font-size: 1.75rem;
+  line-height: 1;
+  font-weight: 800;
+  color: #f8fafc;
+  margin-bottom: 6px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-meta {
+  color: rgba(203, 213, 225, 0.84);
+  font-size: 0.8rem;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-ops-grid {
+  display: grid;
+  grid-template-columns: 1.1fr 1fr;
+  gap: 12px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-panel-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: linear-gradient(160deg, rgba(15, 23, 42, 0.74), rgba(15, 23, 42, 0.46));
+  padding: 14px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-panel-head h6 {
+  margin: 0;
+  color: rgba(248, 250, 252, 0.98);
+  font-weight: 800;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-panel-head span {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.78rem;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-list { display: grid; gap: 10px; }
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-item { display: grid; gap: 6px; }
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.82rem;
+  color: rgba(226, 232, 240, 0.9);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-row strong { color: rgba(248, 250, 252, 0.98); }
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-bar {
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.2);
+  overflow: hidden;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.9), rgba(59, 130, 246, 0.9));
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-bar span.is-pending {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.9), rgba(250, 204, 21, 0.85));
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-funnel-bar span.is-rejected {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.92), rgba(248, 113, 113, 0.84));
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-quick-actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-quick-actions .btn {
+  border-color: rgba(148, 163, 184, 0.45);
+  color: rgba(226, 232, 240, 0.95);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-quick-actions .btn:hover {
+  border-color: rgba(96, 165, 250, 0.66);
+  color: #fff;
+  background: rgba(59, 130, 246, 0.14);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline {
+  display: grid;
+  gap: 8px;
+  max-height: 310px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-item {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 9px;
+  align-items: center;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 11px;
+  padding: 8px 10px;
+  background: rgba(15, 23, 42, 0.5);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(191, 219, 254, 0.96);
+  background: rgba(37, 99, 235, 0.22);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-copy { display: grid; gap: 2px; }
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-copy strong {
+  color: rgba(248, 250, 252, 0.98);
+  font-size: 0.86rem;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-copy span {
+  color: rgba(203, 213, 225, 0.86);
+  font-size: 0.75rem;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-status {
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 0.69rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.32);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-status.is-ok {
+  border-color: rgba(16, 185, 129, 0.46);
+  color: rgba(110, 231, 183, 0.96);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-status.is-pending {
+  border-color: rgba(245, 158, 11, 0.5);
+  color: rgba(253, 230, 138, 0.96);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-status.is-bad {
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(252, 165, 165, 0.96);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline-empty {
+  margin: 6px 0;
+  color: rgba(148, 163, 184, 0.95);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 1180px) {
+  body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  body.admin-panel.admin-manager-page.admin-manager-revamp .principal-ops-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
 
