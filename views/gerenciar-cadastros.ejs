@@ -61,29 +61,30 @@
   <% const adminRoleDefaults = adminRoleDefaultPermissions || {}; %>
   <% const adminNivelAtual = adminNivelAcesso || 'super_admin'; %>
   <% const podeGerenciarAdmins = adminPermissoesLista.includes('admins.gerenciar'); %>
+  <% const podeVisualizarPainel = adminPermissoesLista.includes('painel.visualizar'); %>
 
   <div class="admin-shell">
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="brand-inline">
-          <div class="brand-badge"><i class="fas fa-shield-heart"></i></div>
-          <div class="brand-text">Painel Admin</div>
+          <div class="brand-badge"><img src="/images/rodape.png" alt="EJC COP" loading="lazy" decoding="async"></div>
+          <div class="brand-text">EJC COP</div>
         </div>
       </div>
 
       <nav class="side-menu">
-          <button type="button" class="menu-link" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
-          <button type="button" class="menu-link" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
-          <button type="button" class="menu-link" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
-          <button type="button" class="menu-link" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
-          <button type="button" class="menu-link menu-link-aprovacoes" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')" title="<%= pendenciasTituloMenu %>">
+          <button type="button" class="menu-link" data-menu-title="Principal" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontristas" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontreiros" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Tios" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
+          <button type="button" class="menu-link menu-link-aprovacoes" data-menu-title="Aprovações" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')" title="<%= pendenciasTituloMenu %>">
             <i class="fas fa-check-circle"></i>
             <span class="menu-label">Aprovações</span>
             <span class="menu-alert-counter <%= pendenciasClasseMenu %>"><%= totalPendencias %></span>
           </button>
-          <button type="button" class="menu-link" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
-          <button type="button" class="menu-link" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
-          <a href="/admin/logout" class="menu-link"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
+          <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Administradores" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
+          <a href="/admin/logout" class="menu-link" data-menu-title="Sair"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
         </nav>
 
         <div class="sidebar-note">
@@ -107,6 +108,32 @@
               <span class="hero-strip-pill"><i class="fas fa-user-group"></i><%= encontreirosAprovados.length %> encontreiros liberados</span>
               <span class="hero-strip-pill"><i class="fas fa-heart"></i><%= (tios || []).length %> tios em apoio</span>
             </div>
+            <% if (podeVisualizarPainel) { %>
+              <div class="event-scope-workbench" aria-label="Escopo dos dados do painel administrativo">
+                <div class="event-scope-switch" role="group" aria-label="Filtro de escopo por encontro">
+                  <button
+                    type="button"
+                    class="event-scope-btn <%= (escopoEventoAdmin || 'ativo') === 'ativo' ? 'active' : '' %>"
+                    data-event-scope="ativo"
+                    aria-pressed="<%= (escopoEventoAdmin || 'ativo') === 'ativo' ? 'true' : 'false' %>"
+                  >
+                    <i class="fas fa-bullseye"></i>Somente encontro ativo
+                  </button>
+                  <button
+                    type="button"
+                    class="event-scope-btn <%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'active' : '' %>"
+                    data-event-scope="todos"
+                    aria-pressed="<%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'true' : 'false' %>"
+                  >
+                    <i class="fas fa-layer-group"></i>Todos os encontros
+                  </button>
+                </div>
+                <span class="event-filter-banner" role="status">
+                  <i class="fas fa-filter"></i>
+                  Exibindo: <strong><%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'todos os encontros' : (eventoFiltroNome || encontroAtivoNome || 'encontro ativo') %></strong>
+                </span>
+              </div>
+            <% } %>
           </div>
           <div class="manager-stats" aria-label="Resumo da gestão">
             <article class="workspace-stat-card">
@@ -1131,15 +1158,16 @@
                         <td><strong><%= item.nome %></strong></td>
                         <td>
                           <% if (item.ativo) { %>
-                            <span class="status-badge status-ok">Ativo</span>
+                            <span class="status-badge status-ok has-led"><span class="status-led-dot is-active" aria-hidden="true"></span>Ativo</span>
                           <% } else { %>
-                            <span class="status-badge">Inativo</span>
+                            <span class="status-badge has-led"><span class="status-led-dot is-inactive" aria-hidden="true"></span>Inativo</span>
                           <% } %>
                         </td>
                         <td><%= new Date(item.dataCriacao).toLocaleDateString('pt-BR') %></td>
                         <td>
-                          <button class="btn btn-edit" onclick="definirEjcAtivo('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')" <%= item.ativo ? 'disabled' : '' %>>
-                            <i class="fas fa-bullseye me-1"></i><%= item.ativo ? 'Encontro ativo' : 'Definir como ativo' %>
+                          <button class="btn btn-edit btn-ejc-state <%= item.ativo ? 'is-active' : 'is-inactive' %>" onclick="definirEjcAtivo('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')" <%= item.ativo ? 'disabled' : '' %>>
+                            <span class="ejc-led-dot" aria-hidden="true"></span>
+                            <%= item.ativo ? 'Encontro ativo' : 'Definir como ativo' %>
                           </button>
                           <button class="btn btn-delete" onclick="deletarEjc('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')">
                             <i class="fas fa-trash me-1"></i>Excluir Encontro
@@ -2563,6 +2591,37 @@
     aplicarPermissoesNoPainel();
     restaurarAbaAtiva();
 
+    function initSidebarDockGlow() {
+      const sidebar = document.querySelector('.admin-shell .sidebar');
+      if (!sidebar) return;
+
+      const supportsFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (!supportsFinePointer || prefersReducedMotion) return;
+
+      const updateGlowPosition = (event) => {
+        const rect = sidebar.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        const x = ((event.clientX - rect.left) / rect.width) * 100;
+        const y = ((event.clientY - rect.top) / rect.height) * 100;
+        sidebar.style.setProperty('--dock-glow-x', `${Math.max(0, Math.min(100, x)).toFixed(2)}%`);
+        sidebar.style.setProperty('--dock-glow-y', `${Math.max(0, Math.min(100, y)).toFixed(2)}%`);
+      };
+
+      sidebar.addEventListener('mouseenter', (event) => {
+        updateGlowPosition(event);
+        sidebar.classList.add('is-dock-glow');
+      });
+
+      sidebar.addEventListener('mousemove', updateGlowPosition);
+
+      sidebar.addEventListener('mouseleave', () => {
+        sidebar.classList.remove('is-dock-glow');
+      });
+    }
+
+    initSidebarDockGlow();
+
     function formatarStatusCadastro(status) {
       const rotulos = {
         pendente: 'Pendente',
@@ -3586,6 +3645,44 @@
       }
     }
 
+    function setupEventScopeControls() {
+      const buttons = Array.from(document.querySelectorAll('.event-scope-btn[data-event-scope]'));
+      if (buttons.length === 0) return;
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const nextScope = button.dataset.eventScope === 'todos' ? 'todos' : 'ativo';
+
+          buttons.forEach((btn) => {
+            const isActive = btn === button;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', String(isActive));
+            btn.disabled = true;
+          });
+
+          try {
+            const response = await fetch('/admin/evento-scope', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ scope: nextScope }),
+            });
+
+            const result = await response.json();
+            if (!response.ok || !result.success) {
+              throw new Error(result.error || 'Falha ao atualizar escopo de evento.');
+            }
+
+            window.location.reload();
+          } catch (error) {
+            buttons.forEach((btn) => {
+              btn.disabled = false;
+            });
+            appAlert('Erro: ' + (error.message || 'Falha ao trocar escopo.'), 'danger', 'Escopo de evento');
+          }
+        });
+      });
+    }
+
     async function salvarConfiguracoesBloqueio() {
       if (!ensurePermission('bloqueio.gerenciar')) return;
       try {
@@ -3633,6 +3730,8 @@
         applyRoleDefaultPermissions('admin_nivel', '#admin_permissions .admin-perm-item');
       });
     }
+
+    setupEventScopeControls();
 
     carregarConfiguracoesBloqueio();
 

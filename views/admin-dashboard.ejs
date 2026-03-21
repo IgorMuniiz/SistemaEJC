@@ -15,7 +15,7 @@
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
   <link rel="stylesheet" href="/css/admin-saas.css">
 </head>
-<body class="admin-panel admin-dashboard-page">
+<body class="admin-panel admin-dashboard-page is-loading">
   <div class="db-bg" aria-hidden="true"></div>
 
   <!-- ── TOPBAR ── -->
@@ -30,13 +30,130 @@
     <nav class="topbar-nav">
       <a href="/" class="topbar-link"><i class="fas fa-house"></i>Início</a>
       <a href="/admin/gerenciar-cadastros" class="topbar-link"><i class="fas fa-table-columns"></i>Cadastros</a>
-      <span class="topbar-user"><i class="fas fa-user-circle"></i><%= adminUsername %></span>
+      <span class="topbar-user">
+        <span class="topbar-user-avatar"><%= ((adminUsername || 'A').trim().charAt(0) || 'A').toUpperCase() %></span>
+        <span><%= adminUsername %></span>
+      </span>
       <a href="/admin/logout" class="topbar-logout"><i class="fas fa-arrow-right-from-bracket"></i>Sair</a>
     </nav>
   </header>
 
+  <div class="db-skeleton-layer" aria-hidden="true">
+    <div class="db-skeleton-wrap">
+      <div class="db-skeleton-line lg"></div>
+      <div class="db-skeleton-line sm"></div>
+      <div class="db-skeleton-grid">
+        <div class="db-skeleton-card"></div>
+        <div class="db-skeleton-card"></div>
+        <div class="db-skeleton-card"></div>
+        <div class="db-skeleton-card"></div>
+      </div>
+      <div class="db-skeleton-panel"></div>
+    </div>
+  </div>
+
   <!-- ── MAIN ── -->
   <main class="db-wrap">
+    <% 
+      const totalPendentes = totalPendentesEncontristas + totalPendentesEncontreiros;
+      const totalAprovados = totalAprovadosEncontristas + totalAprovadosEncontreiros;
+      const totalReprovados = totalReprovadosEncontristas + totalReprovadosEncontreiros;
+      const totalGeral = totalPendentes + totalAprovados + totalReprovados;
+      const totalProcessados = totalAprovados + totalReprovados;
+
+      const pressaoPendencia = totalGeral > 0 ? Math.round((totalPendentes / totalGeral) * 100) : 0;
+      const taxaAprovacao = totalProcessados > 0 ? Math.round((totalAprovados / totalProcessados) * 100) : 0;
+      const indiceRisco = totalProcessados > 0 ? Math.round((totalReprovados / totalProcessados) * 100) : 0;
+
+      const pendenciaCritica = pressaoPendencia >= 35;
+      const aprovacaoSaudavel = taxaAprovacao >= 70;
+      const riscoAlto = indiceRisco >= 25;
+
+      const acoesRecomendadas = [];
+      if (pendenciaCritica) {
+        acoesRecomendadas.push({
+          tone: 'amber',
+          icon: 'fa-clock',
+          titulo: 'Reduzir fila de pendências',
+          texto: `${totalPendentes} cadastros estão aguardando (${pressaoPendencia}% do funil). Priorize aprovação em lote agora.`,
+        });
+      }
+      if (totalProcessados > 0 && !aprovacaoSaudavel) {
+        acoesRecomendadas.push({
+          tone: 'blue',
+          icon: 'fa-chart-line',
+          titulo: 'Aumentar conversão de aprovações',
+          texto: `Taxa atual em ${taxaAprovacao}%. Revisar critérios de triagem pode recuperar conversão sem perder qualidade.`,
+        });
+      }
+      if (riscoAlto) {
+        acoesRecomendadas.push({
+          tone: 'red',
+          icon: 'fa-triangle-exclamation',
+          titulo: 'Investigar padrão de reprovação',
+          texto: `${indiceRisco}% de reprovação entre processados. Vale auditar dados incompletos ou inconsistências recorrentes.`,
+        });
+      }
+      if (acoesRecomendadas.length === 0) {
+        acoesRecomendadas.push(
+          {
+            tone: 'green',
+            icon: 'fa-circle-check',
+            titulo: 'Fluxo saudável',
+            texto: 'Os indicadores estão equilibrados. Mantenha rotina de revisão em lote para preservar a velocidade.',
+          },
+          {
+            tone: 'blue',
+            icon: 'fa-list-check',
+            titulo: 'Ação rápida sugerida',
+            texto: 'Faça uma rodada curta nos cadastros pendentes de maior tempo para evitar gargalos futuros.',
+          },
+          {
+            tone: 'amber',
+            icon: 'fa-bullseye',
+            titulo: 'Meta do dia',
+            texto: 'Busque manter pendência abaixo de 30% do funil e taxa de aprovação acima de 70%.',
+          }
+        );
+      }
+
+      const todosCadastros = [
+        ...pendentesEncontristas,
+        ...aprovadosEncontristas,
+        ...reprovadosEncontristas,
+        ...pendentesEncontreiros,
+        ...aprovadosEncontreiros,
+        ...reprovadosEncontreiros,
+      ];
+
+      const normalizarEmail = (valor) => String(valor || '').trim().toLowerCase();
+      const normalizarTelefone = (valor) => String(valor || '').replace(/\D/g, '');
+      const paraDataISO = (valor) => {
+        const data = valor ? new Date(valor) : null;
+        return data && !Number.isNaN(data.getTime()) ? data.toISOString().slice(0, 10) : '';
+      };
+
+      const mapaEmail = {};
+      const mapaTelefone = {};
+      todosCadastros.forEach((registro) => {
+        const emailKey = normalizarEmail(registro.email);
+        const telefoneKey = normalizarTelefone(registro.telefone);
+        if (emailKey) mapaEmail[emailKey] = (mapaEmail[emailKey] || 0) + 1;
+        if (telefoneKey) mapaTelefone[telefoneKey] = (mapaTelefone[telefoneKey] || 0) + 1;
+      });
+
+      const equipesUnicas = [...new Set(todosCadastros.map((registro) => String(registro.ejc || '').trim()).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+
+      const construirInsights = (registro, status) => {
+        const emailKey = normalizarEmail(registro.email);
+        const telefoneKey = normalizarTelefone(registro.telefone);
+        const incompleto = !registro.email || !registro.telefone || !registro.logradouro || !registro.bairro;
+        const duplicado = (emailKey && mapaEmail[emailKey] > 1) || (telefoneKey && mapaTelefone[telefoneKey] > 1);
+        const recomendado = status === 'pendente' && !incompleto && !duplicado;
+        return { incompleto, duplicado, recomendado };
+      };
+    %>
 
     <!-- Toasts -->
     <div class="db-toast-area">
@@ -63,41 +180,148 @@
         <p class="db-header-sub">Gerencie inscrições de encontristas e encontreiros em tempo real</p>
       </div>
       <div class="db-header-actions">
+        <div class="event-scope-switch" role="group" aria-label="Escopo de evento">
+          <button
+            type="button"
+            class="event-scope-btn <%= (escopoEventoAdmin || 'ativo') === 'ativo' ? 'active' : '' %>"
+            data-event-scope="ativo"
+            aria-pressed="<%= (escopoEventoAdmin || 'ativo') === 'ativo' ? 'true' : 'false' %>">
+            <i class="fas fa-bullseye"></i>Evento ativo
+          </button>
+          <button
+            type="button"
+            class="event-scope-btn <%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'active' : '' %>"
+            data-event-scope="todos"
+            aria-pressed="<%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'true' : 'false' %>">
+            <i class="fas fa-layer-group"></i>Todos
+          </button>
+        </div>
         <a href="/admin/gerenciar-cadastros" class="btn-action btn-action-primary">
           <i class="fas fa-users-cog"></i>Gerenciar Cadastros
         </a>
         <span class="live-badge"><span class="live-dot"></span>Fluxo ativo</span>
+        <div class="motion-mode-switch" role="group" aria-label="Modo de animação">
+          <button type="button" class="motion-mode-btn" data-motion-mode="executivo" aria-pressed="false">
+            <i class="fas fa-gauge-high"></i>Executivo
+          </button>
+          <button type="button" class="motion-mode-btn" data-motion-mode="premium" aria-pressed="true">
+            <i class="fas fa-sparkles"></i>Premium
+          </button>
+        </div>
       </div>
     </div>
 
+    <div class="event-filter-banner">
+      <i class="fas fa-filter-circle-dollar"></i>
+      <span>
+        <strong>Escopo:</strong>
+        <%= (escopoEventoAdmin || 'ativo') === 'todos'
+          ? 'Mostrando todos os eventos'
+          : ('Evento ativo: ' + (eventoFiltroNome || eventoAtivoNome || 'Nao definido')) %>
+      </span>
+    </div>
+
+    <section class="quick-workbench" aria-label="Filtros avançados">
+      <div class="quick-workbench-title">
+        <i class="fas fa-sliders"></i>
+        <span>Filtros avançados</span>
+      </div>
+      <div class="quick-filters-grid">
+        <label class="quick-filter-field">
+          <span>Status</span>
+          <select id="filter-status">
+            <option value="all">Todos</option>
+            <option value="pendente">Em análise</option>
+            <option value="aprovado">Aprovados</option>
+            <option value="reprovado">Reprovados</option>
+          </select>
+        </label>
+        <label class="quick-filter-field">
+          <span>Equipe</span>
+          <select id="filter-team">
+            <option value="all">Todas</option>
+            <% equipesUnicas.forEach((equipe) => { %>
+              <option value="<%= equipe.toLowerCase() %>"><%= equipe %></option>
+            <% }); %>
+          </select>
+        </label>
+        <label class="quick-filter-field">
+          <span>De</span>
+          <input type="date" id="filter-date-from" />
+        </label>
+        <label class="quick-filter-field">
+          <span>Até</span>
+          <input type="date" id="filter-date-to" />
+        </label>
+      </div>
+      <div class="quick-filter-actions">
+        <button type="button" class="batch-btn" id="save-filters-btn"><i class="fas fa-bookmark"></i>Salvar filtros</button>
+        <button type="button" class="batch-btn" id="clear-filters-btn"><i class="fas fa-rotate-left"></i>Limpar filtros</button>
+      </div>
+    </section>
+
+    <section class="strategy-strip" aria-label="Ações recomendadas hoje">
+      <div class="strategy-head">
+        <h2 class="strategy-title"><i class="fas fa-compass"></i>Ações recomendadas hoje</h2>
+        <span class="strategy-sub">Priorização automática com base no estado atual do funil</span>
+      </div>
+      <div class="strategy-grid">
+        <% acoesRecomendadas.slice(0, 3).forEach((acao) => { %>
+          <article class="strategy-card <%= acao.tone %>">
+            <div class="strategy-icon"><i class="fas <%= acao.icon %>"></i></div>
+            <div>
+              <h3 class="strategy-card-title"><%= acao.titulo %></h3>
+              <p class="strategy-card-text"><%= acao.texto %></p>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    </section>
+
     <!-- Stats -->
     <div class="stats-row">
-      <div class="stat-tile amber-tile">
+      <div class="stat-tile amber-tile priority-tile">
         <div class="stat-tile-icon amber"><i class="fas fa-clock"></i></div>
         <div>
-          <div class="stat-tile-num"><%= totalPendentesEncontristas + totalPendentesEncontreiros %></div>
-          <div class="stat-tile-lbl">Pendentes</div>
+          <div class="stat-tile-num"><%= totalPendentes %></div>
+          <div class="stat-tile-lbl">Pendentes (Prioridade)</div>
+          <div class="stat-tile-trend <%= pendenciaCritica ? 'trend-up trend-alert' : 'trend-down trend-good' %>">
+            <i class="fas <%= pendenciaCritica ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
+            <span><%= pressaoPendencia %>% do funil aguardando análise</span>
+          </div>
         </div>
       </div>
       <div class="stat-tile green-tile">
-        <div class="stat-tile-icon green"><i class="fas fa-circle-check"></i></div>
+        <div class="stat-tile-icon green"><i class="fas fa-chart-line"></i></div>
         <div>
-          <div class="stat-tile-num"><%= totalAprovadosEncontristas + totalAprovadosEncontreiros %></div>
-          <div class="stat-tile-lbl">Aprovados</div>
+          <div class="stat-tile-num"><%= taxaAprovacao %>%</div>
+          <div class="stat-tile-lbl">Taxa de Aprovação</div>
+          <div class="stat-tile-trend <%= aprovacaoSaudavel ? 'trend-up trend-good' : 'trend-down trend-alert' %>">
+            <i class="fas <%= aprovacaoSaudavel ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
+            <span><%= totalAprovados %> aprovados de <%= totalProcessados %> processados</span>
+          </div>
         </div>
       </div>
       <div class="stat-tile red-tile">
         <div class="stat-tile-icon red"><i class="fas fa-circle-xmark"></i></div>
         <div>
-          <div class="stat-tile-num"><%= totalReprovadosEncontristas + totalReprovadosEncontreiros %></div>
+          <div class="stat-tile-num"><%= totalReprovados %></div>
           <div class="stat-tile-lbl">Reprovados</div>
+          <div class="stat-tile-trend <%= riscoAlto ? 'trend-up trend-alert' : 'trend-down trend-good' %>">
+            <i class="fas <%= riscoAlto ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
+            <span><%= indiceRisco %>% entre processados</span>
+          </div>
         </div>
       </div>
       <div class="stat-tile blue-tile">
         <div class="stat-tile-icon blue"><i class="fas fa-users"></i></div>
         <div>
-          <div class="stat-tile-num"><%= (totalPendentesEncontristas + totalAprovadosEncontristas + totalReprovadosEncontristas) + (totalPendentesEncontreiros + totalAprovadosEncontreiros + totalReprovadosEncontreiros) %></div>
+          <div class="stat-tile-num"><%= totalGeral %></div>
           <div class="stat-tile-lbl">Total Geral</div>
+          <div class="stat-tile-trend trend-neutral">
+            <i class="fas fa-layer-group"></i>
+            <span><%= totalPendentes %> pendentes | <%= totalProcessados %> processados</span>
+          </div>
         </div>
       </div>
     </div>
@@ -129,11 +353,17 @@
           <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
           <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
         </div>
+        <div class="status-tabs" data-board-tabs>
+          <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
+          <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
+          <button type="button" class="status-tab" data-view="aprovado"><i class="fas fa-circle-check"></i>Aprovados</button>
+          <button type="button" class="status-tab" data-view="reprovado"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+        </div>
       </div>
 
       <div class="kanban-board">
         <!-- Pendentes -->
-        <div class="kanban-col">
+        <div class="kanban-col col-pendente">
           <div class="kanban-col-head">
             <span class="kanban-col-label amber"><span class="dot"></span>Pendentes</span>
             <span class="kanban-count"><%= pendentesEncontristas.length %></span>
@@ -145,7 +375,18 @@
             </div>
           <% } else { %>
             <% pendentesEncontristas.forEach(r => { %>
-              <div class="pcard amber-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
+              <% const insights = construirInsights(r, 'pendente'); %>
+              <div class="pcard amber-card selectable-card smart-card"
+                   data-batch-card="encontrista:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontrista"
+                   data-status="pendente"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
@@ -173,6 +414,8 @@
                 </div>
                 <div class="pcard-actions">
                   <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-check"></i>Aprovar</button>
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-xmark"></i>Reprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -180,7 +423,7 @@
         </div>
 
         <!-- Aprovados -->
-        <div class="kanban-col">
+        <div class="kanban-col col-aprovado">
           <div class="kanban-col-head">
             <span class="kanban-col-label green"><span class="dot"></span>Aprovados</span>
             <span class="kanban-count"><%= aprovadosEncontristas.length %></span>
@@ -192,7 +435,18 @@
             </div>
           <% } else { %>
             <% aprovadosEncontristas.forEach(r => { %>
-              <div class="pcard green-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
+              <% const insights = construirInsights(r, 'aprovado'); %>
+              <div class="pcard green-card selectable-card smart-card"
+                   data-batch-card="encontrista:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontrista"
+                   data-status="aprovado"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
@@ -211,8 +465,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="pcard-details pcard-details-compact">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                </div>
                 <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-check"></i>Aprovar</button>
                   <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-xmark"></i>Desaprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -220,7 +480,7 @@
         </div>
 
         <!-- Reprovados -->
-        <div class="kanban-col">
+        <div class="kanban-col col-reprovado">
           <div class="kanban-col-head">
             <span class="kanban-col-label red"><span class="dot"></span>Reprovados</span>
             <span class="kanban-count"><%= reprovadosEncontristas.length %></span>
@@ -232,7 +492,18 @@
             </div>
           <% } else { %>
             <% reprovadosEncontristas.forEach(r => { %>
-              <div class="pcard red-card selectable-card" data-batch-card="encontrista:<%= r._id %>">
+              <% const insights = construirInsights(r, 'reprovado'); %>
+              <div class="pcard red-card selectable-card smart-card"
+                   data-batch-card="encontrista:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontrista"
+                   data-status="reprovado"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontrista" data-batch-id="<%= r._id %>" data-batch-tipo="encontrista" />
@@ -251,8 +522,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="pcard-details pcard-details-compact">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                </div>
                 <div class="pcard-actions">
                   <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-rotate-left"></i>Reativar</button>
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontrista')"><i class="fas fa-xmark"></i>Reprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -288,11 +565,17 @@
           <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
           <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
         </div>
+        <div class="status-tabs" data-board-tabs>
+          <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
+          <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
+          <button type="button" class="status-tab" data-view="aprovado"><i class="fas fa-circle-check"></i>Aprovados</button>
+          <button type="button" class="status-tab" data-view="reprovado"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+        </div>
       </div>
 
       <div class="kanban-board">
         <!-- Pendentes -->
-        <div class="kanban-col">
+        <div class="kanban-col col-pendente">
           <div class="kanban-col-head">
             <span class="kanban-col-label amber"><span class="dot"></span>Pendentes</span>
             <span class="kanban-count"><%= pendentesEncontreiros.length %></span>
@@ -304,7 +587,18 @@
             </div>
           <% } else { %>
             <% pendentesEncontreiros.forEach(r => { %>
-              <div class="pcard amber-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
+              <% const insights = construirInsights(r, 'pendente'); %>
+              <div class="pcard amber-card selectable-card smart-card"
+                   data-batch-card="encontreiro:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontreiro"
+                   data-status="pendente"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
@@ -333,6 +627,8 @@
                 </div>
                 <div class="pcard-actions">
                   <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-check"></i>Aprovar</button>
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-xmark"></i>Reprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -340,7 +636,7 @@
         </div>
 
         <!-- Aprovados -->
-        <div class="kanban-col">
+        <div class="kanban-col col-aprovado">
           <div class="kanban-col-head">
             <span class="kanban-col-label green"><span class="dot"></span>Aprovados</span>
             <span class="kanban-count"><%= aprovadosEncontreiros.length %></span>
@@ -352,7 +648,18 @@
             </div>
           <% } else { %>
             <% aprovadosEncontreiros.forEach(r => { %>
-              <div class="pcard green-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
+              <% const insights = construirInsights(r, 'aprovado'); %>
+              <div class="pcard green-card selectable-card smart-card"
+                   data-batch-card="encontreiro:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontreiro"
+                   data-status="aprovado"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
@@ -372,8 +679,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="pcard-details pcard-details-compact">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                </div>
                 <div class="pcard-actions">
+                  <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-check"></i>Aprovar</button>
                   <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-xmark"></i>Desaprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -381,7 +694,7 @@
         </div>
 
         <!-- Reprovados -->
-        <div class="kanban-col">
+        <div class="kanban-col col-reprovado">
           <div class="kanban-col-head">
             <span class="kanban-col-label red"><span class="dot"></span>Reprovados</span>
             <span class="kanban-count"><%= reprovadosEncontreiros.length %></span>
@@ -393,7 +706,18 @@
             </div>
           <% } else { %>
             <% reprovadosEncontreiros.forEach(r => { %>
-              <div class="pcard red-card selectable-card" data-batch-card="encontreiro:<%= r._id %>">
+              <% const insights = construirInsights(r, 'reprovado'); %>
+              <div class="pcard red-card selectable-card smart-card"
+                   data-batch-card="encontreiro:<%= r._id %>"
+                   data-id="<%= r._id %>"
+                   data-tipo="encontreiro"
+                   data-status="reprovado"
+                   data-team="<%= String(r.ejc || '').toLowerCase() %>"
+                   data-date="<%= paraDataISO(r.dataCadastro) %>"
+                   data-updated-date="<%= paraDataISO(r.dataAtualizacao || r.updatedAt || r.dataCadastro) %>"
+                   data-incomplete="<%= insights.incompleto ? '1' : '0' %>"
+                   data-duplicate="<%= insights.duplicado ? '1' : '0' %>"
+                   data-recommended="<%= insights.recomendado ? '1' : '0' %>">
                 <div class="pcard-top">
                   <label class="pcard-select" aria-label="Selecionar <%= r.nomeCompleto %>">
                     <input type="checkbox" class="batch-checkbox" data-batch-scope="encontreiro" data-batch-id="<%= r._id %>" data-batch-tipo="encontreiro" />
@@ -413,8 +737,14 @@
                     </div>
                   </div>
                 </div>
+                <div class="pcard-details pcard-details-compact">
+                  <div><div class="pcard-field-lbl">Email</div><div class="pcard-field-val"><%= r.email %></div></div>
+                  <div><div class="pcard-field-lbl">Telefone</div><div class="pcard-field-val"><%= r.telefone %></div></div>
+                </div>
                 <div class="pcard-actions">
                   <button class="pcard-btn approve" onclick="aprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-rotate-left"></i>Reativar</button>
+                  <button class="pcard-btn reject" onclick="desaprovarCadastro('<%= r._id %>', 'encontreiro')"><i class="fas fa-xmark"></i>Reprovar</button>
+                  <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
                 </div>
               </div>
             <% }); %>
@@ -424,6 +754,17 @@
     </section>
 
   </main>
+
+  <a href="/inscricao" class="fab-new-encontrista" aria-label="Novo encontrista">
+    <i class="fas fa-plus"></i>
+    <span>Novo encontrista</span>
+  </a>
+
+  <nav class="mobile-quick-nav" aria-label="Navegação rápida">
+    <a href="/admin" class="mobile-quick-item"><i class="fas fa-gauge"></i><span>Painel</span></a>
+    <a href="/inscricao" class="mobile-quick-item"><i class="fas fa-user-plus"></i><span>Novo</span></a>
+    <a href="/admin/gerenciar-cadastros" class="mobile-quick-item"><i class="fas fa-table-columns"></i><span>Cadastros</span></a>
+  </nav>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script>
@@ -494,6 +835,292 @@
       showAppPopup({ title, message: msg, confirmText: 'Entendi', tone });
     const appConfirm = (msg, title = 'Confirmação') =>
       showAppPopup({ title, message: msg, confirmText: 'Confirmar', cancelText: 'Cancelar', tone: 'warning' });
+
+    const MOTION_MODE_STORAGE_KEY = 'ejc-dashboard-motion-mode';
+    const FILTERS_STORAGE_KEY = 'ejc-dashboard-filters';
+
+    function applyMotionMode(mode) {
+      const normalized = mode === 'executivo' ? 'executivo' : 'premium';
+      document.body.classList.remove('motion-mode-executivo', 'motion-mode-premium');
+      document.body.classList.add(`motion-mode-${normalized}`);
+
+      document.querySelectorAll('.motion-mode-btn[data-motion-mode]').forEach((button) => {
+        const isActive = button.dataset.motionMode === normalized;
+        button.classList.toggle('active', isActive);
+        button.setAttribute('aria-pressed', String(isActive));
+      });
+    }
+
+    function setupMotionModeControls() {
+      const savedMode = localStorage.getItem(MOTION_MODE_STORAGE_KEY);
+      applyMotionMode(savedMode === 'executivo' ? 'executivo' : 'premium');
+
+      document.querySelectorAll('.motion-mode-btn[data-motion-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          const selectedMode = button.dataset.motionMode === 'executivo' ? 'executivo' : 'premium';
+          applyMotionMode(selectedMode);
+          localStorage.setItem(MOTION_MODE_STORAGE_KEY, selectedMode);
+        });
+      });
+    }
+
+    function setupEventScopeControls() {
+      const buttons = Array.from(document.querySelectorAll('.event-scope-btn[data-event-scope]'));
+      if (buttons.length === 0) return;
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', async () => {
+          const nextScope = button.dataset.eventScope === 'todos' ? 'todos' : 'ativo';
+          buttons.forEach((b) => {
+            const active = b === button;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', String(active));
+            b.disabled = true;
+          });
+
+          try {
+            const res = await fetch('/admin/evento-scope', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ scope: nextScope }),
+            });
+            const data = await res.json();
+            if (!res.ok || !data.success) {
+              throw new Error(data.error || 'Falha ao trocar escopo de evento.');
+            }
+
+            window.location.reload();
+          } catch (error) {
+            buttons.forEach((b) => {
+              b.disabled = false;
+            });
+            await appAlert('Erro: ' + error.message, 'danger', 'Escopo de evento');
+          }
+        });
+      });
+    }
+
+    function formatarDataCurta(dateIso) {
+      if (!dateIso) return 'Data não informada';
+      const data = new Date(`${dateIso}T00:00:00`);
+      if (Number.isNaN(data.getTime())) return 'Data não informada';
+      return data.toLocaleDateString('pt-BR');
+    }
+
+    function refreshVisibleCounts() {
+      document.querySelectorAll('.kanban-col').forEach((col) => {
+        const visibleCards = col.querySelectorAll('.pcard:not(.is-filter-hidden)');
+        const countEl = col.querySelector('.kanban-count');
+        if (countEl) countEl.textContent = String(visibleCards.length);
+
+        const existingEmpty = col.querySelector('.empty-col.dynamic-empty');
+        if (visibleCards.length === 0) {
+          if (!existingEmpty) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-col dynamic-empty';
+            empty.innerHTML = '<div class="empty-col-icon"><i class="fas fa-filter-circle-xmark"></i></div><p class="empty-col-text">Nenhum cadastro com estes filtros</p>';
+            col.appendChild(empty);
+          }
+        } else if (existingEmpty) {
+          existingEmpty.remove();
+        }
+      });
+    }
+
+    function applyAdvancedFilters() {
+      const status = document.getElementById('filter-status')?.value || 'all';
+      const team = document.getElementById('filter-team')?.value || 'all';
+      const dateFrom = document.getElementById('filter-date-from')?.value || '';
+      const dateTo = document.getElementById('filter-date-to')?.value || '';
+
+      document.querySelectorAll('.smart-card').forEach((card) => {
+        const cardStatus = card.dataset.status || '';
+        const cardTeam = card.dataset.team || '';
+        const cardDate = card.dataset.date || '';
+
+        const statusOk = status === 'all' || cardStatus === status;
+        const teamOk = team === 'all' || cardTeam === team;
+        const fromOk = !dateFrom || !cardDate || cardDate >= dateFrom;
+        const toOk = !dateTo || !cardDate || cardDate <= dateTo;
+
+        card.classList.toggle('is-filter-hidden', !(statusOk && teamOk && fromOk && toOk));
+      });
+
+      refreshVisibleCounts();
+    }
+
+    function saveCurrentFilters() {
+      const payload = {
+        status: document.getElementById('filter-status')?.value || 'all',
+        team: document.getElementById('filter-team')?.value || 'all',
+        dateFrom: document.getElementById('filter-date-from')?.value || '',
+        dateTo: document.getElementById('filter-date-to')?.value || '',
+      };
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(payload));
+    }
+
+    function loadSavedFilters() {
+      const raw = localStorage.getItem(FILTERS_STORAGE_KEY);
+      if (!raw) return;
+
+      try {
+        const saved = JSON.parse(raw);
+        const statusEl = document.getElementById('filter-status');
+        const teamEl = document.getElementById('filter-team');
+        const fromEl = document.getElementById('filter-date-from');
+        const toEl = document.getElementById('filter-date-to');
+        if (statusEl) statusEl.value = saved.status || 'all';
+        if (teamEl) teamEl.value = saved.team || 'all';
+        if (fromEl) fromEl.value = saved.dateFrom || '';
+        if (toEl) toEl.value = saved.dateTo || '';
+      } catch {
+        localStorage.removeItem(FILTERS_STORAGE_KEY);
+      }
+    }
+
+    function setupAdvancedFilters() {
+      ['filter-status', 'filter-team', 'filter-date-from', 'filter-date-to'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('change', applyAdvancedFilters);
+      });
+
+      document.getElementById('save-filters-btn')?.addEventListener('click', async () => {
+        saveCurrentFilters();
+        await appAlert('Filtros salvos com sucesso.', 'success', 'Preferências salvas');
+      });
+
+      document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
+        const statusEl = document.getElementById('filter-status');
+        const teamEl = document.getElementById('filter-team');
+        const fromEl = document.getElementById('filter-date-from');
+        const toEl = document.getElementById('filter-date-to');
+        if (statusEl) statusEl.value = 'all';
+        if (teamEl) teamEl.value = 'all';
+        if (fromEl) fromEl.value = '';
+        if (toEl) toEl.value = '';
+        localStorage.removeItem(FILTERS_STORAGE_KEY);
+        applyAdvancedFilters();
+      });
+    }
+
+    async function executarAcaoRapida(id, tipoLista, action, triggerButton) {
+      const endpoint = action === 'aprovar' ? '/admin/aprovar' : '/admin/desaprovar';
+      const button = triggerButton;
+      if (button) button.disabled = true;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, tipoLista }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha na ação rápida');
+
+        const card = button?.closest('.pcard');
+        if (card) {
+          card.classList.add('is-removing');
+          setTimeout(() => {
+            card.remove();
+            refreshVisibleCounts();
+          }, 320);
+        }
+      } catch (error) {
+        if (button) button.disabled = false;
+        await appAlert('Erro: ' + error.message, 'danger', 'Ação rápida falhou');
+      }
+    }
+
+    function hydrateSmartCards() {
+      document.querySelectorAll('.smart-card').forEach((card) => {
+        const status = card.dataset.status || '';
+        const tipo = card.dataset.tipo || '';
+        const id = card.dataset.id || '';
+        const meta = card.querySelector('.pcard-meta');
+        const details = card.querySelector('.pcard-details');
+        const top = card.querySelector('.pcard-top');
+
+        if (meta && !meta.querySelector('.pcard-ai')) {
+          const ai = document.createElement('div');
+          ai.className = 'pcard-ai';
+          if (card.dataset.incomplete === '1') {
+            ai.innerHTML += '<span class="ai-chip warning"><i class="fas fa-triangle-exclamation"></i>Dados incompletos</span>';
+          }
+          if (card.dataset.duplicate === '1') {
+            ai.innerHTML += '<span class="ai-chip danger"><i class="fas fa-clone"></i>Possível duplicado</span>';
+          }
+          if (card.dataset.recommended === '1') {
+            ai.innerHTML += '<span class="ai-chip good"><i class="fas fa-wand-magic-sparkles"></i>Recomendado aprovar</span>';
+          }
+          if (!ai.innerHTML) {
+            ai.innerHTML = '<span class="ai-chip neutral"><i class="fas fa-circle-info"></i>Cadastro estável</span>';
+          }
+          meta.appendChild(ai);
+        }
+
+        if (details && !details.querySelector('.pcard-timeline')) {
+          const timeline = document.createElement('div');
+          timeline.className = 'pcard-timeline';
+          const createdDate = formatarDataCurta(card.dataset.date);
+          const updatedDate = formatarDataCurta(card.dataset.updatedDate || card.dataset.date);
+          const statusLabel = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em análise';
+          timeline.innerHTML = `
+            <div class="timeline-title"><i class="fas fa-timeline"></i>Timeline</div>
+            <ul>
+              <li><span>Inscrição</span><strong>${createdDate}</strong></li>
+              <li><span>Última alteração</span><strong>${updatedDate}</strong></li>
+              <li><span>Status atual</span><strong>${statusLabel} • Equipe Admin</strong></li>
+            </ul>`;
+          details.appendChild(timeline);
+        }
+
+        if (top && !top.querySelector('.pcard-quick')) {
+          const quick = document.createElement('div');
+          quick.className = 'pcard-quick';
+
+          if (status !== 'aprovado') {
+            const approveBtn = document.createElement('button');
+            approveBtn.type = 'button';
+            approveBtn.className = 'quick-icon-btn quick-approve';
+            approveBtn.title = 'Aprovar com 1 clique';
+            approveBtn.innerHTML = '<i class="fas fa-bolt"></i>';
+            approveBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
+              executarAcaoRapida(id, tipo, 'aprovar', approveBtn);
+            });
+            quick.appendChild(approveBtn);
+          }
+
+          if (status !== 'reprovado') {
+            const rejectBtn = document.createElement('button');
+            rejectBtn.type = 'button';
+            rejectBtn.className = 'quick-icon-btn quick-reject';
+            rejectBtn.title = 'Reprovar com 1 clique';
+            rejectBtn.innerHTML = '<i class="fas fa-xmark"></i>';
+            rejectBtn.addEventListener('click', (event) => {
+              event.stopPropagation();
+              executarAcaoRapida(id, tipo, 'desaprovar', rejectBtn);
+            });
+            quick.appendChild(rejectBtn);
+          }
+
+          const detailsBtn = document.createElement('button');
+          detailsBtn.type = 'button';
+          detailsBtn.className = 'quick-icon-btn quick-view';
+          detailsBtn.title = 'Ver detalhes';
+          detailsBtn.innerHTML = '<i class="fas fa-eye"></i>';
+          detailsBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            card.classList.toggle('is-expanded');
+          });
+          quick.appendChild(detailsBtn);
+
+          top.appendChild(quick);
+        }
+      });
+
+      refreshVisibleCounts();
+    }
 
     function obterCheckboxesLote(scope) {
       return Array.from(document.querySelectorAll(`.batch-checkbox[data-batch-scope="${scope}"]`));
@@ -596,8 +1223,57 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+      setupMotionModeControls();
+      setupEventScopeControls();
+      setupAdvancedFilters();
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          const loadDelay = document.body.classList.contains('motion-mode-executivo') ? 220 : 300;
+          setTimeout(() => {
+            document.body.classList.remove('is-loading');
+            document.body.classList.add('is-loaded');
+          }, loadDelay);
+        });
+      });
+
       ['encontrista', 'encontreiro'].forEach(atualizarInterfaceLote);
+      hydrateSmartCards();
+      loadSavedFilters();
+      applyAdvancedFilters();
+
+      document.querySelectorAll('[data-board-tabs]').forEach((tabGroup) => {
+        const panel = tabGroup.closest('.section-panel');
+        if (!panel) return;
+
+        tabGroup.addEventListener('click', (event) => {
+          const button = event.target.closest('.status-tab');
+          if (!button) return;
+
+          const view = button.dataset.view || 'all';
+          tabGroup.querySelectorAll('.status-tab').forEach((tab) => tab.classList.remove('active'));
+          button.classList.add('active');
+
+          panel.classList.remove('view-all', 'view-pendente', 'view-aprovado', 'view-reprovado');
+          panel.classList.add(`view-${view}`);
+        });
+      });
+
+      document.querySelectorAll('.pcard').forEach((card) => {
+        const header = card.querySelector('.pcard-top');
+        if (!header) return;
+        header.addEventListener('click', (event) => {
+          if (event.target.closest('button, a, input, label')) return;
+          card.classList.toggle('is-expanded');
+        });
+      });
     });
+
+    function toggleCardDetails(trigger) {
+      const card = trigger.closest('.pcard');
+      if (!card) return;
+      card.classList.toggle('is-expanded');
+    }
 
     /* ── Actions ─────────────────────────────────────────────── */
     async function aprovarCadastro(id, tipoLista) {

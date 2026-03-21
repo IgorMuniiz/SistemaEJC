@@ -754,6 +754,32 @@ const resolveApprovalStatus = (doc) => {
 
 const normalizeTextInput = (value) => String(value || '').trim();
 
+const normalizeAdminEventScopeInput = (value) => {
+  const raw = normalizeTextInput(value).toLowerCase();
+  return raw === 'todos' ? 'todos' : 'ativo';
+};
+
+const resolveAdminEventContext = async (req) => {
+  const encontroAtivo = await getEncontroAtivo();
+  const scope = normalizeAdminEventScopeInput(req.session?.adminEventScope || 'ativo');
+
+  if (scope === 'todos' || !encontroAtivo?.nome) {
+    return {
+      scope,
+      encontroAtivo,
+      filtro: {},
+      encontroNome: '',
+    };
+  }
+
+  return {
+    scope,
+    encontroAtivo,
+    filtro: { ejc: encontroAtivo.nome },
+    encontroNome: encontroAtivo.nome,
+  };
+};
+
 const normalizePhoneDigits = (value) => String(value || '').replace(/\D/g, '');
 
 const normalizeStringArrayInput = (value) => {
@@ -3912,12 +3938,15 @@ app.get('/admin/home', checkAdminAuth, requireAdminPermission('painel.visualizar
 // GET /admin/dashboard - Painel de admin (rota protegida)
 app.get('/admin/dashboard', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
   try {
-    const pendentesEncontristas = await Cadastro.find({ statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
-    const aprovadosEncontristas = await Cadastro.find({ aprovado: true }).sort({ dataCadastro: -1 }).lean();
-    const reprovadosEncontristas = await Cadastro.find({ statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
-    const pendentesEncontreiros = await Encontro.find({ statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
-    const aprovadosEncontreiros = await Encontro.find({ aprovado: true }).sort({ dataCadastro: -1 }).lean();
-    const reprovadosEncontreiros = await Encontro.find({ statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
+    const eventContext = await resolveAdminEventContext(req);
+    const baseFilter = eventContext.filtro;
+
+    const pendentesEncontristas = await Cadastro.find({ ...baseFilter, statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
+    const aprovadosEncontristas = await Cadastro.find({ ...baseFilter, aprovado: true }).sort({ dataCadastro: -1 }).lean();
+    const reprovadosEncontristas = await Cadastro.find({ ...baseFilter, statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
+    const pendentesEncontreiros = await Encontro.find({ ...baseFilter, statusAprovacao: { $in: [...PENDING_APPROVAL_STATUSES, null] } }).sort({ dataCadastro: -1 }).lean();
+    const aprovadosEncontreiros = await Encontro.find({ ...baseFilter, aprovado: true }).sort({ dataCadastro: -1 }).lean();
+    const reprovadosEncontreiros = await Encontro.find({ ...baseFilter, statusAprovacao: 'reprovado' }).sort({ dataCadastro: -1 }).lean();
     
     console.log(`[INFO] Dashboard - Encontristas(${pendentesEncontristas.length}/${aprovadosEncontristas.length}), Encontreiros(${pendentesEncontreiros.length}/${aprovadosEncontreiros.length})`);
 
@@ -3943,6 +3972,9 @@ app.get('/admin/dashboard', checkAdminAuth, requireAdminPermission('painel.visua
       totalPendentesEncontreiros: pendentesEncontreiros.length,
       totalAprovadosEncontreiros: aprovadosEncontreiros.length,
       totalReprovadosEncontreiros: reprovadosEncontreiros.length,
+      escopoEventoAdmin: eventContext.scope,
+      eventoAtivoNome: eventContext.encontroAtivo?.nome || '',
+      eventoFiltroNome: eventContext.encontroNome,
       mensagemSucesso,
       mensagemErro
     });
@@ -3981,7 +4013,7 @@ function getApprovalUpdatePayload(action) {
   return null;
 }
 
-async function applyApprovalUpdateToMany({ ids, tipoLista, action }) {
+async function applyApprovalUpdateToMany({ ids, tipoLista, action, baseFilter = {} }) {
   const config = getApprovalUpdatePayload(action);
 
   if (!config) {
@@ -4015,7 +4047,7 @@ async function applyApprovalUpdateToMany({ ids, tipoLista, action }) {
   }
 
   const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
-  const documentos = await Model.find({ _id: { $in: uniqueIds } }).select('_id nomeCompleto').lean();
+  const documentos = await Model.find({ ...baseFilter, _id: { $in: uniqueIds } }).select('_id nomeCompleto').lean();
   const encontrados = documentos.map((doc) => String(doc._id));
   const missingIds = uniqueIds.filter((id) => !encontrados.includes(id));
 
@@ -4029,7 +4061,7 @@ async function applyApprovalUpdateToMany({ ids, tipoLista, action }) {
   }
 
   await Model.updateMany(
-    { _id: { $in: encontrados } },
+    { ...baseFilter, _id: { $in: encontrados } },
     { $set: config.update }
   );
 
@@ -4051,6 +4083,8 @@ app.post('/admin/aprovacao-lote', checkAdminAuth, requireAdminPermission('cadast
   const config = getApprovalUpdatePayload(action);
 
   try {
+    const eventContext = await resolveAdminEventContext(req);
+
     if (!tipoLista) {
       return res.status(400).json({ success: false, error: 'Tipo inválido para atualização em lote' });
     }
@@ -4059,7 +4093,7 @@ app.post('/admin/aprovacao-lote', checkAdminAuth, requireAdminPermission('cadast
       return res.status(400).json({ success: false, error: 'Ação inválida para atualização em lote' });
     }
 
-    const result = await applyApprovalUpdateToMany({ ids, tipoLista, action });
+    const result = await applyApprovalUpdateToMany({ ids, tipoLista, action, baseFilter: eventContext.filtro });
 
     if (!result.success) {
       await logAdminAction(req, {
@@ -4118,6 +4152,7 @@ app.post('/admin/aprovacao-lote', checkAdminAuth, requireAdminPermission('cadast
 // POST /admin/aprovar - Aprovar um cadastro
 app.post('/admin/aprovar', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
+    const eventContext = await resolveAdminEventContext(req);
     const id = String(req.body.id || '').trim();
     const tipoListaRaw = String(req.body.tipoLista || req.body.tipo || '').trim().toLowerCase();
     const tipoLista = normalizeApprovalTargetType(tipoListaRaw);
@@ -4142,15 +4177,15 @@ app.post('/admin/aprovar', checkAdminAuth, requireAdminPermission('cadastros.apr
     }
 
     const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
-    const exists = await Model.findById(id);
+    const exists = await Model.findOne({ ...eventContext.filtro, _id: id });
     
     if (!exists) {
       console.error('[ERRO] Cadastro não encontrado');
       return res.status(404).json({ success: false, error: 'Cadastro não encontrado' });
     }
 
-    const result = await Model.findByIdAndUpdate(
-      id,
+    const result = await Model.findOneAndUpdate(
+      { ...eventContext.filtro, _id: id },
       { aprovado: true, statusAprovacao: 'aprovado' },
       { new: true }
     );
@@ -4184,6 +4219,7 @@ app.post('/admin/aprovar', checkAdminAuth, requireAdminPermission('cadastros.apr
 // POST /admin/desaprovar - Desaprovar um cadastro
 app.post('/admin/desaprovar', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
+    const eventContext = await resolveAdminEventContext(req);
     const id = String(req.body.id || '').trim();
     const tipoListaRaw = String(req.body.tipoLista || req.body.tipo || '').trim().toLowerCase();
     const tipoLista = normalizeApprovalTargetType(tipoListaRaw);
@@ -4208,8 +4244,8 @@ app.post('/admin/desaprovar', checkAdminAuth, requireAdminPermission('cadastros.
     }
 
     const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
-    const result = await Model.findByIdAndUpdate(
-      id,
+    const result = await Model.findOneAndUpdate(
+      { ...eventContext.filtro, _id: id },
       { aprovado: false, statusAprovacao: 'reprovado' },
       { new: true }
     );
@@ -4242,6 +4278,7 @@ app.post('/admin/desaprovar', checkAdminAuth, requireAdminPermission('cadastros.
 
 app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadastros.aprovar'), async (req, res) => {
   try {
+    const eventContext = await resolveAdminEventContext(req);
     const id = normalizeTextInput(req.body.id);
     const tipoListaRaw = normalizeTextInput(req.body.tipoLista || req.body.tipo).toLowerCase();
     const statusAprovacao = normalizeApprovalStatusInput(req.body.statusAprovacao);
@@ -4258,8 +4295,8 @@ app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadast
     }
 
     const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
-    const result = await Model.findByIdAndUpdate(
-      id,
+    const result = await Model.findOneAndUpdate(
+      { ...eventContext.filtro, _id: id },
       { aprovado: statusAprovacao === 'aprovado', statusAprovacao },
       { new: true }
     );
@@ -4291,8 +4328,11 @@ app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadast
 // GET /admin/gerenciar-cadastros - Página de gestão de cadastros
 app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
   try {
-    const encontristas = await Cadastro.find().sort({ dataCadastro: -1 }).lean();
-    const encontreirosRaw = await Encontro.find().sort({ dataCadastro: -1 }).lean();
+    const eventContext = await resolveAdminEventContext(req);
+    const baseFilter = eventContext.filtro;
+
+    const encontristas = await Cadastro.find(baseFilter).sort({ dataCadastro: -1 }).lean();
+    const encontreirosRaw = await Encontro.find(baseFilter).sort({ dataCadastro: -1 }).lean();
     const gruposTios = new Map();
 
     encontreirosRaw.forEach((item) => {
@@ -4342,12 +4382,24 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       auditoriaLogs,
       ejcs,
       encontroAtivoNome: encontroAtivo?.nome || '',
+      escopoEventoAdmin: eventContext.scope,
+      eventoFiltroNome: eventContext.encontroNome,
       equipes,
       encontreirosParaEquipe,
     });
   } catch (err) {
     console.error('Erro ao carregar cadastros:', err);
     res.status(500).send('Erro ao carregar cadastros');
+  }
+});
+
+app.post('/admin/evento-scope', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
+  try {
+    const scope = normalizeAdminEventScopeInput(req.body.scope);
+    req.session.adminEventScope = scope;
+    return res.json({ success: true, scope });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Erro ao atualizar escopo de evento.' });
   }
 });
 
