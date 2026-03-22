@@ -214,6 +214,9 @@
             <span class="manager-module-count"><%= (administradores || []).length %></span>
           </button>
         </section>
+        <p class="manager-shortcut-hint" aria-label="Atalhos de teclado">
+          Atalhos: <strong>Alt+1..7</strong> para abas, <strong>Alt+D</strong> para dashboard e <strong>Alt+S</strong> para salvar formulário ativo.
+        </p>
 
         <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
@@ -1441,9 +1444,18 @@
                 <div>
                   <p class="admin-card-kicker">Rastreabilidade</p>
                   <h5><i class="fas fa-clipboard-list me-2"></i>Auditoria</h5>
-                  <p class="admin-card-subtitle">Acompanhe os últimos 100 eventos administrativos para revisão, conferência e histórico operacional.</p>
+                  <p class="admin-card-subtitle">Acompanhe eventos administrativos com paginação para revisão, conferência e histórico operacional.</p>
                 </div>
-                <span class="admin-card-badge">Últimos 100 eventos</span>
+                <span class="admin-card-badge">Total: <%= auditoriaTotal || 0 %> eventos</span>
+              </div>
+              <div class="audit-pagination-head">
+                <span class="audit-page-meta">Página <strong><%= auditoriaPaginaAtual || 1 %></strong> de <strong><%= auditoriaTotalPaginas || 1 %></strong></span>
+                <div class="audit-pagination-actions">
+                  <% const prevAuditPage = Math.max(1, (auditoriaPaginaAtual || 1) - 1); %>
+                  <% const nextAuditPage = Math.min((auditoriaTotalPaginas || 1), (auditoriaPaginaAtual || 1) + 1); %>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) <= 1 ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= prevAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Anterior</a>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) >= (auditoriaTotalPaginas || 1) ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= nextAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Próxima</a>
+                </div>
               </div>
               <div class="table-wrap admin-table-shell">
                 <table class="table table-hover">
@@ -2443,6 +2455,53 @@
       }
     }
 
+    function setupAdminKeyboardShortcuts() {
+      const tabsByShortcut = {
+        '1': 'principal-tab',
+        '2': 'encontristas-tab',
+        '3': 'encontreiros-tab',
+        '4': 'tios-tab',
+        '5': 'aprovacoes-tab',
+        '6': 'encontros-tab',
+        '7': 'admins-tab',
+      };
+
+      document.addEventListener('keydown', (event) => {
+        const key = String(event.key || '').toLowerCase();
+        const target = event.target;
+        const isTyping = target && (
+          target.tagName === 'INPUT'
+          || target.tagName === 'TEXTAREA'
+          || target.tagName === 'SELECT'
+          || target.isContentEditable
+        );
+
+        if (isTyping) return;
+        if (!event.altKey) return;
+
+        if (tabsByShortcut[key]) {
+          event.preventDefault();
+          abrirAba(tabsByShortcut[key]);
+          return;
+        }
+
+        if (key === 'd') {
+          event.preventDefault();
+          window.location.href = '/admin/dashboard';
+          return;
+        }
+
+        if (key === 's') {
+          event.preventDefault();
+          const activePane = document.querySelector('.tab-pane.active.show') || document;
+          const saveButton = activePane.querySelector('.admin-primary-action, .btn-primary, button[type="submit"]');
+          if (saveButton && !saveButton.disabled) {
+            saveButton.click();
+          }
+        }
+      });
+    }
+
     function atualizarNavegacaoAtiva(tabButtonId) {
       document.querySelectorAll('[data-tab-target]').forEach((item) => {
         item.classList.toggle('active', item.dataset.tabTarget === tabButtonId);
@@ -2590,6 +2649,7 @@
 
     aplicarPermissoesNoPainel();
     restaurarAbaAtiva();
+    setupAdminKeyboardShortcuts();
 
     function initSidebarDockGlow() {
       const sidebar = document.querySelector('.admin-shell .sidebar');

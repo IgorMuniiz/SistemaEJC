@@ -89,6 +89,32 @@ Se não especificar, um padrão será usado (não recomendado para produção).
 - O valor padrão é `false` (não aprovado)
 - Você pode aprovar/desaprovar quantas vezes quiser
 
+## 🚀 Operação Profissional (Novo)
+
+### Onboarding rápido do operador
+
+1. Acesse o painel em `/admin/gerenciar-cadastros`.
+2. Use os atalhos para navegar sem perder tempo:
+  - `Alt+1..7`: troca direta de abas
+  - `Alt+D`: abre o dashboard executivo
+  - `Alt+S`: tenta salvar o formulário ativo
+3. Revise o bloco de auditoria ao final da aba de admins para verificar ações recentes.
+
+### Métricas recomendadas de acompanhamento
+
+- Tempo médio de aprovação (cadastro -> decisão)
+- Taxa de pendência por equipe e por encontro
+- Volume diário de aprovações/reprovações
+- Erros operacionais por tipo (edição, exclusão, bloqueio, encontro)
+
+### Checklist de produção
+
+1. Definir `SESSION_SECRET` forte no ambiente.
+2. Habilitar HTTPS e marcar cookie de sessão como `secure`.
+3. Revisar permissões de cada perfil administrativo (`super_admin`, `coordenador`, `operador`, `consulta`).
+4. Monitorar bloqueios por excesso de tentativas de login/rate limit.
+5. Garantir execução da pipeline CI em cada PR antes de merge.
+
 ## ❓ Problemas?
 
 Se não conseguir acessar `/admin/login`:

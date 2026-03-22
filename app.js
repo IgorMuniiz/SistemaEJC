@@ -12,6 +12,8 @@ const session = require('express-session');
 const bcryptjs = require('bcryptjs');
 const compression = require('compression');
 const sharp = require('sharp');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 
 const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
 const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
@@ -35,6 +37,8 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
+
+app.set('trust proxy', 1);
 
 const ensureImportPlaceholderImage = () => {
   const uploadsDir = path.join(__dirname, 'uploads');
@@ -548,6 +552,11 @@ app.set('view engine', 'ejs');
 // compress text assets to reduce transfer size in Lighthouse.
 app.use(compression({ threshold: 1024 }));
 
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: false,
+}));
+
 const setStaticCacheHeaders = (res, filePath) => {
   const ext = path.extname(filePath).toLowerCase();
   const immutableExt = new Set([
@@ -647,6 +656,36 @@ app.get('/sw.js', (req, res) => {
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
+
+const adminLoginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 8,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
+});
+
+const adminWriteLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 260,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    const method = String(req.method || '').toUpperCase();
+    const pathName = String(req.path || '');
+    if (!pathName.startsWith('/admin')) return true;
+    if (pathName === '/admin/login') return true;
+    return !['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+  },
+  handler: (req, res) => {
+    return res.status(429).json({
+      success: false,
+      error: 'Muitas operações em sequência. Aguarde alguns minutos e tente novamente.',
+    });
+  },
+});
+
+app.use(adminWriteLimiter);
 
 // configure session
 app.use(session({
@@ -3891,8 +3930,20 @@ app.get('/admin/login', (req, res) => {
 });
 
 // POST /admin/login - Processar login
-app.post('/admin/login', async (req, res) => {
+app.post('/admin/login', adminLoginLimiter, [
+  body('username')
+    .trim()
+    .notEmpty().withMessage('Usuário e senha são obrigatórios')
+    .isLength({ min: 3, max: 64 }).withMessage('Usuário inválido.'),
+  body('senha')
+    .isLength({ min: 1, max: 120 }).withMessage('Usuário e senha são obrigatórios'),
+], async (req, res) => {
   try {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      return res.render('admin-login', { error: validationErrors.array()[0].msg });
+    }
+
     const usernameInput = String(req.body.username || '').trim();
     const senha = String(req.body.senha || '');
 
@@ -4361,7 +4412,19 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       nivelAcesso: normalizeAdminAccessLevel(adminDoc?.nivelAcesso, 'super_admin'),
       permissoesEfetivas: resolveAdminPermissions(adminDoc),
     }));
-    const auditoriaLogs = await AdminAuditLog.find().sort({ createdAt: -1 }).limit(100).lean();
+    const auditoriaLimite = parsePositiveInt(req.query.auditLimit, 40, 10, 100);
+    const auditoriaTotal = await AdminAuditLog.countDocuments();
+    const auditoriaTotalPaginas = Math.max(1, Math.ceil(auditoriaTotal / auditoriaLimite));
+    const auditoriaPaginaAtual = Math.min(
+      parsePositiveInt(req.query.auditPage, 1, 1, 9999),
+      auditoriaTotalPaginas,
+    );
+    const auditoriaSkip = (auditoriaPaginaAtual - 1) * auditoriaLimite;
+    const auditoriaLogs = await AdminAuditLog.find()
+      .sort({ createdAt: -1 })
+      .skip(auditoriaSkip)
+      .limit(auditoriaLimite)
+      .lean();
     const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao ativo').lean();
     const encontroAtivo = await getEncontroAtivo();
     const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcNome nomeReferencia dataCriacao').lean();
@@ -4380,6 +4443,10 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       encontreiros,
       administradores,
       auditoriaLogs,
+      auditoriaPaginaAtual,
+      auditoriaTotalPaginas,
+      auditoriaTotal,
+      auditoriaLimite,
       ejcs,
       encontroAtivoNome: encontroAtivo?.nome || '',
       escopoEventoAdmin: eventContext.scope,
@@ -4393,8 +4460,15 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
   }
 });
 
-app.post('/admin/evento-scope', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
+app.post('/admin/evento-scope', checkAdminAuth, requireAdminPermission('painel.visualizar'), [
+  body('scope').optional().isIn(['ativo', 'todos']).withMessage('Escopo de evento inválido.'),
+], async (req, res) => {
   try {
+    const validationErrors = validationResult(req);
+    if (!validationErrors.isEmpty()) {
+      return res.status(400).json({ success: false, error: validationErrors.array()[0].msg });
+    }
+
     const scope = normalizeAdminEventScopeInput(req.body.scope);
     req.session.adminEventScope = scope;
     return res.json({ success: true, scope });
