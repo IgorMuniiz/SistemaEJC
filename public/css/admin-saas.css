@@ -1709,6 +1709,48 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: linear-gradient(105deg, rgba(20, 23, 34, 0.9), rgba(20, 23, 34, 0.76));
       border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     }
+    body.admin-panel.admin-dashboard-page .approval-panel .section-panel-head {
+      padding: 18px 22px 16px;
+      background:
+        linear-gradient(120deg, rgba(14, 22, 42, 0.88), rgba(20, 23, 34, 0.84));
+      border-bottom-color: rgba(125, 211, 252, 0.24);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
+    }
+    body.admin-panel.admin-dashboard-page .approval-head-main {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+      width: 100%;
+      flex-wrap: wrap;
+    }
+    body.admin-panel.admin-dashboard-page .approval-head-sub {
+      margin: 6px 0 0;
+      font-size: .78rem;
+      color: rgba(191, 219, 254, 0.84);
+      letter-spacing: .01em;
+      max-width: 620px;
+    }
+    body.admin-panel.admin-dashboard-page .approval-head-tools {
+      margin-top: 1px;
+    }
+    body.admin-panel.admin-dashboard-page .approval-command-bar {
+      margin-top: 2px;
+      padding: 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.66), rgba(15, 23, 42, 0.4));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-dashboard-page .approval-view-switch {
+      margin-top: 2px;
+      padding: 6px;
+      border-radius: 999px;
+      background: rgba(8, 15, 30, 0.44);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      width: auto;
+      display: inline-flex;
+    }
     body.admin-panel.admin-dashboard-page .section-panel-title {
       display: flex; align-items: center; gap: 10px;
       font-size: 1.05rem; font-weight: 700; color: var(--text-1); margin: 0;
@@ -1840,7 +1882,42 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       opacity: 1;
       transform: translateY(0);
       transition: opacity var(--motion-fade), transform var(--motion-lift), padding var(--motion-smooth), max-height var(--motion-lift);
-      max-height: 999px;
+      max-height: none;
+      overflow: visible;
+    }
+    body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente,
+    body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado,
+    body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado {
+      max-height: min(72vh, 860px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(125, 211, 252, 0.5) rgba(15, 23, 42, 0.45);
+    }
+    body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar,
+    body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar,
+    body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar {
+      width: 10px;
+    }
+    body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-track,
+    body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-track,
+    body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.45);
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.12);
+    }
+    body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-thumb,
+    body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-thumb,
+    body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, rgba(125, 211, 252, 0.75), rgba(56, 189, 248, 0.55));
+      border-radius: 999px;
+      border: 2px solid rgba(15, 23, 42, 0.55);
+    }
+    body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-thumb:hover,
+    body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-thumb:hover,
+    body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, rgba(125, 211, 252, 0.9), rgba(56, 189, 248, 0.72));
     }
     body.admin-panel.admin-dashboard-page .kanban-col:last-child { border-right: none; }
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col:not(.col-pendente),
@@ -1864,6 +1941,12 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 16px; padding-bottom: 14px;
       border-bottom: 2px solid var(--border-sub);
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: linear-gradient(180deg, rgba(10, 18, 34, 0.94), rgba(10, 18, 34, 0.78));
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
     }
     body.admin-panel.admin-dashboard-page .kanban-col-label {
       display: flex; align-items: center; gap: 7px;
@@ -1894,6 +1977,13 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       transition: all var(--transition);
       position: relative;
       box-shadow: 0 8px 24px rgba(2, 6, 23, 0.22);
+    }
+    body.admin-panel.admin-dashboard-page .approval-panel .pcard {
+      border-color: rgba(148, 163, 184, 0.22);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.014)),
+        linear-gradient(125deg, rgba(37, 99, 235, 0.08), rgba(15, 23, 42, 0.9) 42%, rgba(56, 189, 248, 0.07));
+      box-shadow: 0 12px 28px rgba(2, 6, 23, 0.24);
     }
     body.admin-panel.admin-dashboard-page .pcard::after {
       position: absolute;
@@ -2126,12 +2216,21 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       opacity: 1;
       transform: translateY(0);
     }
+    body.admin-panel.admin-dashboard-page .approval-panel .pcard-actions {
+      border-top: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(8, 15, 30, 0.24), rgba(8, 15, 30, 0.48));
+    }
     body.admin-panel.admin-dashboard-page .pcard-btn {
       flex: 1; padding: 9px 0; border-radius: 9px;
       font-size: .8rem; font-weight: 700; border: none;
       cursor: pointer; display: flex; align-items: center;
       justify-content: center; gap: 6px;
       transition: all var(--transition);
+    }
+    body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn {
+      min-height: 36px;
+      font-size: .78rem;
+      letter-spacing: .01em;
     }
     body.admin-panel.admin-dashboard-page .pcard-btn.approve {
       background: var(--green-dim); color: #86efac;
@@ -2238,10 +2337,46 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .section-panel:nth-of-type(1) { animation-delay: 90ms; }
     body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .section-panel:nth-of-type(2) { animation-delay: 140ms; }
 
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .pcard {
+      animation: approval-card-enter 520ms cubic-bezier(.22,1,.36,1) both;
+      will-change: transform, opacity;
+    }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(1) { animation-delay: 80ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(2) { animation-delay: 120ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(3) { animation-delay: 160ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(4) { animation-delay: 200ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(5) { animation-delay: 240ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(6) { animation-delay: 280ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(7) { animation-delay: 320ms; }
+    body.admin-panel.admin-dashboard-page.is-loaded .approval-panel .kanban-col .pcard:nth-child(n+8) { animation-delay: 360ms; }
+
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .pcard {
+      animation-duration: 320ms;
+    }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(1) { animation-delay: 40ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(2) { animation-delay: 65ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(3) { animation-delay: 90ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(4) { animation-delay: 115ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(5) { animation-delay: 140ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(6) { animation-delay: 165ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(7) { animation-delay: 190ms; }
+    body.admin-panel.admin-dashboard-page.motion-mode-executivo.is-loaded .approval-panel .kanban-col .pcard:nth-child(n+8) { animation-delay: 220ms; }
+
     @keyframes dashboard-rise {
       from {
         opacity: 0;
         transform: translateY(14px) scale(0.995);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes approval-card-enter {
+      from {
+        opacity: 0;
+        transform: translateY(10px) scale(0.992);
       }
       to {
         opacity: 1;
@@ -2262,7 +2397,8 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-dashboard-page .pcard-btn::after,
       body.admin-panel.admin-dashboard-page .strategy-strip,
       body.admin-panel.admin-dashboard-page .section-panel,
-      body.admin-panel.admin-dashboard-page .stats-row .stat-tile {
+      body.admin-panel.admin-dashboard-page .stats-row .stat-tile,
+      body.admin-panel.admin-dashboard-page .approval-panel .pcard {
         animation: none !important;
         transition: none !important;
       }
@@ -2361,6 +2497,11 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     @media (max-width: 720px) {
       body.admin-panel.admin-dashboard-page .kanban-board { grid-template-columns: 1fr; }
       body.admin-panel.admin-dashboard-page .kanban-col { border-right: none; border-bottom: 1px solid var(--border-sub); }
+      body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente,
+      body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado,
+      body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado {
+        max-height: min(64vh, 680px);
+      }
       body.admin-panel.admin-dashboard-page .kanban-col:last-child { border-bottom: none; }
       body.admin-panel.admin-dashboard-page .stats-row { grid-template-columns: 1fr 1fr; }
       body.admin-panel.admin-dashboard-page .strategy-grid { grid-template-columns: 1fr; }

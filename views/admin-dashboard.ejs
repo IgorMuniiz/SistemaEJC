@@ -327,20 +327,25 @@
     </div>
 
     <!-- ───────── ENCONTRISTAS ───────── -->
-    <section class="section-panel">
+    <section class="section-panel approval-panel" data-approval-panel="encontristas">
       <div class="section-panel-head">
-        <h2 class="section-panel-title"><i class="fas fa-user-graduate"></i>Encontristas</h2>
-        <div class="section-meta">
-          <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontristas %> pendente(s)</span>
-          <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontristas %> aprovado(s)</span>
-          <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontristas %> reprovado(s)</span>
+        <div class="approval-head-main">
+          <div>
+            <h2 class="section-panel-title"><i class="fas fa-user-graduate"></i>Encontristas</h2>
+            <p class="approval-head-sub">Central de triagem e decisão operacional para inscrições de encontristas.</p>
+          </div>
+          <div class="section-meta">
+            <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontristas %> pendente(s)</span>
+            <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontristas %> aprovado(s)</span>
+            <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontristas %> reprovado(s)</span>
+          </div>
         </div>
-        <div class="export-row">
+        <div class="export-row approval-head-tools">
           <a href="/export?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontristas" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
-        <div class="batch-toolbar" data-batch-scope="encontrista">
+        <div class="batch-toolbar approval-command-bar" data-batch-scope="encontrista">
           <span class="batch-counter">0 selecionado(s)</span>
           <span class="batch-separator"></span>
           <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontrista','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
@@ -353,7 +358,7 @@
           <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
           <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
         </div>
-        <div class="status-tabs" data-board-tabs>
+        <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
           <button type="button" class="status-tab" data-view="aprovado"><i class="fas fa-circle-check"></i>Aprovados</button>
@@ -539,20 +544,25 @@
     </section>
 
     <!-- ───────── ENCONTREIROS ───────── -->
-    <section class="section-panel">
+    <section class="section-panel approval-panel" data-approval-panel="encontreiros">
       <div class="section-panel-head">
-        <h2 class="section-panel-title"><i class="fas fa-people-group"></i>Encontreiros</h2>
-        <div class="section-meta">
-          <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontreiros %> pendente(s)</span>
-          <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontreiros %> aprovado(s)</span>
-          <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontreiros %> reprovado(s)</span>
+        <div class="approval-head-main">
+          <div>
+            <h2 class="section-panel-title"><i class="fas fa-people-group"></i>Encontreiros</h2>
+            <p class="approval-head-sub">Fila inteligente de aprovação para equipes de serviço, jovens e tios.</p>
+          </div>
+          <div class="section-meta">
+            <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontreiros %> pendente(s)</span>
+            <span class="meta-chip green"><i class="fas fa-check"></i><%= totalAprovadosEncontreiros %> aprovado(s)</span>
+            <span class="meta-chip red"><i class="fas fa-xmark"></i><%= totalReprovadosEncontreiros %> reprovado(s)</span>
+          </div>
         </div>
-        <div class="export-row">
+        <div class="export-row approval-head-tools">
           <a href="/export-encontro?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontreiros" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
-        <div class="batch-toolbar" data-batch-scope="encontreiro">
+        <div class="batch-toolbar approval-command-bar" data-batch-scope="encontreiro">
           <span class="batch-counter">0 selecionado(s)</span>
           <span class="batch-separator"></span>
           <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontreiro','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
@@ -565,7 +575,7 @@
           <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
           <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
         </div>
-        <div class="status-tabs" data-board-tabs>
+        <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
           <button type="button" class="status-tab" data-view="aprovado"><i class="fas fa-circle-check"></i>Aprovados</button>
