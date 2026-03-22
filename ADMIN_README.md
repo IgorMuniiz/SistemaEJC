@@ -115,6 +115,26 @@ Se não especificar, um padrão será usado (não recomendado para produção).
 4. Monitorar bloqueios por excesso de tentativas de login/rate limit.
 5. Garantir execução da pipeline CI em cada PR antes de merge.
 
+## ✅ Deploy Ready v1
+
+O sistema agora inclui camadas adicionais de prontidão para produção:
+
+1. **Store de sessão persistente** via Mongo (`connect-mongo`) com fallback seguro.
+2. **Proteção CSRF compatível** em rotas administrativas (`POST/PUT/PATCH/DELETE`).
+3. **Healthcheck e readiness**:
+  - `GET /healthz`
+  - `GET /readyz`
+4. **Graceful shutdown** em `SIGTERM` e `SIGINT`.
+5. **Validação de ambiente em produção** (falha de startup se config crítica estiver inválida).
+6. **Teste automatizado básico** para endpoints de saúde.
+
+### Variáveis novas/relevantes
+
+Use como base o arquivo `.env.example`.
+
+- `SESSION_STORE_MONGO_URI`: URI do Mongo para persistência de sessão.
+- `SKIP_MONGO_CONNECT=1`: útil apenas para testes locais/CI sem banco.
+
 ## ❓ Problemas?
 
 Se não conseguir acessar `/admin/login`:

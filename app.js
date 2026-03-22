@@ -14,6 +14,8 @@ const compression = require('compression');
 const sharp = require('sharp');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const crypto = require('crypto');
+const MongoStore = require('connect-mongo');
 
 const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
 const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
@@ -37,6 +39,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 app.set('trust proxy', 1);
 
@@ -60,6 +63,28 @@ const mongoUri = process.env.MONGODB_URL
   || process.env.MONGO_URI
   || 'mongodb://127.0.0.1:27017/ejc_sistema';
 const mongoFallbackUri = process.env.MONGODB_FALLBACK_URL || 'mongodb://127.0.0.1:27017/ECJCOP';
+
+const validateRuntimeConfig = () => {
+  const issues = [];
+
+  if (IS_PRODUCTION) {
+    const secret = String(process.env.SESSION_SECRET || '');
+    if (!secret || secret.includes('mude-em-producao') || secret.length < 24) {
+      issues.push('SESSION_SECRET forte (>= 24 chars) obrigatorio em producao.');
+    }
+
+    const hasMongoEnv = Boolean(process.env.MONGODB_URL || process.env.MONGODB_URI || process.env.MONGO_URI);
+    if (!hasMongoEnv) {
+      issues.push('Defina MONGODB_URI/MONGODB_URL/MONGO_URI em producao.');
+    }
+  }
+
+  if (issues.length > 0) {
+    throw new Error(`Configuracao invalida de ambiente:\n- ${issues.join('\n- ')}`);
+  }
+};
+
+validateRuntimeConfig();
 
 const connectToMongo = async () => {
   const uris = [mongoUri, mongoFallbackUri].filter((value, index, arr) => value && arr.indexOf(value) === index);
@@ -96,7 +121,12 @@ const connectToMongo = async () => {
   }
 };
 
-connectToMongo();
+const SKIP_MONGO_CONNECT = process.env.SKIP_MONGO_CONNECT === '1';
+if (!SKIP_MONGO_CONNECT) {
+  connectToMongo();
+} else {
+  console.warn('MongoDB connect skipped (SKIP_MONGO_CONNECT=1).');
+}
 
 mongoose.connection.on('disconnected', () => {
   console.warn('MongoDB desconectado.');
@@ -687,16 +717,45 @@ const adminWriteLimiter = rateLimit({
 
 app.use(adminWriteLimiter);
 
+const createSessionStore = () => {
+  if (process.env.NODE_ENV === 'test' || SKIP_MONGO_CONNECT) {
+    return null;
+  }
+
+  try {
+    const sessionMongoUri = process.env.SESSION_STORE_MONGO_URI || mongoUri || mongoFallbackUri;
+    return MongoStore.create({
+      mongoUrl: sessionMongoUri,
+      collectionName: 'sessions',
+      ttl: 60 * 60 * 24,
+      autoRemove: 'native',
+      touchAfter: 24 * 3600,
+    });
+  } catch (err) {
+    console.error('Falha ao inicializar session store persistente:', err.message);
+    return null;
+  }
+};
+
+const sessionStore = createSessionStore();
+if (!sessionStore) {
+  console.warn('Session store persistente indisponivel. Usando MemoryStore (nao recomendado em producao).');
+}
+
 // configure session
 app.use(session({
+  name: 'ejc.sid',
+  store: sessionStore || undefined,
   secret: process.env.SESSION_SECRET || 'seu-supercódigo-secreto-mude-em-producao',
   resave: false,
   saveUninitialized: false,
+  proxy: true,
   cookie: {
-    secure: false, // mude para true em produção com HTTPS
+    secure: IS_PRODUCTION,
+    sameSite: 'lax',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 // 24 horas
-  }
+    maxAge: 1000 * 60 * 60 * 24,
+  },
 }));
 
 // file upload config
@@ -792,6 +851,98 @@ const resolveApprovalStatus = (doc) => {
 };
 
 const normalizeTextInput = (value) => String(value || '').trim();
+
+const ensureAdminCsrfToken = (req, res, next) => {
+  if (!req.session) return next();
+
+  if (!req.session.adminCsrfToken) {
+    req.session.adminCsrfToken = crypto.randomBytes(24).toString('hex');
+  }
+
+  res.locals.adminCsrfToken = req.session.adminCsrfToken;
+  return next();
+};
+
+const isSameOriginRequest = (req) => {
+  const host = normalizeTextInput(req.get('host'));
+  if (!host) return false;
+
+  const allowedOrigin = `${req.protocol}://${host}`;
+  const origin = normalizeTextInput(req.get('origin'));
+  const referer = normalizeTextInput(req.get('referer'));
+
+  if (origin) return origin === allowedOrigin;
+  if (referer) return referer === allowedOrigin || referer.startsWith(`${allowedOrigin}/`);
+  return false;
+};
+
+const adminCsrfGuard = (req, res, next) => {
+  const method = String(req.method || '').toUpperCase();
+  const routePath = String(req.path || '');
+  const stateChanging = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
+
+  if (!stateChanging || !routePath.startsWith('/admin')) {
+    return next();
+  }
+
+  if (routePath === '/admin/login') {
+    return next();
+  }
+
+  const expectedToken = normalizeTextInput(req.session?.adminCsrfToken);
+  const providedToken = normalizeTextInput(
+    req.get('x-csrf-token')
+      || req.get('x-admin-csrf')
+      || req.body?._csrf
+      || req.query?._csrf
+  );
+
+  if (
+    expectedToken
+    && providedToken
+    && providedToken.length === expectedToken.length
+    && crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))
+  ) {
+    return next();
+  }
+
+  if (isSameOriginRequest(req)) {
+    return next();
+  }
+
+  return res.status(403).json({
+    success: false,
+    error: 'Falha de validacao CSRF. Recarregue a pagina e tente novamente.',
+  });
+};
+
+app.use(ensureAdminCsrfToken);
+app.use(adminCsrfGuard);
+
+app.get('/healthz', (req, res) => {
+  return res.status(200).json({
+    status: 'ok',
+    uptimeSec: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get('/readyz', async (req, res) => {
+  const mongoReady = mongoose.connection.readyState === 1;
+  if (!mongoReady) {
+    return res.status(503).json({
+      status: 'degraded',
+      mongo: 'disconnected',
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  return res.status(200).json({
+    status: 'ready',
+    mongo: 'connected',
+    timestamp: new Date().toISOString(),
+  });
+});
 
 const normalizeAdminEventScopeInput = (value) => {
   const raw = normalizeTextInput(value).toLowerCase();
@@ -1082,25 +1233,34 @@ const executeLgpdRetention = async (retentionDays = LGPD_RETENTION_DAYS_DEFAULT)
   };
 };
 
-setTimeout(() => {
-  executeLgpdRetention().then((result) => {
-    if (result.totalAnonimizados > 0) {
-      console.log(`[LGPD] Anonimizacao automatica inicial: ${result.totalAnonimizados} registro(s).`);
-    }
-  }).catch((err) => {
-    console.error('[LGPD] Falha na anonimização automática inicial:', err.message);
-  });
-}, 20 * 1000);
+const ENABLE_BACKGROUND_JOBS = process.env.DISABLE_BACKGROUND_JOBS !== '1'
+  && process.env.NODE_ENV !== 'test'
+  && !SKIP_MONGO_CONNECT;
 
-setInterval(() => {
-  executeLgpdRetention().then((result) => {
-    if (result.totalAnonimizados > 0) {
-      console.log(`[LGPD] Anonimizacao automatica diaria: ${result.totalAnonimizados} registro(s).`);
-    }
-  }).catch((err) => {
-    console.error('[LGPD] Falha na anonimização diária:', err.message);
-  });
-}, 24 * 60 * 60 * 1000);
+if (ENABLE_BACKGROUND_JOBS) {
+  const lgpdInitialTimer = setTimeout(() => {
+    executeLgpdRetention().then((result) => {
+      if (result.totalAnonimizados > 0) {
+        console.log(`[LGPD] Anonimizacao automatica inicial: ${result.totalAnonimizados} registro(s).`);
+      }
+    }).catch((err) => {
+      console.error('[LGPD] Falha na anonimização automática inicial:', err.message);
+    });
+  }, 20 * 1000);
+
+  const lgpdDailyInterval = setInterval(() => {
+    executeLgpdRetention().then((result) => {
+      if (result.totalAnonimizados > 0) {
+        console.log(`[LGPD] Anonimizacao automatica diaria: ${result.totalAnonimizados} registro(s).`);
+      }
+    }).catch((err) => {
+      console.error('[LGPD] Falha na anonimização diária:', err.message);
+    });
+  }, 24 * 60 * 60 * 1000);
+
+  if (typeof lgpdInitialTimer.unref === 'function') lgpdInitialTimer.unref();
+  if (typeof lgpdDailyInterval.unref === 'function') lgpdDailyInterval.unref();
+}
 
 const truncateText = (value, max = 42) => {
   const text = String(value || '').trim();
@@ -6948,8 +7108,68 @@ app.get('/admin/logout', (req, res) => {
   });
 });
 
-app.listen(PORT, HOST, () => {
-  const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
-  console.log(`Server running on http://${displayHost}:${PORT}`);
-  console.log(`Listening on ${HOST}:${PORT} for external access.`);
-});
+let serverInstance = null;
+
+const startServer = () => {
+  if (serverInstance) return serverInstance;
+
+  serverInstance = app.listen(PORT, HOST, () => {
+    const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+    console.log(`Server running on http://${displayHost}:${PORT}`);
+    console.log(`Listening on ${HOST}:${PORT} for external access.`);
+  });
+
+  return serverInstance;
+};
+
+const shutdownServer = async (signal, exitCode = 0) => {
+  console.log(`[SHUTDOWN] Signal received: ${signal}`);
+
+  if (serverInstance) {
+    await new Promise((resolve) => {
+      serverInstance.close(() => resolve());
+    });
+  }
+
+  try {
+    if (mongoose.connection.readyState !== 0) {
+      await mongoose.connection.close();
+    }
+  } catch (err) {
+    console.error('[SHUTDOWN] Erro ao encerrar MongoDB:', err.message);
+  }
+
+  process.exit(exitCode);
+};
+
+if (require.main === module) {
+  startServer();
+
+  process.on('SIGTERM', () => {
+    shutdownServer('SIGTERM').catch((err) => {
+      console.error('[SHUTDOWN] Falha no encerramento SIGTERM:', err.message);
+      process.exit(1);
+    });
+  });
+
+  process.on('SIGINT', () => {
+    shutdownServer('SIGINT').catch((err) => {
+      console.error('[SHUTDOWN] Falha no encerramento SIGINT:', err.message);
+      process.exit(1);
+    });
+  });
+
+  process.on('unhandledRejection', (reason) => {
+    console.error('[FATAL] Unhandled rejection:', reason);
+  });
+
+  process.on('uncaughtException', (err) => {
+    console.error('[FATAL] Uncaught exception:', err);
+    shutdownServer('uncaughtException', 1).catch(() => process.exit(1));
+  });
+}
+
+module.exports = {
+  app,
+  startServer,
+};
