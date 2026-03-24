@@ -64,6 +64,8 @@ function GenericForm() {
     dataNascimento: '',
     telefone: '',
     intolerante: '',
+    ehAlergico: 'nao',
+    alergiaDescricao: '',
     email: '',
     temRelacionamento: '',
     instagram: '',
@@ -86,6 +88,8 @@ function GenericForm() {
       dataNascimento: '',
       telefone: '',
       intolerante: '',
+      ehAlergico: 'nao',
+      alergiaDescricao: '',
       email: '',
       temRelacionamento: '',
       instagram: '',
@@ -107,6 +111,8 @@ function GenericForm() {
       dataNascimento: '',
       telefone: '',
       intolerante: '',
+      ehAlergico: 'nao',
+      alergiaDescricao: '',
       email: '',
       temRelacionamento: '',
       instagram: '',
@@ -236,17 +242,6 @@ function GenericForm() {
     return () => {
       cancelled = true;
     };
-  }, [ejcAtivo]);
-
-  useEffect(() => {
-    if (!ejcAtivo) return;
-
-    setFormData((prev) => (prev.ejc === ejcAtivo ? prev : { ...prev, ejc: ejcAtivo }));
-    setTiosData((prev) => ({
-      ...prev,
-      pessoa1: prev.pessoa1.ejc === ejcAtivo ? prev.pessoa1 : { ...prev.pessoa1, ejc: ejcAtivo },
-      pessoa2: prev.pessoa2.ejc === ejcAtivo ? prev.pessoa2 : { ...prev.pessoa2, ejc: ejcAtivo },
-    }));
   }, [ejcAtivo]);
 
   useEffect(() => {
@@ -401,7 +396,6 @@ function GenericForm() {
             }
           });
           data.append('tipo', 'tios');
-          data.set('ejc', ejcAtivo);
           data.append('tiosCategoria', categoriaTios);
           data.append('origemTios', 'true');
           if (tiosGrupoId) {
@@ -441,7 +435,6 @@ function GenericForm() {
           }
         });
         data.append('tipo', tipo);
-        data.set('ejc', ejcAtivo);
         data.append('tiosCategoria', '');
         data.append('origemTios', 'false');
         data.append('tiosGrupoId', '');
@@ -750,6 +743,30 @@ function GenericForm() {
             <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
           </div>
           <div className="mb-3">
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
+              <option value="nao">Nao</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
+            <input
+              type="text"
+              className="form-control"
+              id={`alergiaDescricao-${pessoa}`}
+              name="alergiaDescricao"
+              value={data.alergiaDescricao || ''}
+              onChange={handleCh}
+              placeholder="Ex: amendoim, dipirona, lactose"
+              disabled={(data.ehAlergico || 'nao') !== 'sim'}
+              required={(data.ehAlergico || 'nao') === 'sim'}
+            />
+          </div>
+          <div className="mb-3">
             <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
             <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/png, image/jpeg" onChange={handleF} required />
           </div>
@@ -833,11 +850,12 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`ejc-${pessoa}`} className="form-label">EJC *</label>
+            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC você fez? *</label>
             <div className="input-group">
               <span className="input-group-text"><i className="fas fa-church"></i></span>
-              <input type="text" className="form-control" id={`ejc-${pessoa}`} name="ejc" value={ejcAtivo || data.ejc} readOnly required />
+              <input type="text" className="form-control" id={`ejc-${pessoa}`} name="ejc" value={data.ejc} onChange={handleCh} required />
             </div>
+            {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
           </div>
           <div className="mb-3">
             <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">A qual EJC pertence</label>
@@ -974,6 +992,30 @@ function GenericForm() {
             <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
           </div>
           <div className="mb-3">
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
+              <option value="nao">Nao</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
+            <input
+              type="text"
+              className="form-control"
+              id={`alergiaDescricao-${pessoa}`}
+              name="alergiaDescricao"
+              value={data.alergiaDescricao || ''}
+              onChange={handleCh}
+              placeholder="Ex: amendoim, dipirona, lactose"
+              disabled={(data.ehAlergico || 'nao') !== 'sim'}
+              required={(data.ehAlergico || 'nao') === 'sim'}
+            />
+          </div>
+          <div className="mb-3">
             <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
             <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/png, image/jpeg" onChange={handleF} required />
           </div>
@@ -1075,11 +1117,12 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`ejc-${pessoa}`} className="form-label">EJC *</label>
+            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC você fez? *</label>
             <div className="input-group">
               <span className="input-group-text"><i className="fas fa-church"></i></span>
-              <input type="text" className="form-control" id={`ejc-${pessoa}`} name="ejc" value={ejcAtivo || data.ejc} readOnly required />
+              <input type="text" className="form-control" id={`ejc-${pessoa}`} name="ejc" value={data.ejc} onChange={handleCh} required />
             </div>
+            {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
           </div>
           <div className="mb-3">
             <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">A qual EJC pertence</label>
@@ -1166,6 +1209,30 @@ function GenericForm() {
         <div className="mb-3">
           <label htmlFor={`intolerante-${pessoa}`} className="form-label">Intolerante a alguma comida</label>
           <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
+              <option value="nao">Nao</option>
+              <option value="sim">Sim</option>
+            </select>
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
+            <input
+              type="text"
+              className="form-control"
+              id={`alergiaDescricao-${pessoa}`}
+              name="alergiaDescricao"
+              value={data.alergiaDescricao || ''}
+              onChange={handleCh}
+              placeholder="Ex: amendoim, dipirona, lactose"
+              disabled={(data.ehAlergico || 'nao') !== 'sim'}
+              required={(data.ehAlergico || 'nao') === 'sim'}
+            />
+          </div>
         </div>
       </section>
 

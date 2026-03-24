@@ -28,6 +28,12 @@
     if (raw === 'reprovado' || raw === 'desistiu') return 'reprovado';
     return 'pendente';
   }; %>
+  <% const resumoAlergia = function(c){
+    const ehAlergico = String((c && c.ehAlergico) || '').toLowerCase() === 'sim';
+    const alergiaDescricao = String((c && c.alergiaDescricao) || '').trim();
+    if (!ehAlergico) return 'Nao';
+    return alergiaDescricao || 'Sim (nao informado)';
+  }; %>
   <% const encontristasAprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
   <% const encontristasReprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
   <% const encontristasPendentes = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'pendente'; }); %>
@@ -104,9 +110,6 @@
             </h1>
             <div class="workspace-hero-strip" aria-label="Destaques da gestão">
               <span class="hero-strip-pill"><i class="fas fa-bullseye"></i>Encontro ativo: <strong><%= encontroAtivoNome || 'Nenhum definido' %></strong></span>
-              <span class="hero-strip-pill"><i class="fas fa-circle-check"></i><%= encontristasAprovados.length %> encontristas aprovados</span>
-              <span class="hero-strip-pill"><i class="fas fa-user-group"></i><%= encontreirosAprovados.length %> encontreiros liberados</span>
-              <span class="hero-strip-pill"><i class="fas fa-heart"></i><%= (tios || []).length %> tios em apoio</span>
             </div>
             <% if (podeVisualizarPainel) { %>
               <div class="event-scope-workbench" aria-label="Escopo dos dados do painel administrativo">
@@ -128,10 +131,6 @@
                     <i class="fas fa-layer-group"></i>Todos os encontros
                   </button>
                 </div>
-                <span class="event-filter-banner" role="status">
-                  <i class="fas fa-filter"></i>
-                  Exibindo: <strong><%= (escopoEventoAdmin || 'ativo') === 'todos' ? 'todos os encontros' : (eventoFiltroNome || encontroAtivoNome || 'encontro ativo') %></strong>
-                </span>
               </div>
             <% } %>
           </div>
@@ -214,9 +213,23 @@
             <span class="manager-module-count"><%= (administradores || []).length %></span>
           </button>
         </section>
-        <p class="manager-shortcut-hint" aria-label="Atalhos de teclado">
-          Atalhos: <strong>Alt+1..7</strong> para abas, <strong>Alt+D</strong> para dashboard e <strong>Alt+S</strong> para salvar formulário ativo.
-        </p>
+        <div class="manager-shortcut-hint" aria-label="Atalhos de teclado">
+          <span class="manager-shortcut-title"><i class="fas fa-keyboard"></i>Atalhos</span>
+          <div class="manager-shortcut-list" role="list">
+            <span class="manager-shortcut-chip" role="listitem">
+              <kbd>Alt+1..7</kbd>
+              <small>Alternar entre abas</small>
+            </span>
+            <span class="manager-shortcut-chip" role="listitem">
+              <kbd>Alt+D</kbd>
+              <small>Abrir dashboard</small>
+            </span>
+            <span class="manager-shortcut-chip" role="listitem">
+              <kbd>Alt+S</kbd>
+              <small>Salvar formulário ativo</small>
+            </span>
+          </div>
+        </div>
 
         <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
@@ -405,13 +418,14 @@
                     <th>Nome</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasAprovados.length === 0) { %>
-                    <tr><td colspan="7" class="empty-state">Nenhum encontrista aprovado.</td></tr>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista aprovado.</td></tr>
                   <% } else { %>
                     <% encontristasAprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="aprovado">
@@ -428,6 +442,7 @@
                         <td><%= cadastro.nomeCompleto %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td>
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
@@ -474,13 +489,14 @@
                     <th>Nome</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasReprovados.length === 0) { %>
-                    <tr><td colspan="7" class="empty-state">Nenhum encontrista reprovado.</td></tr>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista reprovado.</td></tr>
                   <% } else { %>
                     <% encontristasReprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="reprovado">
@@ -497,6 +513,7 @@
                         <td><%= cadastro.nomeCompleto %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td><span class="status-badge status-warn">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
@@ -535,13 +552,14 @@
                     <th>Nome</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasPendentes.length === 0) { %>
-                    <tr><td colspan="7" class="empty-state">Nenhum encontrista pendente.</td></tr>
+                    <tr><td colspan="8" class="empty-state">Nenhum encontrista pendente.</td></tr>
                   <% } else { %>
                     <% encontristasPendentes.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="pendente">
@@ -558,6 +576,7 @@
                         <td><%= cadastro.nomeCompleto %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td><span class="status-badge status-warn">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
@@ -603,6 +622,75 @@
                 <i class="fas fa-file-archive me-1"></i>Imagens
               </a>
             </div>
+
+            <!-- Card de link de inscrição de encontreiros -->
+            <div class="slc-card mb-3" id="card-link-encontreiros">
+              <!-- Orb decorativo -->
+              <span class="slc-orb" aria-hidden="true"></span>
+
+              <!-- Cabeçalho -->
+              <div class="slc-head">
+                <div class="slc-icon" aria-hidden="true">
+                  <i class="fas fa-link"></i>
+                </div>
+                <div>
+                  <p class="slc-kicker">Compartilhamento</p>
+                  <h5 class="slc-title">Link de inscrição de encontreiros</h5>
+                  <p class="slc-subtitle">Gere um link direto para o formulário de encontreiros. O link funciona mesmo quando o formulário está bloqueado.</p>
+                </div>
+              </div>
+
+              <!-- Separador -->
+              <div class="slc-divider" aria-hidden="true"></div>
+
+              <!-- Estado: link ativo -->
+              <% if (conviteEnconteiroToken) { %>
+                <div class="slc-link-box">
+                  <div class="slc-link-row">
+                    <input id="link-convite-encontreiro" type="text" class="slc-link-input"
+                      readonly value="<%= appBaseUrl %>/encontro?convite=<%= encodeURIComponent(conviteEnconteiroToken) %>" aria-label="Link de convite gerado">
+                    <button class="slc-btn slc-btn--icon" type="button" onclick="copiarLinkConvite()" title="Copiar link" aria-label="Copiar link">
+                      <i class="fas fa-copy" aria-hidden="true"></i>
+                    </button>
+                    <a class="slc-btn slc-btn--icon slc-btn--open" href="/encontro?convite=<%= encodeURIComponent(conviteEnconteiroToken) %>" target="_blank" rel="noreferrer" title="Abrir formulário" aria-label="Abrir formulário em nova aba">
+                      <i class="fas fa-external-link-alt" aria-hidden="true"></i>
+                    </a>
+                  </div>
+                  <% if (conviteEnconteiroTokenExp) { %>
+                    <p class="slc-exp"><i class="fas fa-clock" aria-hidden="true"></i> Expira em <strong><%= new Date(conviteEnconteiroTokenExp).toLocaleString('pt-BR') %></strong></p>
+                  <% } else { %>
+                    <p class="slc-exp slc-exp--no-exp"><i class="fas fa-infinity" aria-hidden="true"></i> Sem data de expiração</p>
+                  <% } %>
+                </div>
+              <% } else { %>
+                <div class="slc-empty">
+                  <i class="fas fa-link-slash slc-empty__icon" aria-hidden="true"></i>
+                  <span>Nenhum link ativo. Gere um abaixo.</span>
+                </div>
+              <% } %>
+
+              <!-- Controles -->
+              <div class="slc-controls">
+                <div class="slc-validity">
+                  <label for="convite-exp-dias" class="slc-validity__label">Validade (dias)</label>
+                  <input id="convite-exp-dias" type="number" class="slc-validity__input" min="1" max="365" placeholder="∞" aria-label="Validade em dias">
+                  <span class="slc-validity__hint">vazio = sem expiração</span>
+                </div>
+                <div class="slc-actions">
+                  <button type="button" class="slc-btn slc-btn--primary" onclick="gerarLinkConviteEncontreiro()" id="btn-gerar-link-convite">
+                    <i class="fas fa-rotate" aria-hidden="true"></i>
+                    <span><%= conviteEnconteiroToken ? 'Renovar Link' : 'Gerar Link' %></span>
+                  </button>
+                  <% if (conviteEnconteiroToken) { %>
+                    <button type="button" class="slc-btn slc-btn--danger" onclick="revogarLinkConviteEncontreiro()">
+                      <i class="fas fa-ban" aria-hidden="true"></i>
+                      <span>Revogar</span>
+                    </button>
+                  <% } %>
+                </div>
+              </div>
+            </div>
+
             <div class="search-toolbar">
               <div class="search-input-wrap">
                 <i class="fas fa-search"></i>
@@ -631,13 +719,14 @@
                     <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosAprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro aprovado.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro aprovado.</td></tr>
                   <% } else { %>
                     <% encontreirosAprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -659,6 +748,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td>
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
@@ -703,13 +793,14 @@
                     <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosReprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro reprovado.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro reprovado.</td></tr>
                   <% } else { %>
                     <% encontreirosReprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -731,6 +822,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td><span class="status-badge status-warn">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
@@ -767,13 +859,14 @@
                     <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosPendentes.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontreiro pendente.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro pendente.</td></tr>
                   <% } else { %>
                     <% encontreirosPendentes.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -795,6 +888,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td><span class="status-badge status-warn">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
@@ -869,12 +963,13 @@
                     <th>EJC</th>
                     <th>Telefone</th>
                     <th>Email</th>
+                    <th>Alergia</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (tios.length === 0) { %>
-                    <tr><td colspan="7" class="empty-state">Nenhum tios cadastrado.</td></tr>
+                    <tr><td colspan="8" class="empty-state">Nenhum tios cadastrado.</td></tr>
                   <% } else { %>
                     <% tios.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -890,6 +985,7 @@
                         <td><%= cadastro.ejc %></td>
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
+                        <td><%= resumoAlergia(cadastro) %></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1095,17 +1191,20 @@
                 <span class="tab-chip tab-chip-soft">Acesso e criacao rapidos</span>
               </div>
             </div>
-            <div class="admin-form-card">
+            <div class="admin-form-card ejc-selector-card">
               <h5 class="mb-3"><i class="fas fa-location-arrow me-2"></i>Selecionar EJC</h5>
               <div class="row g-3 ejc-row">
                 <div class="col-lg-9 col-md-8">
                   <label for="seletor_ejc_pagina" class="form-label">EJC disponível</label>
-                  <select id="seletor_ejc_pagina" class="form-select">
-                    <option value="">Selecione um EJC</option>
-                    <% (ejcs || []).forEach(function(item) { %>
-                      <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
-                    <% }); %>
-                  </select>
+                  <div class="ejc-selector-shell">
+                    <span class="ejc-selector-dot" aria-hidden="true"></span>
+                    <select id="seletor_ejc_pagina" class="form-select ejc-selector-input">
+                      <option value="">Selecione um EJC</option>
+                      <% (ejcs || []).forEach(function(item) { %>
+                        <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
+                      <% }); %>
+                    </select>
+                  </div>
                 </div>
                 <div class="col-lg-3 col-md-4 d-flex align-items-end ejc-action-col">
                   <button type="button" class="btn btn-primary w-100 btn-ejc-action" onclick="abrirPaginaEjc()">
@@ -1288,15 +1387,19 @@
             </div>
 
             <div class="admin-form-card admin-config-card admin-import-card" data-required-permission="importacao.executar">
-              <div class="admin-card-head">
+              <div class="admin-card-head" id="import-card-toggle" onclick="toggleImportCard()" style="cursor:pointer;user-select:none;">
                 <div>
                   <p class="admin-card-kicker">Integração</p>
                   <h5><i class="fas fa-file-import me-2"></i>Importar Apenas Encontreiros</h5>
                   <p class="admin-card-subtitle">Traga dados externos com mais segurança, padronização e controle de volume.</p>
                 </div>
-                <span class="admin-card-badge">Importação segura</span>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="admin-card-badge">Importação segura</span>
+                  <i class="fas fa-chevron-down" id="import-card-chevron" style="transition:transform .25s;color:var(--admin-text-muted,#6c757d)"></i>
+                </div>
               </div>
-              <form id="formImportacao" class="row g-3">
+              <div id="import-card-body" style="display:none;overflow:hidden;">
+                <form id="formImportacao" class="row g-3">
                 <div class="col-md-4">
                   <label class="form-label">Origem da Importacao *</label>
                   <select id="import_sourceType" class="form-select" onchange="atualizarCamposImportacao()">
@@ -1364,6 +1467,7 @@
               </form>
               <small class="text-muted admin-helper-note">Formatos aceitos: MongoDB, PostgreSQL, MySQL, Excel (.xlsx/.xls/.xlsm) e PDF.</small>
               <div id="import_result" class="import-result"></div>
+              </div>
             </div>
 
             <div class="admin-form-card admin-config-card admin-admins-card" data-required-permission="admins.gerenciar">
@@ -1439,15 +1543,18 @@
               <small class="text-muted admin-helper-note">Anonimiza dados antigos de cadastros não aprovados conforme o prazo informado.</small>
             </div>
 
-            <div class="admin-form-card admin-config-card admin-table-card mb-3" data-required-permission="admins.gerenciar">
+            <div id="admins-audit-card" class="admin-form-card admin-config-card admin-table-card mb-3" data-required-permission="admins.gerenciar">
               <div class="admin-card-head">
                 <div>
                   <p class="admin-card-kicker">Rastreabilidade</p>
                   <h5><i class="fas fa-clipboard-list me-2"></i>Auditoria</h5>
                   <p class="admin-card-subtitle">Acompanhe eventos administrativos com paginação para revisão, conferência e histórico operacional.</p>
                 </div>
-                <span class="admin-card-badge">Total: <%= auditoriaTotal || 0 %> eventos</span>
+                <button type="button" id="toggle-admin-audit" class="admin-card-badge audit-toggle-btn" aria-expanded="false" aria-controls="admins-audit-content">
+                  Mostrar auditoria (<%= auditoriaTotal || 0 %>)
+                </button>
               </div>
+              <div id="admins-audit-content" class="audit-collapsible-content" hidden>
               <div class="audit-pagination-head">
                 <span class="audit-page-meta">Página <strong><%= auditoriaPaginaAtual || 1 %></strong> de <strong><%= auditoriaTotalPaginas || 1 %></strong></span>
                 <div class="audit-pagination-actions">
@@ -1491,9 +1598,10 @@
                   </tbody>
                 </table>
               </div>
+              </div>
             </div>
 
-            <div class="admin-form-card admin-config-card admin-table-card" data-required-permission="admins.gerenciar">
+            <div id="admins-list-card" class="admin-form-card admin-config-card admin-table-card" data-required-permission="admins.gerenciar">
               <div class="admin-card-head">
                 <div>
                   <p class="admin-card-kicker">Equipe de acesso</p>
@@ -1757,6 +1865,17 @@
                         <label class="form-label">Intolerâncias / restrições alimentares</label>
                         <input type="text" class="form-control" id="edit_intolerante_encontrista" name="intolerante_encontrista">
                       </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">É alérgico?</label>
+                        <select class="form-select" id="edit_ehAlergico_encontrista" name="ehAlergico_encontrista">
+                          <option value="nao">Não</option>
+                          <option value="sim">Sim</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-8">
+                        <label class="form-label">Se sim, a quê?</label>
+                        <input type="text" class="form-control" id="edit_alergiaDescricao_encontrista" name="alergiaDescricao_encontrista" placeholder="Ex: amendoim, dipirona, lactose">
+                      </div>
                     </div>
                   </section>
                 </div>
@@ -1835,6 +1954,17 @@
                         <label class="form-label">Intolerâncias / alergias</label>
                         <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="3"></textarea>
                       </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">É alérgico?</label>
+                        <select class="form-select" id="edit_ehAlergico" name="ehAlergico">
+                          <option value="nao">Não</option>
+                          <option value="sim">Sim</option>
+                        </select>
+                      </div>
+                      <div class="col-lg-8">
+                        <label class="form-label">Se sim, a quê?</label>
+                        <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2" placeholder="Ex: amendoim, dipirona, lactose"></textarea>
+                      </div>
                     </div>
                   </section>
                 </div>
@@ -1908,58 +2038,6 @@
     </div>
   </div>
 
-  <div class="modal fade" id="modalEdicaoAdmin" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title"><i class="fas fa-user-pen me-2"></i>Editar Administrador</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-        </div>
-        <div class="modal-body">
-          <input type="hidden" id="edit_admin_id">
-          <div class="mb-3">
-            <label class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="edit_admin_username" placeholder="Digite o usuario">
-          </div>
-          <div class="mb-1">
-            <label class="form-label">Nova senha (opcional)</label>
-            <input type="password" class="form-control" id="edit_admin_senha" minlength="6" placeholder="Deixe em branco para manter a atual">
-          </div>
-          <div class="mb-3 mt-3">
-            <label class="form-label">Nível hierárquico</label>
-            <select id="edit_admin_nivel" class="form-select">
-              <option value="consulta">Consulta</option>
-              <option value="operador">Operador</option>
-              <option value="coordenador">Coordenador</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
-          </div>
-          <div class="mb-1">
-            <label class="form-label">Permissões extras</label>
-            <div id="edit_admin_permissions" class="admin-perm-pill-group">
-              <% adminPermissionOptionsList.forEach(function(option) { %>
-                <div class="admin-perm-pill">
-                  <input class="admin-perm-item-edit" type="checkbox" id="perm-edit-<%= option.key %>" value="<%= option.key %>">
-                  <label class="admin-perm-pill-label" for="perm-edit-<%= option.key %>">
-                    <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i><%= option.label %></span>
-                    <small><%= option.description %></small>
-                  </label>
-                </div>
-              <% }); %>
-            </div>
-          </div>
-          <small class="text-muted">Se informar senha, ela deve ter no minimo 6 caracteres.</small>
-        </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" class="btn btn-primary" onclick="salvarEdicaoAdmin()">
-            <i class="fas fa-save me-1"></i>Salvar alteracoes
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/page-transitions.js"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
@@ -1977,6 +2055,7 @@
     const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
     const administradoresData = JSON.parse(document.getElementById('administradores-data').textContent || '[]');
     const adminRoleDefaults = JSON.parse(document.getElementById('admin-role-defaults-data').textContent || '{}');
+      const adminPermissionOptionsData = <%- JSON.stringify(adminPermissionOptionsList || []) %>;
     const currentAdminPermissions = <%- JSON.stringify(adminPermissoesLista || []) %>;
     const adminUsernameAtual = <%- JSON.stringify(adminUsername || '') %>;
     const currentAdminLevel = <%- JSON.stringify(adminNivelAtual || 'super_admin') %>;
@@ -1994,6 +2073,27 @@
       return false;
     }
 
+    // Utilitário global de escape HTML — protege contra XSS em interpolações de innerHTML.
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    // Em ambiente de produção suprime os logs de debug; ative via localStorage:
+    //   localStorage.setItem('ejc_debug', '1')  ou  window.EJC_DEBUG = true
+    (function () {
+      const debugEnabled = window.EJC_DEBUG || localStorage.getItem('ejc_debug') === '1';
+      if (!debugEnabled) {
+        const noop = () => {};
+        console.log = noop;
+        console.debug = noop;
+      }
+    })();
+
     function getPrimeiraAbaDisponivelId() {
       const tabButtons = Array.from(document.querySelectorAll('#cadastroTabs .nav-link'));
       const firstVisible = tabButtons.find((item) => item.style.display !== 'none');
@@ -2009,8 +2109,58 @@
       });
     }
 
+    function initAdminsCardsLayout() {
+      const adminsCard = document.getElementById('admins-list-card');
+      const auditCard = document.getElementById('admins-audit-card');
+      const toggleBtn = document.getElementById('toggle-admin-audit');
+      const auditContent = document.getElementById('admins-audit-content');
+      const auditStorageKey = 'adminsAuditOpenState';
+      if (!adminsCard || !auditCard || !toggleBtn || !auditContent) return;
+
+      const parent = auditCard.parentElement;
+      if (parent && adminsCard.parentElement === parent) {
+        // Garante: lista de administradores acima e auditoria como ultimo card
+        parent.insertBefore(adminsCard, auditCard);
+        parent.appendChild(auditCard);
+      }
+
+      const setAuditOpen = (open) => {
+        auditContent.hidden = !open;
+        toggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        toggleBtn.textContent = `${open ? 'Ocultar' : 'Mostrar'} auditoria (<%= auditoriaTotal || 0 %>)`;
+        auditCard.classList.toggle('is-open', open);
+        try {
+          localStorage.setItem(auditStorageKey, open ? '1' : '0');
+        } catch (error) {
+          // Ignora falha de armazenamento (ex.: modo privado)
+        }
+      };
+
+      let shouldOpen = false;
+      try {
+        shouldOpen = localStorage.getItem(auditStorageKey) === '1';
+      } catch (error) {
+        shouldOpen = false;
+      }
+      setAuditOpen(shouldOpen);
+
+      toggleBtn.addEventListener('click', () => {
+        const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+        setAuditOpen(!isOpen);
+      });
+
+      const cardHead = auditCard.querySelector('.admin-card-head');
+      if (cardHead) {
+        cardHead.addEventListener('click', (event) => {
+          if (event.target === toggleBtn || toggleBtn.contains(event.target)) return;
+          const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true';
+          setAuditOpen(!isOpen);
+        });
+      }
+    }
+
     const modalEdicaoElement = document.getElementById('modalEdicao');
-    const modalEdicaoAdminElement = document.getElementById('modalEdicaoAdmin');
+    initAdminsCardsLayout();
     function createFixedEditorModalController(element) {
       if (!element) {
         return {
@@ -2085,14 +2235,32 @@
     }
 
     let modalEdicao = createFixedEditorModalController(modalEdicaoElement);
-    let modalEdicaoAdmin = createFixedEditorModalController(modalEdicaoAdminElement);
     let scrollPaginaAntesModal = 0;
+    let adminInlineEditorRemoveTimer = null;
+    let adminInlineEditorBusy = false;
+    let adminInlineEditLastClickAt = 0;
 
-    function abrirModalEdicaoAdminSeguro() {
-      if (!modalEdicaoAdminElement) return;
-      modalEdicaoAdmin.show();
+    function fecharInlineEditorAdmin(force = false) {
+      const row = document.getElementById('admin-inline-editor-row');
+      if (!row) return;
+      if (adminInlineEditorRemoveTimer) {
+        clearTimeout(adminInlineEditorRemoveTimer);
+        adminInlineEditorRemoveTimer = null;
+      }
+
+      if (force) {
+        row.remove();
+        return;
+      }
+
+      row.style.opacity = '0';
+      row.style.transform = 'scaleY(0)';
+      row.style.pointerEvents = 'none';
+      adminInlineEditorRemoveTimer = setTimeout(() => {
+        if (row.isConnected) row.remove();
+        adminInlineEditorRemoveTimer = null;
+      }, 180);
     }
-
 
     function popularParceirosTiosSelect(cadastroIdAtual, parceiroIdAtual) {
       const select = document.getElementById('edit_tioParceiroId');
@@ -2759,6 +2927,8 @@
       document.getElementById('edit_instrumentoMusical').value = cadastro.instrumentoMusical || '';
       document.getElementById('edit_expectativaXixEjcCop').value = cadastro.expectativaXixEjcCop || '';
       document.getElementById('edit_intolerante_encontrista').value = cadastro.intolerante || '';
+      document.getElementById('edit_ehAlergico_encontrista').value = String(cadastro.ehAlergico || '').toLowerCase() === 'sim' ? 'sim' : 'nao';
+      document.getElementById('edit_alergiaDescricao_encontrista').value = cadastro.alergiaDescricao || '';
       const statusAtual = cadastro.statusAprovacao || (cadastro.aprovado ? 'aprovado' : 'pendente');
       document.getElementById('edit_aprovado').value = ['aprovado', 'reprovado', 'pendente', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'].includes(statusAtual)
         ? statusAtual
@@ -2811,6 +2981,8 @@
         document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
         document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
         document.getElementById('edit_intolerante').value = cadastro.intolerante || '';
+        document.getElementById('edit_ehAlergico').value = String(cadastro.ehAlergico || '').toLowerCase() === 'sim' ? 'sim' : 'nao';
+        document.getElementById('edit_alergiaDescricao').value = cadastro.alergiaDescricao || '';
       } else {
         camposEncontreiro.style.display = 'none';
       }
@@ -3307,6 +3479,13 @@
 
     async function editarAdmin(adminId, username, nivelAcesso, permissoesCsv) {
       try {
+        const now = Date.now();
+        if (now - adminInlineEditLastClickAt < 180) return;
+        adminInlineEditLastClickAt = now;
+
+        if (adminInlineEditorBusy) return;
+        adminInlineEditorBusy = true;
+
         if (!hasPermission('admins.gerenciar')) {
           await showAlert('Você não possui permissão para editar administradores.', 'Acesso Negado');
           return;
@@ -3322,32 +3501,131 @@
           permissoesArray = String(permissoesCsv || '').split(',').map((s) => s.trim()).filter(Boolean);
         }
 
-        // Preenche o formulário do modal
-        const idField = document.getElementById('edit_admin_id');
-        const usernameField = document.getElementById('edit_admin_username');
-        const senhaField = document.getElementById('edit_admin_senha');
-        const nivelField = document.getElementById('edit_admin_nivel');
-        if (idField) idField.value = adminId;
-        if (usernameField) usernameField.value = username || '';
-        if (senhaField) senhaField.value = '';
-        if (nivelField) nivelField.value = nivelAcesso || 'super_admin';
-        setCheckedAdminPermissions('#edit_admin_permissions .admin-perm-item-edit', permissoesArray);
+        const existingEditorRow = document.getElementById('admin-inline-editor-row');
+        if (existingEditorRow) {
+          const abertoParaMesmoAdmin = String(existingEditorRow.dataset.adminId || '') === String(adminId);
+          if (abertoParaMesmoAdmin) {
+            const existingInput = existingEditorRow.querySelector('#edit_admin_username');
+            if (existingInput) existingInput.focus();
+            existingEditorRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            return;
+          }
+          // Remove o editor anterior imediatamente para evitar duplicidade de IDs e corrida de estado.
+          fecharInlineEditorAdmin(true);
+        }
 
-        abrirModalEdicaoAdminSeguro();
+        // Localiza a linha clicada na tabela
+        const clickedBtn = document.querySelector(`.js-edit-admin[data-admin-id="${adminId}"]`);
+        const targetRow = clickedBtn ? clickedBtn.closest('tr') : null;
+        if (!targetRow) return;
+
+        const editScopeId = `admin-edit-${String(adminId).replace(/[^a-zA-Z0-9_-]/g, '')}`;
+
+        // Gera HTML dos checkboxes de permissão dinamicamente
+        const permsHtml = adminPermissionOptionsData.map((opt) => `
+          <div class="admin-perm-pill">
+            <input class="admin-perm-item-edit" type="checkbox" id="${editScopeId}-perm-${opt.key}" value="${opt.key}">
+            <label class="admin-perm-pill-label" for="${editScopeId}-perm-${opt.key}">
+              <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i>${escapeHtml(opt.label)}</span>
+              <small>${escapeHtml(opt.description)}</small>
+            </label>
+          </div>`).join('');
+
+        const safeUsername = escapeHtml(username || '');
+
+        const editorRow = document.createElement('tr');
+        editorRow.id = 'admin-inline-editor-row';
+        editorRow.className = 'admin-inline-editor-row';
+        editorRow.dataset.adminId = String(adminId);
+        editorRow.innerHTML = `
+          <td colspan="5" style="padding:0;border-top:none">
+            <div class="admin-inline-editor">
+              <div class="admin-inline-editor-header">
+                <span><i class="fas fa-user-pen me-2"></i>Editando: <strong>${safeUsername || adminId}</strong></span>
+                <button type="button" class="admin-inline-close" onclick="fecharInlineEditorAdmin()" aria-label="Fechar">×</button>
+              </div>
+              <input type="hidden" id="edit_admin_id" value="${adminId}">
+              <div class="admin-inline-editor-grid">
+                <div class="admin-inline-field">
+                  <label class="form-label">Usuário</label>
+                  <input type="text" class="form-control" id="edit_admin_username" placeholder="Digite o usuário" value="${safeUsername}">
+                </div>
+                <div class="admin-inline-field">
+                  <label class="form-label">Nova senha <small>(opcional)</small></label>
+                  <input type="password" class="form-control" id="edit_admin_senha" minlength="6" placeholder="Deixe em branco para manter">
+                </div>
+                <div class="admin-inline-field">
+                  <label class="form-label">Nível hierárquico</label>
+                  <select id="edit_admin_nivel" class="form-select">
+                    <option value="consulta">Consulta</option>
+                    <option value="operador">Operador</option>
+                    <option value="coordenador">Coordenador</option>
+                    <option value="super_admin">Super Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div class="admin-inline-perms">
+                <label class="form-label">Permissões extras</label>
+                <div id="edit_admin_permissions" class="admin-perm-pill-group">${permsHtml}</div>
+              </div>
+              <div class="admin-inline-footer">
+                <small class="text-muted">Se informar senha, deve ter no mínimo 6 caracteres.</small>
+                <div class="admin-inline-actions">
+                  <button type="button" class="btn btn-secondary" onclick="fecharInlineEditorAdmin()">
+                    <i class="fas fa-times me-1"></i>Cancelar
+                  </button>
+                  <button type="button" class="btn btn-primary js-save-admin-inline" onclick="salvarEdicaoAdmin()">
+                    <i class="fas fa-save me-1"></i>Salvar alterações
+                  </button>
+                </div>
+              </div>
+            </div>
+          </td>`;
+
+        targetRow.insertAdjacentElement('afterend', editorRow);
+        requestAnimationFrame(() => editorRow.classList.add('open'));
+
+        const nivelField = editorRow.querySelector('#edit_admin_nivel');
+        if (nivelField) nivelField.value = nivelAcesso || 'super_admin';
+
+        const selectedPerms = new Set(permissoesArray.map((item) => String(item || '').trim()).filter(Boolean));
+        editorRow.querySelectorAll('.admin-perm-item-edit').forEach((node) => {
+          node.checked = selectedPerms.has(String(node.value || '').trim());
+        });
+
+        editorRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       } catch (error) {
         console.error('[editarAdmin] ERRO:', error);
         await showAlert('Erro ao abrir editor de administrador: ' + error.message, 'Erro');
+      } finally {
+        adminInlineEditorBusy = false;
       }
     }
 
     async function salvarEdicaoAdmin() {
       if (!ensurePermission('admins.gerenciar')) return;
-      const adminId = String(document.getElementById('edit_admin_id').value || '').trim();
-      const usernameTratado = String(document.getElementById('edit_admin_username').value || '').trim();
-      const novaSenha = String(document.getElementById('edit_admin_senha').value || '');
-      const nivelAcesso = String(document.getElementById('edit_admin_nivel').value || '').trim();
-      const permissoes = getCheckedAdminPermissions('#edit_admin_permissions .admin-perm-item-edit');
-      const usernameAtualNoCampo = String(document.getElementById('edit_admin_username').value || '').trim();
+      const editorRow = document.getElementById('admin-inline-editor-row');
+      if (!editorRow) {
+        await appAlert('Editor de administrador não está aberto.', 'warning', 'Editor fechado');
+        return;
+      }
+
+      const saveBtn = editorRow.querySelector('.js-save-admin-inline');
+      if (saveBtn && saveBtn.dataset.loading === '1') return;
+      if (saveBtn) {
+        saveBtn.dataset.loading = '1';
+        saveBtn.disabled = true;
+      }
+
+      const adminId = String((editorRow.querySelector('#edit_admin_id') || {}).value || '').trim();
+      const usernameTratado = String((editorRow.querySelector('#edit_admin_username') || {}).value || '').trim();
+      const novaSenha = String((editorRow.querySelector('#edit_admin_senha') || {}).value || '');
+      const nivelAcesso = String((editorRow.querySelector('#edit_admin_nivel') || {}).value || '').trim();
+      const permissoes = Array.from(editorRow.querySelectorAll('#edit_admin_permissions .admin-perm-item-edit'))
+        .filter((node) => node.checked)
+        .map((node) => String(node.value || '').trim())
+        .filter(Boolean);
+      const usernameAtualNoCampo = usernameTratado;
 
       if (!adminId) {
         await appAlert('Administrador invalido para atualizacao.', 'danger', 'Erro');
@@ -3380,15 +3658,79 @@
 
         if (result.success) {
           await appAlert('Administrador atualizado com sucesso.', 'success', 'Sucesso');
-          modalEdicaoAdmin.hide();
+          fecharInlineEditorAdmin();
           recarregarMantendoAbaAtual();
         } else {
           await appAlert(result.error || 'Erro ao atualizar administrador.', 'danger', 'Erro');
         }
       } catch (error) {
         await appAlert('Erro ao atualizar administrador.', 'danger', 'Erro');
+      } finally {
+        if (saveBtn) {
+          saveBtn.dataset.loading = '0';
+          saveBtn.disabled = false;
+        }
       }
     }
+
+    // ─── Link de convite para formulário de encontreiros ────────────────────────
+
+    function copiarLinkConvite() {
+      const input = document.getElementById('link-convite-encontreiro');
+      if (!input) return;
+      navigator.clipboard.writeText(input.value).then(() => {
+        appAlert('Link copiado para a área de transferência!', 'success', 'Copiado');
+      }).catch(() => {
+        input.select();
+        document.execCommand('copy');
+        appAlert('Link copiado!', 'success', 'Copiado');
+      });
+    }
+
+    async function gerarLinkConviteEncontreiro() {
+      if (!ensurePermission('cadastros.visualizar')) return;
+      const btn = document.getElementById('btn-gerar-link-convite');
+      if (btn) { btn.disabled = true; btn.dataset.loading = '1'; }
+      try {
+        const expDias = document.getElementById('convite-exp-dias')?.value?.trim() || '';
+        const resp = await fetch('/admin/gerar-link-encontreiro', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ expDias: expDias ? Number(expDias) : null }),
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || 'Erro ao gerar link.');
+        await appAlert('Link gerado com sucesso! A página será recarregada.', 'success', 'Link gerado');
+        window.location.reload();
+      } catch (err) {
+        await appAlert(err.message || 'Erro ao gerar link.', 'danger', 'Erro');
+      } finally {
+        if (btn) { btn.disabled = false; delete btn.dataset.loading; }
+      }
+    }
+
+    async function revogarLinkConviteEncontreiro() {
+      if (!ensurePermission('cadastros.visualizar')) return;
+      const confirma = await showAppPopup({
+        title: 'Revogar link de convite',
+        message: 'Tem certeza? O link atual deixará de funcionar imediatamente e qualquer um que o tenha não conseguirá mais acessar o formulário por ele.',
+        confirmText: 'Revogar',
+        cancelText: 'Cancelar',
+        tone: 'danger',
+      });
+      if (!confirma) return;
+      try {
+        const resp = await fetch('/admin/revogar-link-encontreiro', { method: 'POST' });
+        const data = await resp.json();
+        if (!resp.ok || !data.success) throw new Error(data.error || 'Erro ao revogar link.');
+        await appAlert('Link revogado com sucesso.', 'success', 'Revogado');
+        window.location.reload();
+      } catch (err) {
+        await appAlert(err.message || 'Erro ao revogar link.', 'danger', 'Erro');
+      }
+    }
+
+    // ─── Fim: link de convite ────────────────────────────────────────────────────
 
     async function deletarAdmin(adminId, username) {
       try {
@@ -3432,6 +3774,15 @@
         console.error('[deletarAdmin] ERRO CAPTURADO:', error);
         await showAlert('Erro ao deletar administrador: ' + error.message, 'Erro');
       }
+    }
+
+    function toggleImportCard() {
+      const body = document.getElementById('import-card-body');
+      const chevron = document.getElementById('import-card-chevron');
+      if (!body) return;
+      const isOpen = body.style.display !== 'none';
+      body.style.display = isOpen ? 'none' : 'block';
+      if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
     }
 
     function atualizarCamposImportacao() {

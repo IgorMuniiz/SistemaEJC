@@ -140,6 +140,8 @@ const cadastroSchema = new mongoose.Schema({
   nomeCompleto: { type: String, required: true },
   comoQuerSerChamado: { type: String, default: '' },
   ejc: { type: String, default: 'Nao informado' },
+  ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
+  ejcVinculadoNome: { type: String, default: '', trim: true },
   cep: { type: String, default: '' },
   estadoCivil: { type: String, default: '' },
   nomeMae: { type: String, default: '' },
@@ -158,6 +160,8 @@ const cadastroSchema = new mongoose.Schema({
   dataNascimento: { type: Date, required: true },
   telefone: { type: String, required: true },
   intolerante: { type: String, default: '' },
+  ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
+  alergiaDescricao: { type: String, default: '' },
   email: { type: String, default: '' },
   instagram: { type: String },
   foto: { type: String, required: true },
@@ -178,6 +182,8 @@ const encontroSchema = new mongoose.Schema({
   comoQuerSerChamado: { type: String, default: '' },
   genero: { type: String, enum: ['masculino', 'feminino', 'outros'], default: 'outros' },
   ejc: { type: String, required: true },
+  ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
+  ejcVinculadoNome: { type: String, default: '', trim: true },
   qualEjcPertence: { type: String, default: '' },
   tipo: { type: String, enum: ['jovens', 'tios'], required: true },
   tiosCategoria: { type: String, enum: ['casal', 'solo', ''], default: '' },
@@ -192,6 +198,8 @@ const encontroSchema = new mongoose.Schema({
   dataNascimento: { type: Date, required: true },
   telefone: { type: String, required: true },
   intolerante: { type: String, default: '' },
+  ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
+  alergiaDescricao: { type: String, default: '' },
   email: { type: String, required: true },
   temRelacionamento: { type: String, default: '' },
   instagram: { type: String, default: '' },
@@ -358,6 +366,10 @@ const requireAdminPermission = (permissionKey) => (req, res, next) => {
 };
 
 const canManageAdminWithHierarchy = (actingAdmin, targetAdmin) => {
+  const actingLevel = normalizeAdminAccessLevel(actingAdmin?.nivelAcesso, 'consulta');
+  // super_admin pode gerenciar qualquer nível (inclusive outros super_admins).
+  // Exclusão de si mesmo e do último super_admin são tratadas separadamente.
+  if (actingLevel === 'super_admin') return true;
   const actingRank = getAdminLevelRank(actingAdmin?.nivelAcesso);
   const targetRank = getAdminLevelRank(targetAdmin?.nivelAcesso);
   return actingRank > targetRank;
@@ -403,6 +415,8 @@ const ejcSchema = new mongoose.Schema({
   nomeNormalizado: { type: String, required: true, unique: true, trim: true },
   ativo: { type: Boolean, default: false },
   dataCriacao: { type: Date, default: Date.now },
+  conviteEnconteiroToken: { type: String, default: '' },
+  conviteEnconteiroTokenExp: { type: Date, default: null },
 });
 
 const Ejc = mongoose.model('Ejc', ejcSchema);
@@ -949,6 +963,49 @@ const normalizeAdminEventScopeInput = (value) => {
   return raw === 'todos' ? 'todos' : 'ativo';
 };
 
+const buildEventLinkPayload = (ejc) => {
+  if (!ejc?._id) {
+    return {
+      ejcVinculadoId: null,
+      ejcVinculadoNome: '',
+    };
+  }
+
+  return {
+    ejcVinculadoId: ejc._id,
+    ejcVinculadoNome: normalizeTextInput(ejc.nome),
+  };
+};
+
+const buildEventScopeFilter = (encontroAtivo) => {
+  if (!encontroAtivo?._id || !encontroAtivo?.nome) return {};
+
+  return {
+    $or: [
+      { ejcVinculadoId: encontroAtivo._id },
+      { ejcVinculadoNome: encontroAtivo.nome },
+      {
+        $and: [
+          { ejc: encontroAtivo.nome },
+          {
+            $or: [
+              { ejcVinculadoId: { $exists: false } },
+              { ejcVinculadoId: null },
+            ],
+          },
+          {
+            $or: [
+              { ejcVinculadoNome: { $exists: false } },
+              { ejcVinculadoNome: '' },
+              { ejcVinculadoNome: null },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+};
+
 const resolveAdminEventContext = async (req) => {
   const encontroAtivo = await getEncontroAtivo();
   const scope = normalizeAdminEventScopeInput(req.session?.adminEventScope || 'ativo');
@@ -965,7 +1022,7 @@ const resolveAdminEventContext = async (req) => {
   return {
     scope,
     encontroAtivo,
-    filtro: { ejc: encontroAtivo.nome },
+    filtro: buildEventScopeFilter(encontroAtivo),
     encontroNome: encontroAtivo.nome,
   };
 };
@@ -1040,6 +1097,8 @@ const mapToEncontroPayload = (row, fotoPadrao = '', options = {}) => {
     equipeCoordenou: normalizeStringArrayInput(row.equipeCoordenou || row.equipe_coordenou),
     temVeiculoProprio: normalizeBooleanInput(row.temVeiculoProprio || row.tem_veiculo_proprio || row.veiculoProprio),
     intolerante: normalizeTextInput(row.intolerante || row.alergias),
+    ehAlergico: normalizeTextInput(row.ehAlergico || row.e_alergico || row.alergico).toLowerCase() === 'sim' ? 'sim' : (normalizeTextInput(row.alergias) ? 'sim' : 'nao'),
+    alergiaDescricao: normalizeTextInput(row.alergiaDescricao || row.alergia_descricao || row.alergias),
     temRelacionamento: normalizeTextInput(row.temRelacionamento || row.relacionamento),
     observacoes: normalizeTextInput(row.observacoes || row.obs),
     aprovado: normalizeBooleanInput(row.aprovado),
@@ -1269,6 +1328,65 @@ const truncateText = (value, max = 42) => {
   return `${text.slice(0, max - 1)}...`;
 };
 
+const buildPdfDisplayName = (nomeCompleto, comoQuerSerChamado, max = 28) => {
+  const nome = normalizeTextInput(nomeCompleto) || 'Nao informado';
+  const apelido = normalizeTextInput(comoQuerSerChamado);
+  const parts = nome.split(/\s+/).filter(Boolean);
+
+  const abbreviateSurnames = () => {
+    if (parts.length <= 2) return nome;
+
+    const firstToken = normalizeTextInput(parts[0]).toLowerCase();
+    const preserveCount = ['tio', 'tia'].includes(firstToken)
+      ? Math.min(parts.length >= 5 ? 3 : 2, parts.length)
+      : Math.min(2, parts.length);
+
+    return parts.map((part, index) => {
+      if (index < preserveCount) return part;
+      const initial = normalizeTextInput(part).charAt(0);
+      return initial ? `${initial.toUpperCase()}.` : '';
+    }).filter(Boolean).join(' ');
+  };
+
+  if (!apelido) {
+    if (nome.length <= max) return nome;
+    const abbreviatedName = abbreviateSurnames();
+    if (abbreviatedName.length <= max) return abbreviatedName;
+    return truncateText(abbreviatedName, max);
+  }
+
+  const render = (baseName) => `${baseName} (${apelido})`;
+  let composed = render(nome);
+  if (composed.length <= max) return composed;
+
+  if (parts.length > 2) {
+    composed = render(abbreviateSurnames());
+    if (composed.length <= max) return composed;
+  }
+
+  const fallbackBaseMax = Math.max(8, max - apelido.length - 4);
+  return `${truncateText(nome, fallbackBaseMax)} (${truncateText(apelido, 10)})`;
+};
+
+const fitPdfTextToWidth = (doc, value, width, options = {}) => {
+  const raw = normalizeTextInput(value) || '-';
+  const fontName = normalizeTextInput(options.fontName) || 'Helvetica';
+  const fontSize = Number(options.fontSize) > 0 ? Number(options.fontSize) : 8.5;
+  const suffix = normalizeTextInput(options.suffix) || '...';
+
+  doc.font(fontName).fontSize(fontSize);
+  if (doc.widthOfString(raw) <= width) return raw;
+
+  let compact = raw.replace(/\s{2,}/g, ' ');
+  while (compact.length > 1) {
+    compact = compact.slice(0, -1).trimEnd();
+    const candidate = `${compact}${suffix}`;
+    if (doc.widthOfString(candidate) <= width) return candidate;
+  }
+
+  return suffix;
+};
+
 const resolvePhotoPath = (fileName) => {
   if (!fileName) return null;
   const filePath = path.join(__dirname, 'uploads', fileName);
@@ -1329,7 +1447,6 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
   if (showLabels && alignColumns) {
     const safeLabel = truncateText(label, 12);
     const rawValue = normalizeTextInput(value) || '-';
-    const safeValue = truncateValue ? truncateText(rawValue, textMax) : rawValue;
     const valueWidth = Math.max(10, width - labelWidth - 3);
 
     let adjustedFontSize = fontSize;
@@ -1337,13 +1454,18 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
       doc.font(fontName);
       for (let size = fontSize; size >= minFontSize; size -= 0.2) {
         doc.fontSize(size);
-        if (doc.widthOfString(safeValue) <= valueWidth) {
+        if (doc.widthOfString(rawValue) <= valueWidth) {
           adjustedFontSize = size;
           break;
         }
         adjustedFontSize = size;
       }
     }
+
+    doc.font(fontName).fontSize(adjustedFontSize);
+    const safeValue = autoFitValue
+      ? fitPdfTextToWidth(doc, rawValue, valueWidth, { fontName, fontSize: adjustedFontSize })
+      : (truncateValue ? truncateText(rawValue, textMax) : rawValue);
 
     doc.font('Helvetica').fontSize(Math.max(7.6, fontSize - 0.1)).fillColor('#243446').text(`${safeLabel}:`, x, textY, {
       width: labelWidth,
@@ -1447,8 +1569,10 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   const textWidth = width - (textX - x) - photoInset;
   const headerOffset = badgeLabel ? 24 : topPadding;
 
+  const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, 28);
+
   const defaultLines = [
-    ['Nome', entry.nomeCompleto, 0, 8.5 + fontBoost + nameFontBoost],
+    ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
     ['Logradouro', entry.logradouro, 4, 8.5 + fontBoost],
     ['Bairro', entry.bairro, 0, 8.5 + fontBoost],
     ['Email', entry.email, 0, 7.5 + fontBoost],
@@ -1458,7 +1582,7 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   ];
 
   const availableFieldLines = {
-    nome: ['Nome', entry.nomeCompleto, 0, 8.5 + fontBoost + nameFontBoost],
+    nome: ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     aniversario: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
@@ -1519,6 +1643,7 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
 
 const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
+  comoQuerSerChamado: pessoa?.comoQuerSerChamado || '',
   ejc: pessoa?.ejc || ejcNome,
   logradouro: pessoa?.logradouro || 'Nao informado',
   bairro: pessoa?.bairro || 'Nao informado',
@@ -1538,7 +1663,7 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
 const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+  res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   doc.pipe(res);
@@ -2009,7 +2134,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
 const renderCardGridPdf = (res, entries, options) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${options.fileName}"`);
+  res.setHeader('Content-Disposition', `inline; filename="${options.fileName}"`);
 
   const doc = new PDFDocument({ margin: 40, size: 'A4' });
   doc.pipe(res);
@@ -2224,7 +2349,7 @@ app.get('/export-encontro', async (req, res) => {
     const entries = await Encontro.find().sort({ dataCadastro: 1 }).lean();
     const format = req.query.format || 'csv';
     if (format === 'csv') {
-      const header = ['nomeCompleto','ejc','logradouro','bairro','equipeServiu','equipeCoordenou','dataNascimento','intolerante','email','instagram','foto','dataCadastro'];
+      const header = ['nomeCompleto','ejc','logradouro','bairro','equipeServiu','equipeCoordenou','dataNascimento','intolerante','ehAlergico','alergiaDescricao','email','instagram','foto','dataCadastro'];
       const rows = entries.map(e => header.map(h => {
         let val = formatExportValue(e[h]);
         if (val instanceof Date) val = val.toISOString();
@@ -2423,6 +2548,8 @@ app.get('/export-encontro-relatorio', async (req, res) => {
       'Total Equipes Coordenou',
       'Experiência (Serviu/Coordenou)',
       'Intolerâncias',
+      'É alérgico?',
+      'Alergia (descrição)',
       'Data Cadastro'
     ];
     
@@ -2484,6 +2611,10 @@ app.get('/export-encontro-relatorio', async (req, res) => {
       
       // Intolerâncias / Alergias
       row.push(`"${String(e.intolerante || '').replace(/"/g, '""')}"`);
+
+      // Campos de alergia
+      row.push(`"${String((e.ehAlergico || 'nao')).replace(/"/g, '""')}"`);
+      row.push(`"${String(e.alergiaDescricao || '').replace(/"/g, '""')}"`);
       
       // Data Cadastro
       let dataCadastroStr = '';
@@ -3085,6 +3216,8 @@ app.get('/export-encontro-excel', async (req, res) => {
         { header: 'Data de Nascimento', key: 'dataNascimento', width: 18 },
         { header: 'Telefone', key: 'telefone', width: 18 },
         { header: 'Intolerancias/Alergias', key: 'intolerante', width: 28 },
+        { header: 'É alérgico?', key: 'ehAlergico', width: 14 },
+        { header: 'Alergia (descrição)', key: 'alergiaDescricao', width: 28 },
         { header: 'Email', key: 'email', width: 28 },
         { header: 'Status', key: 'statusAprovacao', width: 14 },
         { header: 'Relacionamento com encontreiro/encontrista', key: 'temRelacionamento', width: 34 },
@@ -3126,7 +3259,7 @@ app.get('/export-encontro-excel', async (req, res) => {
       // Adicionar filtros automáticos
       worksheet.autoFilter = {
         from: { row: 1, column: 1 },
-        to: { row: 1, column: 21 },
+        to: { row: 1, column: worksheet.columns.length },
       };
 
       // Adicionar dados
@@ -3150,6 +3283,8 @@ app.get('/export-encontro-excel', async (req, res) => {
           dataNascimento: e.dataNascimento ? new Date(e.dataNascimento).toLocaleDateString('pt-BR') : '',
           telefone: e.telefone || '',
           intolerante: e.intolerante || '',
+          ehAlergico: normalizeTextInput(e.ehAlergico).toLowerCase() === 'sim' ? 'Sim' : 'Nao',
+          alergiaDescricao: e.alergiaDescricao || '',
           email: e.email || '',
           statusAprovacao: resolveApprovalStatus(e),
           temRelacionamento: e.temRelacionamento || '',
@@ -3205,6 +3340,8 @@ app.get('/export-encontro-excel', async (req, res) => {
         dataNascimento: '',
         telefone: '',
         intolerante: '',
+        ehAlergico: '',
+        alergiaDescricao: '',
         email: `Gerado em: ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' })} às ${new Date().toLocaleTimeString('pt-BR')}`,
         statusAprovacao: '',
         temRelacionamento: '',
@@ -3260,6 +3397,8 @@ app.get('/export-encontro-excel', async (req, res) => {
       { header: 'Data de Nascimento', key: 'dataNascimento', width: 18 },
       { header: 'Telefone', key: 'telefone', width: 18 },
       { header: 'Intolerancias/Alergias', key: 'intolerante', width: 28 },
+      { header: 'É alérgico?', key: 'ehAlergico', width: 14 },
+      { header: 'Alergia (descrição)', key: 'alergiaDescricao', width: 28 },
       { header: 'Email', key: 'email', width: 28 },
       { header: 'Status', key: 'statusAprovacao', width: 14 },
       { header: 'Relacionamento', key: 'temRelacionamento', width: 28 },
@@ -3284,7 +3423,7 @@ app.get('/export-encontro-excel', async (req, res) => {
 
     allSheet.autoFilter = {
       from: { row: 1, column: 1 },
-      to: { row: 1, column: 22 },
+      to: { row: 1, column: allSheet.columns.length },
     };
 
     allEncontreiros.forEach((e, idx) => {
@@ -3307,6 +3446,8 @@ app.get('/export-encontro-excel', async (req, res) => {
         dataNascimento: e.dataNascimento ? new Date(e.dataNascimento).toLocaleDateString('pt-BR') : '',
         telefone: e.telefone || '',
         intolerante: e.intolerante || '',
+        ehAlergico: normalizeTextInput(e.ehAlergico).toLowerCase() === 'sim' ? 'Sim' : 'Nao',
+        alergiaDescricao: e.alergiaDescricao || '',
         email: e.email || '',
         statusAprovacao: status,
         temRelacionamento: e.temRelacionamento || '',
@@ -3415,6 +3556,8 @@ app.get('/export-encontrista-excel', async (req, res) => {
       { header: 'Instrumento/Canto', key: 'instrumentoMusical', width: 24 },
       { header: 'Expectativa', key: 'expectativaXixEjcCop', width: 40 },
       { header: 'Intolerancias', key: 'intolerante', width: 24 },
+      { header: 'É alérgico?', key: 'ehAlergico', width: 14 },
+      { header: 'Alergia (descrição)', key: 'alergiaDescricao', width: 28 },
       { header: 'Logradouro', key: 'logradouro', width: 32 },
       { header: 'Bairro', key: 'bairro', width: 24 },
       { header: 'Data Nascimento', key: 'dataNascimento', width: 16 },
@@ -3453,7 +3596,7 @@ app.get('/export-encontrista-excel', async (req, res) => {
     // Adicionar filtros automáticos
     worksheet.autoFilter = {
       from: { row: 1, column: 1 },
-      to: { row: 1, column: 27 },
+      to: { row: 1, column: worksheet.columns.length },
     };
 
     // Adicionar dados com formatação moderna
@@ -3477,6 +3620,8 @@ app.get('/export-encontrista-excel', async (req, res) => {
         instrumentoMusical: entry.instrumentoMusical || '',
         expectativaXixEjcCop: entry.expectativaXixEjcCop || '',
         intolerante: entry.intolerante || '',
+        ehAlergico: normalizeTextInput(entry.ehAlergico).toLowerCase() === 'sim' ? 'Sim' : 'Nao',
+        alergiaDescricao: entry.alergiaDescricao || '',
         logradouro: entry.logradouro || '',
         bairro: entry.bairro || '',
         dataNascimento: entry.dataNascimento
@@ -3622,15 +3767,28 @@ app.get('/debug/encontreiros', checkAdminAuth, async (req, res) => {
 
 app.get('/encontro', async (req, res) => {
   try {
+    const conviteParam = String(req.query.convite || '').trim();
     const [encontroAtivo, bloqueio] = await Promise.all([
       getEncontroAtivo(),
       verificarFormularioBloqueado('encontreiro'),
     ]);
+
+    // Valida o token de convite para liberar o acesso mesmo com bloqueio ativo.
+    let conviteValido = false;
+    if (conviteParam && encontroAtivo) {
+      const tokenSalvo = normalizeTextInput(encontroAtivo.conviteEnconteiroToken);
+      const tokenExp = encontroAtivo.conviteEnconteiroTokenExp;
+      const tokenExpirado = tokenExp ? new Date() > new Date(tokenExp) : false;
+      if (tokenSalvo && tokenSalvo === conviteParam && !tokenExpirado) {
+        conviteValido = true;
+      }
+    }
+
     res.render('encontro', {
       errors: [],
       formData: {},
-      bloqueado: bloqueio.bloqueado,
-      motivoBloqueio: bloqueio.motivo,
+      bloqueado: conviteValido ? false : bloqueio.bloqueado,
+      motivoBloqueio: conviteValido ? '' : bloqueio.motivo,
       ejcAtivo: encontroAtivo?.nome || '',
     });
   } catch (err) {
@@ -3745,6 +3903,14 @@ app.post(
     body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
     body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
+    body('ehAlergico').optional({ checkFalsy: true }).isIn(['sim', 'nao']).withMessage('Campo de alergia inválido'),
+    body('alergiaDescricao').custom((value, { req }) => {
+      const ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim';
+      if (ehAlergico && !normalizeTextInput(value)) {
+        throw new Error('Se for alergico, informe a alergia.');
+      }
+      return true;
+    }),
     body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email inválido'),
     body('lgpdConsentimento').custom((value) => {
       const ok = value === true || value === 'true' || value === 'on' || value === '1';
@@ -3782,7 +3948,7 @@ app.post(
         });
       }
 
-      const encontroAtivoNome = encontroAtivo.nome;
+      const eventLinkData = buildEventLinkPayload(encontroAtivo);
       const cadastroExistente = await findExistingByNameOrEmail(
         Cadastro,
         req.body.nomeCompleto,
@@ -3808,7 +3974,8 @@ app.post(
       const cadastroData = {
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
-        ejc: encontroAtivoNome,
+        ejc: normalizeTextInput(req.body.ejc) || cadastroExistente?.ejc || 'Nao informado',
+        ...eventLinkData,
         cep: req.body.cep || '',
         estadoCivil: req.body.estadoCivil || '',
         nomeMae: req.body.nomeMae || '',
@@ -3827,6 +3994,8 @@ app.post(
         dataNascimento: req.body.dataNascimento,
         telefone: req.body.telefone,
         intolerante: req.body.intolerante || '',
+        ehAlergico: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao',
+        alergiaDescricao: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '',
         email: req.body.email || '',
         instagram: req.body.instagram || '',
         aprovado: false,
@@ -3898,10 +4067,19 @@ app.post(
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
     body('genero').isIn(['masculino', 'feminino', 'outros', 'homem', 'mulher']).withMessage('Gênero inválido'),
     body('tipo').isIn(['jovens', 'tios']).withMessage('Tipo inválido'),
+    body('ejc').notEmpty().withMessage('Informe qual EJC você fez'),
     body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
     body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
     body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
+    body('ehAlergico').optional({ checkFalsy: true }).isIn(['sim', 'nao']).withMessage('Campo de alergia inválido'),
+    body('alergiaDescricao').custom((value, { req }) => {
+      const ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim';
+      if (ehAlergico && !normalizeTextInput(value)) {
+        throw new Error('Se for alergico, informe a alergia.');
+      }
+      return true;
+    }),
     body('email').isEmail().withMessage('Email inválido'),
     body('lgpdConsentimento').custom((value) => {
       const ok = value === true || value === 'true' || value === 'on' || value === '1';
@@ -3943,7 +4121,7 @@ app.post(
         });
       }
 
-      const encontroAtivoNome = encontroAtivo.nome;
+      const eventLinkData = buildEventLinkPayload(encontroAtivo);
       const encontroExistente = await findExistingByNameOrEmail(
         Encontro,
         req.body.nomeCompleto,
@@ -3983,7 +4161,8 @@ app.post(
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
         genero: normalizeGeneroEncontro(req.body.genero),
-        ejc: encontroAtivoNome,
+        ejc: normalizeTextInput(req.body.ejc) || encontroExistente?.ejc || 'Nao informado',
+        ...eventLinkData,
         qualEjcPertence: req.body.qualEjcPertence || '',
         tipo: tipoNormalizado,
         tiosCategoria: tipoNormalizado === 'tios' ? (normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' ? 'casal' : 'solo') : '',
@@ -4002,6 +4181,8 @@ app.post(
         dataNascimento: req.body.dataNascimento,
         telefone: req.body.telefone,
         intolerante: req.body.intolerante || '',
+        ehAlergico: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao',
+        alergiaDescricao: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '',
         email: req.body.email,
         temRelacionamento: req.body.temRelacionamento || '',
         instagram: req.body.instagram || '',
@@ -4588,6 +4769,7 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
     const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao ativo').lean();
     const encontroAtivo = await getEncontroAtivo();
     const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcNome nomeReferencia dataCriacao').lean();
+    const ejcAtivoFull = encontroAtivo ? await Ejc.findById(encontroAtivo._id).select('conviteEnconteiroToken conviteEnconteiroTokenExp').lean() : null;
     const encontreirosParaEquipe = await Encontro.find({ tipo: { $in: ['jovens', 'tios', 'homem', 'mulher'] } })
       .sort({ nomeCompleto: 1 })
       .select('nomeCompleto tipo equipeServiu equipeCoordenou')
@@ -4609,6 +4791,9 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       auditoriaLimite,
       ejcs,
       encontroAtivoNome: encontroAtivo?.nome || '',
+      conviteEnconteiroToken: ejcAtivoFull?.conviteEnconteiroToken || '',
+      conviteEnconteiroTokenExp: ejcAtivoFull?.conviteEnconteiroTokenExp || null,
+      appBaseUrl: `${req.protocol}://${req.get('host')}`,
       escopoEventoAdmin: eventContext.scope,
       eventoFiltroNome: eventContext.encontroNome,
       equipes,
@@ -4859,6 +5044,10 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       updateData.instrumentoMusical = req.body.instrumentoMusical || '';
       updateData.expectativaXixEjcCop = req.body.expectativaXixEjcCop || '';
       updateData.intolerante = req.body.intolerante_encontrista || req.body.intolerante || '';
+      updateData.ehAlergico = normalizeTextInput(req.body.ehAlergico_encontrista || req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao';
+      updateData.alergiaDescricao = updateData.ehAlergico === 'sim'
+        ? normalizeTextInput(req.body.alergiaDescricao_encontrista || req.body.alergiaDescricao)
+        : '';
       updateData.comoQuerSerChamado = req.body.comoQuerSerChamado || '';
     }
 
@@ -4889,6 +5078,8 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       updateData.equipeCoordenou = req.body.equipeCoordenou ? req.body.equipeCoordenou.split(',').map(e => e.trim()).filter(e => e) : [];
       updateData.temVeiculoProprio = req.body.temVeiculoProprio === 'true' || req.body.temVeiculoProprio === true;
       updateData.intolerante = req.body.intolerante || '';
+      updateData.ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao';
+      updateData.alergiaDescricao = updateData.ehAlergico === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '';
       updateData.temRelacionamento = req.body.temRelacionamento || '';
       updateData.observacoes = req.body.observacoes || '';
     }
@@ -5066,6 +5257,8 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
       comoQuerSerChamado: '',
       genero: 'outros',
       ejc: encontrista.ejc,
+      ejcVinculadoId: encontrista.ejcVinculadoId || null,
+      ejcVinculadoNome: encontrista.ejcVinculadoNome || '',
       qualEjcPertence: '',
       tipo: 'jovens',
       tiosCategoria: '',
@@ -5078,6 +5271,8 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
       dataNascimento: encontrista.dataNascimento,
       telefone: encontrista.telefone,
       intolerante: '',
+      ehAlergico: 'nao',
+      alergiaDescricao: '',
       email: encontrista.email,
       temRelacionamento: '',
       instagram: encontrista.instagram || '',
@@ -5142,6 +5337,8 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
         comoQuerSerChamado: '',
         genero: 'outros',
         ejc: encontrista.ejc,
+        ejcVinculadoId: encontrista.ejcVinculadoId || null,
+        ejcVinculadoNome: encontrista.ejcVinculadoNome || '',
         qualEjcPertence: '',
         tipo: 'jovens',
         tiosCategoria: '',
@@ -5154,6 +5351,8 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
         dataNascimento: encontrista.dataNascimento,
         telefone: encontrista.telefone,
         intolerante: '',
+        ehAlergico: 'nao',
+        alergiaDescricao: '',
         email: encontrista.email,
         temRelacionamento: '',
         instagram: encontrista.instagram || '',
@@ -5456,6 +5655,67 @@ app.post('/admin/deletar-admin/:id', checkAdminAuth, requireAdminPermission('adm
     });
     console.error('[ERRO] Erro ao deletar administrador:', err.message);
     return res.status(500).json({ success: false, error: 'Erro ao deletar administrador: ' + err.message });
+  }
+});
+
+// POST /admin/gerar-link-encontreiro - Gera ou renova o token de convite para o formulário de encontreiros
+app.post('/admin/gerar-link-encontreiro', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const encontroAtivo = await getEncontroAtivo();
+    if (!encontroAtivo) {
+      return res.status(404).json({ success: false, error: 'Nenhum encontro ativo encontrado. Ative um EJC primeiro.' });
+    }
+
+    const expDias = Number.parseInt(String(req.body.expDias || ''), 10);
+    const token = crypto.randomBytes(24).toString('base64url');
+    const tokenExp = (Number.isFinite(expDias) && expDias > 0)
+      ? new Date(Date.now() + expDias * 86_400_000)
+      : null;
+
+    await Ejc.findByIdAndUpdate(encontroAtivo._id, {
+      conviteEnconteiroToken: token,
+      conviteEnconteiroTokenExp: tokenExp,
+    });
+    invalidarCacheEncontroAtivo();
+
+    await logAdminAction(req, {
+      action: 'gerar_link_encontreiro',
+      targetType: 'ejc',
+      targetId: String(encontroAtivo._id),
+      metadata: { token, expDias: expDias || 'sem_validade' },
+    });
+
+    return res.json({ success: true, token, tokenExp });
+  } catch (err) {
+    console.error('[ERRO] Erro ao gerar link encontreiro:', err.message);
+    return res.status(500).json({ success: false, error: 'Erro ao gerar link: ' + err.message });
+  }
+});
+
+// POST /admin/revogar-link-encontreiro - Revoga o token de convite do formulário de encontreiros
+app.post('/admin/revogar-link-encontreiro', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const encontroAtivo = await getEncontroAtivo();
+    if (!encontroAtivo) {
+      return res.status(404).json({ success: false, error: 'Nenhum encontro ativo encontrado.' });
+    }
+
+    await Ejc.findByIdAndUpdate(encontroAtivo._id, {
+      conviteEnconteiroToken: '',
+      conviteEnconteiroTokenExp: null,
+    });
+    invalidarCacheEncontroAtivo();
+
+    await logAdminAction(req, {
+      action: 'revogar_link_encontreiro',
+      targetType: 'ejc',
+      targetId: String(encontroAtivo._id),
+    });
+
+    return res.json({ success: true, message: 'Link de convite revogado com sucesso.' });
+  } catch (err) {
+    console.error('[ERRO] Erro ao revogar link encontreiro:', err.message);
+    return res.status(500).json({ success: false, error: 'Erro ao revogar link: ' + err.message });
   }
 });
 
@@ -5940,6 +6200,7 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
     let entidade = entidadeTipo === 'circulo'
       ? await Circulo.findOne({ _id: entidadeId, ejcId })
       : await Equipe.findOne({ _id: entidadeId, ejcId });
+    const ejc = await Ejc.findById(ejcId).select('nome').lean();
 
     console.log('[VINCULAR] entidade encontrada (1a tentativa):', entidade ? entidade._id : null);
 
@@ -5958,6 +6219,9 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
       console.log('[VINCULAR] entidade nao encontrada para ejcId:', ejcId, 'entidadeId:', entidadeId);
       return res.status(404).json({ success: false, error: 'Entidade não encontrada neste EJC.' });
     }
+    if (!ejc) {
+      return res.status(404).json({ success: false, error: 'EJC não encontrado para este vínculo.' });
+    }
 
     const ModelPessoa = pessoaTipo === 'encontrista' ? Cadastro : Encontro;
     const pessoas = await ModelPessoa.find({ _id: { $in: pessoaIds } });
@@ -5974,6 +6238,8 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
         naoEncontrados += 1;
         continue;
       }
+
+      let shouldPersistPessoa = false;
 
       const existente = await VinculoEncontro.findOne({
         ejcId,
@@ -6006,8 +6272,18 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
         if (!listaAtual.includes(equipeNome)) {
           listaAtual.push(equipeNome);
           pessoa[field] = listaAtual;
-          await pessoa.save();
+          shouldPersistPessoa = true;
         }
+      }
+
+      if (String(pessoa.ejcVinculadoId || '') !== String(ejc._id) || normalizeTextInput(pessoa.ejcVinculadoNome) !== normalizeTextInput(ejc.nome)) {
+        pessoa.ejcVinculadoId = ejc._id;
+        pessoa.ejcVinculadoNome = ejc.nome;
+        shouldPersistPessoa = true;
+      }
+
+      if (shouldPersistPessoa) {
+        await pessoa.save();
       }
     }
 

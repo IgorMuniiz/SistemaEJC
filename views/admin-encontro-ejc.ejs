@@ -769,20 +769,20 @@
       modalElement.tabIndex = -1;
       modalElement.setAttribute('aria-hidden', 'true');
       modalElement.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header">
+        <div class="modal-dialog modal-dialog-centered app-input-dialog">
+          <div class="modal-content border-0 shadow-lg app-input-card">
+            <div class="modal-header app-input-header">
               <h5 class="modal-title" id="app-input-title">Editar</h5>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-input-body">
               <label for="app-input-field" id="app-input-label" class="form-label">Novo valor</label>
-              <input id="app-input-field" type="text" class="form-control" maxlength="120" autocomplete="off">
+              <input id="app-input-field" type="text" class="form-control app-input-field" maxlength="120" autocomplete="off">
               <small class="text-muted d-block mt-2" id="app-input-help">Confirme para salvar.</small>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" id="app-input-cancel">Cancelar</button>
-              <button type="button" class="btn btn-primary" id="app-input-confirm">Salvar</button>
+            <div class="modal-footer app-input-footer">
+              <button type="button" class="btn btn-outline-secondary app-input-cancel" id="app-input-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary app-input-confirm" id="app-input-confirm">Salvar</button>
             </div>
           </div>
         </div>

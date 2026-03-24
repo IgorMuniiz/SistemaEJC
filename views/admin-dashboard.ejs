@@ -966,7 +966,13 @@
         dateFrom: document.getElementById('filter-date-from')?.value || '',
         dateTo: document.getElementById('filter-date-to')?.value || '',
       };
-      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(payload));
+      try {
+        localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(payload));
+        return true;
+      } catch (error) {
+        console.error('Falha ao salvar filtros no localStorage:', error);
+        return false;
+      }
     }
 
     function loadSavedFilters() {
@@ -994,9 +1000,29 @@
         if (el) el.addEventListener('change', applyAdvancedFilters);
       });
 
-      document.getElementById('save-filters-btn')?.addEventListener('click', async () => {
-        saveCurrentFilters();
-        await appAlert('Filtros salvos com sucesso.', 'success', 'Preferências salvas');
+      document.getElementById('save-filters-btn')?.addEventListener('click', async (event) => {
+        event.preventDefault();
+
+        // Aplica primeiro para refletir imediatamente o estado atual na tela.
+        applyAdvancedFilters();
+
+        const saved = saveCurrentFilters();
+        if (!saved) {
+          await appAlert('Não foi possível salvar os filtros neste navegador.', 'warning', 'Atenção');
+          return;
+        }
+
+        const button = event.currentTarget;
+        if (!(button instanceof HTMLButtonElement)) return;
+
+        const originalHtml = button.innerHTML;
+        button.disabled = true;
+        button.innerHTML = '<i class="fas fa-check"></i>Filtros salvos';
+
+        setTimeout(() => {
+          button.innerHTML = originalHtml;
+          button.disabled = false;
+        }, 900);
       });
 
       document.getElementById('clear-filters-btn')?.addEventListener('click', () => {
