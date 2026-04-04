@@ -5,16 +5,123 @@
  *  - POST /admin/cadastrar-admin   → 401 sem sessão, 400 dados inválidos
  *  - POST /admin/atualizar-admin/:id → 401 sem sessão, 400 ID ausente
  *  - POST /admin/deletar-admin/:id   → 401 sem sessão, 400 ID inválido
+ *  - POST /admin/cadastrar-subequipe → 401 sem sessão
+ *  - POST /admin/editar-subequipe/:id → 401 sem sessão
+ *  - POST /admin/deletar-subequipe/:id → 401 sem sessão
+ *  - POST /admin/vincular-encontreiro-subequipe → 401 sem sessão
  */
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
+const mongoose = require('mongoose');
+const ExcelJS = require('exceljs');
 
 process.env.NODE_ENV = 'test';
 process.env.SKIP_MONGO_CONNECT = '1';
 
-const { app } = require('../app');
+const { app, getCrachaPalette } = require('../app');
+const Admin = mongoose.model('Admin');
+const SubEquipe = mongoose.model('SubEquipe');
+const Cadastro = mongoose.model('Cadastro_EJC');
+const Encontro = mongoose.model('Encontro');
+const Equipe = mongoose.model('Equipe');
+const Ejc = mongoose.model('Ejc');
+const VinculoEncontro = mongoose.model('VinculoEncontro');
+const GastoEncontro = mongoose.model('GastoEncontro');
+const FluxoCaixaEncontro = mongoose.model('FluxoCaixaEncontro');
+const AdminAuditLog = mongoose.model('AdminAuditLog');
+
+const ADMIN_ID = '507f1f77bcf86cd799439011';
+
+const createMockAdminDoc = () => ({
+  _id: ADMIN_ID,
+  username: 'admin_teste',
+  nivelAcesso: 'super_admin',
+  permissoes: [],
+  senha: 'senha123',
+  save: async () => {},
+});
+
+const mockAdminAuthFlow = (t) => {
+  const originalFindOne = Admin.findOne;
+  const originalFindById = Admin.findById;
+
+  Admin.findOne = async () => createMockAdminDoc();
+  Admin.findById = () => ({
+    select: () => ({
+      lean: async () => ({
+        _id: ADMIN_ID,
+        username: 'admin_teste',
+        nivelAcesso: 'super_admin',
+        permissoes: [],
+      }),
+    }),
+  });
+
+  t.after(() => {
+    Admin.findOne = originalFindOne;
+    Admin.findById = originalFindById;
+  });
+};
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const loginAsAdmin = async (agent) => {
+  let response = null;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    response = await agent
+      .post('/admin/login')
+      .send({ username: 'admin_teste', senha: 'senha123' });
+
+    if (response.status !== 429) break;
+    await wait(250);
+  }
+
+  assert.equal(response.status, 302, `Login deveria redirecionar, retornou ${response.status}`);
+};
+
+const asSameOrigin = (req) => req
+  .set('Host', 'localhost')
+  .set('Origin', 'http://localhost')
+  .set('Referer', 'http://localhost/admin/gerenciar-cadastros')
+  .set('Accept', 'application/json');
+
+const binaryParser = (res, callback) => {
+  res.setEncoding('binary');
+  let data = '';
+  res.on('data', (chunk) => {
+    data += chunk;
+  });
+  res.on('end', () => {
+    callback(null, Buffer.from(data, 'binary'));
+  });
+};
+
+test('getCrachaPalette usa vermelho quando o círculo é vermelho', () => {
+  const palette = getCrachaPalette('circulo', 'Círculo Vermelho');
+
+  assert.equal(palette.accent, '#dc2626');
+  assert.equal(palette.border, '#fca5a5');
+  assert.equal(palette.chipText, '#991b1b');
+});
+
+test('getCrachaPalette usa amarelo fiel quando o círculo é amarelo', () => {
+  const palette = getCrachaPalette('circulo', 'Círculo Amarelo');
+
+  assert.equal(palette.accent, '#eab308');
+  assert.equal(palette.border, '#fde047');
+  assert.equal(palette.chipText, '#a16207');
+});
+
+test('getCrachaPalette usa roxo premium para equipe de liturgia', () => {
+  const palette = getCrachaPalette('equipe', 'Liturgia interna');
+
+  assert.equal(palette.accent, '#6d28d9');
+  assert.equal(palette.border, '#c4b5fd');
+  assert.equal(palette.chipText, '#4c1d95');
+});
 
 // ─── Cadastrar admin ──────────────────────────────────────────────────────────
 
@@ -85,4 +192,637 @@ test('POST /admin/deletar-admin/:id com ID inválido sem autenticação retorna 
     response.status === 401 || response.status === 302 || response.status === 403,
     `Status esperado 401/302/403, recebido: ${response.status}`,
   );
+});
+
+test('POST /admin/login persiste sessão e mantém acesso a rota protegida', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  const loginResponse = await agent
+    .post('/admin/login')
+    .send({ username: 'admin_teste', senha: 'senha123' });
+
+  assert.equal(loginResponse.status, 302);
+  assert.equal(loginResponse.headers.location, '/admin/gerenciar-cadastros');
+  assert.ok(
+    Array.isArray(loginResponse.headers['set-cookie'])
+    && loginResponse.headers['set-cookie'].some((cookie) => String(cookie).includes('ejc.sid=')),
+    'Login deve emitir cookie de sessão do admin',
+  );
+
+  const protectedResponse = await agent.get('/admin/home');
+  assert.equal(protectedResponse.status, 302);
+  assert.equal(protectedResponse.headers.location, '/admin/gerenciar-cadastros');
+});
+
+// ─── Sub-equipes ─────────────────────────────────────────────────────────────
+
+test('POST /admin/cadastrar-subequipe sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/cadastrar-subequipe')
+    .send({ nome: 'Acolhida', anoVigencia: 2025 });
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+test('POST /admin/cadastrar-gasto sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/cadastrar-gasto')
+    .send({ descricao: 'Mercado', valor: '120,00', dataGasto: '2026-04-04' });
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+
+test('POST /admin/cadastrar-fluxo-caixa sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/cadastrar-fluxo-caixa')
+    .send({ tipoMovimento: 'entrada', descricao: 'Doação', valor: '180,00', dataMovimento: '2026-04-04' });
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+test('POST /admin/editar-subequipe/:id sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/editar-subequipe/000000000000000000000001')
+    .send({ nome: 'Acolhida 2', anoVigencia: 2026 });
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+
+test('POST /admin/deletar-subequipe/:id sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/deletar-subequipe/000000000000000000000001');
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+
+test('POST /admin/vincular-encontreiro-subequipe sem autenticação retorna 401 ou redireciona', async () => {
+  const response = await request(app)
+    .post('/admin/vincular-encontreiro-subequipe')
+    .send({
+      pessoaId: '000000000000000000000001',
+      subequipeId: '000000000000000000000002',
+      papel: 'coordenador',
+    });
+
+  assert.ok(
+    response.status === 401 || response.status === 302 || response.status === 403,
+    `Status esperado 401/302/403, recebido: ${response.status}`,
+  );
+});
+
+test('POST /admin/cadastrar-subequipe autenticado retorna sucesso', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalFindOne = SubEquipe.findOne;
+  const originalCreate = SubEquipe.create;
+
+  let createPayload = null;
+  SubEquipe.findOne = async () => null;
+  SubEquipe.create = async (payload) => {
+    createPayload = payload;
+    return { _id: '507f1f77bcf86cd799439012', ...payload };
+  };
+
+  t.after(() => {
+    SubEquipe.findOne = originalFindOne;
+    SubEquipe.create = originalCreate;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/cadastrar-subequipe').send({ nome: 'Acolhida Técnica', anoVigencia: 2025 })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(createPayload.nome, 'Acolhida Técnica');
+  assert.equal(createPayload.anoVigencia, 2025);
+});
+
+test('POST /admin/cadastrar-gasto autenticado retorna sucesso', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalEjcFindById = Ejc.findById;
+  const originalGastoCreate = GastoEncontro.create;
+  const originalAdminAuditCreate = AdminAuditLog.create;
+
+  Ejc.findById = () => ({
+    select: () => ({
+      lean: async () => ({ _id: '507f1f77bcf86cd799439032', nome: 'EJC Teste' }),
+    }),
+  });
+  GastoEncontro.create = async (payload) => ({ _id: '507f1f77bcf86cd799439033', ...payload });
+  AdminAuditLog.create = async () => ({ _id: '507f1f77bcf86cd799439034' });
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    GastoEncontro.create = originalGastoCreate;
+    AdminAuditLog.create = originalAdminAuditCreate;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/cadastrar-gasto').send({
+      ejcId: '507f1f77bcf86cd799439032',
+      escopoTipo: 'encontro',
+      categoria: 'Alimentação',
+      descricao: 'Compra de mercado',
+      valor: '125,50',
+      dataGasto: '2026-04-04',
+      responsavel: 'Tesouraria',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+});
+
+test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalEjcFindById = Ejc.findById;
+  const originalFluxoCreate = FluxoCaixaEncontro.create;
+  const originalAdminAuditCreate = AdminAuditLog.create;
+
+  Ejc.findById = () => ({
+    select: () => ({
+      lean: async () => ({ _id: '507f1f77bcf86cd799439052', nome: 'EJC Teste' }),
+    }),
+  });
+  FluxoCaixaEncontro.create = async (payload) => ({ _id: '507f1f77bcf86cd799439053', ...payload });
+  AdminAuditLog.create = async () => ({ _id: '507f1f77bcf86cd799439054' });
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    FluxoCaixaEncontro.create = originalFluxoCreate;
+    AdminAuditLog.create = originalAdminAuditCreate;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/cadastrar-fluxo-caixa').send({
+      ejcId: '507f1f77bcf86cd799439052',
+      tipoMovimento: 'entrada',
+      categoria: 'Doação',
+      descricao: 'Doação de família',
+      valor: '250,00',
+      dataMovimento: '2026-04-04',
+      responsavel: 'Tesouraria',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+});
+
+test('POST /admin/cadastrar-subequipe autenticado retorna 409 quando duplicado', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalFindOne = SubEquipe.findOne;
+  SubEquipe.findOne = async () => ({ _id: '507f1f77bcf86cd799439013' });
+
+  t.after(() => {
+    SubEquipe.findOne = originalFindOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/cadastrar-subequipe').send({ nome: 'Acolhida Técnica', anoVigencia: 2025 })
+  );
+
+  assert.equal(response.status, 409);
+  assert.equal(response.body.success, false);
+});
+
+test('POST /admin/editar-subequipe/:id autenticado retorna 400 para id inválido', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/editar-subequipe/id-invalido').send({ nome: 'Novo Nome', anoVigencia: 2026 })
+  );
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+});
+
+test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalSubFindById = SubEquipe.findById;
+  const originalEncontroFindById = Encontro.findById;
+
+  SubEquipe.findById = async () => ({
+    _id: '507f1f77bcf86cd799439014',
+    nome: 'SubEquipe Apoio',
+    nomeReferencia: 'SubEquipe Apoio',
+    anoVigencia: 2025,
+  });
+
+  let saved = false;
+  Encontro.findById = async () => ({
+    _id: '507f1f77bcf86cd799439015',
+    subequipeCoordenou: [],
+    subequipeCoordenacoes: [],
+    save: async () => {
+      saved = true;
+    },
+  });
+
+  t.after(() => {
+    SubEquipe.findById = originalSubFindById;
+    Encontro.findById = originalEncontroFindById;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/vincular-encontreiro-subequipe').send({
+      pessoaId: '507f1f77bcf86cd799439015',
+      subequipeId: '507f1f77bcf86cd799439014',
+      papel: 'coordenador',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(saved, true);
+});
+
+test('POST /admin/importar-cadastros autenticado rejeita sqlQuery customizado', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/importar-cadastros').send({
+      tipoImportacao: 'encontreiros',
+      sourceType: 'database',
+      dbEngine: 'postgresql',
+      connectionString: 'postgresql://usuario:senha@localhost:5432/banco',
+      tableName: 'encontro',
+      sqlQuery: 'SELECT * FROM encontro LIMIT 1',
+    })
+  );
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+  assert.match(String(response.body.error || ''), /desativada por seguranca/i);
+});
+
+test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equipes ao virar tio', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const VinculoEncontro = mongoose.model('VinculoEncontro');
+  const originalFindById = Encontro.findById;
+  const originalFindByIdAndUpdate = Encontro.findByIdAndUpdate;
+  const originalDeleteMany = VinculoEncontro.deleteMany;
+
+  const cadastroId = '507f1f77bcf86cd799439099';
+  const cadastroAtual = {
+    _id: cadastroId,
+    nomeCompleto: 'Carlos Histórico',
+    tipo: 'jovens',
+    tiosCategoria: '',
+    tiosGrupoId: '',
+    tioParceiroId: null,
+  };
+
+  let payloadAtualizado = null;
+
+  Encontro.findById = async () => cadastroAtual;
+  Encontro.findByIdAndUpdate = async (_id, payload) => {
+    payloadAtualizado = payload;
+    return {
+      ...cadastroAtual,
+      ...payload,
+      _id: cadastroId,
+    };
+  };
+  VinculoEncontro.deleteMany = async () => ({ acknowledged: true, deletedCount: 0 });
+
+  t.after(() => {
+    Encontro.findById = originalFindById;
+    Encontro.findByIdAndUpdate = originalFindByIdAndUpdate;
+    VinculoEncontro.deleteMany = originalDeleteMany;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post(`/admin/atualizar-cadastro/encontreiro/${cadastroId}`).type('form').send({
+      nomeCompleto: 'Carlos Histórico',
+      ejc: 'EJC 2026',
+      logradouro: 'Rua A',
+      bairro: 'Centro',
+      telefone: '88999999999',
+      email: 'carlos@example.com',
+      instagram: '@carlos',
+      dataNascimento: '1990-05-10',
+      statusAprovacao: 'aprovado',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: 'false',
+      equipeServiu: 'Sala, Cozinha',
+      equipeCoordenou: 'Secretaria',
+      ehAlergico: 'nao',
+      intolerante: '',
+      alergiaDescricao: '',
+      temRelacionamento: '',
+      observacoes: 'Virou tio',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.deepEqual(payloadAtualizado.equipeServiu, ['Sala', 'Cozinha']);
+  assert.deepEqual(payloadAtualizado.equipeCoordenou, ['Secretaria']);
+});
+
+const findRowByName = (sheet, nome) => {
+  for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber += 1) {
+    const row = sheet.getRow(rowNumber);
+    if (row.getCell(1).value === nome) {
+      return row;
+    }
+  }
+  return null;
+};
+
+test('GET /export-encontro-excel mantém tios em todas as equipes e zera histórico só no relatório', async (t) => {
+  const originalFind = Encontro.find;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEquipeFind = Equipe.find;
+
+  const registros = [
+    {
+      _id: '507f1f77bcf86cd799439120',
+      nomeCompleto: 'Tio João',
+      comoQuerSerChamado: 'João',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: true,
+      temVeiculoProprio: true,
+      equipeServiu: ['Sala', 'Cozinha'],
+      equipeCoordenou: ['Secretaria'],
+      aprovado: true,
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-01T10:00:00Z'),
+    },
+  ];
+
+  Encontro.find = () => ({
+    sort: () => ({
+      lean: async () => registros,
+    }),
+  });
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([]),
+  });
+
+  Equipe.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Encontro.find = originalFind;
+    VinculoEncontro.find = originalVinculoFind;
+    Equipe.find = originalEquipeFind;
+  });
+
+  const response = await request(app)
+    .get('/export-encontro-excel')
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /spreadsheetml|octet-stream/i);
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(response.body);
+
+  const dashboard = workbook.getWorksheet('Dashboard');
+  const salaSheet = workbook.getWorksheet('Sala');
+  const secretariaSheet = workbook.getWorksheet('Secretaria');
+
+  assert.ok(dashboard, 'A aba Dashboard deve existir');
+  assert.ok(salaSheet, 'A aba Sala deve existir');
+  assert.ok(secretariaSheet, 'A aba Secretaria deve existir');
+  assert.equal(dashboard.getCell('C5').value, 0);
+  assert.equal(dashboard.getCell('E5').value, 0);
+
+  const salaRow = findRowByName(salaSheet, 'Tio João');
+  const secretariaRow = findRowByName(secretariaSheet, 'Tio João');
+
+  assert.ok(salaRow, 'O tio deve aparecer também na equipe Sala');
+  assert.ok(secretariaRow, 'O tio deve aparecer também na equipe Secretaria');
+  assert.equal(salaRow.getCell(12).value || '', '');
+  assert.equal(salaRow.getCell(13).value || '', '');
+  assert.equal(secretariaRow.getCell(12).value || '', '');
+  assert.equal(secretariaRow.getCell(13).value || '', '');
+});
+
+test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/crachas autenticado retorna PDF bonito de crachás', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439301';
+  const equipeId = '507f1f77bcf86cd799439302';
+  const pessoaId = '507f1f77bcf86cd799439303';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEncontroFind = Encontro.find;
+  const originalCadastroFind = Cadastro.find;
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Equipe.findOne = () => ({
+    lean: async () => ({ _id: equipeId, ejcId, nome: 'Liturgia' }),
+  });
+
+  VinculoEncontro.find = () => ({
+    sort: () => ({
+      lean: async () => ([
+        {
+          _id: '507f1f77bcf86cd799439304',
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId,
+          papel: 'coordenador',
+          descricaoPapel: '',
+          dataCriacao: new Date('2026-04-04T10:00:00Z'),
+        },
+      ]),
+    }),
+  });
+
+  Encontro.find = () => ({
+    select: () => ({
+      lean: async () => ([
+        {
+          _id: pessoaId,
+          nomeCompleto: 'João da Liturgia',
+          comoQuerSerChamado: 'João',
+          tipo: 'jovens',
+          telefone: '88999998888',
+          email: 'joao@example.com',
+          instagram: '@joao',
+          bairro: 'Centro',
+          logradouro: 'Rua A',
+          ejc: 'EJC Teste',
+        },
+      ]),
+    }),
+  });
+
+  Cadastro.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    Encontro.find = originalEncontroFind;
+    Cadastro.find = originalCadastroFind;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .get(`/admin/encontros/${ejcId}/export/equipe/${equipeId}/crachas`)
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /pdf/i);
+  assert.ok(response.body.length > 0, 'O PDF de crachás deve ser gerado');
+});
+
+test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadastro já é de tio', async (t) => {
+  const originalEncontroFind = Encontro.find;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEquipeFind = Equipe.find;
+
+  const tioId = '507f1f77bcf86cd799439121';
+  const registros = [
+    {
+      _id: tioId,
+      nomeCompleto: 'Tia Maria',
+      comoQuerSerChamado: 'Maria',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: true,
+      temVeiculoProprio: false,
+      equipeServiu: ['Sala', 'Cozinha'],
+      equipeCoordenou: ['Secretaria'],
+      aprovado: true,
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-02T10:00:00Z'),
+    },
+  ];
+
+  Encontro.find = () => ({
+    sort: () => ({
+      lean: async () => registros,
+    }),
+  });
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        pessoaId: tioId,
+        entidadeTipo: 'equipe',
+        entidadeId: '507f1f77bcf86cd799439201',
+        pessoaTipo: 'encontreiro',
+        papel: 'membro',
+      },
+      {
+        pessoaId: tioId,
+        entidadeTipo: 'equipe',
+        entidadeId: '507f1f77bcf86cd799439202',
+        pessoaTipo: 'encontreiro',
+        papel: 'coordenador',
+      },
+    ]),
+  });
+
+  Equipe.find = () => ({
+    select: () => ({
+      lean: async () => ([
+        { _id: '507f1f77bcf86cd799439201', nome: 'Sala', nomeReferencia: 'Sala' },
+        { _id: '507f1f77bcf86cd799439202', nome: 'Compras', nomeReferencia: 'Compras' },
+      ]),
+    }),
+  });
+
+  t.after(() => {
+    Encontro.find = originalEncontroFind;
+    VinculoEncontro.find = originalVinculoFind;
+    Equipe.find = originalEquipeFind;
+  });
+
+  const response = await request(app)
+    .get('/export-encontro-excel')
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(response.body);
+
+  const dashboard = workbook.getWorksheet('Dashboard');
+  const allSheet = workbook.getWorksheet('Todos Encontreiros');
+  const secretariaSheet = workbook.getWorksheet('Secretaria');
+  const salaSheet = workbook.getWorksheet('Sala');
+
+  assert.equal(dashboard.getCell('C5').value, 1);
+  assert.equal(dashboard.getCell('E15').value, 1);
+
+  const allRow = findRowByName(allSheet, 'Tia Maria');
+  assert.ok(allRow, 'A aba consolidada deve conter a tia');
+  assert.equal(allRow.getCell(12).value, 'Sala');
+  assert.equal(allRow.getCell(13).value, 'Compras');
+
+  assert.equal(findRowByName(salaSheet, 'Tia Maria'), null);
+  assert.ok(findRowByName(secretariaSheet, 'Tia Maria'), 'Ela deve continuar disponível nas demais equipes');
 });

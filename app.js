@@ -16,10 +16,17 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const MongoStore = require('connect-mongo');
+const { buildHelmetConfig } = require('./src/config/security');
+const { processarImportacaoCompletaTransacional } = require('./src/services/importacaoCompletaService');
+const {
+  carregarDadosEncontroCompletoDeOrigemExterna,
+  carregarEncontreirosDeOrigemExterna,
+} = require('./src/services/importacaoOrigemExternaService');
 
 const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
 const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
 const LGPD_RETENTION_DAYS_DEFAULT = 730;
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 // configure VAPID keys (set environment variables beforehand)
 let vapidKeys = {
@@ -27,10 +34,13 @@ let vapidKeys = {
   privateKey: process.env.VAPID_PRIVATE_KEY,
 };
 if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
+  if (IS_PRODUCTION) {
+    throw new Error('VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY sao obrigatorias em producao.');
+  }
+
   const keys = webpush.generateVAPIDKeys();
   // Log as regular output to avoid false startup failures in environments that treat stderr as fatal.
-  console.log('VAPID keys were not provided. Generated new keys; please add them to your .env');
-  console.log(JSON.stringify(keys, null, 2));
+  console.log('VAPID keys were not provided. Generated ephemeral keys for development only.');
   vapidKeys = keys;
 }
 webpush.setVapidDetails('mailto:you@example.com', vapidKeys.publicKey, vapidKeys.privateKey);
@@ -39,9 +49,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
-app.set('trust proxy', 1);
+const resolveTrustProxySetting = () => {
+  const raw = String(process.env.TRUST_PROXY || '').trim().toLowerCase();
+  if (!raw) return IS_PRODUCTION ? 1 : false;
+  if (['false', '0', 'off', 'no'].includes(raw)) return false;
+  if (['true', '1', 'on', 'yes'].includes(raw)) return 1;
+
+  const numericValue = Number.parseInt(raw, 10);
+  if (Number.isFinite(numericValue) && numericValue >= 0) return numericValue;
+
+  return process.env.TRUST_PROXY;
+};
+
+app.set('trust proxy', resolveTrustProxySetting());
 
 const ensureImportPlaceholderImage = () => {
   const uploadsDir = path.join(__dirname, 'uploads');
@@ -164,6 +185,16 @@ const cadastroSchema = new mongoose.Schema({
   alergiaDescricao: { type: String, default: '' },
   email: { type: String, default: '' },
   instagram: { type: String },
+  subequipeCoordenou: { type: [String], default: [] },
+  subequipeCoordenacoes: {
+    type: [{
+      subequipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubEquipe', required: true },
+      subequipeNome: { type: String, required: true, trim: true },
+      anoVigencia: { type: Number, required: true },
+      dataVinculo: { type: Date, default: Date.now },
+    }],
+    default: [],
+  },
   foto: { type: String, required: true },
   aprovado: { type: Boolean, default: false },
   statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
@@ -173,6 +204,10 @@ const cadastroSchema = new mongoose.Schema({
   anonimizadoEm: { type: Date, default: null },
   dataCadastro: { type: Date, default: Date.now },
 });
+
+cadastroSchema.index({ dataCadastro: -1 });
+cadastroSchema.index({ ejcVinculadoId: 1, dataCadastro: -1 });
+cadastroSchema.index({ email: 1 });
 
 const Cadastro = mongoose.model('Cadastro_EJC', cadastroSchema);
 
@@ -192,6 +227,16 @@ const encontroSchema = new mongoose.Schema({
   tioParceiroId: { type: mongoose.Schema.Types.ObjectId, ref: 'Encontro', default: null },
   equipeServiu: { type: [String], default: [] },
   equipeCoordenou: { type: [String], default: [] },
+  subequipeCoordenou: { type: [String], default: [] },
+  subequipeCoordenacoes: {
+    type: [{
+      subequipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'SubEquipe', required: true },
+      subequipeNome: { type: String, required: true, trim: true },
+      anoVigencia: { type: Number, required: true },
+      dataVinculo: { type: Date, default: Date.now },
+    }],
+    default: [],
+  },
   temVeiculoProprio: { type: Boolean, default: false },
   logradouro: { type: String, required: true },
   bairro: { type: String, required: true },
@@ -213,6 +258,10 @@ const encontroSchema = new mongoose.Schema({
   anonimizadoEm: { type: Date, default: null },
   dataCadastro: { type: Date, default: Date.now },
 });
+
+encontroSchema.index({ dataCadastro: -1 });
+encontroSchema.index({ ejcVinculadoId: 1, dataCadastro: -1 });
+encontroSchema.index({ ejc: 1, email: 1 });
 
 const Encontro = mongoose.model('Encontro', encontroSchema);
 
@@ -270,6 +319,7 @@ const ADMIN_PERMISSION_OPTIONS = [
   { key: 'cadastros.excluir', label: 'Excluir cadastros', description: 'Permite deletar cadastros e limpezas em lote.' },
   { key: 'encontros.gerenciar', label: 'Gerenciar encontros', description: 'Permite criar/deletar encontro, círculos e vínculos.' },
   { key: 'equipes.gerenciar', label: 'Gerenciar equipes', description: 'Permite criar/editar/excluir equipes e vincular pessoas.' },
+  { key: 'gastos.gerenciar', label: 'Gerenciar gastos', description: 'Permite cadastrar e excluir gastos do encontro e das equipes.' },
   { key: 'importacao.executar', label: 'Importar dados', description: 'Permite executar importação de cadastros externos.' },
   { key: 'bloqueio.gerenciar', label: 'Gerenciar bloqueios', description: 'Permite configurar bloqueio dos formulários.' },
   { key: 'lgpd.executar', label: 'Executar LGPD', description: 'Permite rodar anonimização/retencão LGPD.' },
@@ -285,6 +335,7 @@ const ADMIN_ROLE_DEFAULT_PERMISSIONS = {
     'cadastros.aprovar',
     'encontros.gerenciar',
     'equipes.gerenciar',
+    'gastos.gerenciar',
     'importacao.executar',
     'bloqueio.gerenciar',
     'lgpd.executar',
@@ -341,6 +392,37 @@ const buildAdminSessionData = (adminDoc) => {
     nivelAcesso,
     permissoes,
   };
+};
+
+const regenerateRequestSession = (req) => new Promise((resolve, reject) => {
+  if (!req.session || typeof req.session.regenerate !== 'function') {
+    resolve();
+    return;
+  }
+
+  req.session.regenerate((err) => {
+    if (err) reject(err);
+    else resolve();
+  });
+});
+
+const saveRequestSession = (req) => new Promise((resolve, reject) => {
+  if (!req.session || typeof req.session.save !== 'function') {
+    resolve();
+    return;
+  }
+
+  req.session.save((err) => {
+    if (err) reject(err);
+    else resolve();
+  });
+});
+
+const applyAdminSessionData = (req, sessionData) => {
+  req.session.adminId = sessionData._id;
+  req.session.adminUsername = sessionData.username;
+  req.session.adminNivelAcesso = sessionData.nivelAcesso;
+  req.session.adminPermissoes = sessionData.permissoes;
 };
 
 const denyAdminPermission = (req, res, permissionKey) => {
@@ -454,6 +536,88 @@ const equipeSchema = new mongoose.Schema({
 
 const Equipe = mongoose.model('Equipe', equipeSchema);
 
+const subequipeSchema = new mongoose.Schema({
+  nome: { type: String, required: true, trim: true },
+  anoVigencia: { type: Number, required: true },
+  nomeReferencia: { type: String, default: '', trim: true },
+  nomeNormalizado: { type: String, required: true, unique: true, trim: true },
+  dataCriacao: { type: Date, default: Date.now },
+});
+
+const SubEquipe = mongoose.model('SubEquipe', subequipeSchema);
+
+const gastoSchema = new mongoose.Schema({
+  ejc: { type: String, default: '', trim: true },
+  ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
+  ejcVinculadoNome: { type: String, default: '', trim: true },
+  escopoTipo: { type: String, enum: ['encontro', 'equipe'], default: 'encontro', required: true },
+  equipeId: { type: mongoose.Schema.Types.ObjectId, ref: 'Equipe', default: null },
+  equipeNome: { type: String, default: '', trim: true },
+  categoria: { type: String, default: 'Geral', trim: true },
+  descricao: { type: String, required: true, trim: true },
+  valor: { type: Number, required: true, min: 0 },
+  dataGasto: { type: Date, required: true },
+  formaPagamento: { type: String, default: '', trim: true },
+  responsavel: { type: String, default: '', trim: true },
+  observacoes: { type: String, default: '', trim: true },
+  criadoPorAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+  criadoPorAdminUsername: { type: String, default: '', trim: true },
+  dataCriacao: { type: Date, default: Date.now },
+});
+
+gastoSchema.index({ ejcVinculadoId: 1, dataGasto: -1 });
+gastoSchema.index({ escopoTipo: 1, equipeId: 1, dataGasto: -1 });
+
+const GastoEncontro = mongoose.model('GastoEncontro', gastoSchema);
+
+const fluxoCaixaSchema = new mongoose.Schema({
+  ejc: { type: String, default: '', trim: true },
+  ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
+  ejcVinculadoNome: { type: String, default: '', trim: true },
+  tipoMovimento: { type: String, enum: ['entrada', 'saida'], required: true },
+  categoria: { type: String, default: 'Outros', trim: true },
+  descricao: { type: String, required: true, trim: true },
+  valor: { type: Number, required: true, min: 0 },
+  dataMovimento: { type: Date, required: true },
+  origemDestino: { type: String, default: '', trim: true },
+  formaPagamento: { type: String, default: '', trim: true },
+  responsavel: { type: String, default: '', trim: true },
+  observacoes: { type: String, default: '', trim: true },
+  criadoPorAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+  criadoPorAdminUsername: { type: String, default: '', trim: true },
+  dataCriacao: { type: Date, default: Date.now },
+});
+
+fluxoCaixaSchema.index({ ejcVinculadoId: 1, dataMovimento: -1, dataCriacao: -1 });
+fluxoCaixaSchema.index({ tipoMovimento: 1, dataMovimento: -1, dataCriacao: -1 });
+
+const FluxoCaixaEncontro = mongoose.model('FluxoCaixaEncontro', fluxoCaixaSchema);
+
+const GASTO_CATEGORY_OPTIONS = [
+  'Alimentação',
+  'Decoração',
+  'Liturgia',
+  'Infraestrutura',
+  'Transporte',
+  'Limpeza',
+  'Material',
+  'Brindes',
+  'Comunicação',
+  'Outros',
+];
+
+const FLUXO_CATEGORY_OPTIONS = [
+  'Inscrição',
+  'Doação',
+  'Patrocínio',
+  'Venda',
+  'Repasse',
+  'Infraestrutura',
+  'Alimentação',
+  'Material',
+  'Outros',
+];
+
 const circuloSchema = new mongoose.Schema({
   nome: { type: String, required: true, trim: true },
   ejcId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', required: true },
@@ -480,6 +644,21 @@ const parsePositiveInt = (value, fallback, min, max) => {
   const parsed = Number.parseInt(String(value || ''), 10);
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) return fallback;
   return parsed;
+};
+
+const parseCurrencyToNumber = (value) => {
+  const raw = String(value == null ? '' : value).trim();
+  if (!raw) return Number.NaN;
+
+  const normalized = raw
+    .replace(/r\$/gi, '')
+    .replace(/\s+/g, '')
+    .replace(/\.(?=\d{3}(\D|$))/g, '')
+    .replace(',', '.')
+    .replace(/[^\d.-]/g, '');
+
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
 };
 
 const createTiosGroupId = () => `tios-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -596,10 +775,7 @@ app.set('view engine', 'ejs');
 // compress text assets to reduce transfer size in Lighthouse.
 app.use(compression({ threshold: 1024 }));
 
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: 'cross-origin' },
-  contentSecurityPolicy: false,
-}));
+app.use(helmet(buildHelmetConfig()));
 
 const setStaticCacheHeaders = (res, filePath) => {
   const ext = path.extname(filePath).toLowerCase();
@@ -706,6 +882,7 @@ const adminLoginLimiter = rateLimit({
   max: 8,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => process.env.NODE_ENV === 'test',
   message: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
 });
 
@@ -755,6 +932,19 @@ const sessionStore = createSessionStore();
 if (!sessionStore) {
   console.warn('Session store persistente indisponivel. Usando MemoryStore (nao recomendado em producao).');
 }
+if (sessionStore && typeof sessionStore.on === 'function') {
+  sessionStore.on('error', (err) => {
+    console.error('Falha no session store:', err && err.message ? err.message : err);
+  });
+}
+
+const resolveSessionCookieSecure = () => {
+  const raw = String(process.env.SESSION_COOKIE_SECURE || '').trim().toLowerCase();
+  if (!raw) return 'auto';
+  if (['true', '1', 'on', 'yes'].includes(raw)) return true;
+  if (['false', '0', 'off', 'no'].includes(raw)) return false;
+  return 'auto';
+};
 
 // configure session
 app.use(session({
@@ -765,7 +955,7 @@ app.use(session({
   saveUninitialized: false,
   proxy: true,
   cookie: {
-    secure: IS_PRODUCTION,
+    secure: resolveSessionCookieSecure(),
     sameSite: 'lax',
     httpOnly: true,
     maxAge: 1000 * 60 * 60 * 24,
@@ -1107,6 +1297,38 @@ const mapToEncontroPayload = (row, fotoPadrao = '', options = {}) => {
   };
 };
 
+const buildEquipeImportIdentity = (ejcNome, equipeNome) => {
+  const nomeLimpo = normalizeTextInput(equipeNome);
+  const ejcNomeLimpo = normalizeTextInput(ejcNome);
+  const nomeReferencia = ejcNomeLimpo ? `${ejcNomeLimpo} - ${nomeLimpo}` : nomeLimpo;
+  const nomeNormalizado = (ejcNomeLimpo ? `${ejcNomeLimpo}::${nomeLimpo}` : nomeLimpo).toLowerCase();
+
+  return {
+    nomeLimpo,
+    nomeReferencia,
+    nomeNormalizado,
+  };
+};
+
+const normalizeEquipeReferenceForImport = (value, ejcNome) => {
+  const raw = normalizeTextInput(value);
+  if (!raw) return '';
+
+  const partes = raw.split(' - ');
+  const nomeBase = partes.length > 1 ? partes.slice(1).join(' - ').trim() : raw;
+  return buildEquipeImportIdentity(ejcNome, nomeBase).nomeReferencia;
+};
+
+const normalizeEquipeReferenceListForImport = (value, ejcNome, incluirEquipes) => {
+  if (!incluirEquipes) return [];
+
+  const referencias = normalizeStringArrayInput(value)
+    .map((item) => normalizeEquipeReferenceForImport(item, ejcNome))
+    .filter(Boolean);
+
+  return [...new Set(referencias)];
+};
+
 const normalizeMultiField = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (!value) return [];
@@ -1223,6 +1445,94 @@ const formatDateBR = (value) => {
   const month = String(d.getUTCMonth() + 1).padStart(2, '0');
   const year = d.getUTCFullYear();
   return `${day}/${month}/${year}`;
+};
+
+const buildTiosEquipeReportMap = async (entries = []) => {
+  const tioIds = [...new Set(
+    (Array.isArray(entries) ? entries : [])
+      .filter((entry) => entry && normalizeTextInput(entry.tipo).toLowerCase() === 'tios' && entry._id)
+      .map((entry) => String(entry._id))
+  )];
+
+  if (!tioIds.length) {
+    return new Map();
+  }
+
+  const vinculos = await VinculoEncontro.find({
+    entidadeTipo: 'equipe',
+    pessoaTipo: 'encontreiro',
+    pessoaId: { $in: tioIds },
+  }).lean();
+
+  if (!Array.isArray(vinculos) || !vinculos.length) {
+    return new Map();
+  }
+
+  const equipeIds = [...new Set(
+    vinculos
+      .map((vinculo) => normalizeTextInput(vinculo.entidadeId))
+      .filter((id) => mongoose.Types.ObjectId.isValid(id))
+  )];
+
+  const equipeNamesById = new Map();
+  if (equipeIds.length) {
+    const equipes = await Equipe.find({ _id: { $in: equipeIds } })
+      .select('_id nome nomeReferencia')
+      .lean();
+
+    equipes.forEach((equipe) => {
+      const key = String(equipe._id);
+      const nome = normalizeTextInput(equipe.nomeReferencia || equipe.nome);
+      if (nome) {
+        equipeNamesById.set(key, nome);
+      }
+    });
+  }
+
+  const result = new Map();
+  vinculos.forEach((vinculo) => {
+    const pessoaId = normalizeTextInput(vinculo.pessoaId);
+    const equipeNome = equipeNamesById.get(String(vinculo.entidadeId));
+    if (!pessoaId || !equipeNome) {
+      return;
+    }
+
+    const papel = normalizeTextInput(vinculo.papel).toLowerCase();
+    const field = ['coordenador', 'coordenou'].includes(papel) ? 'equipeCoordenou' : 'equipeServiu';
+
+    if (!result.has(pessoaId)) {
+      result.set(pessoaId, {
+        equipeServiu: [],
+        equipeCoordenou: [],
+      });
+    }
+
+    const current = result.get(pessoaId);
+    if (!current[field].includes(equipeNome)) {
+      current[field].push(equipeNome);
+    }
+  });
+
+  return result;
+};
+
+const buildEncontroReportEntry = (entry, tiosEquipeMap = new Map()) => {
+  if (!entry || normalizeTextInput(entry.tipo).toLowerCase() !== 'tios') {
+    return entry;
+  }
+
+  const equipesAtuais = tiosEquipeMap.get(String(entry._id)) || {
+    equipeServiu: [],
+    equipeCoordenou: [],
+  };
+
+  return {
+    ...entry,
+    equipeServiu: Array.isArray(equipesAtuais.equipeServiu) ? [...equipesAtuais.equipeServiu] : [],
+    equipeCoordenou: Array.isArray(equipesAtuais.equipeCoordenou) ? [...equipesAtuais.equipeCoordenou] : [],
+    subequipeCoordenou: [],
+    subequipeCoordenacoes: [],
+  };
 };
 
 const executeLgpdRetention = async (retentionDays = LGPD_RETENTION_DAYS_DEFAULT) => {
@@ -1439,6 +1749,8 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
   const truncateValue = options.truncateValue !== false;
   const autoFitValue = options.autoFitValue === true;
   const minFontSize = Number(options.minFontSize) > 0 ? Number(options.minFontSize) : 6;
+  const labelColor = normalizeTextInput(options.labelColor) || '#243446';
+  const valueColor = normalizeTextInput(options.valueColor) || '#1f1f1f';
   const textYOffset = centerText
     ? Math.max(0.5, (rowHeight - fontSize) / 2)
     : 0.7;
@@ -1467,13 +1779,13 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
       ? fitPdfTextToWidth(doc, rawValue, valueWidth, { fontName, fontSize: adjustedFontSize })
       : (truncateValue ? truncateText(rawValue, textMax) : rawValue);
 
-    doc.font('Helvetica').fontSize(Math.max(7.6, fontSize - 0.1)).fillColor('#243446').text(`${safeLabel}:`, x, textY, {
+    doc.font('Helvetica').fontSize(Math.max(7.6, fontSize - 0.1)).fillColor(labelColor).text(`${safeLabel}:`, x, textY, {
       width: labelWidth,
       lineBreak: false,
       ellipsis: true,
     });
 
-    doc.font(fontName).fontSize(adjustedFontSize).fillColor('#1f1f1f').text(safeValue, x + labelWidth + 3, textY, {
+    doc.font(fontName).fontSize(adjustedFontSize).fillColor(valueColor).text(safeValue, x + labelWidth + 3, textY, {
       width: valueWidth,
       lineBreak: false,
       ellipsis: true,
@@ -1484,7 +1796,7 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
     const normalizedLine = showLabels
       ? `${label}: ${renderedValue}`
       : `${renderedValue}`;
-    doc.font(fontName).fontSize(fontSize).fillColor('#1f1f1f').text(normalizedLine, x, textY, {
+    doc.font(fontName).fontSize(fontSize).fillColor(valueColor).text(normalizedLine, x, textY, {
       width,
       lineBreak: false,
       ellipsis: true,
@@ -1501,10 +1813,24 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
 
 const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {}) => {
   // Card com acabamento mais limpo e profissional.
+  const outerInset = Math.max(0, Number(options.outerInset) || 0);
+  const cardX = x + outerInset;
+  const cardY = y + outerInset;
+  const cardWidth = Math.max(12, width - (outerInset * 2));
+  const cardHeight = Math.max(12, height - (outerInset * 2));
+  const cardFillColor = normalizeTextInput(options.cardFillColor) || '#ffffff';
+  const cardStrokeColor = normalizeTextInput(options.cardStrokeColor) || '#5f6b7a';
+  const topDividerColor = normalizeTextInput(options.topDividerColor) || '#d2dae3';
+  const photoStrokeColor = normalizeTextInput(options.photoStrokeColor) || '#8793a3';
+  const badgeFillColor = normalizeTextInput(options.badgeFillColor) || '#1f2f46';
+  const badgeTextColor = normalizeTextInput(options.badgeTextColor) || '#ffffff';
+  const labelColor = normalizeTextInput(options.labelColor) || '#243446';
+  const valueColor = normalizeTextInput(options.valueColor) || '#1f1f1f';
+  const rowLineColor = normalizeTextInput(options.rowLineColor) || '#bdc7d3';
   doc.save();
-  doc.roundedRect(x, y, width, height, 4).fillAndStroke('#ffffff', '#5f6b7a');
+  doc.roundedRect(cardX, cardY, cardWidth, cardHeight, 4).fillAndStroke(cardFillColor, cardStrokeColor);
   if (options.topDivider !== false) {
-    doc.lineWidth(0.6).strokeColor('#d2dae3').moveTo(x + 7, y + 22).lineTo(x + width - 7, y + 22).stroke();
+    doc.lineWidth(0.6).strokeColor(topDividerColor).moveTo(cardX + 7, cardY + 22).lineTo(cardX + cardWidth - 7, cardY + 22).stroke();
   }
   doc.restore();
 
@@ -1534,19 +1860,19 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
     : [];
   if (badgeLabel) {
     doc.save();
-    doc.roundedRect(x + 6, y + 5, width - 12, 14, 3).fill('#1f2f46');
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(8).text(badgeLabel, x + 8, y + 9, {
-      width: width - 16,
+    doc.roundedRect(cardX + 6, cardY + 5, cardWidth - 12, 14, 3).fill(badgeFillColor);
+    doc.fillColor(badgeTextColor).font('Helvetica-Bold').fontSize(8).text(badgeLabel, cardX + 8, cardY + 9, {
+      width: cardWidth - 16,
       align: 'center',
       lineBreak: false,
     });
     doc.restore();
   }
 
-  const photoX = x + photoInset;
-  const photoY = y + (badgeLabel ? 24 : topPadding);
+  const photoX = cardX + photoInset;
+  const photoY = cardY + (badgeLabel ? 24 : topPadding);
 
-  doc.lineWidth(0.6).strokeColor('#8793a3').rect(photoX, photoY, photoWidth, photoHeight).stroke();
+  doc.lineWidth(0.6).strokeColor(photoStrokeColor).rect(photoX, photoY, photoWidth, photoHeight).stroke();
 
   const photoPath = resolvePhotoPath(entry.foto);
   if (photoPath) {
@@ -1566,7 +1892,7 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   }
 
   const textX = photoX + photoWidth + textGap;
-  const textWidth = width - (textX - x) - photoInset;
+  const textWidth = cardWidth - (textX - cardX) - photoInset;
   const headerOffset = badgeLabel ? 24 : topPadding;
 
   const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, 28);
@@ -1613,8 +1939,8 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
     lines = lines.filter(([label]) => label !== 'EJC');
   }
 
-  const contentAreaTop = y + headerOffset;
-  const contentAreaHeight = Math.max(photoHeight, height - headerOffset - topPadding);
+  const contentAreaTop = cardY + headerOffset;
+  const contentAreaHeight = Math.max(photoHeight, cardHeight - headerOffset - topPadding);
   const linesHeight = lines.reduce((sum, line) => sum + rowHeight + (line[2] || 0), 0);
   let rowY = contentAreaTop + Math.max(0, (contentAreaHeight - linesHeight) / 2);
 
@@ -1635,7 +1961,9 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
       truncateValue: !isNameLine,
       showDivider: disableDividerForLine ? false : options.showDivider,
       fontName: idx === 0 ? 'Helvetica-Bold' : 'Helvetica',
-      lineColor: '#bdc7d3',
+      lineColor: rowLineColor,
+      labelColor,
+      valueColor,
     });
     rowY += rowHeight + extraSpace;
   });
@@ -1659,6 +1987,393 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   papel: normalizeTextInput(vinculo?.papel).toLowerCase(),
   descricaoPapel: normalizeTextInput(vinculo?.descricaoPapel),
 });
+
+const resolveCirculoCrachaTheme = (groupName) => {
+  const normalizado = String(groupName || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const palette = [
+    {
+      termos: ['amarelo', 'dourado', 'ouro', 'ambar', 'gold'],
+      colors: { accent: '#eab308', border: '#fde047', soft: '#fefce8', chipText: '#a16207' },
+    },
+    {
+      termos: ['azul', 'anil', 'ciano', 'cyan', 'turquesa', 'celeste'],
+      colors: { accent: '#1d4ed8', border: '#93c5fd', soft: '#eaf2ff', chipText: '#1e40af' },
+    },
+    {
+      termos: ['laranja', 'laranjado', 'ocre', 'coral', 'marrom', 'terracota', 'bronze'],
+      colors: { accent: '#ea580c', border: '#fdba74', soft: '#fff3e8', chipText: '#9a3412' },
+    },
+    {
+      termos: ['verde', 'esmeralda', 'lima', 'limao', 'olive', 'oliva'],
+      colors: { accent: '#16a34a', border: '#86efac', soft: '#ecfdf3', chipText: '#166534' },
+    },
+    {
+      termos: ['vermelho', 'rubro', 'vinho', 'bordo', 'scarlet', 'red'],
+      colors: { accent: '#dc2626', border: '#fca5a5', soft: '#fef2f2', chipText: '#991b1b' },
+    },
+    {
+      termos: ['rosa', 'pink', 'rose', 'cor de rosa', 'rosado'],
+      colors: { accent: '#db2777', border: '#f9a8d4', soft: '#fdf2f8', chipText: '#9d174d' },
+    },
+    {
+      termos: ['roxo', 'lilas', 'violeta', 'purple', 'magenta'],
+      colors: { accent: '#7c3aed', border: '#c4b5fd', soft: '#f5f3ff', chipText: '#5b21b6' },
+    },
+  ];
+
+  for (const item of palette) {
+    if (item.termos.some((termo) => normalizado.includes(termo))) {
+      return item.colors;
+    }
+  }
+
+  if (['preto', 'grafite', 'black'].some((termo) => normalizado.includes(termo))) {
+    return { accent: '#1f2937', border: '#9ca3af', soft: '#f3f4f6', chipText: '#111827' };
+  }
+
+  if (['branco', 'prata', 'silver', 'white'].some((termo) => normalizado.includes(termo))) {
+    return { accent: '#64748b', border: '#cbd5e1', soft: '#f8fafc', chipText: '#334155' };
+  }
+
+  return { accent: '#1d4ed8', border: '#93c5fd', soft: '#eaf2ff', chipText: '#1e40af' };
+};
+
+const resolveEquipeCrachaTheme = (groupName) => {
+  const normalizado = String(groupName || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z\s-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  const palette = [
+    {
+      termos: ['liturgia'],
+      colors: { accent: '#6d28d9', border: '#c4b5fd', soft: '#f7f2ff', chipText: '#4c1d95' },
+    },
+    {
+      termos: ['cozinha', 'cafezinho', 'cafezinho'],
+      colors: { accent: '#a16207', border: '#fcd34d', soft: '#fff9eb', chipText: '#854d0e' },
+    },
+    {
+      termos: ['garcom', 'garçom', 'sala', 'secretaria'],
+      colors: { accent: '#1d4ed8', border: '#93c5fd', soft: '#eef4ff', chipText: '#1e3a8a' },
+    },
+    {
+      termos: ['ordem', 'limpeza', 'apoio', 'acolhida', 'compras'],
+      colors: { accent: '#047857', border: '#86efac', soft: '#ecfdf5', chipText: '#065f46' },
+    },
+    {
+      termos: ['externa', 'tios'],
+      colors: { accent: '#be185d', border: '#f9a8d4', soft: '#fff1f6', chipText: '#9d174d' },
+    },
+  ];
+
+  for (const item of palette) {
+    if (item.termos.some((termo) => normalizado.includes(termo))) {
+      return item.colors;
+    }
+  }
+
+  return {
+    accent: '#0f766e',
+    border: '#99f6e4',
+    soft: '#e6fffb',
+    chipText: '#115e59',
+  };
+};
+
+const getCrachaPalette = (groupType, groupName = '') => {
+  if (groupType === 'circulo') {
+    return resolveCirculoCrachaTheme(groupName);
+  }
+
+  return resolveEquipeCrachaTheme(groupName);
+};
+
+const resolveCrachaRoleStyle = (entry, palette) => {
+  const papel = normalizeTextInput(entry?.papel).toLowerCase();
+  if (['coordenador', 'coordenou'].includes(papel)) {
+    return {
+      label: 'COORDENACAO',
+      fill: '#fff7ed',
+      color: '#c2410c',
+    };
+  }
+
+  if (papel === 'moita') {
+    const detalheMoita = normalizeTextInput(entry?.descricaoPapel);
+    return {
+      label: detalheMoita ? `MOITA • ${truncateText(detalheMoita, 16).toUpperCase()}` : 'MOITA',
+      fill: '#fef3c7',
+      color: '#92400e',
+    };
+  }
+
+  if (normalizeTextInput(entry?.tipo).toLowerCase() === 'tios') {
+    return {
+      label: 'APOIO TIOS',
+      fill: '#f5e8ff',
+      color: '#7c3aed',
+    };
+  }
+
+  return {
+    label: entry?.pessoaTipo === 'encontrista' ? 'ENCONTRISTA' : 'SERVICO',
+    fill: palette.soft,
+    color: palette.chipText,
+  };
+};
+
+const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
+  const PDFDocument = require('pdfkit');
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
+
+  const doc = new PDFDocument({ margin: 28, size: 'A4', layout: 'landscape' });
+  doc.pipe(res);
+
+  const safeGroups = Array.isArray(groups) ? groups : [];
+  const logoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
+  const hasLogo = fs.existsSync(logoPath);
+  const artCandidates = [
+    path.join(__dirname, 'public', 'images', 'tema.png'),
+    path.join(__dirname, 'public', 'images', 'tema-logo-64.webp'),
+    path.join(__dirname, 'public', 'images', 'rodape.png'),
+  ];
+  const artPath = artCandidates.find((candidate) => fs.existsSync(candidate)) || null;
+  const pageMargin = 28;
+  const cardWidth = 384;
+  const cardHeight = 214;
+  const startX = pageMargin;
+  const startY = 92;
+  const gapX = 16;
+  const gapY = 18;
+  const cols = 2;
+  const rowsPerPage = 2;
+  const cardsPerPage = cols * rowsPerPage;
+
+  const drawPageHeader = (group, pageIndex, totalPages) => {
+    const palette = getCrachaPalette(group.tipo, group.nome);
+    const pageWidth = doc.page.width;
+
+    doc.save();
+    doc.roundedRect(pageMargin, 22, pageWidth - (pageMargin * 2), 52, 16).fillAndStroke('#fffdfa', palette.border);
+    doc.roundedRect(pageMargin + 1, 23, pageWidth - (pageMargin * 2) - 2, 15, 15).fill(palette.accent);
+    doc.save();
+    doc.fillOpacity(0.06);
+    doc.roundedRect(pageMargin + 14, 32, pageWidth - (pageMargin * 2) - 28, 30, 12).fill(palette.accent);
+    doc.restore();
+    doc.roundedRect(pageWidth - 190, 31, 96, 32, 12).fill('#ffffff');
+    doc.lineWidth(0.8).strokeColor(palette.border).roundedRect(pageWidth - 190, 31, 96, 32, 12).stroke();
+    doc.restore();
+
+    if (hasLogo) {
+      try {
+        doc.image(logoPath, pageMargin + 12, 31, { fit: [32, 32], align: 'center', valign: 'center' });
+      } catch (err) {
+        // ignore logo rendering problems
+      }
+    }
+
+    const titleX = hasLogo ? (pageMargin + 56) : (pageMargin + 12);
+    doc.fillColor('#1f2f46').font('Helvetica-Bold').fontSize(15).text(mainTitle || 'CRACHAS AUTOMATICOS DO EJC', titleX, 33, {
+      width: pageWidth - 290,
+      lineBreak: false,
+      ellipsis: true,
+    });
+    doc.fillColor('#5f6b7a').font('Helvetica').fontSize(8.3).text(`${group.tipo === 'circulo' ? 'CIRCULO' : 'EQUIPE'} • ${group.nome} • ${ejcName || '-'}`, titleX, 51, {
+      width: pageWidth - 290,
+      lineBreak: false,
+      ellipsis: true,
+    });
+
+    doc.fillColor(palette.accent).font('Helvetica-Bold').fontSize(8.5).text(`PAGINA ${pageIndex}/${totalPages}`, pageWidth - 183, 43, {
+      width: 80,
+      align: 'center',
+      lineBreak: false,
+    });
+  };
+
+  const drawBadgeCard = (entry, group, x, y) => {
+    const palette = getCrachaPalette(group.tipo, group.nome);
+    const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, 36);
+    const groupLabel = truncateText(group.nome || '-', 30).toUpperCase();
+    const photoPath = resolvePhotoPath(entry.foto);
+    const mediaBoxX = x + 16;
+    const mediaBoxY = y + 20;
+    const mediaBoxWidth = 134;
+    const mediaBoxHeight = cardHeight - 40;
+    const textX = mediaBoxX + mediaBoxWidth + 16;
+    const textWidth = cardWidth - (textX - x) - 16;
+    const groupTypeLabel = group.tipo === 'circulo' ? 'CIRCULO' : 'EQUIPE';
+    const isEquipeBadge = group.tipo === 'equipe';
+    const nameFontSize = displayName.length > 30 ? 17.5 : displayName.length > 24 ? 19.5 : 21.5;
+
+    doc.save();
+    doc.roundedRect(x, y, cardWidth, cardHeight, 20).fillAndStroke(isEquipeBadge ? '#fffaf6' : '#fffdfa', isEquipeBadge ? palette.border : '#eadfce');
+    doc.roundedRect(x + 1, y + 1, cardWidth - 2, 18, 19).fill(palette.accent);
+    doc.lineWidth(0.9).strokeColor(palette.border).roundedRect(x + 8, y + 8, cardWidth - 16, cardHeight - 16, 16).stroke();
+    doc.save();
+    doc.fillOpacity(isEquipeBadge ? 0.05 : 0.05);
+    doc.circle(x + cardWidth - 58, y + 46, 28).fill(palette.accent);
+    doc.roundedRect(x + 16, y + 24, cardWidth - 32, cardHeight - 48, 14).fill(palette.accent);
+    doc.restore();
+    doc.restore();
+
+    doc.save();
+    doc.roundedRect(mediaBoxX, mediaBoxY, mediaBoxWidth, mediaBoxHeight, 16).fillAndStroke('#ffffff', palette.border);
+    doc.lineWidth(1).strokeColor(isEquipeBadge ? '#f0d9a7' : '#f8e7b2').roundedRect(mediaBoxX + 4, mediaBoxY + 4, mediaBoxWidth - 8, mediaBoxHeight - 8, 14).stroke();
+    if (photoPath) {
+      try {
+        doc.save();
+        doc.roundedRect(mediaBoxX + 6, mediaBoxY + 6, mediaBoxWidth - 12, mediaBoxHeight - 12, 12).clip();
+        doc.image(photoPath, mediaBoxX + 6, mediaBoxY + 6, {
+          cover: [mediaBoxWidth - 12, mediaBoxHeight - 12],
+          align: 'center',
+          valign: 'center',
+        });
+        doc.restore();
+      } catch (err) {
+        // keep pdf generation resilient if the photo fails
+      }
+    } else if (artPath) {
+      try {
+        doc.save();
+        doc.roundedRect(mediaBoxX + 6, mediaBoxY + 6, mediaBoxWidth - 12, mediaBoxHeight - 12, 12).clip();
+        doc.image(artPath, mediaBoxX + 6, mediaBoxY + 6, {
+          cover: [mediaBoxWidth - 12, mediaBoxHeight - 12],
+          align: 'center',
+          valign: 'center',
+        });
+        doc.restore();
+      } catch (err) {
+        // keep pdf generation resilient if the decorative art fails
+      }
+    } else {
+      doc.fillColor(palette.accent).font('Helvetica-Bold').fontSize(18).text('FOTO', mediaBoxX, mediaBoxY + (mediaBoxHeight / 2) - 8, {
+        width: mediaBoxWidth,
+        align: 'center',
+        lineBreak: false,
+      });
+    }
+
+    if (artPath && photoPath) {
+      try {
+        doc.save();
+        doc.fillOpacity(0.12);
+        doc.image(artPath, mediaBoxX + 12, mediaBoxY + mediaBoxHeight - 48, {
+          fit: [mediaBoxWidth - 24, 30],
+          align: 'center',
+          valign: 'center',
+        });
+        doc.restore();
+      } catch (err) {
+        // ignore decorative watermark failures
+      }
+    }
+    doc.restore();
+
+    doc.save();
+    doc.lineWidth(1.2).strokeColor(palette.border).moveTo(textX - 10, y + 32).lineTo(textX - 10, y + cardHeight - 32).stroke();
+    doc.restore();
+
+    doc.save();
+    doc.roundedRect(textX, y + 28, 86, 20, 10).fill(palette.soft);
+    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(8).text(groupTypeLabel, textX, y + 34.5, {
+      width: 86,
+      align: 'center',
+      lineBreak: false,
+    });
+    doc.restore();
+
+    doc.save();
+    doc.roundedRect(textX, y + 57, textWidth - 14, 28, 12).fill('#ffffff');
+    doc.lineWidth(0.9).strokeColor(palette.border).roundedRect(textX, y + 57, textWidth - 14, 28, 12).stroke();
+    doc.fillColor(palette.accent).font('Helvetica-Bold').fontSize(12.2).text(groupLabel, textX + 8, y + 67, {
+      width: textWidth - 30,
+      align: 'center',
+      lineBreak: false,
+      ellipsis: true,
+    });
+    doc.restore();
+
+    doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 10, y + 98).lineTo(textX + textWidth - 18, y + 98).stroke();
+
+    doc.fillColor('#1f2f46').font('Times-BoldItalic').fontSize(nameFontSize).text(displayName, textX + 6, y + 109, {
+      width: textWidth - 18,
+      align: 'center',
+      lineGap: 2,
+      ellipsis: true,
+      height: 52,
+      valign: 'center',
+    });
+
+    doc.save();
+    doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 14, y + cardHeight - 42).lineTo(textX + textWidth - 22, y + cardHeight - 42).stroke();
+    doc.roundedRect(textX + 26, y + cardHeight - 30, textWidth - 48, 16, 8).fill('#fffaf0');
+    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(7.2).text(ejcName || 'EJC', textX + 26, y + cardHeight - 24.2, {
+      width: textWidth - 48,
+      align: 'center',
+      lineBreak: false,
+      ellipsis: true,
+    });
+    doc.restore();
+  };
+
+  if (!safeGroups.length) {
+    doc.font('Helvetica-Bold').fontSize(16).fillColor('#1f2f46').text(mainTitle || 'CRACHAS AUTOMATICOS DO EJC', pageMargin, 40, {
+      width: doc.page.width - (pageMargin * 2),
+      align: 'center',
+    });
+    doc.font('Helvetica').fontSize(11).fillColor('#5f6b7a').text('Nao ha pessoas vinculadas para gerar crachas neste momento.', pageMargin, 110, {
+      width: doc.page.width - (pageMargin * 2),
+      align: 'center',
+    });
+    doc.end();
+    return;
+  }
+
+  safeGroups.forEach((group, groupIndex) => {
+    const entries = Array.isArray(group.entries) ? group.entries : [];
+    const totalPages = Math.max(1, Math.ceil(entries.length / cardsPerPage));
+
+    for (let pageIndex = 0; pageIndex < totalPages; pageIndex += 1) {
+      if (groupIndex > 0 || pageIndex > 0) {
+        doc.addPage();
+      }
+
+      drawPageHeader(group, pageIndex + 1, totalPages);
+
+      const pageEntries = entries.slice(pageIndex * cardsPerPage, (pageIndex + 1) * cardsPerPage);
+      if (!pageEntries.length) {
+        doc.font('Helvetica').fontSize(11).fillColor('#5f6b7a').text('Sem vinculados para gerar crachas nesta estrutura.', pageMargin, 120, {
+          width: doc.page.width - (pageMargin * 2),
+          align: 'center',
+        });
+        continue;
+      }
+
+      pageEntries.forEach((entry, idx) => {
+        const col = idx % cols;
+        const row = Math.floor(idx / cols);
+        const x = startX + (col * (cardWidth + gapX));
+        const y = startY + (row * (cardHeight + gapY));
+        drawBadgeCard(entry, group, x, y);
+      });
+    }
+  });
+
+  doc.end();
+};
 
 const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   const PDFDocument = require('pdfkit');
@@ -2067,6 +2782,10 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
       photoAlign: 'center',
       photoValign: 'center',
     };
+    const equipeCoordenadorCardOptions = {
+      ...equipeCardOptions,
+      outerInset: 4,
+    };
 
     let y = equipePageMargin;
     y += drawEquipeHeader(group.nome, y);
@@ -2095,7 +2814,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
         rowGap: equipeRowGap,
         cardWidth: equipeCardWidth,
         cardHeight: equipeCardHeight,
-        drawOptions: equipeCardOptions,
+        drawOptions: equipeCoordenadorCardOptions,
         cardTopLabel: () => 'Coordenador',
       });
       y += 6;
@@ -2513,7 +3232,9 @@ app.get('/export-images-tios', async (req, res) => {
 // export encontreiros with detailed equipe columns for easy filtering
 app.get('/export-encontro-relatorio', async (req, res) => {
   try {
-    const entries = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const rawEntries = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const tiosEquipeMap = await buildTiosEquipeReportMap(rawEntries);
+    const entries = rawEntries.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
     
     // Define all equipes
     const equipes = [
@@ -2688,8 +3409,11 @@ app.get('/export-encontro-relatorio', async (req, res) => {
 app.get('/export-encontro-excel', async (req, res) => {
   try {
     const Excel = require('exceljs');
-    const entries = await Encontro.find({ aprovado: true }).sort({ dataCadastro: 1 }).lean();
-    const allEncontreiros = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const rawEntries = await Encontro.find({ aprovado: true }).sort({ dataCadastro: 1 }).lean();
+    const rawAllEncontreiros = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const tiosEquipeMap = await buildTiosEquipeReportMap([...rawEntries, ...rawAllEncontreiros]);
+    const entries = rawEntries.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
+    const allEncontreiros = rawAllEncontreiros.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
 
     const equipes = [
       'Sala',
@@ -3820,6 +4544,66 @@ app.get('/api/encontro-ativo', async (req, res) => {
   }
 });
 
+// GET /api/admin/ejcs - Listar todos os EJCs para importacao
+app.get('/api/admin/ejcs', checkAdminAuth, requireAdminPermission('importacao.executar'), async (req, res) => {
+  try {
+    const ejcs = await Ejc.find({})
+      .sort({ dataCriacao: -1 })
+      .lean();
+
+    return res.json({
+      success: true,
+      ejcs: ejcs.map(ejc => ({
+        _id: String(ejc._id),
+        nome: ejc.nome,
+        ativo: ejc.ativo,
+      })),
+    });
+  } catch (err) {
+    console.error('Erro ao listar EJCs:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao listar EJCs disponíveis.' });
+  }
+});
+
+// GET /api/admin/ejcs/:id/resumo-importacao - Resumo prévio de estrutura para importação local
+app.get('/api/admin/ejcs/:id/resumo-importacao', checkAdminAuth, requireAdminPermission('importacao.executar'), async (req, res) => {
+  try {
+    const ejcId = String(req.params.id || '').trim();
+    if (!ejcId || !mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Encontro de origem invalido.' });
+    }
+
+    const encontroOrigem = await Ejc.findById(ejcId).lean();
+    if (!encontroOrigem) {
+      return res.status(404).json({ success: false, error: 'Encontro de origem nao encontrado.' });
+    }
+
+    const filtroEncontreiros = buildEventScopeFilter(encontroOrigem);
+    const [equipes, circulos, encontreiros, vinculos] = await Promise.all([
+      Equipe.countDocuments({ ejcId: encontroOrigem._id }),
+      Circulo.countDocuments({ ejcId: encontroOrigem._id }),
+      Encontro.countDocuments(filtroEncontreiros),
+      VinculoEncontro.countDocuments({ ejcId: encontroOrigem._id, pessoaTipo: 'encontreiro' }),
+    ]);
+
+    return res.json({
+      success: true,
+      resumo: {
+        id: String(encontroOrigem._id),
+        nome: encontroOrigem.nome,
+        ativo: !!encontroOrigem.ativo,
+        equipes,
+        circulos,
+        encontreiros,
+        vinculos,
+      },
+    });
+  } catch (err) {
+    console.error('Erro ao montar resumo de importacao do encontro:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao carregar resumo do encontro de origem.' });
+  }
+});
+
 // Middleware para verificar bloqueio de formulário encontrista
 const middlewareVerificaBloqueoEncontrista = async (req, res, next) => {
   try {
@@ -4311,10 +5095,10 @@ app.post('/admin/login', adminLoginLimiter, [
     }
 
     const sessionData = buildAdminSessionData(admin);
-    req.session.adminId = sessionData._id;
-    req.session.adminUsername = sessionData.username;
-    req.session.adminNivelAcesso = sessionData.nivelAcesso;
-    req.session.adminPermissoes = sessionData.permissoes;
+    await regenerateRequestSession(req);
+    applyAdminSessionData(req, sessionData);
+    req.session.adminCsrfToken = crypto.randomBytes(24).toString('hex');
+    await saveRequestSession(req);
     res.redirect('/admin/gerenciar-cadastros');
   } catch (err) {
     console.error('Login error:', err);
@@ -4722,9 +5506,15 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
   try {
     const eventContext = await resolveAdminEventContext(req);
     const baseFilter = eventContext.filtro;
+    const listLimit = parsePositiveInt(req.query.listLimit, 1200, 100, 5000);
 
-    const encontristas = await Cadastro.find(baseFilter).sort({ dataCadastro: -1 }).lean();
-    const encontreirosRaw = await Encontro.find(baseFilter).sort({ dataCadastro: -1 }).lean();
+    const [encontristasTotal, encontreirosTotal] = await Promise.all([
+      Cadastro.countDocuments(baseFilter),
+      Encontro.countDocuments(baseFilter),
+    ]);
+
+    const encontristas = await Cadastro.find(baseFilter).sort({ dataCadastro: -1 }).limit(listLimit).lean();
+    const encontreirosRaw = await Encontro.find(baseFilter).sort({ dataCadastro: -1 }).limit(listLimit).lean();
     const gruposTios = new Map();
 
     encontreirosRaw.forEach((item) => {
@@ -4768,7 +5558,62 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       .lean();
     const ejcs = await Ejc.find().sort({ nome: 1 }).select('nome dataCriacao ativo').lean();
     const encontroAtivo = await getEncontroAtivo();
-    const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcNome nomeReferencia dataCriacao').lean();
+    const equipes = await Equipe.find().sort({ ejcNome: 1, nome: 1 }).select('nome ejcId ejcNome nomeReferencia dataCriacao').lean();
+    const subequipes = await SubEquipe.find().sort({ anoVigencia: -1, nome: 1 }).select('nome anoVigencia nomeReferencia dataCriacao').lean();
+    const gastos = await GastoEncontro.find(baseFilter)
+      .sort({ dataGasto: -1, dataCriacao: -1 })
+      .limit(500)
+      .lean();
+    const gastosResumo = gastos.reduce((acc, item) => {
+      const valor = Number(item?.valor) || 0;
+      acc.quantidade += 1;
+      acc.total += valor;
+      if (item?.escopoTipo === 'equipe') acc.equipes += valor;
+      else acc.encontro += valor;
+      return acc;
+    }, { quantidade: 0, total: 0, encontro: 0, equipes: 0 });
+    const fluxoCaixa = await FluxoCaixaEncontro.find(baseFilter)
+      .sort({ dataMovimento: -1, dataCriacao: -1 })
+      .limit(500)
+      .lean();
+    const fluxoCaixaResumoDocs = await FluxoCaixaEncontro.find(baseFilter)
+      .select('tipoMovimento valor dataMovimento')
+      .lean();
+    const fluxoCaixaResumo = fluxoCaixaResumoDocs.reduce((acc, item) => {
+      const valor = Number(item?.valor) || 0;
+      acc.quantidade += 1;
+      if (item?.tipoMovimento === 'entrada') acc.entradas += valor;
+      else acc.saidas += valor;
+      return acc;
+    }, { quantidade: 0, entradas: 0, saidas: 0 });
+    fluxoCaixaResumo.saldo = fluxoCaixaResumo.entradas - fluxoCaixaResumo.saidas;
+    const hojeFinanceiroRef = new Date();
+    const inicioMesFinanceiro = new Date(hojeFinanceiroRef.getFullYear(), hojeFinanceiroRef.getMonth(), 1);
+    const fluxoCaixaMensalResumo = fluxoCaixaResumoDocs.reduce((acc, item) => {
+      const valor = Number(item?.valor) || 0;
+      const dataMovimento = item?.dataMovimento ? new Date(item.dataMovimento) : null;
+      if (!dataMovimento || Number.isNaN(dataMovimento.getTime())) return acc;
+
+      const ehSaida = item?.tipoMovimento === 'saida';
+      const mesmoMes = dataMovimento.getFullYear() === hojeFinanceiroRef.getFullYear()
+        && dataMovimento.getMonth() === hojeFinanceiroRef.getMonth();
+
+      if (dataMovimento < inicioMesFinanceiro) {
+        acc.saldoInicial += ehSaida ? -valor : valor;
+      } else if (mesmoMes) {
+        if (ehSaida) acc.saidasMes += valor;
+        else acc.entradasMes += valor;
+      }
+
+      return acc;
+    }, {
+      saldoInicial: 0,
+      entradasMes: 0,
+      saidasMes: 0,
+      saldoFinal: 0,
+      mesReferencia: hojeFinanceiroRef.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+    });
+    fluxoCaixaMensalResumo.saldoFinal = fluxoCaixaMensalResumo.saldoInicial + fluxoCaixaMensalResumo.entradasMes - fluxoCaixaMensalResumo.saidasMes;
     const ejcAtivoFull = encontroAtivo ? await Ejc.findById(encontroAtivo._id).select('conviteEnconteiroToken conviteEnconteiroTokenExp').lean() : null;
     const encontreirosParaEquipe = await Encontro.find({ tipo: { $in: ['jovens', 'tios', 'homem', 'mulher'] } })
       .sort({ nomeCompleto: 1 })
@@ -4783,6 +5628,10 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       adminRoleDefaultPermissions: ADMIN_ROLE_DEFAULT_PERMISSIONS,
       encontristas,
       encontreiros,
+      encontristasTotal,
+      encontreirosTotal,
+      listLimit,
+      dadosLimitados: encontristasTotal > listLimit || encontreirosTotal > listLimit,
       administradores,
       auditoriaLogs,
       auditoriaPaginaAtual,
@@ -4797,7 +5646,15 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       escopoEventoAdmin: eventContext.scope,
       eventoFiltroNome: eventContext.encontroNome,
       equipes,
+      subequipes,
       encontreirosParaEquipe,
+      gastos,
+      gastosResumo,
+      gastoCategoryOptions: GASTO_CATEGORY_OPTIONS,
+      fluxoCaixa,
+      fluxoCaixaResumo,
+      fluxoCaixaMensalResumo,
+      fluxoCategoryOptions: FLUXO_CATEGORY_OPTIONS,
     });
   } catch (err) {
     console.error('Erro ao carregar cadastros:', err);
@@ -5082,6 +5939,14 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       updateData.alergiaDescricao = updateData.ehAlergico === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '';
       updateData.temRelacionamento = req.body.temRelacionamento || '';
       updateData.observacoes = req.body.observacoes || '';
+
+      // Ao converter encontreiro para tio, preserva o histórico no cadastro
+      // e apenas reinicia o vínculo de casal quando necessário.
+      if (cadastroAtual.tipo !== 'tios' && updateData.tipo === 'tios') {
+        updateData.tiosCategoria = 'casal';
+        updateData.tiosGrupoId = createTiosGroupId();
+        updateData.tioParceiroId = null;
+      }
     }
 
     // Se enviou nova foto
@@ -5113,6 +5978,11 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
 
       if (resultado?.tipo === 'tios' && categoriaAtualNova === 'casal' && parceiroNovo) {
         await linkTiosCouple(resultado._id, parceiroNovo, resultado.tiosGrupoId);
+      }
+
+      // Se o encontreiro virou tio, remover os vínculos de equipes anteriores para manter consistência
+      if (cadastroAtual.tipo !== 'tios' && resultado?.tipo === 'tios') {
+        await VinculoEncontro.deleteMany({ pessoaTipo: 'encontreiro', pessoaId: id, entidadeTipo: 'equipe' });
       }
     }
     
@@ -5595,9 +6465,8 @@ app.post('/admin/atualizar-admin/:id', checkAdminAuth, requireAdminPermission('a
     if (isSelfUpdate) {
       const sessionData = buildAdminSessionData(admin);
       req.adminUser = sessionData;
-      req.session.adminUsername = sessionData.username;
-      req.session.adminNivelAcesso = sessionData.nivelAcesso;
-      req.session.adminPermissoes = sessionData.permissoes;
+      applyAdminSessionData(req, sessionData);
+      await saveRequestSession(req);
     }
     return res.json({ success: true, message: 'Administrador atualizado com sucesso.' });
   } catch (err) {
@@ -5758,6 +6627,35 @@ app.post('/admin/cadastrar-equipe', checkAdminAuth, requireAdminPermission('equi
   }
 });
 
+// POST /admin/cadastrar-subequipe - Cadastrar nova sub-equipe
+app.post('/admin/cadastrar-subequipe', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const nome = normalizeTextInput(req.body.nome);
+    const anoVigencia = Number.parseInt(String(req.body.anoVigencia || ''), 10);
+
+    if (!nome) {
+      return res.status(400).json({ success: false, error: 'Nome da sub-equipe e obrigatorio.' });
+    }
+    if (!Number.isFinite(anoVigencia) || anoVigencia < 2000 || anoVigencia > 2100) {
+      return res.status(400).json({ success: false, error: 'Ano de vigencia invalido.' });
+    }
+
+    const nomeReferencia = `${nome} (${anoVigencia})`;
+    const nomeNormalizado = `${anoVigencia}::${nome}`.toLowerCase();
+
+    const existente = await SubEquipe.findOne({ nomeNormalizado });
+    if (existente) {
+      return res.status(409).json({ success: false, error: 'Ja existe uma sub-equipe com este nome.' });
+    }
+
+    await SubEquipe.create({ nome, anoVigencia, nomeReferencia, nomeNormalizado });
+    return res.json({ success: true, message: 'Sub-equipe cadastrada com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao cadastrar sub-equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao cadastrar sub-equipe.' });
+  }
+});
+
 // POST /admin/criar-ejc - Cadastrar novo EJC
 app.post('/admin/criar-ejc', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
@@ -5849,19 +6747,35 @@ app.post('/admin/deletar-ejc/:id', checkAdminAuth, requireAdminPermission('encon
     const nomesEquipes = equipes
       .map((eq) => normalizeTextInput(eq.nomeReferencia || eq.nome))
       .filter(Boolean);
-
     await VinculoEncontro.deleteMany({ ejcId: id });
     await Circulo.deleteMany({ ejcId: id });
     await Equipe.deleteMany({ ejcId: id });
+    await GastoEncontro.deleteMany({
+      $or: [
+        { ejcVinculadoId: id },
+        { ejcVinculadoNome: ejc.nome },
+        { ejc: ejc.nome },
+      ],
+    });
+    await FluxoCaixaEncontro.deleteMany({
+      $or: [
+        { ejcVinculadoId: id },
+        { ejcVinculadoNome: ejc.nome },
+        { ejc: ejc.nome },
+      ],
+    });
 
     if (nomesEquipes.length) {
+      const pullAll = {};
+      if (nomesEquipes.length) {
+        pullAll.equipeServiu = nomesEquipes;
+        pullAll.equipeCoordenou = nomesEquipes;
+      }
+
       await Encontro.updateMany(
         {},
         {
-          $pullAll: {
-            equipeServiu: nomesEquipes,
-            equipeCoordenou: nomesEquipes,
-          },
+          $pullAll: pullAll,
         }
       );
     }
@@ -5888,6 +6802,277 @@ app.post('/admin/deletar-ejc/:id', checkAdminAuth, requireAdminPermission('encon
 });
 
 // GET /admin/encontros/:ejcId - Tela dedicada de encontro por EJC
+app.post('/admin/cadastrar-gasto', checkAdminAuth, requireAdminPermission('gastos.gerenciar'), async (req, res) => {
+  try {
+    const escopoTipo = normalizeTextInput(req.body.escopoTipo).toLowerCase() === 'equipe' ? 'equipe' : 'encontro';
+    const descricao = normalizeTextInput(req.body.descricao);
+    const categoria = normalizeTextInput(req.body.categoria) || 'Outros';
+    const responsavel = normalizeTextInput(req.body.responsavel);
+    const formaPagamento = normalizeTextInput(req.body.formaPagamento);
+    const observacoes = normalizeTextInput(req.body.observacoes);
+    const valor = parseCurrencyToNumber(req.body.valor);
+    const dataGasto = req.body.dataGasto ? new Date(req.body.dataGasto) : new Date();
+    const ejcId = normalizeTextInput(req.body.ejcId);
+    const equipeId = normalizeTextInput(req.body.equipeId);
+
+    if (!descricao) {
+      return res.status(400).json({ success: false, error: 'Informe a descrição do gasto.' });
+    }
+
+    if (!Number.isFinite(valor) || valor < 0) {
+      return res.status(400).json({ success: false, error: 'Informe um valor de gasto válido.' });
+    }
+
+    if (Number.isNaN(dataGasto.getTime())) {
+      return res.status(400).json({ success: false, error: 'Informe uma data válida para o gasto.' });
+    }
+
+    let ejc = null;
+    if (ejcId) {
+      if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+        return res.status(400).json({ success: false, error: 'EJC informado é inválido.' });
+      }
+      ejc = await Ejc.findById(ejcId).select('nome').lean();
+      if (!ejc) {
+        return res.status(404).json({ success: false, error: 'EJC não encontrado.' });
+      }
+    }
+
+    let equipe = null;
+    if (escopoTipo === 'equipe') {
+      if (!equipeId || !mongoose.Types.ObjectId.isValid(equipeId)) {
+        return res.status(400).json({ success: false, error: 'Selecione uma equipe válida para este gasto.' });
+      }
+
+      equipe = await Equipe.findById(equipeId).select('nome ejcId ejcNome').lean();
+      if (!equipe) {
+        return res.status(404).json({ success: false, error: 'Equipe não encontrada.' });
+      }
+
+      if (!ejc && equipe.ejcId) {
+        ejc = await Ejc.findById(equipe.ejcId).select('nome').lean();
+      }
+
+      if (ejc && equipe.ejcId && String(equipe.ejcId) !== String(ejc._id)) {
+        return res.status(400).json({ success: false, error: 'A equipe selecionada não pertence ao EJC informado.' });
+      }
+    }
+
+    if (!ejc) {
+      ejc = await getEncontroAtivo();
+    }
+
+    if (!ejc?.nome) {
+      return res.status(400).json({ success: false, error: 'Defina um EJC para registrar o gasto.' });
+    }
+
+    const gasto = await GastoEncontro.create({
+      ejc: ejc.nome,
+      ejcVinculadoId: ejc._id || null,
+      ejcVinculadoNome: ejc.nome,
+      escopoTipo,
+      equipeId: equipe?._id || null,
+      equipeNome: equipe?.nome || '',
+      categoria,
+      descricao,
+      valor,
+      dataGasto,
+      formaPagamento,
+      responsavel,
+      observacoes,
+      criadoPorAdminId: req.session?.adminId || null,
+      criadoPorAdminUsername: req.session?.adminUsername || '',
+    });
+
+    await logAdminAction(req, {
+      action: 'cadastrar_gasto',
+      targetType: 'gasto',
+      targetId: gasto._id,
+      metadata: {
+        descricao,
+        valor,
+        escopoTipo,
+        equipeNome: equipe?.nome || '',
+        ejcNome: ejc.nome,
+      },
+    });
+
+    return res.json({ success: true, message: 'Gasto cadastrado com sucesso.', gastoId: gasto._id });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'cadastrar_gasto',
+      targetType: 'gasto',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    console.error('Erro ao cadastrar gasto:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao cadastrar gasto.' });
+  }
+});
+
+app.post('/admin/deletar-gasto/:id', checkAdminAuth, requireAdminPermission('gastos.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID de gasto inválido.' });
+    }
+
+    const gasto = await GastoEncontro.findById(id).lean();
+    if (!gasto) {
+      return res.status(404).json({ success: false, error: 'Gasto não encontrado.' });
+    }
+
+    await GastoEncontro.findByIdAndDelete(id);
+    await logAdminAction(req, {
+      action: 'deletar_gasto',
+      targetType: 'gasto',
+      targetId: id,
+      metadata: {
+        descricao: gasto.descricao,
+        valor: gasto.valor,
+        escopoTipo: gasto.escopoTipo,
+      },
+    });
+
+    return res.json({ success: true, message: 'Gasto removido com sucesso.' });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'deletar_gasto',
+      targetType: 'gasto',
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    console.error('Erro ao deletar gasto:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao remover gasto.' });
+  }
+});
+
+app.post('/admin/cadastrar-fluxo-caixa', checkAdminAuth, requireAdminPermission('gastos.gerenciar'), async (req, res) => {
+  try {
+    const tipoMovimento = normalizeTextInput(req.body.tipoMovimento).toLowerCase() === 'saida' ? 'saida' : 'entrada';
+    const descricao = normalizeTextInput(req.body.descricao);
+    const categoria = normalizeTextInput(req.body.categoria) || 'Outros';
+    const origemDestino = normalizeTextInput(req.body.origemDestino);
+    const responsavel = normalizeTextInput(req.body.responsavel);
+    const formaPagamento = normalizeTextInput(req.body.formaPagamento);
+    const observacoes = normalizeTextInput(req.body.observacoes);
+    const valor = parseCurrencyToNumber(req.body.valor);
+    const dataMovimento = req.body.dataMovimento ? new Date(req.body.dataMovimento) : new Date();
+    const ejcId = normalizeTextInput(req.body.ejcId);
+
+    if (!descricao) {
+      return res.status(400).json({ success: false, error: 'Informe a descrição do movimento de caixa.' });
+    }
+
+    if (!Number.isFinite(valor) || valor < 0) {
+      return res.status(400).json({ success: false, error: 'Informe um valor válido para o movimento de caixa.' });
+    }
+
+    if (Number.isNaN(dataMovimento.getTime())) {
+      return res.status(400).json({ success: false, error: 'Informe uma data válida para o movimento de caixa.' });
+    }
+
+    let ejc = null;
+    if (ejcId) {
+      if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+        return res.status(400).json({ success: false, error: 'EJC informado é inválido.' });
+      }
+      ejc = await Ejc.findById(ejcId).select('nome').lean();
+      if (!ejc) {
+        return res.status(404).json({ success: false, error: 'EJC não encontrado.' });
+      }
+    }
+
+    if (!ejc) {
+      ejc = await getEncontroAtivo();
+    }
+
+    if (!ejc?.nome) {
+      return res.status(400).json({ success: false, error: 'Defina um EJC para registrar o movimento de caixa.' });
+    }
+
+    const movimento = await FluxoCaixaEncontro.create({
+      ejc: ejc.nome,
+      ejcVinculadoId: ejc._id || null,
+      ejcVinculadoNome: ejc.nome,
+      tipoMovimento,
+      categoria,
+      descricao,
+      valor,
+      dataMovimento,
+      origemDestino,
+      formaPagamento,
+      responsavel,
+      observacoes,
+      criadoPorAdminId: req.session?.adminId || null,
+      criadoPorAdminUsername: req.session?.adminUsername || '',
+    });
+
+    await logAdminAction(req, {
+      action: 'cadastrar_fluxo_caixa',
+      targetType: 'fluxo_caixa',
+      targetId: movimento._id,
+      metadata: {
+        tipoMovimento,
+        descricao,
+        valor,
+        categoria,
+        ejcNome: ejc.nome,
+      },
+    });
+
+    return res.json({ success: true, message: 'Movimento de caixa cadastrado com sucesso.', movimentoId: movimento._id });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'cadastrar_fluxo_caixa',
+      targetType: 'fluxo_caixa',
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    console.error('Erro ao cadastrar fluxo de caixa:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao cadastrar movimento de caixa.' });
+  }
+});
+
+app.post('/admin/deletar-fluxo-caixa/:id', checkAdminAuth, requireAdminPermission('gastos.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID de movimento inválido.' });
+    }
+
+    const movimento = await FluxoCaixaEncontro.findById(id).lean();
+    if (!movimento) {
+      return res.status(404).json({ success: false, error: 'Movimento não encontrado.' });
+    }
+
+    await FluxoCaixaEncontro.findByIdAndDelete(id);
+    await logAdminAction(req, {
+      action: 'deletar_fluxo_caixa',
+      targetType: 'fluxo_caixa',
+      targetId: id,
+      metadata: {
+        tipoMovimento: movimento.tipoMovimento,
+        descricao: movimento.descricao,
+        valor: movimento.valor,
+      },
+    });
+
+    return res.json({ success: true, message: 'Movimento de caixa removido com sucesso.' });
+  } catch (err) {
+    await logAdminAction(req, {
+      action: 'deletar_fluxo_caixa',
+      targetType: 'fluxo_caixa',
+      targetId: req.params.id,
+      status: 'error',
+      metadata: { erro: err.message },
+    });
+    console.error('Erro ao remover fluxo de caixa:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao remover movimento de caixa.' });
+  }
+});
+
 app.get('/admin/encontros/:ejcId', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const { ejcId } = req.params;
@@ -6295,7 +7480,7 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
 });
 
 // GET /admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato
-// Exporta vinculados de um circulo/equipe em Excel ou PDF.
+// Exporta vinculados de um circulo/equipe em Excel, PDF ou crachas.
 app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
   try {
     const ejcId = normalizeTextInput(req.params.ejcId);
@@ -6309,8 +7494,8 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
     if (!['circulo', 'equipe'].includes(entidadeTipo)) {
       return res.status(400).send('Tipo de entidade invalido.');
     }
-    if (!['excel', 'pdf'].includes(formato)) {
-      return res.status(400).send('Formato invalido. Use excel ou pdf.');
+    if (!['excel', 'pdf', 'crachas'].includes(formato)) {
+      return res.status(400).send('Formato invalido. Use excel, pdf ou crachas.');
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -6597,6 +7782,22 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
       return res.end();
     }
 
+    if (formato === 'crachas') {
+      renderCrachasPdf(res, {
+        fileName: `${arquivoBase}_crachas.pdf`,
+        mainTitle: `CRACHAS AUTOMATICOS - ${ejc.nome}`,
+        ejcName: ejc.nome,
+        groups: [
+          {
+            tipo: entidadeTipo,
+            nome: entidadeNome,
+            entries: pdfEntries,
+          },
+        ],
+      });
+      return;
+    }
+
     renderEstruturasPdf(res, {
       fileName: `${arquivoBase}.pdf`,
       mainTitle: `${entidadeTipo === 'circulo' ? 'Circulos' : 'Equipes'} - ${ejc.nome}`,
@@ -6660,6 +7861,85 @@ app.get('/admin/encontros/:ejcId/quadrante/editor', checkAdminAuth, requireAdmin
   } catch (err) {
     console.error('Erro ao abrir editor de quadrante:', err);
     return res.status(500).send('Erro ao abrir editor de quadrante.');
+  }
+});
+
+app.get('/admin/encontros/:ejcId/export/crachas/pdf', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    const ejcId = normalizeTextInput(req.params.ejcId);
+
+    if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).send('EJC invalido para exportacao de crachas.');
+    }
+
+    const ejc = await Ejc.findById(ejcId).lean();
+    if (!ejc) {
+      return res.status(404).send('EJC nao encontrado.');
+    }
+
+    const [circulos, equipes, vinculos] = await Promise.all([
+      Circulo.find({ ejcId }).sort({ nome: 1 }).lean(),
+      Equipe.find({ ejcId }).sort({ nome: 1 }).lean(),
+      VinculoEncontro.find({ ejcId }).sort({ entidadeTipo: 1, dataCriacao: 1 }).lean(),
+    ]);
+
+    const idsEncontristas = vinculos.filter((v) => v.pessoaTipo === 'encontrista').map((v) => v.pessoaId);
+    const idsEncontreiros = vinculos.filter((v) => v.pessoaTipo === 'encontreiro').map((v) => v.pessoaId);
+
+    const [encontristas, encontreiros] = await Promise.all([
+      idsEncontristas.length
+        ? Cadastro.find({ _id: { $in: idsEncontristas } })
+          .select('nomeCompleto comoQuerSerChamado logradouro bairro dataNascimento telefone email instagram foto')
+          .lean()
+        : [],
+      idsEncontreiros.length
+        ? Encontro.find({ _id: { $in: idsEncontreiros } })
+          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto')
+          .lean()
+        : [],
+    ]);
+
+    const mapEncontristas = new Map(encontristas.map((item) => [String(item._id), item]));
+    const mapEncontreiros = new Map(encontreiros.map((item) => [String(item._id), item]));
+
+    const groups = [
+      ...circulos.map((item) => ({ tipo: 'circulo', id: String(item._id), nome: item.nome || 'Circulo sem nome' })),
+      ...equipes.map((item) => ({ tipo: 'equipe', id: String(item._id), nome: item.nome || 'Equipe sem nome' })),
+    ].map((group) => {
+      const entries = vinculos
+        .filter((v) => v.entidadeTipo === group.tipo && String(v.entidadeId) === group.id)
+        .map((v) => {
+          const pessoa = v.pessoaTipo === 'encontrista'
+            ? mapEncontristas.get(String(v.pessoaId))
+            : mapEncontreiros.get(String(v.pessoaId));
+          return buildPdfEntryFromVinculo(v, pessoa, ejc.nome);
+        });
+
+      return {
+        tipo: group.tipo,
+        nome: group.nome,
+        entries,
+      };
+    }).filter((group) => Array.isArray(group.entries) && group.entries.length > 0);
+
+    const arquivoBase = `crachas_${String(ejc.nome || 'ejc')}`
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '')
+      .toLowerCase() || 'crachas_ejc';
+
+    renderCrachasPdf(res, {
+      fileName: `${arquivoBase}.pdf`,
+      mainTitle: `CRACHAS AUTOMATICOS - ${ejc.nome}`,
+      ejcName: ejc.nome,
+      groups,
+    });
+    return;
+  } catch (err) {
+    console.error('Erro ao exportar crachas do EJC:', err);
+    return res.status(500).send('Erro ao exportar crachas.');
   }
 });
 
@@ -6818,6 +8098,128 @@ app.post('/admin/deletar-equipe/:id', checkAdminAuth, requireAdminPermission('eq
   }
 });
 
+// POST /admin/editar-subequipe/:id - Editar nome de sub-equipe
+app.post('/admin/editar-subequipe/:id', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    const nome = normalizeTextInput(req.body.nome);
+    const anoVigencia = Number.parseInt(String(req.body.anoVigencia || ''), 10);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'Dados invalidos para editar sub-equipe.' });
+    }
+    if (!nome) {
+      return res.status(400).json({ success: false, error: 'Nome da sub-equipe e obrigatorio.' });
+    }
+    if (!Number.isFinite(anoVigencia) || anoVigencia < 2000 || anoVigencia > 2100) {
+      return res.status(400).json({ success: false, error: 'Ano de vigencia invalido.' });
+    }
+
+    const subequipe = await SubEquipe.findById(id);
+    if (!subequipe) {
+      return res.status(404).json({ success: false, error: 'Sub-equipe nao encontrada.' });
+    }
+
+    const nomeReferenciaNovo = `${nome} (${anoVigencia})`;
+    const nomeNormalizadoNovo = `${anoVigencia}::${nome}`.toLowerCase();
+    const duplicado = await SubEquipe.findOne({ nomeNormalizado: nomeNormalizadoNovo, _id: { $ne: id } }).lean();
+    if (duplicado) {
+      return res.status(409).json({ success: false, error: 'Ja existe uma sub-equipe com este nome.' });
+    }
+
+    const nomeReferenciaAntigo = normalizeTextInput(subequipe.nomeReferencia || subequipe.nome);
+    subequipe.nome = nome;
+    subequipe.anoVigencia = anoVigencia;
+    subequipe.nomeReferencia = nomeReferenciaNovo;
+    subequipe.nomeNormalizado = nomeNormalizadoNovo;
+    await subequipe.save();
+
+    if (nomeReferenciaAntigo && nomeReferenciaAntigo !== nomeReferenciaNovo) {
+      await Encontro.updateMany(
+        { subequipeCoordenou: nomeReferenciaAntigo },
+        { $set: { 'subequipeCoordenou.$': nomeReferenciaNovo } }
+      );
+      await Encontro.updateMany(
+        { 'subequipeCoordenacoes.subequipeId': id },
+        {
+          $set: {
+            'subequipeCoordenacoes.$[coord].subequipeNome': nomeReferenciaNovo,
+            'subequipeCoordenacoes.$[coord].anoVigencia': anoVigencia,
+          },
+        },
+        {
+          arrayFilters: [{ 'coord.subequipeId': new mongoose.Types.ObjectId(id) }],
+        }
+      );
+
+      await Cadastro.updateMany(
+        { subequipeCoordenou: nomeReferenciaAntigo },
+        { $set: { 'subequipeCoordenou.$': nomeReferenciaNovo } }
+      );
+      await Cadastro.updateMany(
+        { 'subequipeCoordenacoes.subequipeId': id },
+        {
+          $set: {
+            'subequipeCoordenacoes.$[coord].subequipeNome': nomeReferenciaNovo,
+            'subequipeCoordenacoes.$[coord].anoVigencia': anoVigencia,
+          },
+        },
+        {
+          arrayFilters: [{ 'coord.subequipeId': new mongoose.Types.ObjectId(id) }],
+        }
+      );
+    }
+
+    return res.json({ success: true, message: 'Sub-equipe atualizada com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao editar sub-equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao editar sub-equipe.' });
+  }
+});
+
+// POST /admin/deletar-subequipe/:id - Deletar sub-equipe e limpar vinculos
+app.post('/admin/deletar-subequipe/:id', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID da sub-equipe invalido.' });
+    }
+
+    const subequipe = await SubEquipe.findById(id);
+    if (!subequipe) {
+      return res.status(404).json({ success: false, error: 'Sub-equipe nao encontrada.' });
+    }
+
+    const nomeSubequipe = subequipe.nomeReferencia || subequipe.nome;
+    await SubEquipe.findByIdAndDelete(id);
+
+    await Encontro.updateMany(
+      {},
+      {
+        $pull: {
+          subequipeCoordenou: nomeSubequipe,
+          subequipeCoordenacoes: { subequipeId: new mongoose.Types.ObjectId(id) },
+        },
+      }
+    );
+
+    await Cadastro.updateMany(
+      {},
+      {
+        $pull: {
+          subequipeCoordenou: nomeSubequipe,
+          subequipeCoordenacoes: { subequipeId: new mongoose.Types.ObjectId(id) },
+        },
+      }
+    );
+
+    return res.json({ success: true, message: 'Sub-equipe deletada com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao deletar sub-equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao deletar sub-equipe.' });
+  }
+});
+
 // POST /admin/vincular-encontreiro-equipe - Vincular encontreiro em equipe
 app.post('/admin/vincular-encontreiro-equipe', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
   try {
@@ -6870,6 +8272,77 @@ app.post('/admin/vincular-encontreiro-equipe', checkAdminAuth, requireAdminPermi
   }
 });
 
+// POST /admin/vincular-encontreiro-subequipe - Vincular encontreiro/tios em sub-equipe
+app.post('/admin/vincular-encontreiro-subequipe', checkAdminAuth, requireAdminPermission('equipes.gerenciar'), async (req, res) => {
+  try {
+    const pessoaId = normalizeTextInput(req.body.encontreiroId || req.body.pessoaId);
+    const subequipeId = normalizeTextInput(req.body.subequipeId);
+    const subequipeNome = normalizeTextInput(req.body.subequipeNome);
+    const papel = normalizeTextInput(req.body.papel).toLowerCase();
+
+    if (!mongoose.Types.ObjectId.isValid(pessoaId)) {
+      return res.status(400).json({ success: false, error: 'Pessoa invalida.' });
+    }
+
+    if (!subequipeId && !subequipeNome) {
+      return res.status(400).json({ success: false, error: 'Sub-equipe obrigatoria.' });
+    }
+
+    if (!['coordenador', 'coordenou'].includes(papel)) {
+      return res.status(400).json({ success: false, error: 'Papel invalido. Para sub-equipe use coordenador.' });
+    }
+
+    let subequipe = null;
+    if (subequipeId && mongoose.Types.ObjectId.isValid(subequipeId)) {
+      subequipe = await SubEquipe.findById(subequipeId);
+    }
+    if (!subequipe && subequipeNome) {
+      subequipe = await SubEquipe.findOne({ nomeNormalizado: subequipeNome.toLowerCase() });
+    }
+    if (!subequipe) {
+      return res.status(404).json({ success: false, error: 'Sub-equipe nao encontrada.' });
+    }
+
+    let pessoa = await Encontro.findById(pessoaId);
+    if (!pessoa) {
+      pessoa = await Cadastro.findById(pessoaId);
+    }
+    if (!pessoa) {
+      return res.status(404).json({ success: false, error: 'Pessoa nao encontrada.' });
+    }
+
+    const field = 'subequipeCoordenou';
+    const atual = Array.isArray(pessoa[field]) ? pessoa[field] : [];
+    const nomeVinculo = subequipe.nomeReferencia || subequipe.nome;
+    if (!atual.includes(nomeVinculo)) {
+      atual.push(nomeVinculo);
+      pessoa[field] = atual;
+    }
+
+    const coordenacoes = Array.isArray(pessoa.subequipeCoordenacoes)
+      ? pessoa.subequipeCoordenacoes
+      : [];
+    const subequipeIdObj = subequipe._id ? String(subequipe._id) : String(subequipeId);
+    const jaTemHistorico = coordenacoes.some((item) => String(item?.subequipeId || '') === subequipeIdObj);
+    if (!jaTemHistorico) {
+      coordenacoes.push({
+        subequipeId: subequipe._id,
+        subequipeNome: nomeVinculo,
+        anoVigencia: Number(subequipe.anoVigencia || 0),
+        dataVinculo: new Date(),
+      });
+      pessoa.subequipeCoordenacoes = coordenacoes;
+    }
+
+    await pessoa.save();
+
+    return res.json({ success: true, message: 'Pessoa vinculada a sub-equipe com sucesso.' });
+  } catch (err) {
+    console.error('Erro ao vincular sub-equipe:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao vincular sub-equipe.' });
+  }
+});
+
 // POST /admin/importar-cadastros - Importar somente cadastros de encontreiros
 app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
   const summary = {
@@ -6887,8 +8360,6 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
   };
 
   const importRows = [];
-  let externalConnection;
-  let sqlConnection;
 
   const appendRowsFromPdf = async (buffer, fotoPadrao) => {
     let pdfParse;
@@ -7122,6 +8593,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
   };
 
   try {
+    const tipoImportacao = normalizeTextInput(req.body.tipoImportacao || 'encontreiros').toLowerCase();
     const sourceType = normalizeTextInput(req.body.sourceType || 'database').toLowerCase();
     const atualizarExistentes = normalizeBooleanInput(req.body.atualizarExistentes);
     const fotoPadrao = normalizeTextInput(req.body.fotoPadrao);
@@ -7131,9 +8603,156 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       ? Math.min(Math.max(limiteInformado, 1), 5000)
       : 1000;
 
-    if (!['database', 'excel', 'pdf'].includes(sourceType)) {
+    if (!['sistema', 'database', 'excel', 'pdf'].includes(sourceType)) {
       return res.status(400).json({ success: false, error: 'Tipo de importacao invalido.' });
     }
+
+    // Tratamento especial para importacão de encontro completo
+    if (tipoImportacao === 'encontro_completo') {
+      const ejcId = req.body.ejcId ? String(req.body.ejcId).trim() : '';
+      if (!ejcId || !mongoose.Types.ObjectId.isValid(ejcId)) {
+        return res.status(400).json({ success: false, error: 'EJC invalido ou nao especificado.' });
+      }
+      const sourceEncontroId = req.body.sourceEncontroId ? String(req.body.sourceEncontroId).trim() : '';
+
+      const importarEquipes = normalizeBooleanInput(req.body.importarEquipes);
+      const importarCirculos = normalizeBooleanInput(req.body.importarCirculos);
+      const importarEncontreiros = normalizeBooleanInput(req.body.importarEncontreiros);
+
+      const ejcExistente = await Ejc.findById(ejcId);
+      if (!ejcExistente) {
+        return res.status(404).json({ success: false, error: 'EJC nao encontrado.' });
+      }
+
+      // Aqui sera processada a importacao completa
+      const equipeRows = [];
+      const circuloRows = [];
+      const encontreirosRows = [];
+      const vinculoRows = [];
+      const equipeIdMap = new Map();
+      const circuloIdMap = new Map();
+      const encontreiroIdMap = new Map();
+
+      if (sourceType === 'sistema') {
+        if (!sourceEncontroId || !mongoose.Types.ObjectId.isValid(sourceEncontroId)) {
+          return res.status(400).json({ success: false, error: 'Encontro de origem invalido ou nao especificado.' });
+        }
+
+        if (String(sourceEncontroId) === String(ejcId)) {
+          return res.status(400).json({ success: false, error: 'Selecione encontros diferentes para origem e destino.' });
+        }
+
+        const encontroOrigem = await Ejc.findById(sourceEncontroId).lean();
+        if (!encontroOrigem) {
+          return res.status(404).json({ success: false, error: 'Encontro de origem nao encontrado.' });
+        }
+
+        if (importarEquipes) {
+          const equipesOrigem = await Equipe.find({ ejcId: encontroOrigem._id }).limit(limite).lean();
+          equipesOrigem.forEach((item) => equipeRows.push(item));
+        }
+
+        if (importarCirculos) {
+          const circulosOrigem = await Circulo.find({ ejcId: encontroOrigem._id }).limit(limite).lean();
+          circulosOrigem.forEach((item) => circuloRows.push(item));
+        }
+
+        if (importarEncontreiros) {
+          const filtroOrigem = buildEventScopeFilter(encontroOrigem);
+          const encontreirosOrigem = await Encontro.find(filtroOrigem).limit(limite).lean();
+          encontreirosOrigem.forEach((item) => encontreirosRows.push(item));
+        }
+
+        if (importarEncontreiros && (importarEquipes || importarCirculos)) {
+          const vinculosOrigem = await VinculoEncontro.find({ ejcId: encontroOrigem._id }).limit(limite * 10).lean();
+          vinculosOrigem.forEach((item) => vinculoRows.push(item));
+        }
+      }
+
+      // Se for database, buscar dados do database externo
+      if (sourceType === 'database') {
+        const dbEngine = normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase();
+        const connectionString = normalizeTextInput(req.body.connectionString || req.body.mongoUri);
+        const databaseName = normalizeTextInput(req.body.databaseName);
+        const colecaoEquipes = normalizeTextInput(req.body.colecaoEquipes) || 'Equipe';
+        const colecaoCirculos = normalizeTextInput(req.body.colecaoCirculos) || 'Circulo';
+        const colecaoEncontreiros = normalizeTextInput(req.body.colecaoEncontreiros || req.body.tableName) || 'Encontro';
+
+        try {
+          const dadosExternos = await carregarDadosEncontroCompletoDeOrigemExterna({
+            dbEngine,
+            connectionString,
+            databaseName,
+            colecaoEquipes,
+            colecaoCirculos,
+            colecaoEncontreiros,
+            limite,
+            importarEquipes,
+            importarCirculos,
+            importarEncontreiros,
+            deps: {
+              mongoose,
+            },
+          });
+
+          equipeRows.push(...dadosExternos.equipeRows);
+          circuloRows.push(...dadosExternos.circuloRows);
+          encontreirosRows.push(...dadosExternos.encontreirosRows);
+        } catch (externalErr) {
+          if (externalErr && externalErr.public && Number.isInteger(externalErr.status)) {
+            return res.status(externalErr.status).json({ success: false, error: String(externalErr.message || 'Falha ao ler banco externo.') });
+          }
+          throw externalErr;
+        }
+      } else if (sourceType !== 'sistema') {
+        return res.status(400).json({ success: false, error: 'Importacao de encontro completo via arquivo ainda nao e suportada. Use importacao via banco de dados.' });
+      }
+
+      const transactionResult = await processarImportacaoCompletaTransacional({
+        sourceType,
+        atualizarExistentes,
+        fotoPadrao,
+        ejcId,
+        ejcExistente,
+        importarEquipes,
+        importarCirculos,
+        importarEncontreiros,
+        equipeRows,
+        circuloRows,
+        encontreirosRows,
+        vinculoRows,
+        summaryTemplate: summary,
+        deps: {
+          mongoose,
+          Equipe,
+          Circulo,
+          Encontro,
+          VinculoEncontro,
+          normalizeTextInput,
+          buildEquipeImportIdentity,
+          normalizeGeneroEncontro,
+          normalizeTipoEncontro,
+          parseDateInput,
+          normalizeBooleanInput,
+          normalizeApprovalStatusInput,
+          mapToEncontroPayload,
+          normalizeEquipeReferenceListForImport,
+          ensureImportPlaceholderImage,
+        },
+      });
+
+      // Retornar resumo da importacao completa
+      return res.json({ 
+        success: true,
+        summary: transactionResult.encontreiraSummary,
+        equipes: transactionResult.equipeSummary,
+        circulos: transactionResult.circuloSummary,
+        vinculos: transactionResult.vinculoSummary,
+        sourceType,
+        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+      });
+    }
+
 
     if (sourceType === 'database') {
       const dbEngine = normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase();
@@ -7142,81 +8761,30 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       const colecaoEncontreiros = normalizeTextInput(req.body.colecaoEncontreiros || req.body.tableName) || 'Encontro';
       const sqlQuery = normalizeTextInput(req.body.sqlQuery);
 
-      if (!connectionString) {
-        return res.status(400).json({ success: false, error: 'A conexao com o banco externo e obrigatoria.' });
+      if (sqlQuery) {
+        return res.status(400).json({
+          success: false,
+          error: 'Consulta SQL personalizada foi desativada por seguranca. Informe apenas o nome da tabela.',
+        });
       }
 
-      if (!['mongodb', 'postgresql', 'postgres', 'mysql'].includes(dbEngine)) {
-        return res.status(400).json({ success: false, error: 'Banco nao suportado. Use MongoDB, PostgreSQL ou MySQL.' });
-      }
-
-      if (dbEngine === 'mongodb') {
-        if (!/^mongodb(\+srv)?:\/\//i.test(connectionString)) {
-          return res.status(400).json({ success: false, error: 'Para MongoDB use uma URI valida (mongodb:// ou mongodb+srv://).' });
+      try {
+        const registros = await carregarEncontreirosDeOrigemExterna({
+          dbEngine,
+          connectionString,
+          databaseName,
+          colecaoEncontreiros,
+          limite,
+          deps: {
+            mongoose,
+          },
+        });
+        importRows.push(...registros);
+      } catch (externalErr) {
+        if (externalErr && externalErr.public && Number.isInteger(externalErr.status)) {
+          return res.status(externalErr.status).json({ success: false, error: String(externalErr.message || 'Falha ao ler banco externo.') });
         }
-
-        externalConnection = await mongoose.createConnection(connectionString, {
-          dbName: databaseName || undefined,
-          serverSelectionTimeoutMS: 12000,
-          maxPoolSize: 5,
-        }).asPromise();
-
-        const externalDb = externalConnection.db;
-        const registros = await externalDb.collection(colecaoEncontreiros).find({}).limit(limite).toArray();
-        registros.forEach((item) => importRows.push(item));
-      }
-
-      if (dbEngine === 'postgresql' || dbEngine === 'postgres') {
-        let PgClient;
-        try {
-          ({ Client: PgClient } = require('pg'));
-        } catch (err) {
-          return res.status(500).json({ success: false, error: 'Dependencia "pg" nao instalada. Rode: npm install pg' });
-        }
-
-        if (!/^postgres(ql)?:\/\//i.test(connectionString)) {
-          return res.status(400).json({ success: false, error: 'Para PostgreSQL use uma string de conexao valida (postgresql://).' });
-        }
-
-        sqlConnection = new PgClient({ connectionString });
-        await sqlConnection.connect();
-
-        const safeTable = colecaoEncontreiros;
-        if (!sqlQuery && !/^[a-zA-Z0-9_.]+$/.test(safeTable)) {
-          return res.status(400).json({ success: false, error: 'Nome da tabela invalido.' });
-        }
-
-        const queryResult = sqlQuery
-          ? await sqlConnection.query(sqlQuery)
-          : await sqlConnection.query(`SELECT * FROM ${safeTable} LIMIT $1`, [limite]);
-
-        queryResult.rows.forEach((item) => importRows.push(item));
-      }
-
-      if (dbEngine === 'mysql') {
-        let mysql;
-        try {
-          mysql = require('mysql2/promise');
-        } catch (err) {
-          return res.status(500).json({ success: false, error: 'Dependencia "mysql2" nao instalada. Rode: npm install mysql2' });
-        }
-
-        if (!/^mysql:\/\//i.test(connectionString)) {
-          return res.status(400).json({ success: false, error: 'Para MySQL use uma string de conexao valida (mysql://).' });
-        }
-
-        sqlConnection = await mysql.createConnection(connectionString);
-
-        const safeTable = colecaoEncontreiros;
-        if (!sqlQuery && !/^[a-zA-Z0-9_.]+$/.test(safeTable)) {
-          return res.status(400).json({ success: false, error: 'Nome da tabela invalido.' });
-        }
-
-        const [rows] = sqlQuery
-          ? await sqlConnection.query(sqlQuery)
-          : await sqlConnection.query(`SELECT * FROM ${safeTable} LIMIT ?`, [limite]);
-
-        rows.forEach((item) => importRows.push(item));
+        throw externalErr;
       }
     } else {
       if (!req.file) {
@@ -7355,22 +8923,6 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       error: 'Nao foi possivel importar os encontreiros. Verifique os dados informados.',
       details: process.env.NODE_ENV === 'development' ? String(err.message || err) : undefined,
     });
-  } finally {
-    if (externalConnection) {
-      try {
-        await externalConnection.close();
-      } catch (closeErr) {
-        console.error('Falha ao fechar conexao externa:', closeErr);
-      }
-    }
-
-    if (sqlConnection && typeof sqlConnection.end === 'function') {
-      try {
-        await sqlConnection.end();
-      } catch (closeErr) {
-        console.error('Falha ao fechar conexao SQL externa:', closeErr);
-      }
-    }
   }
 });
 
@@ -7380,6 +8932,7 @@ app.get('/admin/logout', (req, res) => {
     if (err) {
       console.error('Logout error:', err);
     }
+    res.clearCookie('ejc.sid');
     res.redirect('/');
   });
 });
@@ -7448,4 +9001,5 @@ if (require.main === module) {
 module.exports = {
   app,
   startServer,
+  getCrachaPalette,
 };

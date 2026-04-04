@@ -13,6 +13,7 @@ test('GET /healthz retorna 200 e status ok', async () => {
   assert.equal(response.status, 200);
   assert.equal(response.body.status, 'ok');
   assert.ok(typeof response.body.uptimeSec === 'number');
+  assert.ok(response.headers['content-security-policy-report-only']);
 });
 
 test('GET /readyz retorna 503 quando Mongo nao esta conectado', async () => {

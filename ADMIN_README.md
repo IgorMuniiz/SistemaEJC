@@ -7,7 +7,7 @@ Seu novo sistema de administrador está pronto! Aqui está como usar:
 Execute este comando no terminal:
 
 ```bash
-node create-admin.js
+npm run admin:create
 ```
 
 O script irá solicitar:
@@ -78,10 +78,17 @@ Clique no botão **"Sair"** no canto superior direito para fazer logout. Você s
 
 Adicione ao seu `.env`:
 ```
+NODE_ENV=production
+MONGODB_URI=mongodb://127.0.0.1:27017/ECJCOP
 SESSION_SECRET=seu-codigo-secreto-muito-seguro
+SESSION_STORE_MONGO_URI=mongodb://127.0.0.1:27017/ECJCOP
+SESSION_COOKIE_SECURE=auto
+TRUST_PROXY=1
+VAPID_PUBLIC_KEY=
+VAPID_PRIVATE_KEY=
 ```
 
-Se não especificar, um padrão será usado (não recomendado para produção).
+Use [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md), [.env.example](.env.example) e [.env.production.example](.env.production.example) como base antes de publicar.
 
 ## 📝 Notas
 
@@ -110,10 +117,13 @@ Se não especificar, um padrão será usado (não recomendado para produção).
 ### Checklist de produção
 
 1. Definir `SESSION_SECRET` forte no ambiente.
-2. Habilitar HTTPS e marcar cookie de sessão como `secure`.
-3. Revisar permissões de cada perfil administrativo (`super_admin`, `coordenador`, `operador`, `consulta`).
-4. Monitorar bloqueios por excesso de tentativas de login/rate limit.
-5. Garantir execução da pipeline CI em cada PR antes de merge.
+2. Definir `MONGODB_URI` e, se necessário, `SESSION_STORE_MONGO_URI`.
+3. Manter `SESSION_COOKIE_SECURE=auto` ou forçar `true` em HTTPS obrigatório.
+4. Ajustar `TRUST_PROXY` se a aplicação rodar atrás de proxy reverso.
+5. Criar o primeiro admin com `npm run admin:create`.
+6. Revisar permissões de cada perfil administrativo (`super_admin`, `coordenador`, `operador`, `consulta`).
+7. Monitorar bloqueios por excesso de tentativas de login/rate limit.
+8. Garantir execução da pipeline CI em cada PR antes de merge.
 
 ## ✅ Deploy Ready v1
 
@@ -133,13 +143,16 @@ O sistema agora inclui camadas adicionais de prontidão para produção:
 Use como base o arquivo `.env.example`.
 
 - `SESSION_STORE_MONGO_URI`: URI do Mongo para persistência de sessão.
+- `SESSION_COOKIE_SECURE`: `auto` por padrão; aceita `true` ou `false`.
+- `TRUST_PROXY`: importante em deploy atrás de proxy reverso.
 - `SKIP_MONGO_CONNECT=1`: útil apenas para testes locais/CI sem banco.
 
 ## ❓ Problemas?
 
 Se não conseguir acessar `/admin/login`:
 1. Certifique-se de que o servidor está rodando: `npm run dev`
-2. Verifique se criou um admin: `node create-admin.js`
-3. Verifique o console do servidor para mensagens de erro
+2. Verifique se criou um admin: `npm run admin:create`
+3. Verifique o arquivo `.env` e confirme `SESSION_SECRET`, `MONGODB_URI` e `VAPID_*`
+4. Verifique o console do servidor para mensagens de erro
 
 Aproveite o novo sistema de administração! 🎉

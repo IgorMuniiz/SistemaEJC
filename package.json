@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "admin:create": "node create-admin.js",
     "test": "node --test tests/**/*.test.js",
+    "migrate:remove-subequipe-serviu": "node scripts/migrate-remove-subequipe-serviu.js",
     "check:syntax": "node --check app.js",
     "check": "npm run check:syntax && npm run test",
     "predeploy": "npm run check",
