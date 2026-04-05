@@ -1,6 +1,6 @@
 const session = require('express-session');
 const { default: MongoStore } = require('connect-mongo');
-const { IS_PRODUCTION, SKIP_MONGO_CONNECT, mongoUri, mongoFallbackUri } = require('./environment');
+const { IS_PRODUCTION, SKIP_MONGO_CONNECT, mongoUri } = require('./environment');
 
 const createSessionStore = () => {
   if (process.env.NODE_ENV === 'test' || SKIP_MONGO_CONNECT) {
@@ -8,7 +8,7 @@ const createSessionStore = () => {
   }
 
   try {
-    const sessionMongoUri = process.env.SESSION_STORE_MONGO_URI || mongoUri || mongoFallbackUri;
+    const sessionMongoUri = mongoUri;
     return MongoStore.create({
       mongoUrl: sessionMongoUri,
       collectionName: 'sessions',

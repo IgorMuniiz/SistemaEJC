@@ -2,33 +2,16 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const bcryptjs = require('bcryptjs');
 
-const mongoUri = process.env.MONGODB_URL || process.env.MONGODB_URI || process.env.MONGO_URI;
-const mongoFallbackUri = process.env.MONGODB_FALLBACK_URL || 'mongodb://127.0.0.1:27017/ECJCOP';
-
-if (!mongoUri) {
-  console.error('❌ Defina MONGODB_URI, MONGODB_URL ou MONGO_URI no arquivo .env');
-  process.exit(1);
-}
+const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ECJCOP';
 
 async function connectWithFallback() {
-  const uris = [mongoUri, mongoFallbackUri].filter((value, index, arr) => value && arr.indexOf(value) === index);
-
-  for (let index = 0; index < uris.length; index += 1) {
-    const uri = uris[index];
-    try {
-      await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
-      if (index === 0) {
-        console.log('✅ Conectado ao MongoDB!');
-      } else {
-        console.warn(`⚠️  Conectado com fallback local: ${uri}`);
-      }
-      return;
-    } catch (err) {
-      console.error(`❌ Erro ao conectar em ${uri}:`, err.message || err);
-    }
+  try {
+    await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 10000 });
+    console.log('✅ Conectado ao MongoDB!');
+  } catch (err) {
+    console.error(`❌ Erro ao conectar em ${mongoUri}:`, err.message || err);
+    process.exit(1);
   }
-
-  process.exit(1);
 }
 
 const adminSchema = new mongoose.Schema({

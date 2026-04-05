@@ -132,7 +132,7 @@ O sistema agora inclui camadas adicionais de prontidão para produção:
 
 Use como base o arquivo `.env.example`.
 
-- `SESSION_STORE_MONGO_URI`: URI do Mongo para persistência de sessão.
+- `MONGODB_URI`: URI do MongoDB (usada para app e sessões).
 - `SKIP_MONGO_CONNECT=1`: útil apenas para testes locais/CI sem banco.
 
 ## ❓ Problemas?
