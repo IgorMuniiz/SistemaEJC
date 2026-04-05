@@ -2,20 +2,20 @@ const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '..', '.env') });
 
 
-/**
- * Apagar
- */ 
-  Object.assign(process.env, {
-    NODE_ENV: process.env.NODE_ENV || 'production',
-    HOST: process.env.HOST || '0.0.0.0',
-    PORT: process.env.PORT || '3000',
-    SESSION_SECRET: process.env.SESSION_SECRET || 'troque-por-uma-chave-longa-com-mais-de-24-caracteres',
-    SESSION_STORE_MONGO_URI: process.env.SESSION_STORE_MONGO_URI || 'mongodb://localhost:27017/ECJCOP',
-    MONGODB_URI: 'mongodb://localhost:27017/ECJCOP',
-    MONGODB_FALLBACK_URL: process.env.MONGODB_FALLBACK_URL || 'mongodb://localhost:27017/ECJCOP',
-    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BFB4vGEoUXC1nBCnkOFtSUYXnphQ8ra085blYsCWDgW_v2Y2Uq8DczZtg97nb2WBi3lS5QFwsINOG042CtHd8ys',
-    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'iIdQPG8Dad39NUNV67ownWcOzt3TZY9T5f-iW-3GZGM',
-  });
+// /**
+//  * Apagar
+//  */ 
+//   Object.assign(process.env, {
+//     NODE_ENV: process.env.NODE_ENV || 'production',
+//     HOST: process.env.HOST || '0.0.0.0',
+//     PORT: process.env.PORT || '3000',
+//     SESSION_SECRET: process.env.SESSION_SECRET || 'troque-por-uma-chave-longa-com-mais-de-24-caracteres',
+//     SESSION_STORE_MONGO_URI: process.env.SESSION_STORE_MONGO_URI || 'mongodb://localhost:27017/ECJCOP',
+//     MONGODB_URI: 'mongodb://localhost:27017/ECJCOP',
+//     MONGODB_FALLBACK_URL: process.env.MONGODB_FALLBACK_URL || 'mongodb://localhost:27017/ECJCOP',
+//     VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY || 'BFB4vGEoUXC1nBCnkOFtSUYXnphQ8ra085blYsCWDgW_v2Y2Uq8DczZtg97nb2WBi3lS5QFwsINOG042CtHd8ys',
+//     VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY || 'iIdQPG8Dad39NUNV67ownWcOzt3TZY9T5f-iW-3GZGM',
+//   });
 
  
 
