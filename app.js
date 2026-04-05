@@ -57,15 +57,6 @@ const ensureImportPlaceholderImage = () => {
   return '';
 };
 
-const debugVars = {
-  PORT: process.env.PORT,
-  NODE_ENV: process.env.NODE_ENV,
-  MONGODB_URI: process.env.MONGODB_URI ? "Configurada ✅" : "Ausente ❌",
-};
-
-console.table(debugVars);
-
-
 // MongoDB connection
 const mongoUri = process.env.MONGODB_URL
   || process.env.MONGODB_URI
