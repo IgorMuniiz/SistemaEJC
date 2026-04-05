@@ -1,0 +1,42 @@
+const mongoose = require('mongoose');
+const { APPROVAL_STATUSES } = require('../constants/admin');
+
+const cadastroSchema = new mongoose.Schema({
+  nomeCompleto: { type: String, required: true },
+  comoQuerSerChamado: { type: String, default: '' },
+  ejc: { type: String, default: 'Nao informado' },
+  ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
+  ejcVinculadoNome: { type: String, default: '', trim: true },
+  cep: { type: String, default: '' },
+  estadoCivil: { type: String, default: '' },
+  nomeMae: { type: String, default: '' },
+  telefoneMae: { type: String, default: '' },
+  nomePai: { type: String, default: '' },
+  telefonePai: { type: String, default: '' },
+  paroquiaFrequenta: { type: String, default: '' },
+  participaMovimentoIgreja: { type: String, default: '' },
+  conhecidoInscricaoHoje: { type: String, default: '' },
+  conhecidoFezEjc: { type: String, default: '' },
+  inscricaoAnterior: { type: String, default: '' },
+  instrumentoMusical: { type: String, default: '' },
+  expectativaXixEjcCop: { type: String, default: '' },
+  logradouro: { type: String, required: true },
+  bairro: { type: String, required: true },
+  dataNascimento: { type: Date, required: true },
+  telefone: { type: String, required: true },
+  intolerante: { type: String, default: '' },
+  ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
+  alergiaDescricao: { type: String, default: '' },
+  email: { type: String, default: '' },
+  instagram: { type: String },
+  foto: { type: String, required: true },
+  aprovado: { type: Boolean, default: false },
+  statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
+  lgpdConsentimento: { type: Boolean, default: false },
+  lgpdConsentimentoData: { type: Date, default: null },
+  lgpdConsentimentoIp: { type: String, default: '' },
+  anonimizadoEm: { type: Date, default: null },
+  dataCadastro: { type: Date, default: Date.now },
+});
+
+module.exports = mongoose.model('Cadastro_EJC', cadastroSchema);
