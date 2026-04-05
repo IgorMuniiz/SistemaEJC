@@ -70,6 +70,10 @@ app.set('view engine', 'ejs');
 // ─── Global Middleware ──────────────────────────────────────────────
 app.use(compression({ threshold: 1024 }));
 app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' }, contentSecurityPolicy: false }));
+app.use((req, res, next) => {
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  next();
+});
 
 const setStaticCacheHeaders = (res, filePath) => {
   const ext = path.extname(filePath).toLowerCase();
