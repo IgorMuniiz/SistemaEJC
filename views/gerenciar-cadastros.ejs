@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-4">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -113,10 +113,40 @@
   <% const gastoMedioGeral = gastosResumoData.quantidade ? (Number(gastosResumoData.total || 0) / Number(gastosResumoData.quantidade || 1)) : 0; %>
   <% const percentualGastosEquipes = Number(gastosResumoData.total || 0) > 0 ? Math.round((Number(gastosResumoData.equipes || 0) / Number(gastosResumoData.total || 1)) * 100) : 0; %>
   <% const percentualGastosEncontro = Number(gastosResumoData.total || 0) > 0 ? Math.max(0, 100 - percentualGastosEquipes) : 0; %>
+  <% const totalFluxoEntradas = Number(fluxoResumoData.entradas || 0); %>
+  <% const totalFluxoSaidas = Number(fluxoResumoData.saidas || 0); %>
+  <% const totalFluxoMovimentado = totalFluxoEntradas + totalFluxoSaidas; %>
+  <% const percentualFluxoEntradas = totalFluxoMovimentado > 0 ? Math.round((totalFluxoEntradas / totalFluxoMovimentado) * 100) : 0; %>
+  <% const percentualFluxoSaidas = totalFluxoMovimentado > 0 ? Math.max(0, 100 - percentualFluxoEntradas) : 0; %>
+  <% const percentualGastosEncontroBar = Number(gastosResumoData.total || 0) > 0 ? Math.round((Number(gastosResumoData.encontro || 0) / Number(gastosResumoData.total || 1)) * 100) : 0; %>
+  <% const percentualGastosEquipesBar = Number(gastosResumoData.total || 0) > 0 ? Math.max(0, 100 - percentualGastosEncontroBar) : 0; %>
+  <% const gastoCategoriasResumo = (gastosLista || []).reduce(function(acc, item){
+    const categoria = String((item && item.categoria) || 'Outros').trim() || 'Outros';
+    acc[categoria] = (acc[categoria] || 0) + (Number(item && item.valor) || 0);
+    return acc;
+  }, {}); %>
+  <% const gastoCategoriasOrdenadas = Object.keys(gastoCategoriasResumo)
+    .map(function(categoria){ return { categoria: categoria, valor: Number(gastoCategoriasResumo[categoria] || 0) }; })
+    .sort(function(a, b){ return b.valor - a.valor; })
+    .slice(0, 4); %>
+  <% const gastoCategoriaMaiorValor = gastoCategoriasOrdenadas.length ? Number(gastoCategoriasOrdenadas[0].valor || 0) : 0; %>
+  <% const extratoMesReferenciaPrincipal = fluxoMensalResumoData.mesReferencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); %>
+  <% const extratoMaxValorPrincipal = Math.max(
+    1,
+    Math.abs(Number(fluxoMensalResumoData.saldoInicial || 0)),
+    Math.abs(Number(fluxoMensalResumoData.entradasMes || 0)),
+    Math.abs(Number(fluxoMensalResumoData.saidasMes || 0)),
+    Math.abs(Number(fluxoMensalResumoData.saldoFinal || 0))
+  ); %>
   <% const podeGerenciarAdmins = adminPermissoesLista.includes('admins.gerenciar'); %>
   <% const podeVisualizarPainel = adminPermissoesLista.includes('painel.visualizar'); %>
+  <% const abasPermitidasPainel = ['principal', 'encontristas', 'encontreiros', 'tios', 'aprovacoes', 'encontros', 'subequipes', 'gastos', 'administradores']; %>
+  <% const abaInicialGerenciarSafe = typeof abaInicialGerenciar !== 'undefined' ? abaInicialGerenciar : 'principal'; %>
+  <% const modoPaginaAdministradoresSafe = typeof modoPaginaAdministradores !== 'undefined' ? !!modoPaginaAdministradores : false; %>
+  <% const abaInicialPainel = abasPermitidasPainel.includes(String(abaInicialGerenciarSafe || '').toLowerCase()) ? String(abaInicialGerenciarSafe || '').toLowerCase() : 'principal'; %>
+  <% const isAbaAtiva = function(abaId){ return abaInicialPainel === abaId; }; %>
 
-  <div class="admin-shell">
+  <div class="admin-shell <%= modoPaginaAdministradoresSafe ? 'admin-shell-admins-only' : '' %>">
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="brand-inline">
@@ -126,19 +156,19 @@
       </div>
 
       <nav class="side-menu">
-          <button type="button" class="menu-link" data-menu-title="Principal" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
-          <button type="button" class="menu-link" data-menu-title="Encontristas" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
-          <button type="button" class="menu-link" data-menu-title="Encontreiros" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
-          <button type="button" class="menu-link" data-menu-title="Tios" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
-          <button type="button" class="menu-link menu-link-aprovacoes" data-menu-title="Aprovações" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')" title="<%= pendenciasTituloMenu %>">
+          <button type="button" class="menu-link" data-menu-title="Principal" data-tab-target="principal-tab" data-required-permission="painel.visualizar"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontristas" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontreiros" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Tios" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
+          <button type="button" class="menu-link menu-link-aprovacoes" data-menu-title="Aprovações" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" title="<%= pendenciasTituloMenu %>">
             <i class="fas fa-check-circle"></i>
             <span class="menu-label">Aprovações</span>
             <span class="menu-alert-counter <%= pendenciasClasseMenu %>"><%= totalPendencias %></span>
           </button>
-          <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
-          <button type="button" class="menu-link" data-menu-title="Sub-Equipes" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar" onclick="abrirAba('subequipes-tab')"><i class="fas fa-diagram-project"></i><span class="menu-label">Sub-Equipes</span></button>
-          <button type="button" class="menu-link" data-menu-title="Financeiro" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar" onclick="abrirAba('gastos-tab')"><i class="fas fa-wallet"></i><span class="menu-label">Financeiro</span></button>
-          <button type="button" class="menu-link" data-menu-title="Administradores" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Sub-Equipes" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar"><i class="fas fa-diagram-project"></i><span class="menu-label">Sub-Equipes</span></button>
+          <button type="button" class="menu-link" data-menu-title="Financeiro" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar"><i class="fas fa-wallet"></i><span class="menu-label">Financeiro</span></button>
+          <a href="#administradores" class="menu-link" data-menu-title="Administradores" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></a>
           <a href="/admin/logout" class="menu-link" data-menu-title="Sair"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
         </nav>
 
@@ -153,8 +183,8 @@
             <h1 class="workspace-title">
               <span class="workspace-title-icon" aria-hidden="true"><i class="fas fa-users-cog"></i></span>
               <span class="workspace-title-copy">
-                <span class="workspace-title-kicker">Painel</span>
-                <span class="workspace-title-main">Gestão Administrativa</span>
+                <span class="workspace-title-kicker"><%= modoPaginaAdministradoresSafe ? 'Administradores' : 'Painel' %></span>
+                <span class="workspace-title-main"><%= modoPaginaAdministradoresSafe ? 'Gestão de Administradores' : 'Gestão Administrativa' %></span>
               </span>
             </h1>
             <div class="workspace-hero-strip" aria-label="Destaques da gestão">
@@ -205,7 +235,7 @@
         </header>
 
         <section class="manager-module-grid" aria-label="Atalhos da gestão">
-          <button type="button" class="manager-module-card" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="principal-tab" data-required-permission="painel.visualizar">
             <span class="manager-module-icon"><i class="fas fa-chart-line"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Principal</span>
@@ -213,7 +243,7 @@
             </span>
             <span class="manager-module-count"><%= totalCadastrosVisiveis %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-user"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontristas</span>
@@ -221,7 +251,7 @@
             </span>
             <span class="manager-module-count"><%= (encontristas || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-user-group"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontreiros</span>
@@ -229,7 +259,7 @@
             </span>
             <span class="manager-module-count"><%= (encontreirosIndividuais || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-heart"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Tios</span>
@@ -237,7 +267,7 @@
             </span>
             <span class="manager-module-count"><%= (tios || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar">
             <span class="manager-module-icon"><i class="fas fa-check-circle"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Aprovações</span>
@@ -245,7 +275,7 @@
             </span>
             <span class="manager-module-count"><%= totalPendencias %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar">
             <span class="manager-module-icon"><i class="fas fa-calendar-days"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontros</span>
@@ -253,7 +283,7 @@
             </span>
             <span class="manager-module-count"><%= (ejcs || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar" onclick="abrirAba('subequipes-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar">
             <span class="manager-module-icon"><i class="fas fa-diagram-project"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Sub-Equipes</span>
@@ -261,7 +291,7 @@
             </span>
             <span class="manager-module-count"><%= (subequipes || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar" onclick="abrirAba('gastos-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar">
             <span class="manager-module-icon"><i class="fas fa-wallet"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Financeiro</span>
@@ -269,14 +299,14 @@
             </span>
             <span class="manager-module-count"><%= gastosResumoData.quantidade %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')">
+          <a href="#administradores" class="manager-module-card" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true">
             <span class="manager-module-icon"><i class="fas fa-user-shield"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Administradores</span>
               <span class="manager-module-subtitle">Permissões, bloqueios e importações</span>
             </span>
             <span class="manager-module-count"><%= (administradores || []).length %></span>
-          </button>
+          </a>
         </section>
         <div class="manager-shortcut-hint" aria-label="Atalhos de teclado">
           <span class="manager-shortcut-title"><i class="fas fa-keyboard"></i>Atalhos</span>
@@ -299,7 +329,7 @@
         <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" data-required-permission="painel.visualizar" type="button">
+            <button class="nav-link <%= isAbaAtiva('principal') ? 'active' : '' %>" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" data-required-permission="painel.visualizar" type="button" aria-selected="<%= isAbaAtiva('principal') ? 'true' : 'false' %>">
               <i class="fas fa-chart-line me-1"></i>Principal
             </button>
           </li>
@@ -339,7 +369,7 @@
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" data-required-permission="admins.gerenciar" type="button">
+            <button class="nav-link <%= isAbaAtiva('administradores') ? 'active' : '' %>" id="administradores-tab" data-bs-toggle="tab" data-bs-target="#administradores" data-required-permission="admins.gerenciar" type="button" aria-selected="<%= isAbaAtiva('administradores') ? 'true' : 'false' %>">
               <i class="fas fa-user-shield me-1"></i>Administradores (<%= administradores.length %>)
             </button>
           </li>
@@ -354,7 +384,7 @@
             </div>
           <% } %>
           <!-- TAB: PRINCIPAL -->
-          <div class="tab-pane fade show active" id="principal" data-required-permission="painel.visualizar" role="tabpanel">
+          <div class="tab-pane fade <%= isAbaAtiva('principal') ? 'show active' : '' %>" id="principal" data-required-permission="painel.visualizar" role="tabpanel">
             <section class="principal-lite-hero">
               <div class="principal-lite-title-wrap">
                 <h3>Bem-vindo ao Painel do EJC</h3>
@@ -388,43 +418,142 @@
             <div class="principal-lite-grid">
               <section class="principal-lite-panel principal-lite-panel-main">
                 <div class="principal-lite-panel-head">
-                  <h6>Áreas de Gestão</h6>
-                  <span>Atalhos por aba</span>
+                  <h6>Gráficos de Controle de Gastos</h6>
+                  <span>Visão financeira consolidada</span>
                 </div>
 
-                <div class="principal-lite-module-grid">
-                  <button type="button" class="principal-lite-module module-encontristas" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')">
-                    <div class="principal-lite-module-top"><strong>Encontristas</strong><span><%= (encontristas || []).length %></span></div>
-                    <small>Cadastros e acompanhamento individual</small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-encontreiros" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')">
-                    <div class="principal-lite-module-top"><strong>Encontreiros</strong><span><%= (encontreirosIndividuais || []).length %></span></div>
-                    <small>Serviço e apoio do encontro</small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-tios" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')">
-                    <div class="principal-lite-module-top"><strong>Tios</strong><span><%= (tios || []).length %></span></div>
-                    <small>Apoio pastoral e logística</small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-aprovacoes" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')">
-                    <div class="principal-lite-module-top"><strong>Aprovações</strong><span><%= totalPendenciasGeral %></span></div>
-                    <small>Fila de decisão e triagem</small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-encontros" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')">
-                    <div class="principal-lite-module-top"><strong>Encontros</strong><span><%= (ejcs || []).length %></span></div>
-                    <small>EJC ativo: <%= encontroAtivoNome || 'Não definido' %></small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-subequipes" data-required-permission="equipes.gerenciar" onclick="abrirAba('subequipes-tab')">
-                    <div class="principal-lite-module-top"><strong>Sub-Equipes</strong><span><%= (subequipes || []).length %></span></div>
-                    <small>Estrutura e vínculos de serviço</small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-gastos" data-required-permission="gastos.gerenciar" onclick="abrirAba('gastos-tab')">
-                    <div class="principal-lite-module-top"><strong>Financeiro</strong><span><%= gastosResumoData.quantidade + (fluxoResumoData.quantidade || 0) %></span></div>
-                    <small>Saldo caixa: <%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></small>
-                  </button>
-                  <button type="button" class="principal-lite-module module-admins" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')">
-                    <div class="principal-lite-module-top"><strong>Administradores</strong><span><%= (administradores || []).length %></span></div>
-                    <small>Permissões e governança</small>
-                  </button>
+                <div class="principal-finance-board">
+                  <div class="principal-finance-board-head">
+                    <h6>Controle de Gastos</h6>
+                    <span>Gráficos financeiros</span>
+                  </div>
+
+                  <div class="principal-finance-kpi-grid">
+                    <article class="principal-finance-kpi-card is-balance">
+                      <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+                      <small>Saldo atual</small>
+                      <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Posição consolidada do caixa</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-exit">
+                      <div class="kpi-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                      <small>Saídas lançadas</small>
+                      <strong><%= totalFluxoSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span><%= gastosResumoData.quantidade || 0 %> despesa(s) registradas</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-entry">
+                      <div class="kpi-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                      <small>Entradas</small>
+                      <strong><%= totalFluxoEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Receitas e repasses no caixa</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-ticket">
+                      <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                      <small>Ticket médio</small>
+                      <strong><%= Number(gastoMedioGeral || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Média por lançamento de gasto</span>
+                    </article>
+                  </div>
+
+                  <div class="principal-finance-chart-grid">
+                    <article class="principal-finance-card">
+                      <div class="principal-finance-card-head">
+                        <strong>Fluxo do caixa</strong>
+                        <span><%= percentualFluxoEntradas %>% entradas</span>
+                      </div>
+                      <div class="principal-finance-donut-wrap">
+                        <div
+                          class="principal-finance-donut"
+                          style="background: conic-gradient(#27c97a 0 <%= percentualFluxoEntradas %>%, #f34f5f <%= percentualFluxoEntradas %>% 100%);"
+                          aria-label="Percentual de entradas e saídas"
+                          role="img"
+                        >
+                          <div class="principal-finance-donut-center">
+                            <strong><%= percentualFluxoEntradas %>%</strong>
+                            <span>Entradas</span>
+                          </div>
+                        </div>
+                        <div class="principal-finance-legend">
+                          <div class="is-entry"><i></i>Entradas <strong><%= totalFluxoEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-exit"><i></i>Saídas <strong><%= totalFluxoSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-balance"><i></i>Saldo <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        </div>
+                      </div>
+                    </article>
+
+                    <article class="principal-finance-card">
+                      <div class="principal-finance-card-head">
+                        <strong>Gastos por escopo</strong>
+                        <span><%= percentualGastosEquipesBar %>% equipes</span>
+                      </div>
+                      <div class="principal-finance-donut-wrap">
+                        <div
+                          class="principal-finance-donut"
+                          style="background: conic-gradient(#2f7bff 0 <%= percentualGastosEncontroBar %>%, #ffb200 <%= percentualGastosEncontroBar %>% 100%);"
+                          aria-label="Percentual de gastos por escopo"
+                          role="img"
+                        >
+                          <div class="principal-finance-donut-center">
+                            <strong><%= percentualGastosEncontroBar %>%</strong>
+                            <span>Encontro</span>
+                          </div>
+                        </div>
+                        <div class="principal-finance-legend">
+                          <div class="is-encontro"><i></i>Encontro <strong><%= Number(gastosResumoData.encontro || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-equipes"><i></i>Equipes <strong><%= Number(gastosResumoData.equipes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-total"><i></i>Total <strong><%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+
+                  <article class="principal-finance-category-panel">
+                    <div class="principal-finance-card-head">
+                      <strong>Distribuição de gastos por categoria</strong>
+                      <span>Top categorias</span>
+                    </div>
+                    <% if (!gastoCategoriasOrdenadas.length) { %>
+                      <p class="principal-finance-empty">Ainda não existem gastos suficientes para gerar o gráfico.</p>
+                    <% } else { %>
+                      <div class="principal-finance-category-list">
+                        <% gastoCategoriasOrdenadas.forEach(function(item){ %>
+                          <% const percentualCategoria = gastoCategoriaMaiorValor > 0 ? Math.round((Number(item.valor || 0) / gastoCategoriaMaiorValor) * 100) : 0; %>
+                          <div class="principal-finance-category-item">
+                            <div class="category-top">
+                              <span><%= item.categoria %></span>
+                              <strong><%= Number(item.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                            </div>
+                            <div class="category-bar"><span style="width: <%= percentualCategoria %>%;"></span></div>
+                          </div>
+                        <% }); %>
+                      </div>
+                    <% } %>
+                  </article>
+
+                  <article class="principal-finance-extrato-panel">
+                    <div class="principal-finance-card-head">
+                      <strong>Extrato mensal de <%= extratoMesReferenciaPrincipal %></strong>
+                      <span>Saldo do período</span>
+                    </div>
+                    <div class="principal-finance-extrato-list">
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saldo inicial</span><strong><%= Number(fluxoMensalResumoData.saldoInicial || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-balance" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saldoInicial || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Entradas</span><strong><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-entry" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.entradasMes || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saídas</span><strong><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-exit" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saidasMes || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saldo final</span><strong><%= Number(fluxoMensalResumoData.saldoFinal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-total" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saldoFinal || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                    </div>
+                  </article>
                 </div>
               </section>
 
@@ -1563,14 +1692,70 @@
           <!-- TAB: GASTOS -->
           <div class="tab-pane fade gastos-workspace" id="gastos" data-required-permission="gastos.gerenciar" role="tabpanel">
             <div class="tab-workspace-head gastos-head">
-              <div>
+              <div class="gastos-head-main">
                 <p class="tab-kicker">Área Financeira</p>
                 <h5><i class="fas fa-wallet me-2"></i>Financeiro</h5>
+                <p class="gastos-head-subtitle">Gestão financeira com leitura executiva, registro assistido e saldo sempre em evidência.</p>
               </div>
-              <div class="tab-head-chips">
+              <div class="tab-head-chips tab-head-chips-premium">
                 <span class="tab-chip">Lançamentos: <%= gastosResumoData.quantidade %></span>
                 <span class="tab-chip tab-chip-soft">Total: <%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
+                <span class="tab-chip tab-chip-premium"><i class="fas fa-shield-heart me-1"></i>UX premium</span>
               </div>
+            </div>
+
+            <div class="financeiro-command-center" aria-label="Resumo executivo do financeiro">
+              <div class="financeiro-command-primary">
+                <div>
+                  <p class="financeiro-command-kicker">Command center</p>
+                  <h6>Panorama executivo do caixa</h6>
+                  <p>Monitore a saúde financeira do encontro com foco em saldo, entradas, saídas e equilíbrio entre encontro e equipes.</p>
+                </div>
+                <span class="financeiro-command-status <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'is-positive' : 'is-negative' %>">
+                  <i class="fas <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'fa-circle-check' : 'fa-triangle-exclamation' %>"></i>
+                  <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Caixa saudável' : 'Atenção ao saldo' %>
+                </span>
+              </div>
+              <div class="financeiro-command-metrics">
+                <article class="financeiro-command-card accent-balance">
+                  <span>Saldo atual</span>
+                  <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Disponível para operação</small>
+                </article>
+                <article class="financeiro-command-card accent-entry">
+                  <span>Entradas do mês</span>
+                  <strong><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Receitas e repasses confirmados</small>
+                </article>
+                <article class="financeiro-command-card accent-exit">
+                  <span>Saídas do mês</span>
+                  <strong><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Pagamentos e despesas lançadas</small>
+                </article>
+                <article class="financeiro-command-card accent-split">
+                  <span>Distribuição</span>
+                  <strong><%= percentualGastosEncontro %>% / <%= percentualGastosEquipes %>%</strong>
+                  <small>Encontro x equipes</small>
+                </article>
+              </div>
+            </div>
+
+            <div class="financeiro-overview-strip" aria-label="Destaques do painel financeiro">
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Visão central</span>
+                <strong>Tesouraria em um só painel</strong>
+                <small>Entradas, saídas e histórico com leitura imediata para a coordenação.</small>
+              </article>
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Controle confiável</span>
+                <strong>Rastreabilidade por responsável</strong>
+                <small>Cada lançamento fica classificado, contextualizado e pronto para auditoria.</small>
+              </article>
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Decisão rápida</span>
+                <strong>Filtros e KPIs prontos</strong>
+                <small>Encontre categorias, equipes e períodos em poucos segundos.</small>
+              </article>
             </div>
 
             <div class="gastos-toolbar" aria-label="Filtros do painel financeiro">
@@ -1612,6 +1797,10 @@
                 </button>
               </div>
             </div>
+            <div class="financeiro-toolbar-note" role="note">
+              <i class="fas fa-circle-info"></i>
+              <span>Combine período, categoria e busca para localizar qualquer movimentação em segundos e conciliar o caixa com mais segurança.</span>
+            </div>
 
             <div class="row g-3 mb-3">
               <div class="col-xl-7">
@@ -1619,12 +1808,12 @@
                   <div class="gastos-card-hero">
                     <div>
                       <p class="gastos-card-kicker">Lançamento assistido</p>
-                      <h5 class="mb-1"><i class="fas fa-plus-circle me-2"></i>Registrar novo gasto</h5>
-                      <p class="gastos-card-subtitle">Centralize despesas do encontro e das equipes com um fluxo simples, claro e profissional.</p>
+                      <h5 class="mb-1"><i class="fas fa-coins me-2"></i>Registrar lançamentos com clareza</h5>
+                      <p class="gastos-card-subtitle">Centralize arrecadações, vendas, doações e despesas em um fluxo mais elegante, confiável e fácil de acompanhar.</p>
                     </div>
                     <div class="gastos-card-pills">
+                      <span class="gastos-card-pill"><i class="fas fa-arrow-trend-up"></i>Entradas + saídas</span>
                       <span class="gastos-card-pill"><i class="fas fa-shield-heart"></i>Controle seguro</span>
-                      <span class="gastos-card-pill"><i class="fas fa-bolt"></i>Registro rápido</span>
                     </div>
                   </div>
 
@@ -1635,11 +1824,11 @@
                           <span class="gastos-block-step">01</span>
                           <div>
                             <strong>Contexto do lançamento</strong>
-                            <small>Defina onde o gasto será contabilizado.</small>
+                            <small>Defina se o lançamento é entrada ou gasto e onde será contabilizado.</small>
                           </div>
                         </div>
                         <div class="row g-3">
-                          <div class="col-md-6">
+                          <div class="col-md-4">
                             <label for="gasto_ejcId" class="form-label">EJC *</label>
                             <select id="gasto_ejcId" class="form-select" onchange="atualizarCamposGasto()">
                               <option value="">Selecione o EJC</option>
@@ -1648,8 +1837,20 @@
                               <% }); %>
                             </select>
                           </div>
-                          <div class="col-md-6">
-                            <label for="gasto_escopoTipo" class="form-label">Tipo do gasto *</label>
+                          <div class="col-md-4">
+                            <label for="gasto_tipoLancamento" class="form-label">Tipo do lançamento *</label>
+                            <select id="gasto_tipoLancamento" class="form-select" onchange="atualizarCamposGasto()">
+                              <option value="arrecadacao" selected>Entrada de capital (arrecadação)</option>
+                              <option value="venda_equipe">Venda de equipe</option>
+                              <option value="doacao">Doação</option>
+                              <option value="patrocinio">Patrocínio</option>
+                              <option value="inscricao">Repasse de inscrição</option>
+                              <option value="gasto_encontro">Gasto do encontro</option>
+                              <option value="gasto_equipe">Gasto de equipe</option>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_escopoTipo" class="form-label">Escopo *</label>
                             <select id="gasto_escopoTipo" class="form-select" onchange="atualizarCamposGasto()">
                               <option value="encontro" selected>Encontro geral</option>
                               <option value="equipe">Equipe</option>
@@ -1670,7 +1871,7 @@
                             </select>
                           </div>
                           <div class="col-12">
-                            <p id="gasto_scope_hint" class="gastos-field-hint mb-0">Este lançamento será registrado como gasto geral do encontro.</p>
+                            <p id="gasto_scope_hint" class="gastos-field-hint mb-0">Este lançamento será registrado como gasto geral do encontro e também refletido no fluxo de caixa.</p>
                           </div>
                         </div>
                       </div>
@@ -1695,15 +1896,15 @@
                             <input type="text" id="gasto_valor" class="form-control" placeholder="Ex: 150,00" inputmode="decimal" required>
                           </div>
                           <div class="col-md-4">
-                            <label for="gasto_data" class="form-label">Data do gasto *</label>
+                            <label for="gasto_data" id="gasto_data_label" class="form-label">Data do gasto *</label>
                             <input type="date" id="gasto_data" class="form-control" value="<%= new Date().toISOString().slice(0, 10) %>" required>
                           </div>
                           <div class="col-md-4">
-                            <label for="gasto_responsavel" class="form-label">Responsável</label>
+                            <label for="gasto_responsavel" id="gasto_responsavel_label" class="form-label">Responsável</label>
                             <input type="text" id="gasto_responsavel" class="form-control" placeholder="Quem pagou ou lançou">
                           </div>
                           <div class="col-md-4">
-                            <label for="gasto_forma_pagamento" class="form-label">Forma de pagamento</label>
+                            <label for="gasto_forma_pagamento" id="gasto_forma_pagamento_label" class="form-label">Forma de pagamento</label>
                             <input type="text" id="gasto_forma_pagamento" class="form-control" placeholder="Pix, Dinheiro, Cartão...">
                           </div>
                         </div>
@@ -1725,9 +1926,14 @@
                             <textarea id="gasto_observacoes" class="form-control" rows="2" placeholder="Detalhes extras do gasto"></textarea>
                           </div>
                           <div class="col-12">
-                            <button type="button" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarGasto()">
-                              <i class="fas fa-save me-1"></i>Salvar gasto com segurança
+                            <button type="button" id="gasto_submit_btn" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarGasto()">
+                              <i class="fas fa-save me-1"></i>Registrar lançamento com segurança
                             </button>
+                            <div class="gastos-assurance-strip" role="note">
+                              <span><i class="fas fa-shield-heart"></i>Rastreabilidade completa</span>
+                              <span><i class="fas fa-bolt"></i>Resumo atualizado na hora</span>
+                              <span><i class="fas fa-eye"></i>Leitura clara para tesouraria</span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1741,10 +1947,17 @@
                   <div class="gastos-summary-head">
                     <div>
                       <p class="gastos-card-kicker">Visão executiva</p>
-                      <h5 class="mb-1"><i class="fas fa-chart-pie me-2"></i>Resumo financeiro</h5>
-                      <p class="gastos-card-subtitle">Acompanhe o orçamento já lançado com leitura rápida e profissional.</p>
+                      <h5 class="mb-1"><i class="fas fa-chart-pie me-2"></i>Resumo executivo</h5>
+                      <p class="gastos-card-subtitle">Visualize volume, distribuição e indicadores do financeiro com leitura rápida e profissional.</p>
                     </div>
                     <span class="gastos-summary-badge">Tempo real</span>
+                  </div>
+                  <div class="financeiro-summary-spotlight">
+                    <div>
+                      <span class="financeiro-summary-spotlight-label">Leitura prioritária</span>
+                      <strong><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'O caixa opera com saldo positivo e boa previsibilidade.' : 'O caixa precisa de atenção imediata para reequilíbrio.' %></strong>
+                    </div>
+                    <small>Use os KPIs abaixo para decidir rapidamente onde conter despesas ou reforçar arrecadação.</small>
                   </div>
                   <div class="gastos-kpi-grid">
                     <article class="gastos-kpi-card gastos-kpi-card-primary">
@@ -1803,7 +2016,7 @@
                   </div>
 
                   <div class="alert alert-info mt-3 mb-0 gastos-hint" role="alert">
-                    <i class="fas fa-circle-info me-2"></i>Use esta área para lançar gastos gerais do encontro e também despesas específicas de cada equipe.
+                    <i class="fas fa-circle-info me-2"></i>Use esta área para registrar arrecadações, vendas das equipes, doações e também os gastos gerais do encontro.
                   </div>
                 </div>
               </div>
@@ -1812,8 +2025,8 @@
             <div class="gastos-table-shell">
               <div class="gastos-table-head">
                 <div>
-                  <h5 class="mb-1"><i class="fas fa-receipt me-2"></i>Histórico de lançamentos</h5>
-                  <p class="mb-0">Consulte rapidamente os gastos registrados no encontro e nas equipes.</p>
+                  <h5 class="mb-1"><i class="fas fa-receipt me-2"></i>Livro de lançamentos</h5>
+                  <p class="mb-0">Navegue por cada lançamento com contexto, responsáveis e classificação.</p>
                 </div>
                 <span id="gastos_table_count_badge" class="gastos-table-badge"><%= gastosResumoData.quantidade %> registro(s)</span>
               </div>
@@ -1877,13 +2090,15 @@
 
           <div class="financeiro-subsection">
             <div class="tab-workspace-head gastos-head">
-              <div>
+              <div class="gastos-head-main">
                 <p class="tab-kicker">Fluxo de Caixa</p>
                 <h5><i class="fas fa-scale-balanced me-2"></i>Entradas e saídas</h5>
+                <p class="gastos-head-subtitle">Conciliação de entradas e saídas com visão imediata do saldo disponível.</p>
               </div>
-              <div class="tab-head-chips">
+              <div class="tab-head-chips tab-head-chips-premium">
                 <span class="tab-chip">Movimentos: <%= fluxoResumoData.quantidade || 0 %></span>
                 <span class="tab-chip tab-chip-soft">Saldo: <%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
+                <span class="tab-chip tab-chip-premium"><i class="fas fa-bolt me-1"></i>Conciliação</span>
               </div>
             </div>
 
@@ -1893,8 +2108,12 @@
                   <div class="gastos-card-hero">
                     <div>
                       <p class="gastos-card-kicker">Tesouraria</p>
-                      <h5 class="mb-1"><i class="fas fa-right-left me-2"></i>Registrar movimento de caixa</h5>
-                      <p class="gastos-card-subtitle">Cadastre qualquer entrada ou saída de valor para manter o caixa completo e atualizado.</p>
+                      <h5 class="mb-1"><i class="fas fa-right-left me-2"></i>Lançar movimentos com rastreabilidade</h5>
+                      <p class="gastos-card-subtitle">Mantenha o caixa alinhado com origem, destino e forma de pagamento em um fluxo elegante e objetivo.</p>
+                    </div>
+                    <div class="gastos-card-pills">
+                      <span class="gastos-card-pill"><i class="fas fa-chart-line"></i>Saldo em tempo real</span>
+                      <span class="gastos-card-pill"><i class="fas fa-bolt"></i>Conciliação simples</span>
                     </div>
                   </div>
 
@@ -1955,6 +2174,11 @@
                       <button type="button" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarFluxoCaixa()">
                         <i class="fas fa-plus-circle me-1"></i>Registrar movimento no caixa
                       </button>
+                      <div class="gastos-assurance-strip" role="note">
+                        <span><i class="fas fa-bolt"></i>Conciliação simples</span>
+                        <span><i class="fas fa-chart-line"></i>Saldo em tempo real</span>
+                        <span><i class="fas fa-shield-heart"></i>Histórico pronto para auditoria</span>
+                      </div>
                     </div>
                   </form>
                 </div>
@@ -1965,9 +2189,17 @@
                   <div class="gastos-summary-head">
                     <div>
                       <p class="gastos-card-kicker">Saldo consolidado</p>
-                      <h5 class="mb-1"><i class="fas fa-chart-area me-2"></i>Resumo do caixa</h5>
+                      <h5 class="mb-1"><i class="fas fa-chart-area me-2"></i>Painel de caixa</h5>
+                      <p class="gastos-card-subtitle">Acompanhe a saúde do caixa com indicadores diretos e leitura premium.</p>
                     </div>
                     <span class="gastos-summary-badge">Financeiro</span>
+                  </div>
+                  <div class="financeiro-summary-spotlight is-cash">
+                    <div>
+                      <span class="financeiro-summary-spotlight-label">Status do período</span>
+                      <strong><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Saldo sustentável para a operação atual.' : 'Saídas acima do ideal: revisar prioridades.' %></strong>
+                    </div>
+                    <small>O painel abaixo mostra entradas, saídas, saldo líquido e volume de movimentos para a conciliação.</small>
                   </div>
                   <div class="gastos-kpi-grid">
                     <article class="gastos-kpi-card gastos-kpi-card-success">
@@ -2098,7 +2330,7 @@
           </div>
 
           <!-- TAB: ADMINISTRADORES -->
-          <div class="tab-pane fade" id="admins" data-required-permission="admins.gerenciar" role="tabpanel">
+          <div class="tab-pane fade <%= isAbaAtiva('administradores') ? 'show active admin-pane-persistent' : '' %>" id="administradores" data-required-permission="admins.gerenciar" role="tabpanel">
             <div class="tab-workspace-head">
               <div>
                 <p class="tab-kicker">Area Administradores</p>
@@ -2470,8 +2702,8 @@
                 <div class="audit-pagination-actions">
                   <% const prevAuditPage = Math.max(1, (auditoriaPaginaAtual || 1) - 1); %>
                   <% const nextAuditPage = Math.min((auditoriaTotalPaginas || 1), (auditoriaPaginaAtual || 1) + 1); %>
-                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) <= 1 ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= prevAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Anterior</a>
-                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) >= (auditoriaTotalPaginas || 1) ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= nextAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Próxima</a>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) <= 1 ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=administradores&auditPage=<%= prevAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Anterior</a>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) >= (auditoriaTotalPaginas || 1) ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=administradores&auditPage=<%= nextAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Próxima</a>
                 </div>
               </div>
               <div class="table-wrap admin-table-shell">
@@ -2948,8 +3180,8 @@
     </div>
   </div>
 
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/page-transitions.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js?v=20260406-adminfix-3"></script>
+  <script src="/js/page-transitions.js?v=20260406-adminfix-3"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
@@ -2969,6 +3201,74 @@
     const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
     const gastosFinanceiros = JSON.parse(document.getElementById('gastos-data').textContent || '[]');
     const fluxoCaixaFinanceiro = JSON.parse(document.getElementById('fluxo-caixa-data').textContent || '[]');
+    const gastoSaidaCategoryOptions = <%- JSON.stringify(gastoCategoryOptionsList) %>;
+    const gastoEntradaCategoryOptions = ['Arrecadação', 'Venda', 'Doação', 'Patrocínio', 'Inscrição', 'Repasse', 'Outros'];
+    const gastoLancamentoConfigs = {
+      gasto: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-save me-1"></i>Salvar gasto com segurança',
+        descricaoPlaceholder: 'Ex: compra de mercado, decoração, impressão',
+        observacoesPlaceholder: 'Detalhes extras do gasto',
+        sucessoMensagem: 'Gasto cadastrado com sucesso.',
+      },
+      gasto_encontro: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-save me-1"></i>Salvar gasto com segurança',
+        descricaoPlaceholder: 'Ex: compra de mercado, decoração, impressão',
+        observacoesPlaceholder: 'Detalhes extras do gasto',
+        sucessoMensagem: 'Gasto cadastrado com sucesso.',
+      },
+      gasto_equipe: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-users me-1"></i>Registrar gasto da equipe',
+        descricaoPlaceholder: 'Ex: compra da equipe para ação, material, transporte',
+        observacoesPlaceholder: 'Detalhes extras do gasto da equipe',
+        sucessoMensagem: 'Gasto da equipe cadastrado com sucesso.',
+      },
+      arrecadacao: {
+        isEntrada: true,
+        categoriaDefault: 'Arrecadação',
+        submitLabel: '<i class="fas fa-arrow-trend-up me-1"></i>Registrar entrada de capital',
+        descricaoPlaceholder: 'Ex: arrecadação da missa, apoio da comunidade',
+        observacoesPlaceholder: 'Detalhes extras da arrecadação',
+        sucessoMensagem: 'Entrada de capital cadastrada com sucesso.',
+      },
+      venda_equipe: {
+        isEntrada: true,
+        categoriaDefault: 'Venda',
+        submitLabel: '<i class="fas fa-cash-register me-1"></i>Registrar venda da equipe',
+        descricaoPlaceholder: 'Ex: venda de lanche ou rifa da equipe',
+        observacoesPlaceholder: 'Detalhes extras da venda da equipe',
+        sucessoMensagem: 'Venda da equipe cadastrada com sucesso.',
+      },
+      doacao: {
+        isEntrada: true,
+        categoriaDefault: 'Doação',
+        submitLabel: '<i class="fas fa-hand-holding-heart me-1"></i>Registrar doação',
+        descricaoPlaceholder: 'Ex: doação recebida de família ou benfeitor',
+        observacoesPlaceholder: 'Detalhes extras da doação',
+        sucessoMensagem: 'Doação cadastrada com sucesso.',
+      },
+      patrocinio: {
+        isEntrada: true,
+        categoriaDefault: 'Patrocínio',
+        submitLabel: '<i class="fas fa-handshake-angle me-1"></i>Registrar patrocínio',
+        descricaoPlaceholder: 'Ex: apoio financeiro de parceiro local',
+        observacoesPlaceholder: 'Detalhes extras do patrocínio',
+        sucessoMensagem: 'Patrocínio cadastrado com sucesso.',
+      },
+      inscricao: {
+        isEntrada: true,
+        categoriaDefault: 'Inscrição',
+        submitLabel: '<i class="fas fa-file-invoice-dollar me-1"></i>Registrar repasse de inscrição',
+        descricaoPlaceholder: 'Ex: repasse dos valores de inscrição',
+        observacoesPlaceholder: 'Detalhes extras do repasse',
+        sucessoMensagem: 'Repasse de inscrição cadastrado com sucesso.',
+      },
+    };
     const administradoresData = JSON.parse(document.getElementById('administradores-data').textContent || '[]');
     const adminRoleDefaults = JSON.parse(document.getElementById('admin-role-defaults-data').textContent || '{}');
       const adminPermissionOptionsData = <%- JSON.stringify(adminPermissionOptionsList || []) %>;
@@ -3531,12 +3831,120 @@
       }
     }
 
-    function abrirAba(tabId) {
-      const tabButton = document.getElementById(tabId);
-      if (tabButton && tabButton.style.display !== 'none') {
-        atualizarNavegacaoAtiva(tabId);
-        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+    function getTabPaneFromButton(tabButton) {
+      const targetSelector = tabButton ? tabButton.getAttribute('data-bs-target') : '';
+      return targetSelector ? document.querySelector(targetSelector) : null;
+    }
+
+    function ativarAbaSemBootstrap(tabButton) {
+      if (!tabButton) return null;
+
+      const targetPane = getTabPaneFromButton(tabButton);
+
+      document.querySelectorAll('#cadastroTabs .nav-link').forEach((item) => {
+        item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
+      });
+
+      document.querySelectorAll('#cadastroTabsContent .tab-pane').forEach((pane) => {
+        pane.classList.remove('active', 'show');
+      });
+
+      tabButton.classList.add('active');
+      tabButton.setAttribute('aria-selected', 'true');
+
+      if (targetPane) {
+        targetPane.classList.add('active', 'show');
       }
+
+      return targetPane;
+    }
+
+    function scrollParaConteudoDaAba(targetPane) {
+      const anchor = document.getElementById('cadastroTabs') || targetPane;
+      if (!anchor || typeof anchor.scrollIntoView !== 'function') return;
+
+      window.requestAnimationFrame(() => {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function abrirAba(tabId, options = {}) {
+      const tabButton = document.getElementById(tabId);
+      const shouldScroll = options.scroll !== false && options.shouldScroll !== false;
+
+      if (!tabButton || window.getComputedStyle(tabButton).display === 'none') {
+        return;
+      }
+
+      let targetPane = getTabPaneFromButton(tabButton);
+
+      try {
+        if (window.bootstrap && bootstrap.Tab) {
+          bootstrap.Tab.getOrCreateInstance(tabButton).show();
+          targetPane = getTabPaneFromButton(tabButton);
+        } else {
+          targetPane = ativarAbaSemBootstrap(tabButton);
+        }
+      } catch (error) {
+        console.error('[abrirAba] fallback manual acionado:', error);
+        targetPane = ativarAbaSemBootstrap(tabButton);
+      }
+
+      promoverSecaoAdministradores(tabId);
+      atualizarNavegacaoAtiva(tabId);
+      salvarAbaAtiva();
+
+      if (shouldScroll) {
+        scrollParaConteudoDaAba(targetPane);
+      }
+    }
+
+    function bindTabTriggers() {
+      document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
+        if (trigger.dataset.tabBound === 'true') return;
+        trigger.dataset.tabBound = 'true';
+
+        trigger.addEventListener('click', (event) => {
+          const tabTarget = trigger.getAttribute('data-tab-target');
+          if (!tabTarget) return;
+
+          const isAnchorTrigger = trigger.tagName === 'A' && !!trigger.getAttribute('href');
+          if (isAnchorTrigger) {
+            try {
+              localStorage.setItem('admin_gerenciar_cadastros_aba_ativa', tabTarget.replace(/-tab$/, ''));
+            } catch (error) {
+              // Ignora falhas de armazenamento e deixa a navegação seguir normalmente.
+            }
+
+            abrirAba(tabTarget, { shouldScroll: false });
+            return;
+          }
+
+          event.preventDefault();
+          abrirAba(tabTarget);
+        });
+      });
+    }
+
+    function promoverSecaoAdministradores(tabId) {
+      const adminPane = document.getElementById('administradores');
+      const tabsContent = document.getElementById('cadastroTabsContent');
+      if (!adminPane || !tabsContent) return;
+
+      if (tabsContent.firstElementChild !== adminPane) {
+        tabsContent.prepend(adminPane);
+      }
+
+      const abaAtiva = tabId || ((document.querySelector('#cadastroTabs .nav-link.active') || {}).id);
+      const isAdministradores = abaAtiva === 'administradores-tab';
+
+      adminPane.classList.toggle('admin-pane-persistent', isAdministradores);
+      adminPane.classList.toggle('show', isAdministradores);
+      adminPane.classList.toggle('active', isAdministradores);
+      adminPane.classList.toggle('fade', !isAdministradores);
+      adminPane.hidden = !isAdministradores;
+      adminPane.style.display = isAdministradores ? 'block' : '';
     }
 
     function setupAdminKeyboardShortcuts() {
@@ -3549,7 +3957,7 @@
         '6': 'encontros-tab',
         '7': 'subequipes-tab',
         '8': 'gastos-tab',
-        '9': 'admins-tab',
+        '9': 'administradores-tab',
       };
 
       document.addEventListener('keydown', (event) => {
@@ -3614,21 +4022,19 @@
       const abaNaUrl = url.searchParams.get('tab');
       const abaNoStorage = localStorage.getItem('admin_gerenciar_cadastros_aba_ativa');
       const fallbackAba = getPrimeiraAbaDisponivelId();
-      const abaDesejada = abaNaUrl || abaNoStorage || fallbackAba;
+      const aliasesAbas = { admins: 'administradores' };
+      const abaPersistida = abaNaUrl || abaNoStorage || fallbackAba;
+      const abaDesejada = aliasesAbas[abaPersistida] || abaPersistida;
       const botao = document.getElementById(`${abaDesejada}-tab`);
+      const shouldScrollOnRestore = Boolean(abaNaUrl || window.location.hash);
 
-      if (!botao || botao.style.display === 'none') {
-        const fallbackButton = document.getElementById(`${fallbackAba}-tab`);
-        if (fallbackButton && fallbackButton.style.display !== 'none') {
-          bootstrap.Tab.getOrCreateInstance(fallbackButton).show();
-          atualizarNavegacaoAtiva(`${fallbackAba}-tab`);
-        }
+      if (!botao || window.getComputedStyle(botao).display === 'none') {
+        abrirAba(`${fallbackAba}-tab`, { scroll: shouldScrollOnRestore });
         salvarAbaAtiva();
         return;
       }
 
-      bootstrap.Tab.getOrCreateInstance(botao).show();
-      atualizarNavegacaoAtiva(`${abaDesejada}-tab`);
+      abrirAba(`${abaDesejada}-tab`, { scroll: shouldScrollOnRestore });
       salvarAbaAtiva();
     }
 
@@ -3729,12 +4135,15 @@
         salvarAbaAtiva();
         if (event && event.target && event.target.id) {
           atualizarNavegacaoAtiva(event.target.id);
+          promoverSecaoAdministradores(event.target.id);
         }
       });
     });
 
     aplicarPermissoesNoPainel();
+    bindTabTriggers();
     restaurarAbaAtiva();
+    promoverSecaoAdministradores();
     setupAdminKeyboardShortcuts();
 
     function initSidebarDockGlow() {
@@ -4468,6 +4877,41 @@
       return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
     }
 
+    function resolveLancamentoFinanceiroConfig(tipoLancamento) {
+      return gastoLancamentoConfigs[tipoLancamento] || gastoLancamentoConfigs.gasto;
+    }
+
+    function getFinanceCategoryBadgeClass(categoria, tipoMovimento = '') {
+      const normalized = normalizeSearchText(`${categoria || ''} ${tipoMovimento || ''}`);
+      if (normalized.includes('doa')) return 'finance-category-badge badge-donation';
+      if (normalized.includes('vend')) return 'finance-category-badge badge-sale';
+      if (normalized.includes('arrecad') || normalized.includes('inscr') || normalized.includes('repasse') || normalized.includes('patrocin') || normalized.includes('entrada')) {
+        return 'finance-category-badge badge-entry';
+      }
+      if (normalized.includes('saida') || normalized.includes('gasto') || normalized.includes('aliment') || normalized.includes('infra') || normalized.includes('material') || normalized.includes('decor') || normalized.includes('transporte') || normalized.includes('limpeza') || normalized.includes('liturgia') || normalized.includes('comunica') || normalized.includes('brinde')) {
+        return 'finance-category-badge badge-expense';
+      }
+      return 'finance-category-badge';
+    }
+
+    function renderGastoCategoryOptions(preferredValue = '') {
+      const tipoLancamento = document.getElementById('gasto_tipoLancamento')?.value || 'arrecadacao';
+      const categoriaSelect = document.getElementById('gasto_categoria');
+      if (!categoriaSelect) return;
+
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+      const options = lancamentoConfig.isEntrada ? gastoEntradaCategoryOptions : gastoSaidaCategoryOptions;
+      const valorSelecionado = preferredValue || categoriaSelect.value || lancamentoConfig.categoriaDefault || 'Outros';
+
+      categoriaSelect.innerHTML = options
+        .map((categoria) => `<option value="${escapeHtml(categoria)}">${escapeHtml(categoria)}</option>`)
+        .join('');
+
+      categoriaSelect.value = options.includes(valorSelecionado)
+        ? valorSelecionado
+        : (lancamentoConfig.categoriaDefault || options[0] || 'Outros');
+    }
+
     function parseGastoDateSafe(value) {
       const parsed = value ? new Date(value) : null;
       return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
@@ -4587,6 +5031,7 @@
       const descricao = escapeHtml(item?.descricao || '-');
       const observacoes = item?.observacoes ? `<div class="text-muted small">${escapeHtml(item.observacoes)}</div>` : '';
       const categoria = escapeHtml(item?.categoria || 'Outros');
+      const categoriaBadgeClass = getFinanceCategoryBadgeClass(item?.categoria, 'saida');
       const ejcNome = escapeHtml(item?.ejcVinculadoNome || item?.ejc || '-');
       const responsavel = escapeHtml(item?.responsavel || '-');
       const data = parseGastoDateSafe(item?.dataGasto);
@@ -4599,7 +5044,7 @@
       return `<tr>
         <td>${dataTexto}</td>
         <td><strong>${descricao}</strong>${observacoes}</td>
-        <td>${categoria}</td>
+        <td><span class="${categoriaBadgeClass}">${categoria}</span></td>
         <td>${escopoBadge}</td>
         <td>${ejcNome}</td>
         <td><strong>${formatCurrencyValueBRL(item?.valor || 0)}</strong></td>
@@ -4700,11 +5145,25 @@
     }
 
     function atualizarCamposGasto() {
+      const tipoLancamentoSelect = document.getElementById('gasto_tipoLancamento');
       const escopoSelect = document.getElementById('gasto_escopoTipo');
       const equipeWrap = document.getElementById('gasto_equipe_wrap');
       const equipeSelect = document.getElementById('gasto_equipeId');
       const scopeHint = document.getElementById('gasto_scope_hint');
       if (!escopoSelect || !equipeWrap || !equipeSelect) return;
+
+      const tipoLancamento = tipoLancamentoSelect?.value || 'arrecadacao';
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+
+      if (tipoLancamento === 'venda_equipe' && escopoSelect.value !== 'equipe') {
+        escopoSelect.value = 'equipe';
+      }
+      if (tipoLancamento === 'gasto_equipe' && escopoSelect.value !== 'equipe') {
+        escopoSelect.value = 'equipe';
+      }
+      if (tipoLancamento === 'gasto_encontro' && escopoSelect.value !== 'encontro') {
+        escopoSelect.value = 'encontro';
+      }
 
       const isEquipe = escopoSelect.value === 'equipe';
       equipeWrap.style.display = isEquipe ? '' : 'none';
@@ -4712,11 +5171,30 @@
         equipeSelect.value = '';
       }
 
+      renderGastoCategoryOptions();
+
       if (scopeHint) {
-        scopeHint.innerHTML = isEquipe
-          ? 'Este lançamento será vinculado a uma <strong>equipe específica</strong> e refletido no controle financeiro setorial.'
-          : 'Este lançamento será registrado como gasto geral do <strong>encontro</strong> e consolidado no total principal.';
+        const destinoTexto = isEquipe
+          ? 'uma <strong>equipe específica</strong>'
+          : 'o <strong>encontro</strong>';
+        scopeHint.innerHTML = lancamentoConfig.isEntrada
+          ? `Este lançamento será registrado como <strong>entrada de capital</strong> no fluxo de caixa de ${destinoTexto}.`
+          : `Este lançamento será registrado como <strong>gasto</strong> de ${destinoTexto} e também refletido no livro caixa.`;
       }
+
+      const descricaoInput = document.getElementById('gasto_descricao');
+      const observacoesInput = document.getElementById('gasto_observacoes');
+      const dataLabel = document.getElementById('gasto_data_label');
+      const responsavelLabel = document.getElementById('gasto_responsavel_label');
+      const formaLabel = document.getElementById('gasto_forma_pagamento_label');
+      const submitBtn = document.getElementById('gasto_submit_btn');
+
+      if (descricaoInput) descricaoInput.placeholder = lancamentoConfig.descricaoPlaceholder;
+      if (observacoesInput) observacoesInput.placeholder = lancamentoConfig.observacoesPlaceholder;
+      if (dataLabel) dataLabel.textContent = lancamentoConfig.isEntrada ? 'Data do lançamento *' : 'Data do gasto *';
+      if (responsavelLabel) responsavelLabel.textContent = lancamentoConfig.isEntrada ? 'Responsável pela entrada' : 'Responsável';
+      if (formaLabel) formaLabel.textContent = lancamentoConfig.isEntrada ? 'Forma / origem' : 'Forma de pagamento';
+      if (submitBtn) submitBtn.innerHTML = lancamentoConfig.submitLabel;
 
       atualizarOpcoesEquipeGasto(equipeSelect.value);
       initGastosPremiumInputs();
@@ -4728,10 +5206,14 @@
     async function cadastrarGasto() {
       if (!ensurePermission('gastos.gerenciar')) return;
 
+      const tipoLancamento = document.getElementById('gasto_tipoLancamento')?.value || 'arrecadacao';
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+      const isEntrada = Boolean(lancamentoConfig.isEntrada);
       const ejcId = document.getElementById('gasto_ejcId')?.value || '';
       const escopoTipo = document.getElementById('gasto_escopoTipo')?.value || 'encontro';
       const equipeId = document.getElementById('gasto_equipeId')?.value || '';
-      const categoria = document.getElementById('gasto_categoria')?.value || 'Outros';
+      const equipeNome = document.getElementById('gasto_equipeId')?.selectedOptions?.[0]?.textContent?.trim() || '';
+      const categoria = document.getElementById('gasto_categoria')?.value || (lancamentoConfig.categoriaDefault || 'Outros');
       const descricao = document.getElementById('gasto_descricao')?.value.trim() || '';
       const valor = document.getElementById('gasto_valor')?.value.trim() || '';
       const dataGasto = document.getElementById('gasto_data')?.value || '';
@@ -4740,53 +5222,90 @@
       const observacoes = document.getElementById('gasto_observacoes')?.value.trim() || '';
 
       if (!ejcId) {
-        await appAlert('Selecione o EJC do gasto.', 'warning', 'Dados incompletos');
+        await appAlert('Selecione o EJC do lançamento.', 'warning', 'Dados incompletos');
         return;
       }
 
       if (!descricao || !valor || !dataGasto) {
-        await appAlert('Preencha descrição, valor e data do gasto.', 'warning', 'Dados incompletos');
+        await appAlert('Preencha descrição, valor e data do lançamento.', 'warning', 'Dados incompletos');
         return;
       }
 
       if (escopoTipo === 'equipe' && !equipeId) {
-        await appAlert('Selecione a equipe relacionada ao gasto.', 'warning', 'Dados incompletos');
+        await appAlert('Selecione a equipe relacionada ao lançamento.', 'warning', 'Dados incompletos');
         return;
       }
 
+      const gastoPayload = {
+        ejcId,
+        escopoTipo,
+        equipeId,
+        categoria,
+        descricao,
+        valor,
+        dataGasto,
+        responsavel,
+        formaPagamento,
+        observacoes,
+      };
+
+      const fluxoPayload = {
+        ejcId,
+        tipoMovimento: isEntrada ? 'entrada' : 'saida',
+        categoria,
+        descricao,
+        valor,
+        dataMovimento: dataGasto,
+        origemDestino: escopoTipo === 'equipe' ? (equipeNome || 'Equipe') : 'Encontro',
+        responsavel,
+        formaPagamento,
+        observacoes: observacoes || (escopoTipo === 'equipe' ? `Lançamento vinculado à equipe ${equipeNome || 'informada'}.` : ''),
+      };
+
       try {
-        const response = await fetch('/admin/cadastrar-gasto', {
+        if (!isEntrada) {
+          const gastoResponse = await fetch('/admin/cadastrar-gasto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gastoPayload),
+          });
+
+          const gastoResult = await gastoResponse.json();
+          if (!gastoResponse.ok || !gastoResult.success) {
+            await appAlert(gastoResult.error || 'Erro ao cadastrar gasto.', 'danger', 'Erro');
+            return;
+          }
+        }
+
+        const fluxoResponse = await fetch('/admin/cadastrar-fluxo-caixa', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            ejcId,
-            escopoTipo,
-            equipeId,
-            categoria,
-            descricao,
-            valor,
-            dataGasto,
-            responsavel,
-            formaPagamento,
-            observacoes,
-          }),
+          body: JSON.stringify(fluxoPayload),
         });
 
-        const result = await response.json();
-        if (result.success) {
-          await appAlert('Gasto cadastrado com sucesso.', 'success', 'Sucesso');
-          document.getElementById('formGasto')?.reset();
-          const dataInput = document.getElementById('gasto_data');
-          if (dataInput) {
-            dataInput.value = new Date().toISOString().slice(0, 10);
-          }
-          atualizarCamposGasto();
-          recarregarMantendoAbaAtual();
-        } else {
-          await appAlert(result.error || 'Erro ao cadastrar gasto.', 'danger', 'Erro');
+        const fluxoResult = await fluxoResponse.json();
+        if (!fluxoResponse.ok || !fluxoResult.success) {
+          await appAlert(fluxoResult.error || 'Erro ao refletir o lançamento no fluxo de caixa.', 'danger', 'Erro');
+          return;
         }
+
+        await appAlert(lancamentoConfig.sucessoMensagem || 'Lançamento cadastrado com sucesso.', 'success', 'Sucesso');
+        document.getElementById('formGasto')?.reset();
+
+        const tipoLancamentoInput = document.getElementById('gasto_tipoLancamento');
+        if (tipoLancamentoInput) {
+          tipoLancamentoInput.value = 'arrecadacao';
+        }
+
+        const dataInput = document.getElementById('gasto_data');
+        if (dataInput) {
+          dataInput.value = new Date().toISOString().slice(0, 10);
+        }
+
+        atualizarCamposGasto();
+        recarregarMantendoAbaAtual();
       } catch (error) {
-        await appAlert('Erro ao cadastrar gasto.', 'danger', 'Erro');
+        await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
       }
     }
 
@@ -4830,10 +5349,11 @@
       const dataTexto = data ? data.toLocaleDateString('pt-BR') : '-';
       const tipo = String(item?.tipoMovimento || 'entrada') === 'saida' ? 'saida' : 'entrada';
       const tipoBadge = tipo === 'saida'
-        ? '<span class="status-badge status-danger gastos-scope-badge">Saída</span>'
-        : '<span class="status-badge status-ok gastos-scope-badge">Entrada</span>';
+        ? '<span class="finance-movement-badge movement-exit">Saída</span>'
+        : '<span class="finance-movement-badge movement-entry">Entrada</span>';
       const descricao = escapeHtml(item?.descricao || '-');
       const categoria = escapeHtml(item?.categoria || 'Outros');
+      const categoriaBadgeClass = getFinanceCategoryBadgeClass(item?.categoria, tipo);
       const ejcNome = escapeHtml(item?.ejcVinculadoNome || item?.ejc || '-');
       const responsavel = escapeHtml(item?.responsavel || '-');
       const origemDestino = item?.origemDestino ? `<div class="text-muted small">Origem/Destino: ${escapeHtml(item.origemDestino)}</div>` : '';
@@ -4846,7 +5366,7 @@
         <td>${dataTexto}</td>
         <td>${tipoBadge}</td>
         <td><strong>${descricao}</strong>${origemDestino}${observacoes}</td>
-        <td>${categoria}</td>
+        <td><span class="${categoriaBadgeClass}">${categoria}</span></td>
         <td>${ejcNome}</td>
         <td><strong>${formatCurrencyValueBRL(valorSinal)}</strong></td>
         <td>${responsavel}</td>
@@ -6104,7 +6624,7 @@
     carregarConfiguracoesBloqueio();
 
     // Recarregar quando a aba de admins for clicada (garante atualização ao trocar de aba)
-    const adminsTab = document.getElementById('admins-tab') || document.querySelector('[data-bs-target="#admins"]');
+    const adminsTab = document.getElementById('administradores-tab') || document.querySelector('[data-bs-target="#administradores"]');
     if (adminsTab) {
       adminsTab.addEventListener('shown.bs.tab', function() {
         carregarConfiguracoesBloqueio();

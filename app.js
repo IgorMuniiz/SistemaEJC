@@ -15,8 +15,10 @@ const sharp = require('sharp');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
-const MongoStore = require('connect-mongo');
+const connectMongo = require('connect-mongo');
+const MongoStore = connectMongo.default || connectMongo;
 const { buildHelmetConfig } = require('./src/config/security');
+const { attachRequestContext, logRequestSummary, logStartupBanner } = require('./src/utils/observability');
 const { processarImportacaoCompletaTransacional } = require('./src/services/importacaoCompletaService');
 const {
   carregarDadosEncontroCompletoDeOrigemExterna,
@@ -84,6 +86,15 @@ const mongoUri = process.env.MONGODB_URL
   || process.env.MONGO_URI
   || 'mongodb://127.0.0.1:27017/ejc_sistema';
 const mongoFallbackUri = process.env.MONGODB_FALLBACK_URL || 'mongodb://127.0.0.1:27017/ECJCOP';
+let mongoConnectionPromise = Promise.resolve(null);
+
+const getMongoClientFromMongoose = () => {
+  if (typeof mongoose.connection.getClient === 'function') {
+    return mongoose.connection.getClient();
+  }
+
+  return mongoose.connection.client || null;
+};
 
 const validateRuntimeConfig = () => {
   const issues = [];
@@ -109,6 +120,7 @@ validateRuntimeConfig();
 
 const connectToMongo = async () => {
   const uris = [mongoUri, mongoFallbackUri].filter((value, index, arr) => value && arr.indexOf(value) === index);
+  let lastError = null;
 
   for (let index = 0; index < uris.length; index += 1) {
     const uri = uris[index];
@@ -123,8 +135,9 @@ const connectToMongo = async () => {
         console.warn('MongoDB conectado com fallback local:', uri);
       }
 
-      return;
+      return mongoose.connection;
     } catch (err) {
+      lastError = err;
       const message = String(err && err.message ? err.message : err);
       const isLast = index === uris.length - 1;
       console.error(`Falha ao conectar no MongoDB (${uri}).`);
@@ -140,11 +153,16 @@ const connectToMongo = async () => {
       }
     }
   }
+
+  throw lastError || new Error('Nao foi possivel conectar ao MongoDB.');
 };
 
 const SKIP_MONGO_CONNECT = process.env.SKIP_MONGO_CONNECT === '1';
 if (!SKIP_MONGO_CONNECT) {
-  connectToMongo();
+  mongoConnectionPromise = connectToMongo().catch((err) => {
+    console.error('Falha final ao conectar no MongoDB:', err && err.message ? err.message : err);
+    return null;
+  });
 } else {
   console.warn('MongoDB connect skipped (SKIP_MONGO_CONNECT=1).');
 }
@@ -776,6 +794,8 @@ app.set('view engine', 'ejs');
 app.use(compression({ threshold: 1024 }));
 
 app.use(helmet(buildHelmetConfig()));
+app.use(attachRequestContext());
+app.use(logRequestSummary({ slowRequestMs: 1500 }));
 
 const setStaticCacheHeaders = (res, filePath) => {
   const ext = path.extname(filePath).toLowerCase();
@@ -914,9 +934,25 @@ const createSessionStore = () => {
   }
 
   try {
-    const sessionMongoUri = process.env.SESSION_STORE_MONGO_URI || mongoUri || mongoFallbackUri;
+    if (!MongoStore || typeof MongoStore.create !== 'function') {
+      throw new Error('Adaptador connect-mongo incompatível com create().');
+    }
+
+    const sessionMongoUri = String(process.env.SESSION_STORE_MONGO_URI || '').trim();
+    const connectionOptions = sessionMongoUri
+      ? { mongoUrl: sessionMongoUri }
+      : {
+          clientPromise: mongoConnectionPromise.then(() => {
+            const client = getMongoClientFromMongoose();
+            if (!client) {
+              throw new Error('Cliente Mongo indisponivel para o session store.');
+            }
+            return client;
+          }),
+        };
+
     return MongoStore.create({
-      mongoUrl: sessionMongoUri,
+      ...connectionOptions,
       collectionName: 'sessions',
       ttl: 60 * 60 * 24,
       autoRemove: 'native',
@@ -5501,12 +5537,22 @@ app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadast
   }
 });
 
+app.get('/admin/administradores', checkAdminAuth, requireAdminPermission('painel.visualizar'), (req, res) => {
+  res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  return res.redirect('/admin/gerenciar-cadastros?tab=administradores&modo=admins');
+});
+
 // GET /admin/gerenciar-cadastros - Página de gestão de cadastros
 app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('painel.visualizar'), async (req, res) => {
   try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, private');
     const eventContext = await resolveAdminEventContext(req);
     const baseFilter = eventContext.filtro;
     const listLimit = parsePositiveInt(req.query.listLimit, 1200, 100, 5000);
+    const allowedTabs = new Set(['principal', 'encontristas', 'encontreiros', 'tios', 'aprovacoes', 'encontros', 'subequipes', 'gastos', 'administradores']);
+    const requestedTab = normalizeTextInput(req.query.tab).toLowerCase();
+    const modoPaginaAdministradores = normalizeTextInput(req.query.modo).toLowerCase() === 'admins';
+    const abaInicialGerenciar = allowedTabs.has(requestedTab) ? requestedTab : (modoPaginaAdministradores ? 'administradores' : 'principal');
 
     const [encontristasTotal, encontreirosTotal] = await Promise.all([
       Cadastro.countDocuments(baseFilter),
@@ -5655,6 +5701,8 @@ app.get('/admin/gerenciar-cadastros', checkAdminAuth, requireAdminPermission('pa
       fluxoCaixaResumo,
       fluxoCaixaMensalResumo,
       fluxoCategoryOptions: FLUXO_CATEGORY_OPTIONS,
+      abaInicialGerenciar,
+      modoPaginaAdministradores,
     });
   } catch (err) {
     console.error('Erro ao carregar cadastros:', err);
@@ -8944,8 +8992,13 @@ const startServer = () => {
 
   serverInstance = app.listen(PORT, HOST, () => {
     const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
-    console.log(`Server running on http://${displayHost}:${PORT}`);
-    console.log(`Listening on ${HOST}:${PORT} for external access.`);
+    logStartupBanner({
+      host: HOST,
+      port: PORT,
+      displayHost,
+      environment: process.env.NODE_ENV || 'development',
+      mongoState: mongoose.connection.readyState,
+    });
   });
 
   return serverInstance;

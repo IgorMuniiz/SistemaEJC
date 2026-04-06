@@ -52,11 +52,14 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   color: var(--text-50);
+  color-scheme: dark;
   min-height: 100vh;
   overflow-x: hidden;
   background:
@@ -284,6 +287,65 @@ textarea:focus-visible,
   outline: none;
   box-shadow: var(--ux-ring-shadow) !important;
   border-color: var(--ux-ring) !important;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+  color: var(--text-50) !important;
+  -webkit-text-fill-color: var(--text-50);
+  caret-color: var(--text-50);
+  color-scheme: dark;
+  background-clip: padding-box;
+}
+
+select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dbeafe' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right .95rem center !important;
+  background-size: 14px 10px !important;
+}
+
+select option,
+select optgroup {
+  background: #111827 !important;
+  color: #f0f4ff !important;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.15);
+  opacity: .88;
+  cursor: pointer;
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+select:-webkit-autofill,
+textarea:-webkit-autofill {
+  -webkit-text-fill-color: #f0f4ff !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(17, 24, 39, 0.96) inset !important;
+  box-shadow: 0 0 0 1000px rgba(17, 24, 39, 0.96) inset !important;
+  border-color: rgba(79, 142, 247, 0.72) !important;
+  transition: background-color 9999s ease-out 0s;
 }
 
 .btn:hover {

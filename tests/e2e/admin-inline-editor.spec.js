@@ -57,8 +57,23 @@ test.describe('Editor inline de administradores', () => {
 
     await page.goto('/admin/gerenciar-cadastros');
     // Navega para a aba de administradores
-    const adminsTab = page.locator('#admins-tab, [href*="admins"], button:has-text("Admins")').first();
+    const adminsTab = page.locator('#administradores-tab, [href*="administradores"], button:has-text("Administradores")').first();
     if (await adminsTab.isVisible()) await adminsTab.click();
+  });
+
+  test('Atalho Administradores leva até o conteúdo da aba', async ({ page }) => {
+    const adminsShortcut = page.locator('.manager-module-card[data-tab-target="administradores-tab"]').first();
+    await expect(adminsShortcut).toBeVisible();
+
+    const beforeScroll = await page.evaluate(() => window.scrollY);
+    await adminsShortcut.click();
+    await page.waitForTimeout(600);
+
+    const afterScroll = await page.evaluate(() => window.scrollY);
+    expect(afterScroll).toBeGreaterThan(beforeScroll);
+    await expect(page.locator('#administradores-tab')).toHaveClass(/active/);
+    await expect(page.locator('#administradores')).toHaveClass(/show/);
+    await expect(page.locator('#administradores .tab-workspace-head')).toBeVisible();
   });
 
   test('Botão Editar abre o editor inline abaixo da linha', async ({ page }) => {
@@ -156,7 +171,7 @@ test.describe('Seção Auditoria', () => {
     const loggedIn = await loginAdmin(page);
     test.skip(!loggedIn, 'ADMIN_USERNAME/ADMIN_PASSWORD não configurados');
     await page.goto('/admin/gerenciar-cadastros');
-    const adminsTab = page.locator('#admins-tab, [href*="admins"], button:has-text("Admins")').first();
+    const adminsTab = page.locator('#administradores-tab, [href*="administradores"], button:has-text("Administradores")').first();
     if (await adminsTab.isVisible()) await adminsTab.click();
   });
 
