@@ -3,7 +3,6 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
-const multer = require('multer');
 const { body, validationResult } = require('express-validator');
 const fs = require('fs');
 const archiver = require('archiver');
@@ -13,7 +12,6 @@ const bcryptjs = require('bcryptjs');
 const compression = require('compression');
 const sharp = require('sharp');
 const helmet = require('helmet');
-const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const connectMongo = require('connect-mongo');
 const MongoStore = connectMongo.default || connectMongo;
@@ -21,7 +19,10 @@ const { buildHelmetConfig } = require('./src/config/security');
 const { resolveMongoConfig, connectToMongo, registerMongoObservers } = require('./src/config/mongo');
 const { buildRuntimeConfig } = require('./src/config/runtime');
 const { buildSessionMiddleware, createSessionStore } = require('./src/config/session');
+const { createImageUpload, createImportUploadSingle } = require('./src/config/uploads');
 const { configureWebPush } = require('./src/config/webpush');
+const { createAdminLoginLimiter, createAdminWriteLimiter } = require('./src/middlewares/adminRateLimits');
+const { createSystemRouter } = require('./src/routes/systemRoutes');
 const { attachRequestContext, logRequestSummary, logStartupBanner } = require('./src/utils/observability');
 const { processarImportacaoCompletaTransacional } = require('./src/services/importacaoCompletaService');
 const {
@@ -828,34 +829,8 @@ app.get('/sw.js', (req, res) => {
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 
-const adminLoginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 8,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: () => process.env.NODE_ENV === 'test',
-  message: 'Muitas tentativas de login. Tente novamente em alguns minutos.',
-});
-
-const adminWriteLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 260,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    const method = String(req.method || '').toUpperCase();
-    const pathName = String(req.path || '');
-    if (!pathName.startsWith('/admin')) return true;
-    if (pathName === '/admin/login') return true;
-    return !['POST', 'PUT', 'PATCH', 'DELETE'].includes(method);
-  },
-  handler: (req, res) => {
-    return res.status(429).json({
-      success: false,
-      error: 'Muitas operações em sequência. Aguarde alguns minutos e tente novamente.',
-    });
-  },
-});
+const adminLoginLimiter = createAdminLoginLimiter({ env: process.env });
+const adminWriteLimiter = createAdminWriteLimiter();
 
 app.use(adminWriteLimiter);
 
@@ -884,51 +859,8 @@ app.use(buildSessionMiddleware({
 }));
 
 // file upload config
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/');
-  },
-  filename: function (req, file, cb) {
-    const unique = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, unique + path.extname(file.originalname));
-  },
-});
-
-const upload = multer({
-  storage,
-  fileFilter: function (req, file, cb) {
-    const allowed = ['.png', '.jpg', '.jpeg'];
-    const ext = path.extname(file.originalname).toLowerCase();
-    if (allowed.includes(ext)) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only JPG and PNG images are allowed'));
-    }
-  },
-});
-
-const importUpload = multer({
-  storage: multer.memoryStorage(),
-  limits: { fileSize: 25 * 1024 * 1024 },
-});
-
-const importUploadSingle = (req, res, next) => {
-  importUpload.single('arquivo')(req, res, (err) => {
-    if (!err) return next();
-
-    if (err && err.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({
-        success: false,
-        error: 'Arquivo muito grande. O limite para importacao e 25MB.',
-      });
-    }
-
-    return res.status(400).json({
-      success: false,
-      error: `Falha ao processar arquivo de importacao: ${normalizeTextInput(err.message) || 'erro desconhecido.'}`,
-    });
-  });
-};
+const upload = createImageUpload();
+const importUploadSingle = createImportUploadSingle();
 
 const parseDateInput = (value) => {
   if (!value) return null;
@@ -1043,31 +975,7 @@ const adminCsrfGuard = (req, res, next) => {
 
 app.use(ensureAdminCsrfToken);
 app.use(adminCsrfGuard);
-
-app.get('/healthz', (req, res) => {
-  return res.status(200).json({
-    status: 'ok',
-    uptimeSec: Math.round(process.uptime()),
-    timestamp: new Date().toISOString(),
-  });
-});
-
-app.get('/readyz', async (req, res) => {
-  const mongoReady = mongoose.connection.readyState === 1;
-  if (!mongoReady) {
-    return res.status(503).json({
-      status: 'degraded',
-      mongo: 'disconnected',
-      timestamp: new Date().toISOString(),
-    });
-  }
-
-  return res.status(200).json({
-    status: 'ready',
-    mongo: 'connected',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use(createSystemRouter({ mongoose }));
 
 const normalizeAdminEventScopeInput = (value) => {
   const raw = normalizeTextInput(value).toLowerCase();
