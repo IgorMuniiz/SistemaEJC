@@ -18,8 +18,17 @@ const crypto = require('crypto');
 const connectMongo = require('connect-mongo');
 const MongoStore = connectMongo.default || connectMongo;
 const { buildHelmetConfig } = require('./src/config/security');
+const { resolveMongoConfig, connectToMongo, registerMongoObservers } = require('./src/config/mongo');
+const { buildRuntimeConfig } = require('./src/config/runtime');
+const { buildSessionMiddleware, createSessionStore } = require('./src/config/session');
+const { configureWebPush } = require('./src/config/webpush');
 const { attachRequestContext, logRequestSummary, logStartupBanner } = require('./src/utils/observability');
 const { processarImportacaoCompletaTransacional } = require('./src/services/importacaoCompletaService');
+const {
+  executeLgpdRetention: executeLgpdRetentionService,
+  registerLgpdRetentionJobs,
+  shouldEnableBackgroundJobs,
+} = require('./src/services/lgpdRetentionService');
 const {
   carregarDadosEncontroCompletoDeOrigemExterna,
   carregarEncontreirosDeOrigemExterna,
@@ -28,24 +37,19 @@ const {
 const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
 const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
 const LGPD_RETENTION_DAYS_DEFAULT = 730;
-const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const runtimeConfig = buildRuntimeConfig(process.env);
+const IS_PRODUCTION = runtimeConfig.isProduction;
 
-// configure VAPID keys (set environment variables beforehand)
-let vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY,
-  privateKey: process.env.VAPID_PRIVATE_KEY,
-};
-if (!vapidKeys.publicKey || !vapidKeys.privateKey) {
-  if (IS_PRODUCTION) {
-    throw new Error('VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY sao obrigatorias em producao.');
-  }
+runtimeConfig.warnings.forEach((warning) => {
+  console.warn(`[BOOT] ${warning}`);
+});
 
-  const keys = webpush.generateVAPIDKeys();
-  // Log as regular output to avoid false startup failures in environments that treat stderr as fatal.
-  console.log('VAPID keys were not provided. Generated ephemeral keys for development only.');
-  vapidKeys = keys;
-}
-webpush.setVapidDetails('mailto:you@example.com', vapidKeys.publicKey, vapidKeys.privateKey);
+const vapidKeys = configureWebPush({
+  webpush,
+  runtimeConfig,
+  isProduction: IS_PRODUCTION,
+  logger: console,
+});
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -81,85 +85,19 @@ const ensureImportPlaceholderImage = () => {
 };
 
 // MongoDB connection
-const mongoUri = process.env.MONGODB_URL
-  || process.env.MONGODB_URI
-  || process.env.MONGO_URI
-  || 'mongodb://127.0.0.1:27017/ejc_sistema';
-const mongoFallbackUri = process.env.MONGODB_FALLBACK_URL || 'mongodb://127.0.0.1:27017/ECJCOP';
-let mongoConnectionPromise = Promise.resolve(null);
-
-const getMongoClientFromMongoose = () => {
-  if (typeof mongoose.connection.getClient === 'function') {
-    return mongoose.connection.getClient();
-  }
-
-  return mongoose.connection.client || null;
-};
-
-const validateRuntimeConfig = () => {
-  const issues = [];
-
-  if (IS_PRODUCTION) {
-    const secret = String(process.env.SESSION_SECRET || '');
-    if (!secret || secret.includes('mude-em-producao') || secret.length < 24) {
-      issues.push('SESSION_SECRET forte (>= 24 chars) obrigatorio em producao.');
-    }
-
-    const hasMongoEnv = Boolean(process.env.MONGODB_URL || process.env.MONGODB_URI || process.env.MONGO_URI);
-    if (!hasMongoEnv) {
-      issues.push('Defina MONGODB_URI/MONGODB_URL/MONGO_URI em producao.');
-    }
-  }
-
-  if (issues.length > 0) {
-    throw new Error(`Configuracao invalida de ambiente:\n- ${issues.join('\n- ')}`);
-  }
-};
-
-validateRuntimeConfig();
-
-const connectToMongo = async () => {
-  const uris = [mongoUri, mongoFallbackUri].filter((value, index, arr) => value && arr.indexOf(value) === index);
-  let lastError = null;
-
-  for (let index = 0; index < uris.length; index += 1) {
-    const uri = uris[index];
-    try {
-      await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 10000,
-      });
-
-      if (index === 0) {
-        console.log('MongoDB conectado com sucesso.');
-      } else {
-        console.warn('MongoDB conectado com fallback local:', uri);
-      }
-
-      return mongoose.connection;
-    } catch (err) {
-      lastError = err;
-      const message = String(err && err.message ? err.message : err);
-      const isLast = index === uris.length - 1;
-      console.error(`Falha ao conectar no MongoDB (${uri}).`);
-
-      if (message.includes('whitelist') || message.includes('ReplicaSetNoPrimary')) {
-        console.error('No Atlas, libere o IP atual em Network Access e valide usuario/senha da URI.');
-      }
-
-      console.error('Detalhes:', message);
-
-      if (isLast) {
-        console.error('Defina MONGODB_URI, MONGODB_URL ou MONGO_URI no arquivo .env.');
-      }
-    }
-  }
-
-  throw lastError || new Error('Nao foi possivel conectar ao MongoDB.');
-};
+const { mongoUri, mongoFallbackUri } = resolveMongoConfig({
+  env: process.env,
+  isProduction: IS_PRODUCTION,
+});
 
 const SKIP_MONGO_CONNECT = process.env.SKIP_MONGO_CONNECT === '1';
 if (!SKIP_MONGO_CONNECT) {
-  mongoConnectionPromise = connectToMongo().catch((err) => {
+  connectToMongo({
+    mongoose,
+    mongoUri,
+    mongoFallbackUri,
+    logger: console,
+  }).catch((err) => {
     console.error('Falha final ao conectar no MongoDB:', err && err.message ? err.message : err);
     return null;
   });
@@ -167,14 +105,7 @@ if (!SKIP_MONGO_CONNECT) {
   console.warn('MongoDB connect skipped (SKIP_MONGO_CONNECT=1).');
 }
 
-mongoose.connection.on('disconnected', () => {
-  console.warn('MongoDB desconectado.');
-});
-
-mongoose.connection.on('reconnected', () => {
-  console.log('MongoDB reconectado.');
-});
-
+registerMongoObservers({ mongoose, logger: console });
 const cadastroSchema = new mongoose.Schema({
   nomeCompleto: { type: String, required: true },
   comoQuerSerChamado: { type: String, default: '' },
@@ -928,43 +859,13 @@ const adminWriteLimiter = rateLimit({
 
 app.use(adminWriteLimiter);
 
-const createSessionStore = () => {
-  if (process.env.NODE_ENV === 'test' || SKIP_MONGO_CONNECT) {
-    return null;
-  }
-
-  try {
-    if (!MongoStore || typeof MongoStore.create !== 'function') {
-      throw new Error('Adaptador connect-mongo incompatível com create().');
-    }
-
-    const sessionMongoUri = String(process.env.SESSION_STORE_MONGO_URI || '').trim();
-    const connectionOptions = sessionMongoUri
-      ? { mongoUrl: sessionMongoUri }
-      : {
-          clientPromise: mongoConnectionPromise.then(() => {
-            const client = getMongoClientFromMongoose();
-            if (!client) {
-              throw new Error('Cliente Mongo indisponivel para o session store.');
-            }
-            return client;
-          }),
-        };
-
-    return MongoStore.create({
-      ...connectionOptions,
-      collectionName: 'sessions',
-      ttl: 60 * 60 * 24,
-      autoRemove: 'native',
-      touchAfter: 24 * 3600,
-    });
-  } catch (err) {
-    console.error('Falha ao inicializar session store persistente:', err.message);
-    return null;
-  }
-};
-
-const sessionStore = createSessionStore();
+const sessionStore = createSessionStore({
+  env: process.env,
+  mongoose,
+  MongoStore,
+  skipMongoConnect: SKIP_MONGO_CONNECT,
+  logger: console,
+});
 if (!sessionStore) {
   console.warn('Session store persistente indisponivel. Usando MemoryStore (nao recomendado em producao).');
 }
@@ -974,28 +875,12 @@ if (sessionStore && typeof sessionStore.on === 'function') {
   });
 }
 
-const resolveSessionCookieSecure = () => {
-  const raw = String(process.env.SESSION_COOKIE_SECURE || '').trim().toLowerCase();
-  if (!raw) return 'auto';
-  if (['true', '1', 'on', 'yes'].includes(raw)) return true;
-  if (['false', '0', 'off', 'no'].includes(raw)) return false;
-  return 'auto';
-};
-
 // configure session
-app.use(session({
-  name: 'ejc.sid',
-  store: sessionStore || undefined,
-  secret: process.env.SESSION_SECRET || 'seu-supercódigo-secreto-mude-em-producao',
-  resave: false,
-  saveUninitialized: false,
-  proxy: true,
-  cookie: {
-    secure: resolveSessionCookieSecure(),
-    sameSite: 'lax',
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24,
-  },
+app.use(buildSessionMiddleware({
+  session,
+  sessionStore,
+  sessionSecret: runtimeConfig.sessionSecret,
+  env: process.env,
 }));
 
 // file upload config
@@ -1571,102 +1456,24 @@ const buildEncontroReportEntry = (entry, tiosEquipeMap = new Map()) => {
   };
 };
 
-const executeLgpdRetention = async (retentionDays = LGPD_RETENTION_DAYS_DEFAULT) => {
-  const safeDays = Number.isFinite(Number(retentionDays)) ? Math.max(30, Number(retentionDays)) : LGPD_RETENTION_DAYS_DEFAULT;
-  const cutoff = new Date(Date.now() - safeDays * 24 * 60 * 60 * 1000);
-  const statusElegiveis = APPROVAL_STATUSES.filter((item) => item !== 'aprovado');
+const executeLgpdRetention = (retentionDays = LGPD_RETENTION_DAYS_DEFAULT) => executeLgpdRetentionService({
+  retentionDays,
+  approvalStatuses: APPROVAL_STATUSES,
+  mongoose,
+  Cadastro,
+  Encontro,
+});
 
-  const runForModel = async (Model, modelName) => {
-    const docs = await Model.find({
-      dataCadastro: { $lt: cutoff },
-      anonimizadoEm: null,
-      statusAprovacao: { $in: statusElegiveis },
-    }).select('_id').lean();
+const ENABLE_BACKGROUND_JOBS = shouldEnableBackgroundJobs({
+  env: process.env,
+  skipMongoConnect: SKIP_MONGO_CONNECT,
+});
 
-    if (!docs.length) return 0;
-
-    const ops = docs.map((doc) => ({
-      updateOne: {
-        filter: { _id: doc._id },
-        update: {
-          $set: {
-            nomeCompleto: `ANONIMIZADO ${modelName}`,
-            comoQuerSerChamado: '',
-            cep: '',
-            estadoCivil: '',
-            nomeMae: '',
-            telefoneMae: '',
-            nomePai: '',
-            telefonePai: '',
-            paroquiaFrequenta: '',
-            participaMovimentoIgreja: '',
-            conhecidoInscricaoHoje: '',
-            conhecidoFezEjc: '',
-            inscricaoAnterior: '',
-            instrumentoMusical: '',
-            expectativaXixEjcCop: '',
-            logradouro: 'ANONIMIZADO',
-            bairro: 'ANONIMIZADO',
-            telefone: '',
-            intolerante: '',
-            email: `anon-${doc._id}@anon.local`,
-            instagram: '',
-            observacoes: '',
-            foto: '',
-            lgpdConsentimentoIp: '',
-            anonimizadoEm: new Date(),
-          },
-        },
-      },
-    }));
-
-    await Model.bulkWrite(ops, { ordered: false });
-    return ops.length;
-  };
-
-  const [cadastrosAnonimizados, encontrosAnonimizados] = await Promise.all([
-    runForModel(Cadastro, 'CADASTRO'),
-    runForModel(Encontro, 'ENCONTRO'),
-  ]);
-
-  return {
-    retentionDays: safeDays,
-    cutoff,
-    cadastrosAnonimizados,
-    encontrosAnonimizados,
-    totalAnonimizados: cadastrosAnonimizados + encontrosAnonimizados,
-  };
-};
-
-const ENABLE_BACKGROUND_JOBS = process.env.DISABLE_BACKGROUND_JOBS !== '1'
-  && process.env.NODE_ENV !== 'test'
-  && !SKIP_MONGO_CONNECT;
-
-if (ENABLE_BACKGROUND_JOBS) {
-  const lgpdInitialTimer = setTimeout(() => {
-    executeLgpdRetention().then((result) => {
-      if (result.totalAnonimizados > 0) {
-        console.log(`[LGPD] Anonimizacao automatica inicial: ${result.totalAnonimizados} registro(s).`);
-      }
-    }).catch((err) => {
-      console.error('[LGPD] Falha na anonimização automática inicial:', err.message);
-    });
-  }, 20 * 1000);
-
-  const lgpdDailyInterval = setInterval(() => {
-    executeLgpdRetention().then((result) => {
-      if (result.totalAnonimizados > 0) {
-        console.log(`[LGPD] Anonimizacao automatica diaria: ${result.totalAnonimizados} registro(s).`);
-      }
-    }).catch((err) => {
-      console.error('[LGPD] Falha na anonimização diária:', err.message);
-    });
-  }, 24 * 60 * 60 * 1000);
-
-  if (typeof lgpdInitialTimer.unref === 'function') lgpdInitialTimer.unref();
-  if (typeof lgpdDailyInterval.unref === 'function') lgpdDailyInterval.unref();
-}
-
+registerLgpdRetentionJobs({
+  enabled: ENABLE_BACKGROUND_JOBS,
+  executeLgpdRetentionJob: executeLgpdRetention,
+  logger: console,
+});
 const truncateText = (value, max = 42) => {
   const text = String(value || '').trim();
   if (!text) return '-';

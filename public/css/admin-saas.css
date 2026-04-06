@@ -3264,42 +3264,44 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       flex-direction: column; gap: 4px; flex: 1;
     }
     body.admin-panel.admin-manager-page .menu-link {
-      display: flex; align-items: center; gap: 14px; color: var(--t2);
+      display: flex; align-items: center; justify-content: flex-start; gap: 14px; color: var(--t2);
       text-decoration: none; border-radius: 10px; padding: 8px 10px;
+      min-height: 46px;
       font-size: .81rem; font-weight: 600;
       transition: background var(--rt), color var(--rt), transform var(--rt), border-color var(--rt), box-shadow var(--rt);
       border: 1px solid transparent; width: 100%; background: transparent; text-align: left; cursor: pointer;
       position: relative;
     }
     body.admin-panel.admin-manager-page .menu-link i {
-      width: 20px;
+      width: 22px;
+      min-width: 22px;
       text-align: center;
-      font-size: .86rem;
+      font-size: .92rem;
       flex: 0 0 auto;
       color: var(--t3);
-      transition: color var(--rt), transform 380ms cubic-bezier(0.16, 1.35, 0.3, 1), filter var(--rt);
+      transition: color var(--rt), transform 380ms cubic-bezier(0.16, 1.35, 0.3, 1), filter var(--rt), font-size 220ms ease;
       will-change: transform;
     }
 
     @media (hover: hover) and (pointer: fine) {
-      body.admin-panel.admin-manager-page .side-menu:has(.menu-link:hover) .menu-link i {
-        transform: scale(0.92);
-        filter: saturate(0.88);
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu:has(.menu-link:hover) .menu-link i {
+        transform: scale(0.98);
+        filter: saturate(0.92);
       }
 
-      body.admin-panel.admin-manager-page .side-menu .menu-link:hover i {
-        transform: translateX(1px) scale(1.22);
-        filter: saturate(1.12);
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu .menu-link:hover i {
+        transform: translateX(1px) scale(1.04);
+        filter: saturate(1.08);
       }
 
-      body.admin-panel.admin-manager-page .side-menu .menu-link:hover + .menu-link i,
-      body.admin-panel.admin-manager-page .side-menu .menu-link:has(+ .menu-link:hover) i {
-        transform: scale(1.1);
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu .menu-link:hover + .menu-link i,
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu .menu-link:has(+ .menu-link:hover) i {
+        transform: scale(1.01);
       }
 
-      body.admin-panel.admin-manager-page .side-menu .menu-link:hover + .menu-link + .menu-link i,
-      body.admin-panel.admin-manager-page .side-menu .menu-link:has(+ .menu-link + .menu-link:hover) i {
-        transform: scale(1.02);
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu .menu-link:hover + .menu-link + .menu-link i,
+      body.admin-panel.admin-manager-page .sidebar:hover .side-menu .menu-link:has(+ .menu-link + .menu-link:hover) i {
+        transform: scale(1);
       }
     }
 
@@ -3307,6 +3309,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-manager-page .menu-link i,
       body.admin-panel.admin-manager-page .sidebar::after {
         transition: none !important;
+        animation: none !important;
       }
     }
     body.admin-panel.admin-manager-page .menu-label {
@@ -3321,6 +3324,54 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       max-width: 160px;
       opacity: 1;
       transform: translateX(0);
+    }
+
+    @keyframes adminSidebarIconPulse {
+      0% {
+        transform: translateX(0) scale(1.08);
+        filter: drop-shadow(0 6px 14px rgba(59, 130, 246, 0.16));
+      }
+      50% {
+        transform: translateX(2px) scale(1.24);
+        filter: drop-shadow(0 10px 22px rgba(96, 165, 250, 0.28));
+      }
+      100% {
+        transform: translateX(0) scale(1.12);
+        filter: drop-shadow(0 7px 16px rgba(125, 211, 252, 0.2));
+      }
+    }
+
+    body.admin-panel.admin-manager-page .sidebar:not(:hover) .menu-link {
+      justify-content: flex-start;
+      gap: 12px;
+      padding-left: 12px;
+      padding-right: 8px;
+    }
+
+    body.admin-panel.admin-manager-page .sidebar:not(:hover) .menu-link i {
+      width: 30px;
+      min-width: 30px;
+      font-size: 1.18rem;
+      color: rgba(241, 245, 249, 0.98);
+      transform-origin: left center;
+      animation: adminSidebarIconPulse 2.35s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    }
+
+    body.admin-panel.admin-manager-page .sidebar:not(:hover) .menu-link:nth-child(2n) i {
+      animation-delay: .12s;
+    }
+
+    body.admin-panel.admin-manager-page .sidebar:not(:hover) .menu-link:nth-child(3n) i {
+      animation-delay: .24s;
+    }
+
+    body.admin-panel.admin-manager-page .sidebar:hover .menu-link i {
+      width: 22px;
+      min-width: 22px;
+      font-size: .92rem;
+      transform: scale(1);
+      filter: none;
+      animation: none;
     }
 
     body.admin-panel.admin-manager-page .sidebar:not(:hover) .menu-link:hover::after {

@@ -7,9 +7,10 @@
 3. Defina SESSION_SECRET com pelo menos 24 caracteres.
 4. Defina MONGODB_URI para o banco principal.
 5. Defina SESSION_STORE_MONGO_URI se quiser separar a persistencia de sessao do banco principal.
-6. Defina VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY em producao.
+6. Defina VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY em producao (recomendado; se ausentes o app sobe em modo degradado).
 7. Se houver proxy reverso, ajuste TRUST_PROXY. Em producao o default ja e 1.
 8. Mantenha SESSION_COOKIE_SECURE=auto, ou force true se todo o trafego for HTTPS.
+9. Configure o health check da plataforma em `/healthz`; use `/readyz` apenas para validar Mongo conectado.
 
 ## 2. Instalacao
 

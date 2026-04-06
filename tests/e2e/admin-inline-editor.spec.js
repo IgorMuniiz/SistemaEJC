@@ -11,7 +11,6 @@
  *       testes são pulados automaticamente.
  */
 
-// eslint-disable-next-line import/no-extraneous-dependencies
 const { test, expect } = require('@playwright/test');
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
