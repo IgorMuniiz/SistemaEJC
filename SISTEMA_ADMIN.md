@@ -23,7 +23,6 @@
    - Novo campo `aprovado` (boolean, default: false) no schema Encontro
 
 ### 5. **Scripts de Setup**
-   - `setup-admin.js` - Cria admin padrão (admin/admin)
    - `create-admin.js` - Cria admin interativamente
 
 ---
@@ -32,19 +31,8 @@
 
 ### **Passo 1: Criar um Admin**
 
-Execute um destes comandos:
-
-**Opção A (Rápido - admin padrão):**
 ```bash
-node setup-admin.js
-```
-Cria admin com credenciais:
-- Usuário: `admin`
-- Senha: `admin`
-
-**Opção B (Personalizado):**
-```bash
-node create-admin.js
+npm run admin:create
 ```
 Permite escolher username e senha customizados
 
@@ -137,7 +125,7 @@ Se quiser adicionar mais funcionalidades depois:
 
 ## ⚠️ Importante
 
-**Mude a senha padrão!** Se usar `setup-admin.js`, depois de fazer login vá em seu perfil (futuro) e troque a senha de "admin" para algo seguro.
+Use [.env.example](.env.example) como base e revise [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md) antes de publicar em outra maquina.
 
 ---
 
@@ -145,6 +133,6 @@ Se quiser adicionar mais funcionalidades depois:
 
 - Verifique o console do servidor para erros
 - Certifique-se de que MongoDB está rodando
-- Verifique se o admin foi criado: `node setup-admin.js`
+- Verifique se o admin foi criado: `npm run admin:create`
 
 Aproveite! 🎉

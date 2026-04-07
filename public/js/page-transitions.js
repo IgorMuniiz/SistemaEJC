@@ -21,20 +21,20 @@
       }
 
       body {
-        opacity: 0;
-        transform: translate3d(0, 12px, 0) scale(0.994);
-        transition: opacity 220ms ease-out, transform 340ms cubic-bezier(0.16, 1, 0.3, 1);
+        opacity: 1;
+        transform: none;
+        transition: opacity 110ms ease-out, transform 140ms cubic-bezier(0.16, 1, 0.3, 1);
         will-change: opacity, transform;
       }
 
       body.${PAGE_READY_CLASS} {
         opacity: 1;
-        transform: translate3d(0, 0, 0) scale(1);
+        transform: translate3d(0, 0, 0);
       }
 
       body.${PAGE_LEAVING_CLASS} {
-        opacity: 0;
-        transform: translate3d(0, 16px, 0) scale(0.992);
+        opacity: 0.35;
+        transform: translate3d(0, 4px, 0);
         pointer-events: none;
       }
 
@@ -54,12 +54,8 @@
         z-index: 9999;
         pointer-events: none;
         opacity: 0;
-        background:
-          radial-gradient(circle at 18% 20%, rgba(138, 215, 204, 0.16), transparent 32%),
-          radial-gradient(circle at 82% 14%, rgba(213, 159, 102, 0.16), transparent 34%),
-          linear-gradient(160deg, rgba(6, 8, 15, 0.08), rgba(6, 8, 15, 0.28));
-        backdrop-filter: blur(0px);
-        transition: opacity 180ms ease-out, backdrop-filter 260ms ease-out;
+        background: rgba(6, 8, 15, 0.35);
+        transition: opacity 100ms ease-out;
       }
 
       #${PROGRESS_ID} {
@@ -73,7 +69,7 @@
         pointer-events: none;
         background: linear-gradient(90deg, #8ad7cc 0%, #d59f66 50%, #8b5cf6 100%);
         box-shadow: 0 0 16px rgba(141, 108, 246, 0.48);
-        transition: width 360ms cubic-bezier(0.2, 1, 0.3, 1), opacity 180ms ease-out;
+        transition: width 180ms cubic-bezier(0.2, 1, 0.3, 1), opacity 120ms ease-out;
       }
 
       body.${PAGE_LEAVING_CLASS} #${PROGRESS_ID} {
@@ -194,8 +190,7 @@
       }
 
       body.${PAGE_LEAVING_CLASS} #${OVERLAY_ID} {
-        opacity: 0.92;
-        backdrop-filter: blur(6px);
+        opacity: 1;
       }
 
       .tab-content.app-tab-shell {
@@ -207,11 +202,11 @@
       }
 
       .tab-content.app-tab-shell > .tab-pane.fade {
-        transition: opacity 160ms ease-out !important;
+        transition: opacity 100ms ease-out !important;
       }
 
       .tab-content.app-tab-shell > .tab-pane.${TAB_ACTIVE_CLASS} {
-        animation: appTabReveal 280ms cubic-bezier(0.16, 1, 0.3, 1);
+        animation: appTabReveal 150ms cubic-bezier(0.16, 1, 0.3, 1);
       }
 
       @keyframes appTabReveal {
@@ -377,9 +372,9 @@
     if (!bar) return;
     bar.style.opacity = '1';
     bar.style.width = '28%';
-    window.setTimeout(() => {
-      bar.style.width = '72%';
-    }, 80);
+      window.setTimeout(() => {
+        bar.style.width = '72%';
+      }, 40);
   }
 
   function completeProgress() {
@@ -389,7 +384,7 @@
     window.setTimeout(() => {
       bar.style.opacity = '0';
       bar.style.width = '0';
-    }, 140);
+    }, 80);
   }
 
   function markSubmitButtonsAsLoading(form) {
@@ -650,13 +645,8 @@
 
       event.preventDefault();
       const nextHref = link.href;
-      document.body.classList.add(PAGE_LEAVING_CLASS);
-      startProgress();
       trackUx('nav_click', { href: nextHref });
-      announce('Abrindo pagina.');
-      window.setTimeout(() => {
-        window.location.href = nextHref;
-      }, 180);
+      window.location.href = nextHref;
     });
   }
 
@@ -672,9 +662,7 @@
     });
 
     window.addEventListener('beforeunload', () => {
-      if (document.body.classList.contains(PAGE_LEAVING_CLASS)) {
-        startProgress();
-      }
+      // sem ação ao sair
     });
   }
 

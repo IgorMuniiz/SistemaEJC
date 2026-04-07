@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -33,6 +33,9 @@
 
       <button type="button" class="menu-btn" data-required-permission="encontros.gerenciar" onclick="gerarQuadrante(this)">
         <i class="fas fa-file-pdf me-2"></i>Gerar Quadrante
+      </button>
+      <button type="button" class="menu-btn" data-required-permission="encontros.gerenciar" onclick="gerarCrachasEjc(this)">
+        <i class="fas fa-id-badge me-2"></i>Gerar Crachás
       </button>
 
       <a class="btn btn-light w-100 mt-3" href="/admin/gerenciar-cadastros">
@@ -95,6 +98,13 @@
           <span class="encontro-module-icon"><i class="fas fa-file-pdf"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Quadrante</span>
+          </span>
+          <span class="encontro-module-count"><%= totalPessoasVinculadas %></span>
+        </button>
+        <button type="button" class="encontro-module-card encontro-module-card-action" data-required-permission="encontros.gerenciar" onclick="gerarCrachasEjc(this)">
+          <span class="encontro-module-icon"><i class="fas fa-id-badge"></i></span>
+          <span class="encontro-module-copy">
+            <span class="encontro-module-title">Crachás</span>
           </span>
           <span class="encontro-module-count"><%= totalPessoasVinculadas %></span>
         </button>
@@ -505,6 +515,9 @@
                 <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirCirculo('${escapeHtml(String(circulo._id))}', '${escapeHtml(circulo.nome)}')">
                   <i class="fas fa-trash me-1"></i>Excluir
                 </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-cracha" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'crachas', this)">
+                  <i class="fas fa-id-badge me-1"></i>Crachás
+                </button>
                 <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('circulo', '${escapeHtml(String(circulo._id))}', 'excel', this)">
                   <i class="fas fa-file-excel me-1"></i>Excel
                 </button>
@@ -588,6 +601,9 @@
                 </button>
                 <button type="button" class="btn btn-sm btn-danger-soft" onclick="excluirEquipe('${escapeHtml(String(equipe._id))}', '${escapeHtml(equipe.nome)}')">
                   <i class="fas fa-trash me-1"></i>Excluir
+                </button>
+                <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-cracha" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'crachas', this)">
+                  <i class="fas fa-id-badge me-1"></i>Crachás
                 </button>
                 <button type="button" class="btn btn-sm entity-export-btn entity-export-btn-excel" onclick="abrirExportacao('equipe', '${escapeHtml(String(equipe._id))}', 'excel', this)">
                   <i class="fas fa-file-excel me-1"></i>Excel
@@ -909,6 +925,29 @@
           delete botao.dataset.originalHtml;
         }
       }, 1800);
+
+      return restoreTimer;
+    }
+
+    function gerarCrachasEjc(botao) {
+      if (!ensurePermission('encontros.gerenciar')) return;
+      let restoreTimer = null;
+      if (botao) {
+        botao.disabled = true;
+        botao.dataset.originalHtml = botao.innerHTML;
+        botao.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Gerando...';
+      }
+
+      const url = `/admin/encontros/${encodeURIComponent(ejcId)}/export/crachas/pdf`;
+      window.open(url, '_blank');
+
+      restoreTimer = setTimeout(() => {
+        if (botao) {
+          botao.disabled = false;
+          botao.innerHTML = botao.dataset.originalHtml || botao.innerHTML;
+          delete botao.dataset.originalHtml;
+        }
+      }, 1600);
 
       return restoreTimer;
     }

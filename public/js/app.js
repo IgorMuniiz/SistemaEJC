@@ -768,7 +768,7 @@ function GenericForm() {
           </div>
           <div className="mb-3">
             <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/png, image/jpeg" onChange={handleF} required />
+            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
           </div>
         </div>
 
@@ -1017,7 +1017,7 @@ function GenericForm() {
           </div>
           <div className="mb-3">
             <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/png, image/jpeg" onChange={handleF} required />
+            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
           </div>
         </div>
 
@@ -1245,7 +1245,7 @@ function GenericForm() {
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/png, image/jpeg" onChange={handleF} required />
+            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
           </div>
           <div className="mb-3">
             <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
