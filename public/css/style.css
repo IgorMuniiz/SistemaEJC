@@ -76,6 +76,7 @@ body {
   align-items: center;
   justify-content: center;
   color: var(--color-text-light);
+  color-scheme: dark;
   position: relative;
   overflow-x: hidden;
 }
@@ -1357,6 +1358,22 @@ footer {
 
 html {
   scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 a,
@@ -1405,8 +1422,50 @@ input[type='text'],
 input[type='email'],
 input[type='tel'],
 input[type='number'],
-input[type='date'] {
+input[type='date'],
+input[type='password'] {
   border-radius: 12px;
+  color-scheme: dark;
+  -webkit-text-fill-color: #ffffff;
+  caret-color: #ffffff;
+  background-clip: padding-box;
+}
+
+.form-select:not([multiple]),
+select:not([multiple]) {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23dbeafe' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  background-repeat: no-repeat !important;
+  background-position: right .95rem center !important;
+  background-size: 14px 10px !important;
+}
+
+select option,
+select optgroup {
+  background: #0f1730 !important;
+  color: #ffffff !important;
+}
+
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(1.15);
+  opacity: .88;
+  cursor: pointer;
+}
+
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover,
+.form-control:-webkit-autofill:focus,
+.form-select:-webkit-autofill,
+textarea:-webkit-autofill,
+input:-webkit-autofill {
+  -webkit-text-fill-color: #ffffff !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(9, 18, 40, 0.92) inset !important;
+  box-shadow: 0 0 0 1000px rgba(9, 18, 40, 0.92) inset !important;
+  border-color: rgba(78, 142, 255, 0.72) !important;
+  transition: background-color 9999s ease-out 0s;
 }
 
 .form-control::placeholder,

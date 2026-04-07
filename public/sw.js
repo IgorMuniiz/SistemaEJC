@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ejc-cache-v2';
+const CACHE_NAME = 'ejc-cache-v3-adminfix';
 const ASSETS_TO_CACHE = [
   '/',
   '/inscricao',

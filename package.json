@@ -6,7 +6,12 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "lint": "npx --yes eslint app.js src tests",
+    "format": "npx --yes prettier --write \"app.js\" \"src/**/*.js\" \"tests/**/*.js\" \"views/**/*.ejs\" \"public/css/**/*.css\" \"*.md\"",
+    "format:check": "npx --yes prettier --check \"app.js\" \"src/**/*.js\" \"tests/**/*.js\" \"views/**/*.ejs\" \"public/css/**/*.css\" \"*.md\"",
+    "admin:create": "node create-admin.js",
     "test": "node --test tests/**/*.test.js",
+    "migrate:remove-subequipe-serviu": "node scripts/migrate-remove-subequipe-serviu.js",
     "check:syntax": "node --check app.js",
     "check": "npm run check:syntax && npm run test",
     "predeploy": "npm run check",

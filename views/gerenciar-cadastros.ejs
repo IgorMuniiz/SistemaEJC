@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-6">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -33,6 +33,30 @@
     const alergiaDescricao = String((c && c.alergiaDescricao) || '').trim();
     if (!ehAlergico) return 'Nao';
     return alergiaDescricao || 'Sim (nao informado)';
+  }; %>
+  <% const escapeHtmlServer = function(value){
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }; %>
+  <% const getSubequipesVinculadas = function(c){
+    const lista = Array.isArray(c && c.subequipeCoordenou) ? c.subequipeCoordenou : [];
+    return lista.map(function(item){ return String(item || '').trim(); }).filter(Boolean);
+  }; %>
+  <% const renderSubequipesChips = function(c){
+    const subequipes = getSubequipesVinculadas(c);
+    if (!subequipes.length) {
+      return '<span class="subeq-chip subeq-chip-empty">Sem vínculo</span>';
+    }
+
+    const chips = subequipes.map(function(nome){
+      return '<span class="subeq-chip">' + escapeHtmlServer(nome) + '</span>';
+    }).join('');
+
+    return '<div class="subeq-chip-list">' + chips + '</div>';
   }; %>
   <% const encontristasAprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'aprovado'; }); %>
   <% const encontristasReprovados = (encontristas || []).filter(function(c){ return statusCadastroGrupo(c) === 'reprovado'; }); %>
@@ -66,10 +90,63 @@
   <% const adminPermissionOptionsList = Array.isArray(adminPermissionOptions) ? adminPermissionOptions : []; %>
   <% const adminRoleDefaults = adminRoleDefaultPermissions || {}; %>
   <% const adminNivelAtual = adminNivelAcesso || 'super_admin'; %>
+  <% const gastosResumoData = gastosResumo || { quantidade: 0, total: 0, encontro: 0, equipes: 0 }; %>
+  <% const gastoCategoryOptionsList = Array.isArray(gastoCategoryOptions) ? gastoCategoryOptions : []; %>
+  <% const fluxoResumoData = fluxoCaixaResumo || { quantidade: 0, entradas: 0, saidas: 0, saldo: 0 }; %>
+  <% const fluxoMensalResumoData = fluxoCaixaMensalResumo || { saldoInicial: 0, entradasMes: 0, saidasMes: 0, saldoFinal: 0, mesReferencia: '' }; %>
+  <% const fluxoCategoryOptionsList = Array.isArray(fluxoCategoryOptions) ? fluxoCategoryOptions : []; %>
+  <% const gastosLista = Array.isArray(gastos) ? gastos : []; %>
+  <% const hojeGastosRef = new Date(); %>
+  <% const gastosMesAtualLista = gastosLista.filter(function(item){
+    if (!item || !item.dataGasto) return false;
+    const dataItem = new Date(item.dataGasto);
+    return !Number.isNaN(dataItem.getTime())
+      && dataItem.getFullYear() === hojeGastosRef.getFullYear()
+      && dataItem.getMonth() === hojeGastosRef.getMonth();
+  }); %>
+  <% const totalGastosMesAtual = gastosMesAtualLista.reduce(function(total, item){ return total + (Number(item && item.valor) || 0); }, 0); %>
+  <% const maiorGastoMesAtual = gastosMesAtualLista.reduce(function(maior, item){
+    const valorItem = Number(item && item.valor) || 0;
+    if (!maior || valorItem > (Number(maior.valor) || 0)) return item;
+    return maior;
+  }, null); %>
+  <% const gastoMedioGeral = gastosResumoData.quantidade ? (Number(gastosResumoData.total || 0) / Number(gastosResumoData.quantidade || 1)) : 0; %>
+  <% const percentualGastosEquipes = Number(gastosResumoData.total || 0) > 0 ? Math.round((Number(gastosResumoData.equipes || 0) / Number(gastosResumoData.total || 1)) * 100) : 0; %>
+  <% const percentualGastosEncontro = Number(gastosResumoData.total || 0) > 0 ? Math.max(0, 100 - percentualGastosEquipes) : 0; %>
+  <% const totalFluxoEntradas = Number(fluxoResumoData.entradas || 0); %>
+  <% const totalFluxoSaidas = Number(fluxoResumoData.saidas || 0); %>
+  <% const totalFluxoMovimentado = totalFluxoEntradas + totalFluxoSaidas; %>
+  <% const percentualFluxoEntradas = totalFluxoMovimentado > 0 ? Math.round((totalFluxoEntradas / totalFluxoMovimentado) * 100) : 0; %>
+  <% const percentualFluxoSaidas = totalFluxoMovimentado > 0 ? Math.max(0, 100 - percentualFluxoEntradas) : 0; %>
+  <% const percentualGastosEncontroBar = Number(gastosResumoData.total || 0) > 0 ? Math.round((Number(gastosResumoData.encontro || 0) / Number(gastosResumoData.total || 1)) * 100) : 0; %>
+  <% const percentualGastosEquipesBar = Number(gastosResumoData.total || 0) > 0 ? Math.max(0, 100 - percentualGastosEncontroBar) : 0; %>
+  <% const gastoCategoriasResumo = (gastosLista || []).reduce(function(acc, item){
+    const categoria = String((item && item.categoria) || 'Outros').trim() || 'Outros';
+    acc[categoria] = (acc[categoria] || 0) + (Number(item && item.valor) || 0);
+    return acc;
+  }, {}); %>
+  <% const gastoCategoriasOrdenadas = Object.keys(gastoCategoriasResumo)
+    .map(function(categoria){ return { categoria: categoria, valor: Number(gastoCategoriasResumo[categoria] || 0) }; })
+    .sort(function(a, b){ return b.valor - a.valor; })
+    .slice(0, 4); %>
+  <% const gastoCategoriaMaiorValor = gastoCategoriasOrdenadas.length ? Number(gastoCategoriasOrdenadas[0].valor || 0) : 0; %>
+  <% const extratoMesReferenciaPrincipal = fluxoMensalResumoData.mesReferencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }); %>
+  <% const extratoMaxValorPrincipal = Math.max(
+    1,
+    Math.abs(Number(fluxoMensalResumoData.saldoInicial || 0)),
+    Math.abs(Number(fluxoMensalResumoData.entradasMes || 0)),
+    Math.abs(Number(fluxoMensalResumoData.saidasMes || 0)),
+    Math.abs(Number(fluxoMensalResumoData.saldoFinal || 0))
+  ); %>
   <% const podeGerenciarAdmins = adminPermissoesLista.includes('admins.gerenciar'); %>
   <% const podeVisualizarPainel = adminPermissoesLista.includes('painel.visualizar'); %>
+  <% const abasPermitidasPainel = ['principal', 'encontristas', 'encontreiros', 'tios', 'aprovacoes', 'encontros', 'subequipes', 'gastos', 'administradores']; %>
+  <% const abaInicialGerenciarSafe = typeof abaInicialGerenciar !== 'undefined' ? abaInicialGerenciar : 'principal'; %>
+  <% const modoPaginaAdministradoresSafe = typeof modoPaginaAdministradores !== 'undefined' ? !!modoPaginaAdministradores : false; %>
+  <% const abaInicialPainel = abasPermitidasPainel.includes(String(abaInicialGerenciarSafe || '').toLowerCase()) ? String(abaInicialGerenciarSafe || '').toLowerCase() : 'principal'; %>
+  <% const isAbaAtiva = function(abaId){ return abaInicialPainel === abaId; }; %>
 
-  <div class="admin-shell">
+  <div class="admin-shell <%= modoPaginaAdministradoresSafe ? 'admin-shell-admins-only' : '' %>">
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="brand-inline">
@@ -79,17 +156,19 @@
       </div>
 
       <nav class="side-menu">
-          <button type="button" class="menu-link" data-menu-title="Principal" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
-          <button type="button" class="menu-link" data-menu-title="Encontristas" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
-          <button type="button" class="menu-link" data-menu-title="Encontreiros" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
-          <button type="button" class="menu-link" data-menu-title="Tios" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
-          <button type="button" class="menu-link menu-link-aprovacoes" data-menu-title="Aprovações" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')" title="<%= pendenciasTituloMenu %>">
+          <button type="button" class="menu-link" data-menu-title="Principal" data-tab-target="principal-tab" data-required-permission="painel.visualizar"><i class="fas fa-chart-line"></i><span class="menu-label">Principal</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontristas" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-user"></i><span class="menu-label">Encontristas</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontreiros" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-user-group"></i><span class="menu-label">Encontreiros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Tios" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar"><i class="fas fa-heart"></i><span class="menu-label">Tios</span></button>
+          <button type="button" class="menu-link menu-link-aprovacoes" data-menu-title="Aprovações" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" title="<%= pendenciasTituloMenu %>">
             <i class="fas fa-check-circle"></i>
             <span class="menu-label">Aprovações</span>
             <span class="menu-alert-counter <%= pendenciasClasseMenu %>"><%= totalPendencias %></span>
           </button>
-          <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
-          <button type="button" class="menu-link" data-menu-title="Administradores" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></button>
+          <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
+          <button type="button" class="menu-link" data-menu-title="Sub-Equipes" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar"><i class="fas fa-diagram-project"></i><span class="menu-label">Sub-Equipes</span></button>
+          <button type="button" class="menu-link" data-menu-title="Financeiro" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar"><i class="fas fa-wallet"></i><span class="menu-label">Financeiro</span></button>
+          <a href="#administradores" class="menu-link" data-menu-title="Administradores" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></a>
           <a href="/admin/logout" class="menu-link" data-menu-title="Sair"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
         </nav>
 
@@ -104,8 +183,8 @@
             <h1 class="workspace-title">
               <span class="workspace-title-icon" aria-hidden="true"><i class="fas fa-users-cog"></i></span>
               <span class="workspace-title-copy">
-                <span class="workspace-title-kicker">Painel</span>
-                <span class="workspace-title-main">Gestão Administrativa</span>
+                <span class="workspace-title-kicker"><%= modoPaginaAdministradoresSafe ? 'Administradores' : 'Painel' %></span>
+                <span class="workspace-title-main"><%= modoPaginaAdministradoresSafe ? 'Gestão de Administradores' : 'Gestão Administrativa' %></span>
               </span>
             </h1>
             <div class="workspace-hero-strip" aria-label="Destaques da gestão">
@@ -156,7 +235,7 @@
         </header>
 
         <section class="manager-module-grid" aria-label="Atalhos da gestão">
-          <button type="button" class="manager-module-card" data-tab-target="principal-tab" data-required-permission="painel.visualizar" onclick="abrirAba('principal-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="principal-tab" data-required-permission="painel.visualizar">
             <span class="manager-module-icon"><i class="fas fa-chart-line"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Principal</span>
@@ -164,7 +243,7 @@
             </span>
             <span class="manager-module-count"><%= totalCadastrosVisiveis %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontristas-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontristas-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-user"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontristas</span>
@@ -172,7 +251,7 @@
             </span>
             <span class="manager-module-count"><%= (encontristas || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('encontreiros-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontreiros-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-user-group"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontreiros</span>
@@ -180,7 +259,7 @@
             </span>
             <span class="manager-module-count"><%= (encontreirosIndividuais || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar" onclick="abrirAba('tios-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="tios-tab" data-required-permission="cadastros.visualizar">
             <span class="manager-module-icon"><i class="fas fa-heart"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Tios</span>
@@ -188,7 +267,7 @@
             </span>
             <span class="manager-module-count"><%= (tios || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar" onclick="abrirAba('aprovacoes-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="aprovacoes-tab" data-required-permission="cadastros.aprovar">
             <span class="manager-module-icon"><i class="fas fa-check-circle"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Aprovações</span>
@@ -196,7 +275,7 @@
             </span>
             <span class="manager-module-count"><%= totalPendencias %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar" onclick="abrirAba('encontros-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar">
             <span class="manager-module-icon"><i class="fas fa-calendar-days"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Encontros</span>
@@ -204,20 +283,36 @@
             </span>
             <span class="manager-module-count"><%= (ejcs || []).length %></span>
           </button>
-          <button type="button" class="manager-module-card" data-tab-target="admins-tab" data-required-permission="admins.gerenciar" onclick="abrirAba('admins-tab')">
+          <button type="button" class="manager-module-card" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar">
+            <span class="manager-module-icon"><i class="fas fa-diagram-project"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Sub-Equipes</span>
+              <span class="manager-module-subtitle">Criação e vínculo de encontreiros e tios</span>
+            </span>
+            <span class="manager-module-count"><%= (subequipes || []).length %></span>
+          </button>
+          <button type="button" class="manager-module-card" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar">
+            <span class="manager-module-icon"><i class="fas fa-wallet"></i></span>
+            <span class="manager-module-copy">
+              <span class="manager-module-title">Financeiro</span>
+              <span class="manager-module-subtitle">Controle financeiro do encontro e das equipes</span>
+            </span>
+            <span class="manager-module-count"><%= gastosResumoData.quantidade %></span>
+          </button>
+          <a href="#administradores" class="manager-module-card" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true">
             <span class="manager-module-icon"><i class="fas fa-user-shield"></i></span>
             <span class="manager-module-copy">
               <span class="manager-module-title">Administradores</span>
               <span class="manager-module-subtitle">Permissões, bloqueios e importações</span>
             </span>
             <span class="manager-module-count"><%= (administradores || []).length %></span>
-          </button>
+          </a>
         </section>
         <div class="manager-shortcut-hint" aria-label="Atalhos de teclado">
           <span class="manager-shortcut-title"><i class="fas fa-keyboard"></i>Atalhos</span>
           <div class="manager-shortcut-list" role="list">
             <span class="manager-shortcut-chip" role="listitem">
-              <kbd>Alt+1..7</kbd>
+              <kbd>Alt+1..9</kbd>
               <small>Alternar entre abas</small>
             </span>
             <span class="manager-shortcut-chip" role="listitem">
@@ -234,7 +329,7 @@
         <section class="content-card content-card-premium">
         <ul class="nav nav-tabs" id="cadastroTabs" role="tablist">
           <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" data-required-permission="painel.visualizar" type="button">
+            <button class="nav-link <%= isAbaAtiva('principal') ? 'active' : '' %>" id="principal-tab" data-bs-toggle="tab" data-bs-target="#principal" data-required-permission="painel.visualizar" type="button" aria-selected="<%= isAbaAtiva('principal') ? 'true' : 'false' %>">
               <i class="fas fa-chart-line me-1"></i>Principal
             </button>
           </li>
@@ -264,100 +359,251 @@
             </button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="admins-tab" data-bs-toggle="tab" data-bs-target="#admins" data-required-permission="admins.gerenciar" type="button">
+            <button class="nav-link" id="subequipes-tab" data-bs-toggle="tab" data-bs-target="#subequipes" data-required-permission="equipes.gerenciar" type="button">
+              <i class="fas fa-diagram-project me-1"></i>Sub-Equipes (<%= (subequipes || []).length %>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="gastos-tab" data-bs-toggle="tab" data-bs-target="#gastos" data-required-permission="gastos.gerenciar" type="button">
+              <i class="fas fa-wallet me-1"></i>Financeiro (<%= gastosResumoData.quantidade + (fluxoResumoData.quantidade || 0) %>)
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link <%= isAbaAtiva('administradores') ? 'active' : '' %>" id="administradores-tab" data-bs-toggle="tab" data-bs-target="#administradores" data-required-permission="admins.gerenciar" type="button" aria-selected="<%= isAbaAtiva('administradores') ? 'true' : 'false' %>">
               <i class="fas fa-user-shield me-1"></i>Administradores (<%= administradores.length %>)
             </button>
           </li>
         </ul>
 
         <div class="tab-content" id="cadastroTabsContent">
+          <% if (dadosLimitados) { %>
+            <div class="alert alert-warning mb-3" role="alert">
+              Visualizacao limitada a <strong><%= listLimit %></strong> registros por lista para manter desempenho.
+              Totais atuais: encontristas <strong><%= encontristasTotal %></strong> e encontreiros/tios <strong><%= encontreirosTotal %></strong>.
+              Use filtros de escopo ou parametro <code>?listLimit=</code> (max 5000) quando necessario.
+            </div>
+          <% } %>
           <!-- TAB: PRINCIPAL -->
-          <div class="tab-pane fade show active" id="principal" data-required-permission="painel.visualizar" role="tabpanel">
-            <div class="tab-workspace-head tab-workspace-head-principal">
-              <div>
-                <p class="tab-kicker">Painel Executivo</p>
-                <h5><i class="fas fa-gauge-high me-2"></i>Dashboard Premium do Sistema</h5>
+          <div class="tab-pane fade <%= isAbaAtiva('principal') ? 'show active' : '' %>" id="principal" data-required-permission="painel.visualizar" role="tabpanel">
+            <section class="principal-lite-hero">
+              <div class="principal-lite-title-wrap">
+                <h3>Bem-vindo ao Painel do EJC</h3>
+                <p>Gerencie inscrições, equipes, gastos e status do encontro em um único lugar.</p>
               </div>
-              <div class="tab-head-chips">
-                <span class="tab-chip">Total operacional: <%= totalCadastrosVisiveis %></span>
-                <span class="tab-chip tab-chip-ok">Aprovação: <%= taxaAprovacaoGeral %>%</span>
-                <span class="tab-chip tab-chip-pending">Pendências: <%= totalPendenciasGeral %></span>
+              <div class="principal-lite-kpis">
+                <article class="principal-lite-kpi kpi-blue">
+                  <span>Inscritos</span>
+                  <strong><%= totalCadastrosVisiveis %></strong>
+                  <small>Novos: <%= atividadeRecente.length %></small>
+                </article>
+                <article class="principal-lite-kpi kpi-orange">
+                  <span>Equipes</span>
+                  <strong><%= (equipes || []).length %></strong>
+                  <small>Sub-equipes: <%= (subequipes || []).length %></small>
+                </article>
+                <article class="principal-lite-kpi kpi-green">
+                  <span>Confirmados</span>
+                  <strong><%= totalAprovadosGeral %></strong>
+                  <small>Taxa: <%= taxaAprovacaoGeral %>%</small>
+                </article>
+                <article class="principal-lite-kpi kpi-red">
+                  <span>Pendências</span>
+                  <strong><%= totalPendenciasGeral %></strong>
+                  <small>Aguardando ação</small>
+                </article>
               </div>
-            </div>
 
-            <div class="principal-kpi-grid">
-              <article class="principal-kpi-card principal-kpi-card-primary">
-                <span class="principal-kpi-label">Cadastros Monitorados</span>
-                <strong class="principal-kpi-value"><%= totalCadastrosVisiveis %></strong>
-                <small class="principal-kpi-meta">Encontristas, encontreiros e tios em uma única visão</small>
-              </article>
-              <article class="principal-kpi-card principal-kpi-card-success">
-                <span class="principal-kpi-label">Aprovados</span>
-                <strong class="principal-kpi-value"><%= totalAprovadosGeral %></strong>
-                <small class="principal-kpi-meta"><%= taxaAprovacaoGeral %>% do volume total</small>
-              </article>
-              <article class="principal-kpi-card principal-kpi-card-warning">
-                <span class="principal-kpi-label">Pendentes</span>
-                <strong class="principal-kpi-value"><%= totalPendenciasGeral %></strong>
-                <small class="principal-kpi-meta"><%= taxaPendenciaGeral %>% aguardando decisão</small>
-              </article>
-              <article class="principal-kpi-card principal-kpi-card-danger">
-                <span class="principal-kpi-label">Reprovados</span>
-                <strong class="principal-kpi-value"><%= totalReprovadosGeral %></strong>
-                <small class="principal-kpi-meta"><%= taxaReprovacaoGeral %>% fora do fluxo ativo</small>
-              </article>
-            </div>
+            </section>
 
-            <div class="principal-ops-grid">
-              <section class="principal-panel-card">
-                <div class="principal-panel-head">
-                  <h6><i class="fas fa-filter-circle-dollar me-2"></i>Funil Operacional</h6>
-                  <span>Atualizado em tempo real</span>
+            <div class="principal-lite-grid">
+              <section class="principal-lite-panel principal-lite-panel-main">
+                <div class="principal-lite-panel-head">
+                  <h6>Gráficos de Controle de Gastos</h6>
+                  <span>Visão financeira consolidada</span>
                 </div>
-                <div class="principal-funnel-list">
-                  <div class="principal-funnel-item">
-                    <div class="principal-funnel-row"><strong>Aprovados</strong><span><%= totalAprovadosGeral %> registro(s)</span></div>
-                    <div class="principal-funnel-bar"><span style="width: <%= taxaAprovacaoGeral %>%;"></span></div>
+
+                <div class="principal-finance-board">
+                  <div class="principal-finance-board-head">
+                    <h6>Controle de Gastos</h6>
+                    <span>Gráficos financeiros</span>
                   </div>
-                  <div class="principal-funnel-item">
-                    <div class="principal-funnel-row"><strong>Pendentes</strong><span><%= totalPendenciasGeral %> registro(s)</span></div>
-                    <div class="principal-funnel-bar"><span class="is-pending" style="width: <%= taxaPendenciaGeral %>%;"></span></div>
-                  </div>
-                  <div class="principal-funnel-item">
-                    <div class="principal-funnel-row"><strong>Reprovados</strong><span><%= totalReprovadosGeral %> registro(s)</span></div>
-                    <div class="principal-funnel-bar"><span class="is-rejected" style="width: <%= taxaReprovacaoGeral %>%;"></span></div>
-                  </div>
-                </div>
 
-                <div class="principal-quick-actions">
-                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('aprovacoes-tab')"><i class="fas fa-check-circle me-1"></i>Ir para Aprovações</button>
-                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('encontros-tab')"><i class="fas fa-calendar-days me-1"></i>Ir para Encontros</button>
-                  <button class="btn btn-sm btn-outline-light" type="button" onclick="abrirAba('admins-tab')"><i class="fas fa-user-shield me-1"></i>Ir para Admins</button>
-                </div>
-              </section>
+                  <div class="principal-finance-kpi-grid">
+                    <article class="principal-finance-kpi-card is-balance">
+                      <div class="kpi-icon"><i class="fas fa-wallet"></i></div>
+                      <small>Saldo atual</small>
+                      <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Posição consolidada do caixa</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-exit">
+                      <div class="kpi-icon"><i class="fas fa-arrow-trend-down"></i></div>
+                      <small>Saídas lançadas</small>
+                      <strong><%= totalFluxoSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span><%= gastosResumoData.quantidade || 0 %> despesa(s) registradas</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-entry">
+                      <div class="kpi-icon"><i class="fas fa-arrow-trend-up"></i></div>
+                      <small>Entradas</small>
+                      <strong><%= totalFluxoEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Receitas e repasses no caixa</span>
+                    </article>
+                    <article class="principal-finance-kpi-card is-ticket">
+                      <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                      <small>Ticket médio</small>
+                      <strong><%= Number(gastoMedioGeral || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <span>Média por lançamento de gasto</span>
+                    </article>
+                  </div>
 
-              <section class="principal-panel-card">
-                <div class="principal-panel-head">
-                  <h6><i class="fas fa-bolt me-2"></i>Atividade Recente</h6>
-                  <span>Últimos cadastros</span>
-                </div>
-                <div class="principal-timeline">
-                  <% if (!atividadeRecente.length) { %>
-                    <p class="principal-timeline-empty">Sem movimentações recentes no momento.</p>
-                  <% } else { %>
-                    <% atividadeRecente.forEach(function(item){ %>
-                      <article class="principal-timeline-item">
-                        <div class="principal-timeline-avatar"><i class="fas fa-user"></i></div>
-                        <div class="principal-timeline-copy">
-                          <strong><%= item.nomeCompleto || 'Cadastro sem nome' %></strong>
-                          <span><%= item.__tipoPainel %> • <%= item.dataCadastro ? new Date(item.dataCadastro).toLocaleDateString('pt-BR') : 'Sem data' %></span>
+                  <div class="principal-finance-chart-grid">
+                    <article class="principal-finance-card">
+                      <div class="principal-finance-card-head">
+                        <strong>Fluxo do caixa</strong>
+                        <span><%= percentualFluxoEntradas %>% entradas</span>
+                      </div>
+                      <div class="principal-finance-donut-wrap">
+                        <div
+                          class="principal-finance-donut"
+                          style="background: conic-gradient(#27c97a 0 <%= percentualFluxoEntradas %>%, #f34f5f <%= percentualFluxoEntradas %>% 100%);"
+                          aria-label="Percentual de entradas e saídas"
+                          role="img"
+                        >
+                          <div class="principal-finance-donut-center">
+                            <strong><%= percentualFluxoEntradas %>%</strong>
+                            <span>Entradas</span>
+                          </div>
                         </div>
-                        <span class="principal-timeline-status <%= statusCadastroGrupo(item) === 'aprovado' ? 'is-ok' : (statusCadastroGrupo(item) === 'reprovado' ? 'is-bad' : 'is-pending') %>"><%= statusCadastroGrupo(item) %></span>
-                      </article>
-                    <% }); %>
-                  <% } %>
+                        <div class="principal-finance-legend">
+                          <div class="is-entry"><i></i>Entradas <strong><%= totalFluxoEntradas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-exit"><i></i>Saídas <strong><%= totalFluxoSaidas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-balance"><i></i>Saldo <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        </div>
+                      </div>
+                    </article>
+
+                    <article class="principal-finance-card">
+                      <div class="principal-finance-card-head">
+                        <strong>Gastos por escopo</strong>
+                        <span><%= percentualGastosEquipesBar %>% equipes</span>
+                      </div>
+                      <div class="principal-finance-donut-wrap">
+                        <div
+                          class="principal-finance-donut"
+                          style="background: conic-gradient(#2f7bff 0 <%= percentualGastosEncontroBar %>%, #ffb200 <%= percentualGastosEncontroBar %>% 100%);"
+                          aria-label="Percentual de gastos por escopo"
+                          role="img"
+                        >
+                          <div class="principal-finance-donut-center">
+                            <strong><%= percentualGastosEncontroBar %>%</strong>
+                            <span>Encontro</span>
+                          </div>
+                        </div>
+                        <div class="principal-finance-legend">
+                          <div class="is-encontro"><i></i>Encontro <strong><%= Number(gastosResumoData.encontro || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-equipes"><i></i>Equipes <strong><%= Number(gastosResumoData.equipes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                          <div class="is-total"><i></i>Total <strong><%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        </div>
+                      </div>
+                    </article>
+                  </div>
+
+                  <article class="principal-finance-category-panel">
+                    <div class="principal-finance-card-head">
+                      <strong>Distribuição de gastos por categoria</strong>
+                      <span>Top categorias</span>
+                    </div>
+                    <% if (!gastoCategoriasOrdenadas.length) { %>
+                      <p class="principal-finance-empty">Ainda não existem gastos suficientes para gerar o gráfico.</p>
+                    <% } else { %>
+                      <div class="principal-finance-category-list">
+                        <% gastoCategoriasOrdenadas.forEach(function(item){ %>
+                          <% const percentualCategoria = gastoCategoriaMaiorValor > 0 ? Math.round((Number(item.valor || 0) / gastoCategoriaMaiorValor) * 100) : 0; %>
+                          <div class="principal-finance-category-item">
+                            <div class="category-top">
+                              <span><%= item.categoria %></span>
+                              <strong><%= Number(item.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                            </div>
+                            <div class="category-bar"><span style="width: <%= percentualCategoria %>%;"></span></div>
+                          </div>
+                        <% }); %>
+                      </div>
+                    <% } %>
+                  </article>
+
+                  <article class="principal-finance-extrato-panel">
+                    <div class="principal-finance-card-head">
+                      <strong>Extrato mensal de <%= extratoMesReferenciaPrincipal %></strong>
+                      <span>Saldo do período</span>
+                    </div>
+                    <div class="principal-finance-extrato-list">
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saldo inicial</span><strong><%= Number(fluxoMensalResumoData.saldoInicial || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-balance" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saldoInicial || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Entradas</span><strong><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-entry" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.entradasMes || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saídas</span><strong><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-exit" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saidasMes || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                      <div class="extrato-item">
+                        <div class="extrato-row"><span>Saldo final</span><strong><%= Number(fluxoMensalResumoData.saldoFinal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                        <div class="extrato-bar"><span class="is-total" style="width: <%= Math.max(4, Math.round((Math.abs(Number(fluxoMensalResumoData.saldoFinal || 0)) / extratoMaxValorPrincipal) * 100)) %>%;"></span></div>
+                      </div>
+                    </div>
+                  </article>
                 </div>
               </section>
+
+              <aside class="principal-lite-side">
+                <section class="principal-lite-panel">
+                  <div class="principal-lite-panel-head">
+                    <h6>Status do Encontro</h6>
+                    <span>Indicadores rápidos</span>
+                  </div>
+                  <div class="principal-lite-progress-wrap">
+                    <div class="principal-lite-progress-item">
+                      <div class="principal-lite-progress-label"><span>Confirmados</span><strong><%= totalAprovadosGeral %> / <%= totalCadastrosVisiveis || 0 %></strong></div>
+                      <div class="principal-lite-progress-bar"><span class="bar-confirmados" style="width: <%= taxaAprovacaoGeral %>%;"></span></div>
+                    </div>
+                    <div class="principal-lite-progress-item">
+                      <div class="principal-lite-progress-label"><span>Pendentes</span><strong><%= totalPendenciasGeral %> / <%= totalCadastrosVisiveis || 0 %></strong></div>
+                      <div class="principal-lite-progress-bar"><span class="bar-pendentes" style="width: <%= taxaPendenciaGeral %>%;"></span></div>
+                    </div>
+                    <div class="principal-lite-progress-item">
+                      <div class="principal-lite-progress-label"><span>Reprovados</span><strong><%= totalReprovadosGeral %> / <%= totalCadastrosVisiveis || 0 %></strong></div>
+                      <div class="principal-lite-progress-bar"><span class="bar-reprovados" style="width: <%= taxaReprovacaoGeral %>%;"></span></div>
+                    </div>
+                    <div class="principal-lite-progress-item">
+                      <div class="principal-lite-progress-label"><span>Gastos em equipes</span><strong><%= Number(gastosResumoData.equipes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></div>
+                      <div class="principal-lite-progress-bar"><span class="bar-gastos" style="width: <%= gastosResumoData.total ? Math.min(100, Math.round((gastosResumoData.equipes / gastosResumoData.total) * 100)) : 0 %>%;"></span></div>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="principal-lite-panel">
+                  <div class="principal-lite-panel-head">
+                    <h6>Alertas</h6>
+                    <span>Pontos de atenção</span>
+                  </div>
+                  <div class="principal-lite-alerts">
+                    <% if (totalPendenciasGeral > 0) { %>
+                      <div class="principal-lite-alert alert-danger-soft"><i class="fas fa-triangle-exclamation"></i>Existem <strong><%= totalPendenciasGeral %></strong> cadastro(s) pendente(s) aguardando aprovação.</div>
+                    <% } %>
+                    <% if (!encontroAtivoNome) { %>
+                      <div class="principal-lite-alert alert-warning-soft"><i class="fas fa-bullseye"></i>Defina um encontro ativo para organizar novos vínculos automaticamente.</div>
+                    <% } %>
+                    <% if ((gastosResumoData.total || 0) > 0) { %>
+                      <div class="principal-lite-alert alert-info-soft"><i class="fas fa-wallet"></i>Total de gastos lançados: <strong><%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>.</div>
+                    <% } %>
+                    <% if (totalPendenciasGeral === 0 && encontroAtivoNome) { %>
+                      <div class="principal-lite-alert alert-success-soft"><i class="fas fa-circle-check"></i>Painel estável: sem pendências críticas no momento.</div>
+                    <% } %>
+                  </div>
+                </section>
+              </aside>
             </div>
           </div>
 
@@ -419,13 +665,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasAprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista aprovado.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontrista aprovado.</td></tr>
                   <% } else { %>
                     <% encontristasAprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="aprovado">
@@ -443,6 +690,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td>
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
@@ -490,13 +738,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasReprovados.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista reprovado.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontrista reprovado.</td></tr>
                   <% } else { %>
                     <% encontristasReprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="reprovado">
@@ -514,6 +763,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td><span class="status-badge status-warn">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
@@ -553,13 +803,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontristasPendentes.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum encontrista pendente.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum encontrista pendente.</td></tr>
                   <% } else { %>
                     <% encontristasPendentes.forEach(function(cadastro) { %>
                       <tr data-searchable="true" data-transfer-group="pendente">
@@ -577,6 +828,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td><span class="status-badge status-warn">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
@@ -720,13 +972,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosAprovados.length === 0) { %>
-                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro aprovado.</td></tr>
+                    <tr><td colspan="10" class="empty-state">Nenhum encontreiro aprovado.</td></tr>
                   <% } else { %>
                     <% encontreirosAprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -749,6 +1002,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td>
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
@@ -794,13 +1048,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosReprovados.length === 0) { %>
-                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro reprovado.</td></tr>
+                    <tr><td colspan="10" class="empty-state">Nenhum encontreiro reprovado.</td></tr>
                   <% } else { %>
                     <% encontreirosReprovados.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -823,6 +1078,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td><span class="status-badge status-warn">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
@@ -860,13 +1116,14 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (encontreirosPendentes.length === 0) { %>
-                    <tr><td colspan="9" class="empty-state">Nenhum encontreiro pendente.</td></tr>
+                    <tr><td colspan="10" class="empty-state">Nenhum encontreiro pendente.</td></tr>
                   <% } else { %>
                     <% encontreirosPendentes.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -889,6 +1146,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td><span class="status-badge status-warn">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
@@ -964,12 +1222,13 @@
                     <th>Telefone</th>
                     <th>Email</th>
                     <th>Alergia</th>
+                    <th>Sub-equipes</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (tios.length === 0) { %>
-                    <tr><td colspan="8" class="empty-state">Nenhum tios cadastrado.</td></tr>
+                    <tr><td colspan="9" class="empty-state">Nenhum tios cadastrado.</td></tr>
                   <% } else { %>
                     <% tios.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -986,6 +1245,7 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
+                        <td><%- renderSubequipesChips(cadastro) %></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1283,8 +1543,794 @@
             </div>
           </div>
 
+          <!-- TAB: SUB-EQUIPES -->
+          <div class="tab-pane fade" id="subequipes" data-required-permission="equipes.gerenciar" role="tabpanel">
+            <div class="tab-workspace-head">
+              <div>
+                <p class="tab-kicker">Gestao Estrutural</p>
+                <h5><i class="fas fa-diagram-project me-2"></i>Gestao de Sub-Equipes</h5>
+              </div>
+              <div class="tab-head-chips">
+                <span class="tab-chip">Sub-Equipes: <%= (subequipes || []).length %></span>
+                <span class="tab-chip tab-chip-soft">Operacao por vigencia</span>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-lg-6">
+                <div class="admin-form-card h-100 subequipe-feature-card">
+                  <div class="subequipe-feature-head">
+                    <h5 class="mb-2"><i class="fas fa-plus-circle me-2"></i>Nova Sub-Equipe</h5>
+                    <p class="subequipe-feature-subtitle">Estruture frentes de servico por ano de vigencia com rastreabilidade.</p>
+                  </div>
+                  <form id="formSubequipe" class="row g-3 subequipe-feature-form">
+                    <div class="col-12">
+                      <label class="form-label">Nome da Sub-Equipe *</label>
+                      <input type="text" id="subequipe_nome" class="form-control" placeholder="Ex: Acolhida Porta 2" required>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Ano de vigência *</label>
+                      <input type="number" id="subequipe_ano" class="form-control" min="2000" max="2100" step="1" value="<%= new Date().getFullYear() %>" required>
+                    </div>
+                    <div class="col-12">
+                      <button type="button" class="btn btn-primary w-100 admin-primary-action subequipe-feature-action" onclick="cadastrarSubequipe()">
+                        <i class="fas fa-save me-1"></i>Salvar Sub-Equipe
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="col-lg-6">
+                <div class="admin-form-card h-100 subequipe-feature-card subequipe-feature-card-link">
+                  <div class="subequipe-feature-head">
+                    <h5 class="mb-2"><i class="fas fa-link me-2"></i>Vincular Encontreiro/Tio</h5>
+                    <p class="subequipe-feature-subtitle">Registre o vinculo diretamente no cadastro da pessoa para auditoria.</p>
+                  </div>
+                  <form id="formVinculoSubequipe" class="row g-3 subequipe-feature-form">
+                    <div class="col-12">
+                      <label class="form-label">Pessoa vinculada *</label>
+                      <select id="vinculo_subequipe_pessoa" class="form-select">
+                        <option value="">Selecione uma pessoa</option>
+                        <% (encontreiros || []).forEach(function(item) { %>
+                          <option value="<%= item._id %>"><%= item.nomeCompleto %> - <%= item.tipo === 'tios' ? 'Tio/Tia' : 'Jovem' %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Sub-equipe destino *</label>
+                      <select id="vinculo_subequipe" class="form-select">
+                        <option value="">Selecione a sub-equipe</option>
+                        <% (subequipes || []).forEach(function(item) { %>
+                          <option value="<%= item._id %>"><%= item.nome %> (<%= item.anoVigencia || '-' %>)</option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <label class="form-label">Papel no vinculo *</label>
+                      <select id="vinculo_subequipe_papel" class="form-select">
+                        <option value="coordenador" selected>Coordenador(a)</option>
+                      </select>
+                    </div>
+                    <div class="col-12">
+                      <button type="button" class="btn btn-primary w-100 admin-primary-action subequipe-feature-action" onclick="vincularEncontreiroSubequipe()">
+                        <i class="fas fa-user-plus me-1"></i>Salvar Vinculo
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <div class="admin-form-card mb-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-lg-6">
+                  <label class="form-label">Consulta de pessoas por sub-equipe</label>
+                  <select id="visualizar_subequipe" class="form-select" onchange="renderVinculadosSubequipe()">
+                    <option value="">Selecione uma sub-equipe</option>
+                    <% (subequipes || []).forEach(function(item) { %>
+                      <option value="<%= item._id %>"><%= item.nome %> (<%= item.anoVigencia || '-' %>)</option>
+                    <% }); %>
+                  </select>
+                </div>
+              </div>
+
+              <div class="table-wrap mt-3">
+                <table class="table table-hover" id="tabela-vinculados-subequipe">
+                  <thead>
+                    <tr>
+                      <th>Nome</th>
+                      <th>Tipo</th>
+                      <th>Ano Vigência</th>
+                      <th>Coordenador</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td colspan="4" class="empty-state">Selecione uma sub-equipe para visualizar os vinculados.</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Nome</th>
+                    <th>Ano Vigência</th>
+                    <th>Nome de referência</th>
+                    <th>Data de criação</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% if (!subequipes || subequipes.length === 0) { %>
+                    <tr><td colspan="5" class="empty-state">Nenhuma sub-equipe cadastrada.</td></tr>
+                  <% } else { %>
+                    <% subequipes.forEach(function(item) { %>
+                      <tr>
+                        <td><strong><%= item.nome %></strong></td>
+                        <td><%= item.anoVigencia || '-' %></td>
+                        <td><%= item.nomeReferencia || item.nome %></td>
+                        <td><%= item.dataCriacao ? new Date(item.dataCriacao).toLocaleDateString('pt-BR') : '-' %></td>
+                        <td>
+                          <button class="btn btn-edit" onclick="editarSubequipe('<%= item._id %>', '<%= (item.nome || '').replace(/'/g, "\\'") %>', '<%= item.anoVigencia || '' %>')">
+                            <i class="fas fa-edit me-1"></i>Editar
+                          </button>
+                          <button class="btn btn-delete" onclick="deletarSubequipe('<%= item._id %>', '<%= (item.nomeReferencia || item.nome || '').replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-trash me-1"></i>Deletar
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- TAB: GASTOS -->
+          <div class="tab-pane fade gastos-workspace" id="gastos" data-required-permission="gastos.gerenciar" role="tabpanel">
+            <div class="tab-workspace-head gastos-head">
+              <div class="gastos-head-main">
+                <p class="tab-kicker">Área Financeira</p>
+                <h5><i class="fas fa-wallet me-2"></i>Financeiro</h5>
+                <p class="gastos-head-subtitle">Gestão financeira com leitura executiva, registro assistido e saldo sempre em evidência.</p>
+              </div>
+              <div class="tab-head-chips tab-head-chips-premium">
+                <span class="tab-chip">Lançamentos: <%= gastosResumoData.quantidade %></span>
+                <span class="tab-chip tab-chip-soft">Total: <%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
+                <span class="tab-chip tab-chip-premium"><i class="fas fa-shield-heart me-1"></i>UX premium</span>
+              </div>
+            </div>
+
+            <div class="financeiro-command-center" aria-label="Resumo executivo do financeiro">
+              <div class="financeiro-command-primary">
+                <div>
+                  <p class="financeiro-command-kicker">Command center</p>
+                  <h6>Panorama executivo do caixa</h6>
+                  <p>Monitore a saúde financeira do encontro com foco em saldo, entradas, saídas e equilíbrio entre encontro e equipes.</p>
+                </div>
+                <span class="financeiro-command-status <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'is-positive' : 'is-negative' %>">
+                  <i class="fas <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'fa-circle-check' : 'fa-triangle-exclamation' %>"></i>
+                  <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Caixa saudável' : 'Atenção ao saldo' %>
+                </span>
+              </div>
+              <div class="financeiro-command-metrics">
+                <article class="financeiro-command-card accent-balance">
+                  <span>Saldo atual</span>
+                  <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Disponível para operação</small>
+                </article>
+                <article class="financeiro-command-card accent-entry">
+                  <span>Entradas do mês</span>
+                  <strong><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Receitas e repasses confirmados</small>
+                </article>
+                <article class="financeiro-command-card accent-exit">
+                  <span>Saídas do mês</span>
+                  <strong><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <small>Pagamentos e despesas lançadas</small>
+                </article>
+                <article class="financeiro-command-card accent-split">
+                  <span>Distribuição</span>
+                  <strong><%= percentualGastosEncontro %>% / <%= percentualGastosEquipes %>%</strong>
+                  <small>Encontro x equipes</small>
+                </article>
+              </div>
+            </div>
+
+            <div class="financeiro-overview-strip" aria-label="Destaques do painel financeiro">
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Visão central</span>
+                <strong>Tesouraria em um só painel</strong>
+                <small>Entradas, saídas e histórico com leitura imediata para a coordenação.</small>
+              </article>
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Controle confiável</span>
+                <strong>Rastreabilidade por responsável</strong>
+                <small>Cada lançamento fica classificado, contextualizado e pronto para auditoria.</small>
+              </article>
+              <article class="financeiro-overview-card">
+                <span class="financeiro-overview-label">Decisão rápida</span>
+                <strong>Filtros e KPIs prontos</strong>
+                <small>Encontre categorias, equipes e períodos em poucos segundos.</small>
+              </article>
+            </div>
+
+            <div class="gastos-toolbar" aria-label="Filtros do painel financeiro">
+              <div class="gastos-toolbar-group">
+                <label for="gastos_periodo_filtro" class="form-label">Período</label>
+                <select id="gastos_periodo_filtro" class="form-select">
+                  <option value="todos">Todo o período</option>
+                  <option value="hoje">Hoje</option>
+                  <option value="7dias">Últimos 7 dias</option>
+                  <option value="30dias">Últimos 30 dias</option>
+                  <option value="mes_atual" selected>Mês atual</option>
+                  <option value="trimestre">Último trimestre</option>
+                </select>
+              </div>
+              <div class="gastos-toolbar-group">
+                <label for="gastos_categoria_filtro" class="form-label">Categoria</label>
+                <select id="gastos_categoria_filtro" class="form-select">
+                  <option value="">Todas as categorias</option>
+                  <% gastoCategoryOptionsList.forEach(function(categoria) { %>
+                    <option value="<%= categoria %>"><%= categoria %></option>
+                  <% }); %>
+                </select>
+              </div>
+              <div class="gastos-toolbar-group">
+                <label for="gastos_escopo_filtro" class="form-label">Escopo</label>
+                <select id="gastos_escopo_filtro" class="form-select">
+                  <option value="">Todos</option>
+                  <option value="encontro">Somente encontro</option>
+                  <option value="equipe">Somente equipes</option>
+                </select>
+              </div>
+              <div class="gastos-toolbar-group gastos-toolbar-group-search">
+                <label for="gastos_busca_filtro" class="form-label">Buscar</label>
+                <input type="text" id="gastos_busca_filtro" class="form-control" placeholder="Descrição, responsável ou equipe">
+              </div>
+              <div class="gastos-toolbar-actions">
+                <button type="button" class="btn btn-outline-light gastos-filter-btn" onclick="limparFiltrosGastos()">
+                  <i class="fas fa-filter-circle-xmark me-1"></i>Limpar filtros
+                </button>
+              </div>
+            </div>
+            <div class="financeiro-toolbar-note" role="note">
+              <i class="fas fa-circle-info"></i>
+              <span>Combine período, categoria e busca para localizar qualquer movimentação em segundos e conciliar o caixa com mais segurança.</span>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-xl-7">
+                <div class="admin-form-card h-100 gastos-form-card">
+                  <div class="gastos-card-hero">
+                    <div>
+                      <p class="gastos-card-kicker">Lançamento assistido</p>
+                      <h5 class="mb-1"><i class="fas fa-coins me-2"></i>Registrar lançamentos com clareza</h5>
+                      <p class="gastos-card-subtitle">Centralize arrecadações, vendas, doações e despesas em um fluxo mais elegante, confiável e fácil de acompanhar.</p>
+                    </div>
+                    <div class="gastos-card-pills">
+                      <span class="gastos-card-pill"><i class="fas fa-arrow-trend-up"></i>Entradas + saídas</span>
+                      <span class="gastos-card-pill"><i class="fas fa-shield-heart"></i>Controle seguro</span>
+                    </div>
+                  </div>
+
+                  <form id="formGasto" class="row g-3 gastos-form">
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">01</span>
+                          <div>
+                            <strong>Contexto do lançamento</strong>
+                            <small>Defina se o lançamento é entrada ou gasto e onde será contabilizado.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-4">
+                            <label for="gasto_ejcId" class="form-label">EJC *</label>
+                            <select id="gasto_ejcId" class="form-select" onchange="atualizarCamposGasto()">
+                              <option value="">Selecione o EJC</option>
+                              <% (ejcs || []).forEach(function(item) { %>
+                                <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
+                              <% }); %>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_tipoLancamento" class="form-label">Tipo do lançamento *</label>
+                            <select id="gasto_tipoLancamento" class="form-select" onchange="atualizarCamposGasto()">
+                              <option value="arrecadacao" selected>Entrada de capital (arrecadação)</option>
+                              <option value="venda_equipe">Venda de equipe</option>
+                              <option value="doacao">Doação</option>
+                              <option value="patrocinio">Patrocínio</option>
+                              <option value="inscricao">Repasse de inscrição</option>
+                              <option value="gasto_encontro">Gasto do encontro</option>
+                              <option value="gasto_equipe">Gasto de equipe</option>
+                            </select>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_escopoTipo" class="form-label">Escopo *</label>
+                            <select id="gasto_escopoTipo" class="form-select" onchange="atualizarCamposGasto()">
+                              <option value="encontro" selected>Encontro geral</option>
+                              <option value="equipe">Equipe</option>
+                            </select>
+                          </div>
+                          <div class="col-md-6" id="gasto_equipe_wrap" style="display:none;">
+                            <label for="gasto_equipeId" class="form-label">Equipe vinculada *</label>
+                            <select id="gasto_equipeId" class="form-select">
+                              <option value="">Selecione a equipe</option>
+                            </select>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="gasto_categoria" class="form-label">Categoria</label>
+                            <select id="gasto_categoria" class="form-select">
+                              <% gastoCategoryOptionsList.forEach(function(categoria) { %>
+                                <option value="<%= categoria %>"><%= categoria %></option>
+                              <% }); %>
+                            </select>
+                          </div>
+                          <div class="col-12">
+                            <p id="gasto_scope_hint" class="gastos-field-hint mb-0">Este lançamento será registrado como gasto geral do encontro e também refletido no fluxo de caixa.</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">02</span>
+                          <div>
+                            <strong>Detalhes financeiros</strong>
+                            <small>Descreva o lançamento com clareza.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-8">
+                            <label for="gasto_descricao" class="form-label">Descrição *</label>
+                            <input type="text" id="gasto_descricao" class="form-control" placeholder="Ex: compra de mercado, decoração, impressão" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_valor" class="form-label">Valor *</label>
+                            <input type="text" id="gasto_valor" class="form-control" placeholder="Ex: 150,00" inputmode="decimal" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_data" id="gasto_data_label" class="form-label">Data do gasto *</label>
+                            <input type="date" id="gasto_data" class="form-control" value="<%= new Date().toISOString().slice(0, 10) %>" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_responsavel" id="gasto_responsavel_label" class="form-label">Responsável</label>
+                            <input type="text" id="gasto_responsavel" class="form-control" placeholder="Quem pagou ou lançou">
+                          </div>
+                          <div class="col-md-4">
+                            <label for="gasto_forma_pagamento" id="gasto_forma_pagamento_label" class="form-label">Forma de pagamento</label>
+                            <input type="text" id="gasto_forma_pagamento" class="form-control" placeholder="Pix, Dinheiro, Cartão...">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">03</span>
+                          <div>
+                            <strong>Observações e conferência</strong>
+                            <small>Inclua detalhes adicionais, se necessário.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-12">
+                            <label for="gasto_observacoes" class="form-label">Observações</label>
+                            <textarea id="gasto_observacoes" class="form-control" rows="2" placeholder="Detalhes extras do gasto"></textarea>
+                          </div>
+                          <div class="col-12">
+                            <button type="button" id="gasto_submit_btn" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarGasto()">
+                              <i class="fas fa-save me-1"></i>Registrar lançamento com segurança
+                            </button>
+                            <div class="gastos-assurance-strip" role="note">
+                              <span><i class="fas fa-shield-heart"></i>Rastreabilidade completa</span>
+                              <span><i class="fas fa-bolt"></i>Resumo atualizado na hora</span>
+                              <span><i class="fas fa-eye"></i>Leitura clara para tesouraria</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="col-xl-5">
+                <div class="admin-form-card h-100 gastos-summary-card">
+                  <div class="gastos-summary-head">
+                    <div>
+                      <p class="gastos-card-kicker">Visão executiva</p>
+                      <h5 class="mb-1"><i class="fas fa-chart-pie me-2"></i>Resumo executivo</h5>
+                      <p class="gastos-card-subtitle">Visualize volume, distribuição e indicadores do financeiro com leitura rápida e profissional.</p>
+                    </div>
+                    <span class="gastos-summary-badge">Tempo real</span>
+                  </div>
+                  <div class="financeiro-summary-spotlight">
+                    <div>
+                      <span class="financeiro-summary-spotlight-label">Leitura prioritária</span>
+                      <strong><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'O caixa opera com saldo positivo e boa previsibilidade.' : 'O caixa precisa de atenção imediata para reequilíbrio.' %></strong>
+                    </div>
+                    <small>Use os KPIs abaixo para decidir rapidamente onde conter despesas ou reforçar arrecadação.</small>
+                  </div>
+                  <div class="gastos-kpi-grid">
+                    <article class="gastos-kpi-card gastos-kpi-card-primary">
+                      <span class="gastos-kpi-label">Total geral</span>
+                      <strong id="gastos_total_geral_card" class="gastos-kpi-value"><%= Number(gastosResumoData.total || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Todos os lançamentos registrados</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-success">
+                      <span class="gastos-kpi-label">Encontro</span>
+                      <strong id="gastos_total_encontro_card" class="gastos-kpi-value"><%= Number(gastosResumoData.encontro || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Despesas gerais do encontro</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-warning">
+                      <span class="gastos-kpi-label">Equipes</span>
+                      <strong id="gastos_total_equipes_card" class="gastos-kpi-value"><%= Number(gastosResumoData.equipes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Lançamentos específicos das equipes</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-danger">
+                      <span class="gastos-kpi-label">Registros</span>
+                      <strong id="gastos_total_registros_card" class="gastos-kpi-value"><%= gastosResumoData.quantidade %></strong>
+                      <small class="gastos-kpi-meta">Controle financeiro consolidado</small>
+                    </article>
+                  </div>
+
+                  <div class="gastos-insights-grid">
+                    <article class="gastos-insight-card">
+                      <span class="gastos-insight-label">No mês atual</span>
+                      <strong id="gastos_mes_atual_valor"><%= Number(totalGastosMesAtual || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small>Soma dos lançamentos do mês selecionado</small>
+                    </article>
+                    <article class="gastos-insight-card">
+                      <span class="gastos-insight-label">Maior gasto do mês</span>
+                      <strong id="gastos_maior_mes_valor"><%= Number((maiorGastoMesAtual && maiorGastoMesAtual.valor) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small id="gastos_maior_mes_desc"><%= (maiorGastoMesAtual && maiorGastoMesAtual.descricao) || 'Sem lançamento no período' %></small>
+                    </article>
+                    <article class="gastos-insight-card">
+                      <span class="gastos-insight-label">Ticket médio</span>
+                      <strong id="gastos_ticket_medio_valor"><%= Number(gastoMedioGeral || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small>Média por lançamento filtrado</small>
+                    </article>
+                  </div>
+
+                  <div class="gastos-distribution-card">
+                    <div class="gastos-distribution-head">
+                      <strong>Distribuição encontro vs equipes</strong>
+                      <span id="gastos_distrib_total_texto"><%= percentualGastosEncontro %>% / <%= percentualGastosEquipes %>%</span>
+                    </div>
+                    <div class="gastos-distribution-bar">
+                      <span id="gastos_bar_encontro" class="gastos-bar-encontro" style="width: <%= percentualGastosEncontro %>%;"></span>
+                      <span id="gastos_bar_equipes" class="gastos-bar-equipes" style="width: <%= percentualGastosEquipes %>%;"></span>
+                    </div>
+                    <div class="gastos-distribution-legend">
+                      <span><i class="fas fa-circle"></i>Encontro: <strong id="gastos_legenda_encontro"><%= Number(gastosResumoData.encontro || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></span>
+                      <span><i class="fas fa-circle"></i>Equipes: <strong id="gastos_legenda_equipes"><%= Number(gastosResumoData.equipes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></span>
+                    </div>
+                  </div>
+
+                  <div class="alert alert-info mt-3 mb-0 gastos-hint" role="alert">
+                    <i class="fas fa-circle-info me-2"></i>Use esta área para registrar arrecadações, vendas das equipes, doações e também os gastos gerais do encontro.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="gastos-table-shell">
+              <div class="gastos-table-head">
+                <div>
+                  <h5 class="mb-1"><i class="fas fa-receipt me-2"></i>Livro de lançamentos</h5>
+                  <p class="mb-0">Navegue por cada lançamento com contexto, responsáveis e classificação.</p>
+                </div>
+                <span id="gastos_table_count_badge" class="gastos-table-badge"><%= gastosResumoData.quantidade %> registro(s)</span>
+              </div>
+              <div class="table-wrap gastos-table-wrap">
+              <table class="table table-hover gastos-table">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Descrição</th>
+                    <th>Categoria</th>
+                    <th>Escopo</th>
+                    <th>EJC</th>
+                    <th>Valor</th>
+                    <th>Responsável</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="gastos-tbody">
+                  <% if (!gastos || gastos.length === 0) { %>
+                    <tr>
+                      <td colspan="8">
+                        <div class="gastos-empty-state">
+                          <i class="fas fa-wallet"></i>
+                          <span>Nenhum gasto cadastrado até o momento.</span>
+                        </div>
+                      </td>
+                    </tr>
+                  <% } else { %>
+                    <% gastos.forEach(function(item) { %>
+                      <tr>
+                        <td><%= item.dataGasto ? new Date(item.dataGasto).toLocaleDateString('pt-BR') : '-' %></td>
+                        <td>
+                          <strong><%= item.descricao || '-' %></strong>
+                          <% if (item.observacoes) { %>
+                            <div class="text-muted small"><%= item.observacoes %></div>
+                          <% } %>
+                        </td>
+                        <td><%= item.categoria || 'Outros' %></td>
+                        <td>
+                          <% if (item.escopoTipo === 'equipe') { %>
+                            <span class="status-badge status-ok gastos-scope-badge"><%= item.equipeNome || 'Equipe' %></span>
+                          <% } else { %>
+                            <span class="status-badge gastos-scope-badge">Encontro</span>
+                          <% } %>
+                        </td>
+                        <td><%= item.ejcVinculadoNome || item.ejc || '-' %></td>
+                        <td><strong><%= Number(item.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></td>
+                        <td><%= item.responsavel || '-' %></td>
+                        <td>
+                          <button class="btn btn-delete" onclick="deletarGasto('<%= item._id %>', '<%= (item.descricao || '').replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-trash me-1"></i>Excluir
+                          </button>
+                        </td>
+                      </tr>
+                    <% }); %>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="financeiro-subsection">
+            <div class="tab-workspace-head gastos-head">
+              <div class="gastos-head-main">
+                <p class="tab-kicker">Fluxo de Caixa</p>
+                <h5><i class="fas fa-scale-balanced me-2"></i>Entradas e saídas</h5>
+                <p class="gastos-head-subtitle">Conciliação de entradas e saídas com visão imediata do saldo disponível.</p>
+              </div>
+              <div class="tab-head-chips tab-head-chips-premium">
+                <span class="tab-chip">Movimentos: <%= fluxoResumoData.quantidade || 0 %></span>
+                <span class="tab-chip tab-chip-soft">Saldo: <%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
+                <span class="tab-chip tab-chip-premium"><i class="fas fa-bolt me-1"></i>Conciliação</span>
+              </div>
+            </div>
+
+            <div class="row g-3 mb-3">
+              <div class="col-xl-7">
+                <div class="admin-form-card h-100 gastos-form-card">
+                  <div class="gastos-card-hero">
+                    <div>
+                      <p class="gastos-card-kicker">Tesouraria</p>
+                      <h5 class="mb-1"><i class="fas fa-right-left me-2"></i>Lançar movimentos com rastreabilidade</h5>
+                      <p class="gastos-card-subtitle">Mantenha o caixa alinhado com origem, destino e forma de pagamento em um fluxo elegante e objetivo.</p>
+                    </div>
+                    <div class="gastos-card-pills">
+                      <span class="gastos-card-pill"><i class="fas fa-chart-line"></i>Saldo em tempo real</span>
+                      <span class="gastos-card-pill"><i class="fas fa-bolt"></i>Conciliação simples</span>
+                    </div>
+                  </div>
+
+                  <form id="formFluxoCaixa" class="row g-3 gastos-form">
+                    <div class="col-md-4">
+                      <label for="fluxo_ejcId" class="form-label">EJC *</label>
+                      <select id="fluxo_ejcId" class="form-select">
+                        <option value="">Selecione o EJC</option>
+                        <% (ejcs || []).forEach(function(item) { %>
+                          <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="fluxo_tipoMovimento" class="form-label">Tipo *</label>
+                      <select id="fluxo_tipoMovimento" class="form-select">
+                        <option value="entrada" selected>Entrada</option>
+                        <option value="saida">Saída</option>
+                      </select>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="fluxo_categoria" class="form-label">Categoria</label>
+                      <select id="fluxo_categoria" class="form-select">
+                        <% fluxoCategoryOptionsList.forEach(function(categoria) { %>
+                          <option value="<%= categoria %>"><%= categoria %></option>
+                        <% }); %>
+                      </select>
+                    </div>
+                    <div class="col-md-7">
+                      <label for="fluxo_descricao" class="form-label">Descrição *</label>
+                      <input type="text" id="fluxo_descricao" class="form-control" placeholder="Ex: repasse de inscrições, pagamento de fornecedor" required>
+                    </div>
+                    <div class="col-md-2">
+                      <label for="fluxo_valor" class="form-label">Valor *</label>
+                      <input type="text" id="fluxo_valor" class="form-control" placeholder="0,00" inputmode="decimal" required>
+                    </div>
+                    <div class="col-md-3">
+                      <label for="fluxo_dataMovimento" class="form-label">Data *</label>
+                      <input type="date" id="fluxo_dataMovimento" class="form-control" value="<%= new Date().toISOString().slice(0, 10) %>" required>
+                    </div>
+                    <div class="col-md-4">
+                      <label for="fluxo_origemDestino" class="form-label">Origem / Destino</label>
+                      <input type="text" id="fluxo_origemDestino" class="form-control" placeholder="Ex: família, fornecedor, equipe">
+                    </div>
+                    <div class="col-md-4">
+                      <label for="fluxo_responsavel" class="form-label">Responsável</label>
+                      <input type="text" id="fluxo_responsavel" class="form-control" placeholder="Quem recebeu/pagou">
+                    </div>
+                    <div class="col-md-4">
+                      <label for="fluxo_formaPagamento" class="form-label">Forma</label>
+                      <input type="text" id="fluxo_formaPagamento" class="form-control" placeholder="Pix, Dinheiro, Cartão...">
+                    </div>
+                    <div class="col-12">
+                      <label for="fluxo_observacoes" class="form-label">Observações</label>
+                      <textarea id="fluxo_observacoes" class="form-control" rows="2" placeholder="Informações complementares"></textarea>
+                    </div>
+                    <div class="col-12">
+                      <button type="button" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarFluxoCaixa()">
+                        <i class="fas fa-plus-circle me-1"></i>Registrar movimento no caixa
+                      </button>
+                      <div class="gastos-assurance-strip" role="note">
+                        <span><i class="fas fa-bolt"></i>Conciliação simples</span>
+                        <span><i class="fas fa-chart-line"></i>Saldo em tempo real</span>
+                        <span><i class="fas fa-shield-heart"></i>Histórico pronto para auditoria</span>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              <div class="col-xl-5">
+                <div class="admin-form-card h-100 gastos-summary-card">
+                  <div class="gastos-summary-head">
+                    <div>
+                      <p class="gastos-card-kicker">Saldo consolidado</p>
+                      <h5 class="mb-1"><i class="fas fa-chart-area me-2"></i>Painel de caixa</h5>
+                      <p class="gastos-card-subtitle">Acompanhe a saúde do caixa com indicadores diretos e leitura premium.</p>
+                    </div>
+                    <span class="gastos-summary-badge">Financeiro</span>
+                  </div>
+                  <div class="financeiro-summary-spotlight is-cash">
+                    <div>
+                      <span class="financeiro-summary-spotlight-label">Status do período</span>
+                      <strong><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Saldo sustentável para a operação atual.' : 'Saídas acima do ideal: revisar prioridades.' %></strong>
+                    </div>
+                    <small>O painel abaixo mostra entradas, saídas, saldo líquido e volume de movimentos para a conciliação.</small>
+                  </div>
+                  <div class="gastos-kpi-grid">
+                    <article class="gastos-kpi-card gastos-kpi-card-success">
+                      <span class="gastos-kpi-label">Entradas</span>
+                      <strong id="fluxo_total_entradas_card" class="gastos-kpi-value"><%= Number(fluxoResumoData.entradas || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Total recebido</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-danger">
+                      <span class="gastos-kpi-label">Saídas</span>
+                      <strong id="fluxo_total_saidas_card" class="gastos-kpi-value"><%= Number(fluxoResumoData.saidas || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Total pago</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-primary">
+                      <span class="gastos-kpi-label">Saldo</span>
+                      <strong id="fluxo_saldo_card" class="gastos-kpi-value"><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                      <small class="gastos-kpi-meta">Entradas - Saídas</small>
+                    </article>
+                    <article class="gastos-kpi-card gastos-kpi-card-warning">
+                      <span class="gastos-kpi-label">Movimentos</span>
+                      <strong id="fluxo_quantidade_card" class="gastos-kpi-value"><%= fluxoResumoData.quantidade || 0 %></strong>
+                      <small class="gastos-kpi-meta">Lançamentos no livro caixa</small>
+                    </article>
+                  </div>
+
+                  <div class="financeiro-extrato-card mt-3">
+                    <div class="gastos-summary-head gastos-summary-head-secondary">
+                      <div>
+                        <p class="gastos-card-kicker">Extrato mensal</p>
+                        <h6 class="mb-1">Consolidado de <span id="fluxo_mes_referencia_texto"><%= fluxoMensalResumoData.mesReferencia || new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }) %></span></h6>
+                        <p class="gastos-card-subtitle">Acompanhe o início do mês, tudo que entrou, tudo que saiu e o saldo final projetado.</p>
+                      </div>
+                    </div>
+                    <div class="gastos-insights-grid financeiro-extrato-grid">
+                      <article class="gastos-insight-card is-balance">
+                        <span class="gastos-insight-label">Saldo inicial</span>
+                        <strong id="fluxo_saldo_inicial_mes_card"><%= Number(fluxoMensalResumoData.saldoInicial || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                        <small>Posição acumulada antes do mês atual</small>
+                      </article>
+                      <article class="gastos-insight-card is-entry">
+                        <span class="gastos-insight-label">Entradas do mês</span>
+                        <strong id="fluxo_entradas_mes_card"><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                        <small>Receitas e repasses do período</small>
+                      </article>
+                      <article class="gastos-insight-card is-exit">
+                        <span class="gastos-insight-label">Saídas do mês</span>
+                        <strong id="fluxo_saidas_mes_card"><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                        <small>Pagamentos, compras e despesas</small>
+                      </article>
+                      <article class="gastos-insight-card is-highlight">
+                        <span class="gastos-insight-label">Saldo final do mês</span>
+                        <strong id="fluxo_saldo_final_mes_card"><%= Number(fluxoMensalResumoData.saldoFinal || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                        <small>Saldo inicial + entradas - saídas</small>
+                      </article>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="gastos-table-shell">
+              <div class="gastos-table-head">
+                <div>
+                  <h5 class="mb-1"><i class="fas fa-book me-2"></i>Livro caixa</h5>
+                  <p class="mb-0">Registros completos de entrada e saída de valores.</p>
+                </div>
+                <span id="fluxo_table_count_badge" class="gastos-table-badge"><%= fluxoResumoData.quantidade || 0 %> movimento(s)</span>
+              </div>
+              <div class="table-wrap gastos-table-wrap">
+                <table class="table table-hover gastos-table">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Tipo</th>
+                      <th>Descrição</th>
+                      <th>Categoria</th>
+                      <th>EJC</th>
+                      <th>Valor</th>
+                      <th>Responsável</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="fluxo-caixa-tbody">
+                    <% if (!fluxoCaixa || fluxoCaixa.length === 0) { %>
+                      <tr>
+                        <td colspan="8">
+                          <div class="gastos-empty-state">
+                            <i class="fas fa-book-open"></i>
+                            <span>Nenhum movimento de caixa cadastrado.</span>
+                          </div>
+                        </td>
+                      </tr>
+                    <% } else { %>
+                      <% fluxoCaixa.forEach(function(item) { %>
+                        <tr>
+                          <td><%= item.dataMovimento ? new Date(item.dataMovimento).toLocaleDateString('pt-BR') : '-' %></td>
+                          <td>
+                            <% if (item.tipoMovimento === 'saida') { %>
+                              <span class="status-badge status-danger gastos-scope-badge">Saída</span>
+                            <% } else { %>
+                              <span class="status-badge status-ok gastos-scope-badge">Entrada</span>
+                            <% } %>
+                          </td>
+                          <td>
+                            <strong><%= item.descricao || '-' %></strong>
+                            <% if (item.origemDestino) { %>
+                              <div class="text-muted small">Origem/Destino: <%= item.origemDestino %></div>
+                            <% } %>
+                            <% if (item.observacoes) { %>
+                              <div class="text-muted small"><%= item.observacoes %></div>
+                            <% } %>
+                          </td>
+                          <td><%= item.categoria || 'Outros' %></td>
+                          <td><%= item.ejcVinculadoNome || item.ejc || '-' %></td>
+                          <td><strong><%= Number(item.valor || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong></td>
+                          <td><%= item.responsavel || '-' %></td>
+                          <td>
+                            <button class="btn btn-delete" onclick="deletarFluxoCaixa('<%= item._id %>', '<%= (item.descricao || '').replace(/'/g, "\\'") %>')">
+                              <i class="fas fa-trash me-1"></i>Excluir
+                            </button>
+                          </td>
+                        </tr>
+                      <% }); %>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
           <!-- TAB: ADMINISTRADORES -->
-          <div class="tab-pane fade" id="admins" data-required-permission="admins.gerenciar" role="tabpanel">
+          <div class="tab-pane fade <%= isAbaAtiva('administradores') ? 'show active admin-pane-persistent' : '' %>" id="administradores" data-required-permission="admins.gerenciar" role="tabpanel">
             <div class="tab-workspace-head">
               <div>
                 <p class="tab-kicker">Area Administradores</p>
@@ -1390,8 +2436,8 @@
               <div class="admin-card-head" id="import-card-toggle" onclick="toggleImportCard()" style="cursor:pointer;user-select:none;">
                 <div>
                   <p class="admin-card-kicker">Integração</p>
-                  <h5><i class="fas fa-file-import me-2"></i>Importar Apenas Encontreiros</h5>
-                  <p class="admin-card-subtitle">Traga dados externos com mais segurança, padronização e controle de volume.</p>
+                  <h5><i class="fas fa-file-import me-2"></i>Importações</h5>
+                  <p class="admin-card-subtitle">Importe encontreiros ou carregue equipes, circulos e encontreiros de um banco externo para um encontro ja criado no sistema.</p>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                   <span class="admin-card-badge">Importação segura</span>
@@ -1399,11 +2445,29 @@
                 </div>
               </div>
               <div id="import-card-body" style="display:none;overflow:hidden;">
+                <div class="import-ux-strip" aria-label="Etapas da importação">
+                  <span class="import-ux-chip"><strong>1</strong>Modo</span>
+                  <span class="import-ux-chip"><strong>2</strong>Destino e origem</span>
+                  <span class="import-ux-chip"><strong>3</strong>Validação e execução</span>
+                </div>
+                <div class="import-ux-context" aria-live="polite">
+                  <span class="import-context-pill"><i class="fas fa-layer-group"></i><span id="import_context_tipo">Apenas Encontreiros</span></span>
+                  <span class="import-context-pill"><i class="fas fa-database"></i><span id="import_context_origem">Link direto do banco</span></span>
+                </div>
                 <form id="formImportacao" class="row g-3">
+                <div class="col-md-4">
+                  <label class="form-label">Tipo de Importacao *</label>
+                  <select id="import_tipoImportacao" class="form-select" onchange="atualizarCamposImportacao()">
+                    <option value="encontreiros">Apenas Encontreiros</option>
+                    <option value="encontro_completo">Encontro Completo (com Equipes e Circulos)</option>
+                  </select>
+                </div>
+
                 <div class="col-md-4">
                   <label class="form-label">Origem da Importacao *</label>
                   <select id="import_sourceType" class="form-select" onchange="atualizarCamposImportacao()">
                     <option value="database">Link direto do banco</option>
+                    <option value="sistema">Copiar de encontro ja criado no sistema</option>
                     <option value="excel">Arquivo Excel</option>
                     <option value="pdf">Arquivo PDF</option>
                   </select>
@@ -1412,9 +2476,64 @@
                 <div class="col-md-4">
                   <label class="form-label">Limite de Registros</label>
                   <input type="number" id="import_limite" class="form-control" value="1000" min="1" max="5000">
+                  <small class="text-muted admin-helper-note mt-1">Aplique limites menores para importações de teste e maior segurança operacional.</small>
                 </div>
 
-                <div id="import_db_fields" class="row g-3 m-0 p-0">
+                <div id="import_encontro_completo_fields" class="row g-3 m-0 p-0 import-panel" style="display:none;">
+                  <div class="col-12">
+                    <div class="alert alert-info mb-0 import-complete-callout">
+                      <span class="import-complete-callout-title"><i class="fas fa-circle-info me-1"></i>Fluxo recomendado</span>
+                      Crie primeiro o encontro no sistema e selecione abaixo o encontro de destino para receber os dados importados.
+                    </div>
+                  </div>
+                  <div class="col-lg-7 col-md-6">
+                    <label class="form-label">Importar para encontro *</label>
+                    <select id="import_ejcSelecionado" class="form-select import-destination-select">
+                      <option value="">-- Selecione o encontro de destino --</option>
+                    </select>
+                  </div>
+                  <div class="col-lg-5 col-md-6" id="import_origem_sistema_wrap" style="display:none;">
+                    <label class="form-label">Encontro de origem no sistema *</label>
+                    <select id="import_encontroOrigemId" class="form-select" onchange="carregarResumoEncontroOrigem()">
+                      <option value="">-- Selecione o encontro de origem --</option>
+                    </select>
+                  </div>
+                  <div class="col-12">
+                    <div class="import-toggle-grid" role="group" aria-label="Itens para importar">
+                      <div class="form-check import-toggle-card">
+                        <span class="import-toggle-icon"><i class="fas fa-people-group"></i></span>
+                        <div>
+                          <label class="form-check-label" for="import_importarEquipes">Importar Equipes</label>
+                          <small class="d-block">Replica a estrutura de equipes para o encontro destino.</small>
+                        </div>
+                        <input class="form-check-input" type="checkbox" id="import_importarEquipes" checked>
+                      </div>
+                      <div class="form-check import-toggle-card">
+                        <span class="import-toggle-icon"><i class="fas fa-circle-nodes"></i></span>
+                        <div>
+                          <label class="form-check-label" for="import_importarCirculos">Importar Circulos</label>
+                          <small class="d-block">Mantem a organizacao por circulos no novo encontro.</small>
+                        </div>
+                        <input class="form-check-input" type="checkbox" id="import_importarCirculos" checked>
+                      </div>
+                      <div class="form-check import-toggle-card">
+                        <span class="import-toggle-icon"><i class="fas fa-id-badge"></i></span>
+                        <div>
+                          <label class="form-check-label" for="import_importarEncontreiros">Importar Encontreiros</label>
+                          <small class="d-block">Inclui pessoas e dados de cadastro vinculados ao encontro.</small>
+                        </div>
+                        <input class="form-check-input" type="checkbox" id="import_importarEncontreiros" checked>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12">
+                    <div id="import_encontro_resumo" class="alert alert-secondary mb-0" role="status">
+                      Selecione um encontro de origem para ver o resumo prévio da estrutura.
+                    </div>
+                  </div>
+                </div>
+
+                <div id="import_db_fields" class="row g-3 m-0 p-0 import-panel">
                   <div class="col-md-4">
                     <label class="form-label">Banco de Origem *</label>
                     <select id="import_dbEngine" class="form-select" onchange="atualizarCamposImportacao()">
@@ -1435,13 +2554,24 @@
                     <label class="form-label" id="import_table_label">Colecao/Tabela de Encontreiros</label>
                     <input type="text" id="import_tableName" class="form-control" value="Encontro">
                   </div>
-                  <div class="col-12" id="import_sqlquery_wrap" style="display:none;">
-                    <label class="form-label">Consulta SQL (opcional)</label>
-                    <textarea id="import_sqlQuery" class="form-control" rows="3" placeholder="SELECT * FROM encontro LIMIT 1000"></textarea>
+                  <div id="import_complete_collection_fields" class="row g-3 m-0 p-0" style="display:none;">
+                    <div class="col-md-4">
+                      <label class="form-label">Colecao/Tabela de Equipes</label>
+                      <input type="text" id="import_completeColecaoEquipes" class="form-control" value="Equipe">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Colecao/Tabela de Circulos</label>
+                      <input type="text" id="import_completeColecaoCirculos" class="form-control" value="Circulo">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Colecao/Tabela de Encontreiros</label>
+                      <input type="text" id="import_completeColecaoEncontreiros" class="form-control" value="Encontro">
+                    </div>
                   </div>
+                  <div class="col-12" id="import_sqlquery_wrap" style="display:none;"></div>
                 </div>
 
-                <div id="import_file_fields" class="row g-3 m-0 p-0" style="display:none;">
+                <div id="import_file_fields" class="row g-3 m-0 p-0 import-panel" style="display:none;">
                   <div class="col-12">
                     <label class="form-label">Arquivo para Importacao *</label>
                     <input type="file" id="import_arquivo" class="form-control" accept=".xlsx,.xls,.xlsm,.pdf">
@@ -1460,8 +2590,8 @@
                 </div>
 
                 <div class="col-md-6 d-flex align-items-end">
-                  <button type="button" class="btn btn-primary w-100 admin-primary-action" onclick="importarCadastros()">
-                    <i class="fas fa-file-import me-1"></i>Importar Encontreiros
+                  <button type="button" class="btn btn-primary w-100 admin-primary-action" id="import_button" onclick="importarCadastros()">
+                    <i class="fas fa-file-import me-1"></i><span id="import_button_text">Importar Encontreiros</span>
                   </button>
                 </div>
               </form>
@@ -1503,17 +2633,29 @@
                   </button>
                 </div>
                 <div class="col-12">
-                  <label class="form-label">Permissões extras</label>
-                  <div id="admin_permissions" class="admin-perm-pill-group">
-                    <% adminPermissionOptionsList.forEach(function(option) { %>
-                      <div class="admin-perm-pill">
-                        <input class="admin-perm-item" type="checkbox" id="perm-new-<%= option.key %>" value="<%= option.key %>">
-                        <label class="admin-perm-pill-label" for="perm-new-<%= option.key %>">
-                          <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i><%= option.label %></span>
-                          <small><%= option.description %></small>
-                        </label>
-                      </div>
-                    <% }); %>
+                  <button
+                    type="button"
+                    class="btn btn-outline-secondary w-100 text-start"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#admin_permissions_collapse"
+                    aria-expanded="false"
+                    aria-controls="admin_permissions_collapse"
+                  >
+                    <i class="fas fa-shield-halved me-1"></i>Permissões extras (clique para abrir)
+                  </button>
+                  <div id="admin_permissions_collapse" class="collapse mt-2">
+                    <label class="form-label">Permissões extras</label>
+                    <div id="admin_permissions" class="admin-perm-pill-group">
+                      <% adminPermissionOptionsList.forEach(function(option) { %>
+                        <div class="admin-perm-pill">
+                          <input class="admin-perm-item" type="checkbox" id="perm-new-<%= option.key %>" value="<%= option.key %>">
+                          <label class="admin-perm-pill-label" for="perm-new-<%= option.key %>">
+                            <span class="admin-perm-pill-name"><i class="fas fa-check admin-perm-check-icon"></i><%= option.label %></span>
+                            <small><%= option.description %></small>
+                          </label>
+                        </div>
+                      <% }); %>
+                    </div>
                   </div>
                 </div>
               </form>
@@ -1560,8 +2702,8 @@
                 <div class="audit-pagination-actions">
                   <% const prevAuditPage = Math.max(1, (auditoriaPaginaAtual || 1) - 1); %>
                   <% const nextAuditPage = Math.min((auditoriaTotalPaginas || 1), (auditoriaPaginaAtual || 1) + 1); %>
-                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) <= 1 ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= prevAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Anterior</a>
-                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) >= (auditoriaTotalPaginas || 1) ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=admins&auditPage=<%= nextAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Próxima</a>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) <= 1 ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=administradores&auditPage=<%= prevAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Anterior</a>
+                  <a class="btn btn-sm btn-outline-light <%= (auditoriaPaginaAtual || 1) >= (auditoriaTotalPaginas || 1) ? 'disabled' : '' %>" href="/admin/gerenciar-cadastros?tab=administradores&auditPage=<%= nextAuditPage %>&auditLimit=<%= auditoriaLimite || 40 %>">Próxima</a>
                 </div>
               </div>
               <div class="table-wrap admin-table-shell">
@@ -2038,13 +3180,16 @@
     </div>
   </div>
 
-  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/page-transitions.js"></script>
+  <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js?v=20260406-adminfix-3"></script>
+  <script src="/js/page-transitions.js?v=20260406-adminfix-3"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
   <script id="equipes-data" type="application/json"><%- JSON.stringify(equipes || []) %></script>
+  <script id="subequipes-data" type="application/json"><%- JSON.stringify(subequipes || []) %></script>
   <script id="encontreiros-equipe-data" type="application/json"><%- JSON.stringify(encontreirosParaEquipe || []) %></script>
+  <script id="gastos-data" type="application/json"><%- JSON.stringify(gastos || []) %></script>
+  <script id="fluxo-caixa-data" type="application/json"><%- JSON.stringify(fluxoCaixa || []) %></script>
   <script id="administradores-data" type="application/json"><%- JSON.stringify(administradores || []) %></script>
   <script id="admin-role-defaults-data" type="application/json"><%- JSON.stringify(adminRoleDefaults || {}) %></script>
   <script>
@@ -2052,7 +3197,78 @@
     const encontreiros = JSON.parse(document.getElementById('encontreiros-data').textContent || '[]');
     const ejcs = JSON.parse(document.getElementById('ejcs-data').textContent || '[]');
     const equipes = JSON.parse(document.getElementById('equipes-data').textContent || '[]');
+    const subequipes = JSON.parse(document.getElementById('subequipes-data').textContent || '[]');
     const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
+    const gastosFinanceiros = JSON.parse(document.getElementById('gastos-data').textContent || '[]');
+    const fluxoCaixaFinanceiro = JSON.parse(document.getElementById('fluxo-caixa-data').textContent || '[]');
+    const gastoSaidaCategoryOptions = <%- JSON.stringify(gastoCategoryOptionsList) %>;
+    const gastoEntradaCategoryOptions = ['Arrecadação', 'Venda', 'Doação', 'Patrocínio', 'Inscrição', 'Repasse', 'Outros'];
+    const gastoLancamentoConfigs = {
+      gasto: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-save me-1"></i>Salvar gasto com segurança',
+        descricaoPlaceholder: 'Ex: compra de mercado, decoração, impressão',
+        observacoesPlaceholder: 'Detalhes extras do gasto',
+        sucessoMensagem: 'Gasto cadastrado com sucesso.',
+      },
+      gasto_encontro: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-save me-1"></i>Salvar gasto com segurança',
+        descricaoPlaceholder: 'Ex: compra de mercado, decoração, impressão',
+        observacoesPlaceholder: 'Detalhes extras do gasto',
+        sucessoMensagem: 'Gasto cadastrado com sucesso.',
+      },
+      gasto_equipe: {
+        isEntrada: false,
+        categoriaDefault: gastoSaidaCategoryOptions[0] || 'Outros',
+        submitLabel: '<i class="fas fa-users me-1"></i>Registrar gasto da equipe',
+        descricaoPlaceholder: 'Ex: compra da equipe para ação, material, transporte',
+        observacoesPlaceholder: 'Detalhes extras do gasto da equipe',
+        sucessoMensagem: 'Gasto da equipe cadastrado com sucesso.',
+      },
+      arrecadacao: {
+        isEntrada: true,
+        categoriaDefault: 'Arrecadação',
+        submitLabel: '<i class="fas fa-arrow-trend-up me-1"></i>Registrar entrada de capital',
+        descricaoPlaceholder: 'Ex: arrecadação da missa, apoio da comunidade',
+        observacoesPlaceholder: 'Detalhes extras da arrecadação',
+        sucessoMensagem: 'Entrada de capital cadastrada com sucesso.',
+      },
+      venda_equipe: {
+        isEntrada: true,
+        categoriaDefault: 'Venda',
+        submitLabel: '<i class="fas fa-cash-register me-1"></i>Registrar venda da equipe',
+        descricaoPlaceholder: 'Ex: venda de lanche ou rifa da equipe',
+        observacoesPlaceholder: 'Detalhes extras da venda da equipe',
+        sucessoMensagem: 'Venda da equipe cadastrada com sucesso.',
+      },
+      doacao: {
+        isEntrada: true,
+        categoriaDefault: 'Doação',
+        submitLabel: '<i class="fas fa-hand-holding-heart me-1"></i>Registrar doação',
+        descricaoPlaceholder: 'Ex: doação recebida de família ou benfeitor',
+        observacoesPlaceholder: 'Detalhes extras da doação',
+        sucessoMensagem: 'Doação cadastrada com sucesso.',
+      },
+      patrocinio: {
+        isEntrada: true,
+        categoriaDefault: 'Patrocínio',
+        submitLabel: '<i class="fas fa-handshake-angle me-1"></i>Registrar patrocínio',
+        descricaoPlaceholder: 'Ex: apoio financeiro de parceiro local',
+        observacoesPlaceholder: 'Detalhes extras do patrocínio',
+        sucessoMensagem: 'Patrocínio cadastrado com sucesso.',
+      },
+      inscricao: {
+        isEntrada: true,
+        categoriaDefault: 'Inscrição',
+        submitLabel: '<i class="fas fa-file-invoice-dollar me-1"></i>Registrar repasse de inscrição',
+        descricaoPlaceholder: 'Ex: repasse dos valores de inscrição',
+        observacoesPlaceholder: 'Detalhes extras do repasse',
+        sucessoMensagem: 'Repasse de inscrição cadastrado com sucesso.',
+      },
+    };
     const administradoresData = JSON.parse(document.getElementById('administradores-data').textContent || '[]');
     const adminRoleDefaults = JSON.parse(document.getElementById('admin-role-defaults-data').textContent || '{}');
       const adminPermissionOptionsData = <%- JSON.stringify(adminPermissionOptionsList || []) %>;
@@ -2615,12 +3831,120 @@
       }
     }
 
-    function abrirAba(tabId) {
-      const tabButton = document.getElementById(tabId);
-      if (tabButton && tabButton.style.display !== 'none') {
-        atualizarNavegacaoAtiva(tabId);
-        bootstrap.Tab.getOrCreateInstance(tabButton).show();
+    function getTabPaneFromButton(tabButton) {
+      const targetSelector = tabButton ? tabButton.getAttribute('data-bs-target') : '';
+      return targetSelector ? document.querySelector(targetSelector) : null;
+    }
+
+    function ativarAbaSemBootstrap(tabButton) {
+      if (!tabButton) return null;
+
+      const targetPane = getTabPaneFromButton(tabButton);
+
+      document.querySelectorAll('#cadastroTabs .nav-link').forEach((item) => {
+        item.classList.remove('active');
+        item.setAttribute('aria-selected', 'false');
+      });
+
+      document.querySelectorAll('#cadastroTabsContent .tab-pane').forEach((pane) => {
+        pane.classList.remove('active', 'show');
+      });
+
+      tabButton.classList.add('active');
+      tabButton.setAttribute('aria-selected', 'true');
+
+      if (targetPane) {
+        targetPane.classList.add('active', 'show');
       }
+
+      return targetPane;
+    }
+
+    function scrollParaConteudoDaAba(targetPane) {
+      const anchor = document.getElementById('cadastroTabs') || targetPane;
+      if (!anchor || typeof anchor.scrollIntoView !== 'function') return;
+
+      window.requestAnimationFrame(() => {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function abrirAba(tabId, options = {}) {
+      const tabButton = document.getElementById(tabId);
+      const shouldScroll = options.scroll !== false && options.shouldScroll !== false;
+
+      if (!tabButton || window.getComputedStyle(tabButton).display === 'none') {
+        return;
+      }
+
+      let targetPane = getTabPaneFromButton(tabButton);
+
+      try {
+        if (window.bootstrap && bootstrap.Tab) {
+          bootstrap.Tab.getOrCreateInstance(tabButton).show();
+          targetPane = getTabPaneFromButton(tabButton);
+        } else {
+          targetPane = ativarAbaSemBootstrap(tabButton);
+        }
+      } catch (error) {
+        console.error('[abrirAba] fallback manual acionado:', error);
+        targetPane = ativarAbaSemBootstrap(tabButton);
+      }
+
+      promoverSecaoAdministradores(tabId);
+      atualizarNavegacaoAtiva(tabId);
+      salvarAbaAtiva();
+
+      if (shouldScroll) {
+        scrollParaConteudoDaAba(targetPane);
+      }
+    }
+
+    function bindTabTriggers() {
+      document.querySelectorAll('[data-tab-target]').forEach((trigger) => {
+        if (trigger.dataset.tabBound === 'true') return;
+        trigger.dataset.tabBound = 'true';
+
+        trigger.addEventListener('click', (event) => {
+          const tabTarget = trigger.getAttribute('data-tab-target');
+          if (!tabTarget) return;
+
+          const isAnchorTrigger = trigger.tagName === 'A' && !!trigger.getAttribute('href');
+          if (isAnchorTrigger) {
+            try {
+              localStorage.setItem('admin_gerenciar_cadastros_aba_ativa', tabTarget.replace(/-tab$/, ''));
+            } catch (error) {
+              // Ignora falhas de armazenamento e deixa a navegação seguir normalmente.
+            }
+
+            abrirAba(tabTarget, { shouldScroll: false });
+            return;
+          }
+
+          event.preventDefault();
+          abrirAba(tabTarget);
+        });
+      });
+    }
+
+    function promoverSecaoAdministradores(tabId) {
+      const adminPane = document.getElementById('administradores');
+      const tabsContent = document.getElementById('cadastroTabsContent');
+      if (!adminPane || !tabsContent) return;
+
+      if (tabsContent.firstElementChild !== adminPane) {
+        tabsContent.prepend(adminPane);
+      }
+
+      const abaAtiva = tabId || ((document.querySelector('#cadastroTabs .nav-link.active') || {}).id);
+      const isAdministradores = abaAtiva === 'administradores-tab';
+
+      adminPane.classList.toggle('admin-pane-persistent', isAdministradores);
+      adminPane.classList.toggle('show', isAdministradores);
+      adminPane.classList.toggle('active', isAdministradores);
+      adminPane.classList.toggle('fade', !isAdministradores);
+      adminPane.hidden = !isAdministradores;
+      adminPane.style.display = isAdministradores ? 'block' : '';
     }
 
     function setupAdminKeyboardShortcuts() {
@@ -2631,7 +3955,9 @@
         '4': 'tios-tab',
         '5': 'aprovacoes-tab',
         '6': 'encontros-tab',
-        '7': 'admins-tab',
+        '7': 'subequipes-tab',
+        '8': 'gastos-tab',
+        '9': 'administradores-tab',
       };
 
       document.addEventListener('keydown', (event) => {
@@ -2696,21 +4022,19 @@
       const abaNaUrl = url.searchParams.get('tab');
       const abaNoStorage = localStorage.getItem('admin_gerenciar_cadastros_aba_ativa');
       const fallbackAba = getPrimeiraAbaDisponivelId();
-      const abaDesejada = abaNaUrl || abaNoStorage || fallbackAba;
+      const aliasesAbas = { admins: 'administradores' };
+      const abaPersistida = abaNaUrl || abaNoStorage || fallbackAba;
+      const abaDesejada = aliasesAbas[abaPersistida] || abaPersistida;
       const botao = document.getElementById(`${abaDesejada}-tab`);
+      const shouldScrollOnRestore = Boolean(abaNaUrl || window.location.hash);
 
-      if (!botao || botao.style.display === 'none') {
-        const fallbackButton = document.getElementById(`${fallbackAba}-tab`);
-        if (fallbackButton && fallbackButton.style.display !== 'none') {
-          bootstrap.Tab.getOrCreateInstance(fallbackButton).show();
-          atualizarNavegacaoAtiva(`${fallbackAba}-tab`);
-        }
+      if (!botao || window.getComputedStyle(botao).display === 'none') {
+        abrirAba(`${fallbackAba}-tab`, { scroll: shouldScrollOnRestore });
         salvarAbaAtiva();
         return;
       }
 
-      bootstrap.Tab.getOrCreateInstance(botao).show();
-      atualizarNavegacaoAtiva(`${abaDesejada}-tab`);
+      abrirAba(`${abaDesejada}-tab`, { scroll: shouldScrollOnRestore });
       salvarAbaAtiva();
     }
 
@@ -2811,12 +4135,15 @@
         salvarAbaAtiva();
         if (event && event.target && event.target.id) {
           atualizarNavegacaoAtiva(event.target.id);
+          promoverSecaoAdministradores(event.target.id);
         }
       });
     });
 
     aplicarPermissoesNoPainel();
+    bindTabTriggers();
     restaurarAbaAtiva();
+    promoverSecaoAdministradores();
     setupAdminKeyboardShortcuts();
 
     function initSidebarDockGlow() {
@@ -3239,6 +4566,34 @@
       setCheckedAdminPermissions(checkboxSelector, defaults);
     }
 
+    function shouldExpandExtraPermissionsForLevel(level) {
+      const normalizedLevel = String(level || '').trim();
+      const defaults = Array.isArray(adminRoleDefaults[normalizedLevel]) ? adminRoleDefaults[normalizedLevel] : [];
+      const availableOptions = Array.isArray(adminPermissionOptionsData) ? adminPermissionOptionsData : [];
+      return availableOptions.some((option) => {
+        const key = String((option && option.key) || '').trim();
+        return key && !defaults.includes(key);
+      });
+    }
+
+    function toggleAdminPermissionsCollapse(expand) {
+      const collapseNode = document.getElementById('admin_permissions_collapse');
+      if (!collapseNode) return;
+
+      const toggleNode = document.querySelector('[data-bs-target="#admin_permissions_collapse"]');
+      if (typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+        const collapse = bootstrap.Collapse.getOrCreateInstance(collapseNode, { toggle: false });
+        if (expand) collapse.show();
+        else collapse.hide();
+      } else {
+        collapseNode.classList.toggle('show', !!expand);
+      }
+
+      if (toggleNode) {
+        toggleNode.setAttribute('aria-expanded', expand ? 'true' : 'false');
+      }
+    }
+
     async function cadastrarAdmin() {
       if (!ensurePermission('admins.gerenciar')) return;
       const username = document.getElementById('admin_username').value.trim();
@@ -3352,6 +4707,906 @@
       } catch (error) {
         await appAlert('Erro ao deletar equipe.', 'danger', 'Erro');
       }
+    }
+
+    async function cadastrarSubequipe() {
+      if (!ensurePermission('equipes.gerenciar')) return;
+      const nome = document.getElementById('subequipe_nome').value.trim();
+      const anoVigencia = Number.parseInt(String(document.getElementById('subequipe_ano').value || ''), 10);
+
+      if (!nome) {
+        await appAlert('Informe o nome da sub-equipe.', 'warning', 'Dados incompletos');
+        return;
+      }
+      if (!Number.isFinite(anoVigencia) || anoVigencia < 2000 || anoVigencia > 2100) {
+        await appAlert('Informe um ano de vigência válido.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/cadastrar-subequipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome, anoVigencia })
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await appAlert('Sub-equipe cadastrada com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formSubequipe').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao cadastrar sub-equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao cadastrar sub-equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function vincularEncontreiroSubequipe() {
+      if (!ensurePermission('equipes.gerenciar')) return;
+      const pessoaId = document.getElementById('vinculo_subequipe_pessoa').value;
+      const subequipeId = document.getElementById('vinculo_subequipe').value;
+      const papel = document.getElementById('vinculo_subequipe_papel').value;
+
+      if (!pessoaId || !subequipeId || !papel) {
+        await appAlert('Selecione pessoa, sub-equipe e vínculo.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/vincular-encontreiro-subequipe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pessoaId, subequipeId, papel })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Pessoa vinculada na sub-equipe com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formVinculoSubequipe').reset();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao vincular sub-equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao vincular sub-equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function editarSubequipe(subequipeId, nomeAtual, anoAtual) {
+      if (!ensurePermission('equipes.gerenciar')) return;
+      const nome = await appPrompt('Informe o novo nome da sub-equipe.', nomeAtual || '', 'Editar sub-equipe');
+      if (nome == null) return;
+
+      const anoRaw = await appPrompt('Informe o ano de vigência (YYYY).', String(anoAtual || ''), 'Ano de vigência');
+      if (anoRaw == null) return;
+      const anoVigencia = Number.parseInt(String(anoRaw || '').trim(), 10);
+
+      const nomeLimpo = String(nome || '').trim();
+      if (!nomeLimpo) {
+        await appAlert('Informe um nome válido.', 'warning', 'Campo obrigatório');
+        return;
+      }
+      if (!Number.isFinite(anoVigencia) || anoVigencia < 2000 || anoVigencia > 2100) {
+        await appAlert('Informe um ano de vigência válido.', 'warning', 'Campo obrigatório');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/editar-subequipe/${subequipeId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: nomeLimpo, anoVigencia })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Sub-equipe atualizada com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao editar sub-equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao editar sub-equipe.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarSubequipe(subequipeId, subequipeNome) {
+      if (!ensurePermission('equipes.gerenciar')) return;
+      if (!await appConfirm(`Deseja deletar a sub-equipe "${subequipeNome}"? Os vínculos dessa sub-equipe serão removidos dos encontreiros e tios.`, 'Confirmar exclusão')) return;
+
+      try {
+        const response = await fetch(`/admin/deletar-subequipe/${subequipeId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Sub-equipe deletada com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao deletar sub-equipe.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao deletar sub-equipe.', 'danger', 'Erro');
+      }
+    }
+
+    function atualizarOpcoesEquipeGasto(selectedValue = '') {
+      const equipeSelect = document.getElementById('gasto_equipeId');
+      const ejcSelect = document.getElementById('gasto_ejcId');
+      if (!equipeSelect) return;
+
+      const ejcSelecionado = String(ejcSelect?.value || '');
+      const lista = (equipes || [])
+        .filter((item) => !ejcSelecionado || String(item?.ejcId || '') === ejcSelecionado)
+        .sort((a, b) => String(a?.nome || '').localeCompare(String(b?.nome || ''), 'pt-BR'));
+
+      equipeSelect.innerHTML = ['<option value="">Selecione a equipe</option>']
+        .concat(lista.map((item) => `<option value="${escapeHtml(String(item?._id || ''))}">${escapeHtml(String(item?.nome || 'Equipe'))}</option>`))
+        .join('');
+
+      if (selectedValue) {
+        equipeSelect.value = String(selectedValue);
+      }
+    }
+
+    function formatCurrencyInputBRL(value) {
+      const numeric = String(value || '').replace(/\D/g, '');
+      if (!numeric) return '';
+      const cents = Number.parseInt(numeric, 10) / 100;
+      return cents.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function initGastosPremiumInputs() {
+      const valorInput = document.getElementById('gasto_valor');
+      if (!valorInput || valorInput.dataset.maskReady === '1') return;
+
+      valorInput.dataset.maskReady = '1';
+      valorInput.addEventListener('input', () => {
+        valorInput.value = formatCurrencyInputBRL(valorInput.value);
+      });
+      valorInput.addEventListener('focus', () => {
+        requestAnimationFrame(() => valorInput.select());
+      });
+    }
+
+    function formatCurrencyValueBRL(value) {
+      return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function resolveLancamentoFinanceiroConfig(tipoLancamento) {
+      return gastoLancamentoConfigs[tipoLancamento] || gastoLancamentoConfigs.gasto;
+    }
+
+    function getFinanceCategoryBadgeClass(categoria, tipoMovimento = '') {
+      const normalized = normalizeSearchText(`${categoria || ''} ${tipoMovimento || ''}`);
+      if (normalized.includes('doa')) return 'finance-category-badge badge-donation';
+      if (normalized.includes('vend')) return 'finance-category-badge badge-sale';
+      if (normalized.includes('arrecad') || normalized.includes('inscr') || normalized.includes('repasse') || normalized.includes('patrocin') || normalized.includes('entrada')) {
+        return 'finance-category-badge badge-entry';
+      }
+      if (normalized.includes('saida') || normalized.includes('gasto') || normalized.includes('aliment') || normalized.includes('infra') || normalized.includes('material') || normalized.includes('decor') || normalized.includes('transporte') || normalized.includes('limpeza') || normalized.includes('liturgia') || normalized.includes('comunica') || normalized.includes('brinde')) {
+        return 'finance-category-badge badge-expense';
+      }
+      return 'finance-category-badge';
+    }
+
+    function renderGastoCategoryOptions(preferredValue = '') {
+      const tipoLancamento = document.getElementById('gasto_tipoLancamento')?.value || 'arrecadacao';
+      const categoriaSelect = document.getElementById('gasto_categoria');
+      if (!categoriaSelect) return;
+
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+      const options = lancamentoConfig.isEntrada ? gastoEntradaCategoryOptions : gastoSaidaCategoryOptions;
+      const valorSelecionado = preferredValue || categoriaSelect.value || lancamentoConfig.categoriaDefault || 'Outros';
+
+      categoriaSelect.innerHTML = options
+        .map((categoria) => `<option value="${escapeHtml(categoria)}">${escapeHtml(categoria)}</option>`)
+        .join('');
+
+      categoriaSelect.value = options.includes(valorSelecionado)
+        ? valorSelecionado
+        : (lancamentoConfig.categoriaDefault || options[0] || 'Outros');
+    }
+
+    function parseGastoDateSafe(value) {
+      const parsed = value ? new Date(value) : null;
+      return parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
+    }
+
+    function isGastoWithinPeriodo(dateValue, periodo) {
+      if (!periodo || periodo === 'todos') return true;
+      const date = parseGastoDateSafe(dateValue);
+      if (!date) return false;
+
+      const now = new Date();
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const compareDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+
+      if (periodo === 'hoje') {
+        return compareDate.getTime() === startToday.getTime();
+      }
+
+      const diffDays = Math.floor((startToday.getTime() - compareDate.getTime()) / 86400000);
+      if (periodo === '7dias') return diffDays >= 0 && diffDays < 7;
+      if (periodo === '30dias') return diffDays >= 0 && diffDays < 30;
+      if (periodo === 'mes_atual') {
+        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+      }
+      if (periodo === 'trimestre') return diffDays >= 0 && diffDays < 90;
+      return true;
+    }
+
+    function getGastosFiltrados() {
+      const periodo = document.getElementById('gastos_periodo_filtro')?.value || 'todos';
+      const categoria = document.getElementById('gastos_categoria_filtro')?.value || '';
+      const escopo = document.getElementById('gastos_escopo_filtro')?.value || '';
+      const busca = normalizeSearchText(document.getElementById('gastos_busca_filtro')?.value || '');
+
+      return (gastosFinanceiros || []).filter((item) => {
+        if (!item) return false;
+        if (!isGastoWithinPeriodo(item.dataGasto, periodo)) return false;
+        if (categoria && String(item.categoria || '') !== categoria) return false;
+        if (escopo && String(item.escopoTipo || '') !== escopo) return false;
+
+        if (busca) {
+          const haystack = normalizeSearchText([
+            item.descricao,
+            item.responsavel,
+            item.equipeNome,
+            item.ejcVinculadoNome,
+            item.categoria,
+            item.formaPagamento,
+          ].join(' '));
+          if (!haystack.includes(busca)) return false;
+        }
+
+        return true;
+      });
+    }
+
+    let gastosUrlSyncSuspended = false;
+
+    function updateGastosFiltersInUrl() {
+      if (gastosUrlSyncSuspended || typeof window === 'undefined' || !window.history || !window.history.replaceState) return;
+
+      const periodo = document.getElementById('gastos_periodo_filtro')?.value || 'mes_atual';
+      const categoria = document.getElementById('gastos_categoria_filtro')?.value || '';
+      const escopo = document.getElementById('gastos_escopo_filtro')?.value || '';
+      const busca = document.getElementById('gastos_busca_filtro')?.value || '';
+
+      const url = new URL(window.location.href);
+      if (periodo && periodo !== 'mes_atual') url.searchParams.set('gPeriodo', periodo);
+      else url.searchParams.delete('gPeriodo');
+
+      if (categoria) url.searchParams.set('gCategoria', categoria);
+      else url.searchParams.delete('gCategoria');
+
+      if (escopo) url.searchParams.set('gEscopo', escopo);
+      else url.searchParams.delete('gEscopo');
+
+      if (busca.trim()) url.searchParams.set('gBusca', busca.trim());
+      else url.searchParams.delete('gBusca');
+
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    function applyGastosFiltersFromUrl() {
+      if (typeof window === 'undefined') return;
+
+      const params = new URLSearchParams(window.location.search);
+      const periodoInput = document.getElementById('gastos_periodo_filtro');
+      const categoriaInput = document.getElementById('gastos_categoria_filtro');
+      const escopoInput = document.getElementById('gastos_escopo_filtro');
+      const buscaInput = document.getElementById('gastos_busca_filtro');
+
+      gastosUrlSyncSuspended = true;
+
+      const periodoUrl = String(params.get('gPeriodo') || '').trim();
+      if (periodoInput && periodoUrl && Array.from(periodoInput.options || []).some((opt) => opt.value === periodoUrl)) {
+        periodoInput.value = periodoUrl;
+      }
+
+      const categoriaUrl = String(params.get('gCategoria') || '').trim();
+      if (categoriaInput && categoriaUrl && Array.from(categoriaInput.options || []).some((opt) => opt.value === categoriaUrl)) {
+        categoriaInput.value = categoriaUrl;
+      }
+
+      const escopoUrl = String(params.get('gEscopo') || '').trim();
+      if (escopoInput && escopoUrl && Array.from(escopoInput.options || []).some((opt) => opt.value === escopoUrl)) {
+        escopoInput.value = escopoUrl;
+      }
+
+      if (buscaInput) {
+        buscaInput.value = String(params.get('gBusca') || '');
+      }
+
+      gastosUrlSyncSuspended = false;
+    }
+
+    function buildGastoRowMarkup(item) {
+      const descricao = escapeHtml(item?.descricao || '-');
+      const observacoes = item?.observacoes ? `<div class="text-muted small">${escapeHtml(item.observacoes)}</div>` : '';
+      const categoria = escapeHtml(item?.categoria || 'Outros');
+      const categoriaBadgeClass = getFinanceCategoryBadgeClass(item?.categoria, 'saida');
+      const ejcNome = escapeHtml(item?.ejcVinculadoNome || item?.ejc || '-');
+      const responsavel = escapeHtml(item?.responsavel || '-');
+      const data = parseGastoDateSafe(item?.dataGasto);
+      const dataTexto = data ? data.toLocaleDateString('pt-BR') : '-';
+      const escopoBadge = String(item?.escopoTipo || '') === 'equipe'
+        ? `<span class="status-badge status-ok gastos-scope-badge">${escapeHtml(item?.equipeNome || 'Equipe')}</span>`
+        : '<span class="status-badge gastos-scope-badge">Encontro</span>';
+      const descricaoSafe = String(item?.descricao || '').replace(/'/g, "\\'");
+
+      return `<tr>
+        <td>${dataTexto}</td>
+        <td><strong>${descricao}</strong>${observacoes}</td>
+        <td><span class="${categoriaBadgeClass}">${categoria}</span></td>
+        <td>${escopoBadge}</td>
+        <td>${ejcNome}</td>
+        <td><strong>${formatCurrencyValueBRL(item?.valor || 0)}</strong></td>
+        <td>${responsavel}</td>
+        <td>
+          <button class="btn btn-delete" onclick="deletarGasto('${String(item?._id || '')}', '${descricaoSafe}')">
+            <i class="fas fa-trash me-1"></i>Excluir
+          </button>
+        </td>
+      </tr>`;
+    }
+
+    function renderGastosDashboard() {
+      const gastosFiltrados = getGastosFiltrados();
+      const tbody = document.getElementById('gastos-tbody');
+      const countBadge = document.getElementById('gastos_table_count_badge');
+      const total = gastosFiltrados.reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const totalEncontro = gastosFiltrados
+        .filter((item) => String(item?.escopoTipo || '') !== 'equipe')
+        .reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const totalEquipes = gastosFiltrados
+        .filter((item) => String(item?.escopoTipo || '') === 'equipe')
+        .reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const media = gastosFiltrados.length ? (total / gastosFiltrados.length) : 0;
+      const now = new Date();
+      const gastosMesAtual = gastosFiltrados.filter((item) => {
+        const date = parseGastoDateSafe(item?.dataGasto);
+        return date && date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+      });
+      const totalMesAtual = gastosMesAtual.reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const maiorGastoMes = gastosMesAtual.reduce((maior, item) => {
+        if (!maior || (Number(item?.valor) || 0) > (Number(maior?.valor) || 0)) return item;
+        return maior;
+      }, null);
+      const percentEncontro = total ? Math.max(0, Math.round((totalEncontro / total) * 100)) : 0;
+      const percentEquipes = total ? Math.max(0, 100 - percentEncontro) : 0;
+
+      if (tbody) {
+        if (!gastosFiltrados.length) {
+          tbody.innerHTML = '<tr><td colspan="8"><div class="gastos-empty-state"><i class="fas fa-wallet"></i><span>Nenhum gasto encontrado com os filtros atuais.</span></div></td></tr>';
+        } else {
+          tbody.innerHTML = gastosFiltrados.map(buildGastoRowMarkup).join('');
+        }
+      }
+
+      if (countBadge) countBadge.textContent = `${gastosFiltrados.length} registro(s)`;
+      const totalGeralCard = document.getElementById('gastos_total_geral_card');
+      const totalEncontroCard = document.getElementById('gastos_total_encontro_card');
+      const totalEquipesCard = document.getElementById('gastos_total_equipes_card');
+      const totalRegistrosCard = document.getElementById('gastos_total_registros_card');
+      const mesAtualCard = document.getElementById('gastos_mes_atual_valor');
+      const maiorMesValor = document.getElementById('gastos_maior_mes_valor');
+      const maiorMesDesc = document.getElementById('gastos_maior_mes_desc');
+      const ticketMedio = document.getElementById('gastos_ticket_medio_valor');
+      const distribTotal = document.getElementById('gastos_distrib_total_texto');
+      const legendaEncontro = document.getElementById('gastos_legenda_encontro');
+      const legendaEquipes = document.getElementById('gastos_legenda_equipes');
+      const barEncontro = document.getElementById('gastos_bar_encontro');
+      const barEquipes = document.getElementById('gastos_bar_equipes');
+
+      updateGastosFiltersInUrl();
+
+      if (totalGeralCard) totalGeralCard.textContent = formatCurrencyValueBRL(total);
+      if (totalEncontroCard) totalEncontroCard.textContent = formatCurrencyValueBRL(totalEncontro);
+      if (totalEquipesCard) totalEquipesCard.textContent = formatCurrencyValueBRL(totalEquipes);
+      if (totalRegistrosCard) totalRegistrosCard.textContent = String(gastosFiltrados.length);
+      if (mesAtualCard) mesAtualCard.textContent = formatCurrencyValueBRL(totalMesAtual);
+      if (maiorMesValor) maiorMesValor.textContent = formatCurrencyValueBRL(maiorGastoMes?.valor || 0);
+      if (maiorMesDesc) maiorMesDesc.textContent = maiorGastoMes?.descricao || 'Sem lançamento no período';
+      if (ticketMedio) ticketMedio.textContent = formatCurrencyValueBRL(media);
+      if (distribTotal) distribTotal.textContent = `${percentEncontro}% / ${percentEquipes}%`;
+      if (legendaEncontro) legendaEncontro.textContent = formatCurrencyValueBRL(totalEncontro);
+      if (legendaEquipes) legendaEquipes.textContent = formatCurrencyValueBRL(totalEquipes);
+      if (barEncontro) barEncontro.style.width = `${percentEncontro}%`;
+      if (barEquipes) barEquipes.style.width = `${percentEquipes}%`;
+    }
+
+    function limparFiltrosGastos() {
+      const periodo = document.getElementById('gastos_periodo_filtro');
+      const categoria = document.getElementById('gastos_categoria_filtro');
+      const escopo = document.getElementById('gastos_escopo_filtro');
+      const busca = document.getElementById('gastos_busca_filtro');
+      if (periodo) periodo.value = 'mes_atual';
+      if (categoria) categoria.value = '';
+      if (escopo) escopo.value = '';
+      if (busca) busca.value = '';
+      renderGastosDashboard();
+    }
+
+    function bindGastosDashboardFilters() {
+      ['gastos_periodo_filtro', 'gastos_categoria_filtro', 'gastos_escopo_filtro', 'gastos_busca_filtro'].forEach((id) => {
+        const node = document.getElementById(id);
+        if (!node || node.dataset.bound === '1') return;
+        node.dataset.bound = '1';
+        node.addEventListener('input', renderGastosDashboard);
+        node.addEventListener('change', renderGastosDashboard);
+      });
+    }
+
+    function atualizarCamposGasto() {
+      const tipoLancamentoSelect = document.getElementById('gasto_tipoLancamento');
+      const escopoSelect = document.getElementById('gasto_escopoTipo');
+      const equipeWrap = document.getElementById('gasto_equipe_wrap');
+      const equipeSelect = document.getElementById('gasto_equipeId');
+      const scopeHint = document.getElementById('gasto_scope_hint');
+      if (!escopoSelect || !equipeWrap || !equipeSelect) return;
+
+      const tipoLancamento = tipoLancamentoSelect?.value || 'arrecadacao';
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+
+      if (tipoLancamento === 'venda_equipe' && escopoSelect.value !== 'equipe') {
+        escopoSelect.value = 'equipe';
+      }
+      if (tipoLancamento === 'gasto_equipe' && escopoSelect.value !== 'equipe') {
+        escopoSelect.value = 'equipe';
+      }
+      if (tipoLancamento === 'gasto_encontro' && escopoSelect.value !== 'encontro') {
+        escopoSelect.value = 'encontro';
+      }
+
+      const isEquipe = escopoSelect.value === 'equipe';
+      equipeWrap.style.display = isEquipe ? '' : 'none';
+      if (!isEquipe) {
+        equipeSelect.value = '';
+      }
+
+      renderGastoCategoryOptions();
+
+      if (scopeHint) {
+        const destinoTexto = isEquipe
+          ? 'uma <strong>equipe específica</strong>'
+          : 'o <strong>encontro</strong>';
+        scopeHint.innerHTML = lancamentoConfig.isEntrada
+          ? `Este lançamento será registrado como <strong>entrada de capital</strong> no fluxo de caixa de ${destinoTexto}.`
+          : `Este lançamento será registrado como <strong>gasto</strong> de ${destinoTexto} e também refletido no livro caixa.`;
+      }
+
+      const descricaoInput = document.getElementById('gasto_descricao');
+      const observacoesInput = document.getElementById('gasto_observacoes');
+      const dataLabel = document.getElementById('gasto_data_label');
+      const responsavelLabel = document.getElementById('gasto_responsavel_label');
+      const formaLabel = document.getElementById('gasto_forma_pagamento_label');
+      const submitBtn = document.getElementById('gasto_submit_btn');
+
+      if (descricaoInput) descricaoInput.placeholder = lancamentoConfig.descricaoPlaceholder;
+      if (observacoesInput) observacoesInput.placeholder = lancamentoConfig.observacoesPlaceholder;
+      if (dataLabel) dataLabel.textContent = lancamentoConfig.isEntrada ? 'Data do lançamento *' : 'Data do gasto *';
+      if (responsavelLabel) responsavelLabel.textContent = lancamentoConfig.isEntrada ? 'Responsável pela entrada' : 'Responsável';
+      if (formaLabel) formaLabel.textContent = lancamentoConfig.isEntrada ? 'Forma / origem' : 'Forma de pagamento';
+      if (submitBtn) submitBtn.innerHTML = lancamentoConfig.submitLabel;
+
+      atualizarOpcoesEquipeGasto(equipeSelect.value);
+      initGastosPremiumInputs();
+      applyGastosFiltersFromUrl();
+      bindGastosDashboardFilters();
+      renderGastosDashboard();
+    }
+
+    async function cadastrarGasto() {
+      if (!ensurePermission('gastos.gerenciar')) return;
+
+      const tipoLancamento = document.getElementById('gasto_tipoLancamento')?.value || 'arrecadacao';
+      const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
+      const isEntrada = Boolean(lancamentoConfig.isEntrada);
+      const ejcId = document.getElementById('gasto_ejcId')?.value || '';
+      const escopoTipo = document.getElementById('gasto_escopoTipo')?.value || 'encontro';
+      const equipeId = document.getElementById('gasto_equipeId')?.value || '';
+      const equipeNome = document.getElementById('gasto_equipeId')?.selectedOptions?.[0]?.textContent?.trim() || '';
+      const categoria = document.getElementById('gasto_categoria')?.value || (lancamentoConfig.categoriaDefault || 'Outros');
+      const descricao = document.getElementById('gasto_descricao')?.value.trim() || '';
+      const valor = document.getElementById('gasto_valor')?.value.trim() || '';
+      const dataGasto = document.getElementById('gasto_data')?.value || '';
+      const responsavel = document.getElementById('gasto_responsavel')?.value.trim() || '';
+      const formaPagamento = document.getElementById('gasto_forma_pagamento')?.value.trim() || '';
+      const observacoes = document.getElementById('gasto_observacoes')?.value.trim() || '';
+
+      if (!ejcId) {
+        await appAlert('Selecione o EJC do lançamento.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      if (!descricao || !valor || !dataGasto) {
+        await appAlert('Preencha descrição, valor e data do lançamento.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      if (escopoTipo === 'equipe' && !equipeId) {
+        await appAlert('Selecione a equipe relacionada ao lançamento.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      const gastoPayload = {
+        ejcId,
+        escopoTipo,
+        equipeId,
+        categoria,
+        descricao,
+        valor,
+        dataGasto,
+        responsavel,
+        formaPagamento,
+        observacoes,
+      };
+
+      const fluxoPayload = {
+        ejcId,
+        tipoMovimento: isEntrada ? 'entrada' : 'saida',
+        categoria,
+        descricao,
+        valor,
+        dataMovimento: dataGasto,
+        origemDestino: escopoTipo === 'equipe' ? (equipeNome || 'Equipe') : 'Encontro',
+        responsavel,
+        formaPagamento,
+        observacoes: observacoes || (escopoTipo === 'equipe' ? `Lançamento vinculado à equipe ${equipeNome || 'informada'}.` : ''),
+      };
+
+      try {
+        if (!isEntrada) {
+          const gastoResponse = await fetch('/admin/cadastrar-gasto', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(gastoPayload),
+          });
+
+          const gastoResult = await gastoResponse.json();
+          if (!gastoResponse.ok || !gastoResult.success) {
+            await appAlert(gastoResult.error || 'Erro ao cadastrar gasto.', 'danger', 'Erro');
+            return;
+          }
+        }
+
+        const fluxoResponse = await fetch('/admin/cadastrar-fluxo-caixa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(fluxoPayload),
+        });
+
+        const fluxoResult = await fluxoResponse.json();
+        if (!fluxoResponse.ok || !fluxoResult.success) {
+          await appAlert(fluxoResult.error || 'Erro ao refletir o lançamento no fluxo de caixa.', 'danger', 'Erro');
+          return;
+        }
+
+        await appAlert(lancamentoConfig.sucessoMensagem || 'Lançamento cadastrado com sucesso.', 'success', 'Sucesso');
+        document.getElementById('formGasto')?.reset();
+
+        const tipoLancamentoInput = document.getElementById('gasto_tipoLancamento');
+        if (tipoLancamentoInput) {
+          tipoLancamentoInput.value = 'arrecadacao';
+        }
+
+        const dataInput = document.getElementById('gasto_data');
+        if (dataInput) {
+          dataInput.value = new Date().toISOString().slice(0, 10);
+        }
+
+        atualizarCamposGasto();
+        recarregarMantendoAbaAtual();
+      } catch (error) {
+        await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarGasto(gastoId, descricao) {
+      if (!ensurePermission('gastos.gerenciar')) return;
+      if (!await appConfirm(`Deseja excluir o gasto "${descricao}"?`, 'Confirmar exclusão')) return;
+
+      try {
+        const response = await fetch(`/admin/deletar-gasto/${gastoId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Gasto removido com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao remover gasto.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao remover gasto.', 'danger', 'Erro');
+      }
+    }
+
+    function initFluxoCaixaPremiumInputs() {
+      const valorInput = document.getElementById('fluxo_valor');
+      if (!valorInput || valorInput.dataset.maskReady === '1') return;
+
+      valorInput.dataset.maskReady = '1';
+      valorInput.addEventListener('input', () => {
+        valorInput.value = formatCurrencyInputBRL(valorInput.value);
+      });
+      valorInput.addEventListener('focus', () => {
+        requestAnimationFrame(() => valorInput.select());
+      });
+    }
+
+    function buildFluxoCaixaRowMarkup(item) {
+      const data = parseGastoDateSafe(item?.dataMovimento);
+      const dataTexto = data ? data.toLocaleDateString('pt-BR') : '-';
+      const tipo = String(item?.tipoMovimento || 'entrada') === 'saida' ? 'saida' : 'entrada';
+      const tipoBadge = tipo === 'saida'
+        ? '<span class="finance-movement-badge movement-exit">Saída</span>'
+        : '<span class="finance-movement-badge movement-entry">Entrada</span>';
+      const descricao = escapeHtml(item?.descricao || '-');
+      const categoria = escapeHtml(item?.categoria || 'Outros');
+      const categoriaBadgeClass = getFinanceCategoryBadgeClass(item?.categoria, tipo);
+      const ejcNome = escapeHtml(item?.ejcVinculadoNome || item?.ejc || '-');
+      const responsavel = escapeHtml(item?.responsavel || '-');
+      const origemDestino = item?.origemDestino ? `<div class="text-muted small">Origem/Destino: ${escapeHtml(item.origemDestino)}</div>` : '';
+      const observacoes = item?.observacoes ? `<div class="text-muted small">${escapeHtml(item.observacoes)}</div>` : '';
+      const descricaoSafe = String(item?.descricao || '').replace(/'/g, "\\'");
+      const valorNumber = Number(item?.valor) || 0;
+      const valorSinal = tipo === 'saida' ? -valorNumber : valorNumber;
+
+      return `<tr>
+        <td>${dataTexto}</td>
+        <td>${tipoBadge}</td>
+        <td><strong>${descricao}</strong>${origemDestino}${observacoes}</td>
+        <td><span class="${categoriaBadgeClass}">${categoria}</span></td>
+        <td>${ejcNome}</td>
+        <td><strong>${formatCurrencyValueBRL(valorSinal)}</strong></td>
+        <td>${responsavel}</td>
+        <td>
+          <button class="btn btn-delete" onclick="deletarFluxoCaixa('${String(item?._id || '')}', '${descricaoSafe}')">
+            <i class="fas fa-trash me-1"></i>Excluir
+          </button>
+        </td>
+      </tr>`;
+    }
+
+    function renderFluxoCaixaDashboard() {
+      const tbody = document.getElementById('fluxo-caixa-tbody');
+      const countBadge = document.getElementById('fluxo_table_count_badge');
+      const entradas = (fluxoCaixaFinanceiro || [])
+        .filter((item) => String(item?.tipoMovimento || '') !== 'saida')
+        .reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const saidas = (fluxoCaixaFinanceiro || [])
+        .filter((item) => String(item?.tipoMovimento || '') === 'saida')
+        .reduce((sum, item) => sum + (Number(item?.valor) || 0), 0);
+      const saldo = entradas - saidas;
+      const now = new Date();
+      const inicioMes = new Date(now.getFullYear(), now.getMonth(), 1);
+      let saldoInicialMes = 0;
+      let entradasMes = 0;
+      let saidasMes = 0;
+
+      (fluxoCaixaFinanceiro || []).forEach((item) => {
+        const dataMovimento = parseGastoDateSafe(item?.dataMovimento);
+        if (!dataMovimento) return;
+
+        const valor = Number(item?.valor) || 0;
+        const ehSaida = String(item?.tipoMovimento || '') === 'saida';
+        const mesmoMes = dataMovimento.getFullYear() === now.getFullYear()
+          && dataMovimento.getMonth() === now.getMonth();
+
+        if (dataMovimento < inicioMes) {
+          saldoInicialMes += ehSaida ? -valor : valor;
+        } else if (mesmoMes) {
+          if (ehSaida) saidasMes += valor;
+          else entradasMes += valor;
+        }
+      });
+
+      const saldoFinalMes = saldoInicialMes + entradasMes - saidasMes;
+
+      if (tbody) {
+        if (!fluxoCaixaFinanceiro.length) {
+          tbody.innerHTML = '<tr><td colspan="8"><div class="gastos-empty-state"><i class="fas fa-book-open"></i><span>Nenhum movimento de caixa cadastrado.</span></div></td></tr>';
+        } else {
+          tbody.innerHTML = fluxoCaixaFinanceiro.map(buildFluxoCaixaRowMarkup).join('');
+        }
+      }
+
+      if (countBadge) countBadge.textContent = `${fluxoCaixaFinanceiro.length} movimento(s)`;
+      const entradasCard = document.getElementById('fluxo_total_entradas_card');
+      const saidasCard = document.getElementById('fluxo_total_saidas_card');
+      const saldoCard = document.getElementById('fluxo_saldo_card');
+      const quantidadeCard = document.getElementById('fluxo_quantidade_card');
+      const saldoInicialCard = document.getElementById('fluxo_saldo_inicial_mes_card');
+      const entradasMesCard = document.getElementById('fluxo_entradas_mes_card');
+      const saidasMesCard = document.getElementById('fluxo_saidas_mes_card');
+      const saldoFinalMesCard = document.getElementById('fluxo_saldo_final_mes_card');
+      const mesReferencia = document.getElementById('fluxo_mes_referencia_texto');
+
+      if (entradasCard) entradasCard.textContent = formatCurrencyValueBRL(entradas);
+      if (saidasCard) saidasCard.textContent = formatCurrencyValueBRL(saidas);
+      if (saldoCard) saldoCard.textContent = formatCurrencyValueBRL(saldo);
+      if (quantidadeCard) quantidadeCard.textContent = String(fluxoCaixaFinanceiro.length);
+      if (saldoInicialCard) saldoInicialCard.textContent = formatCurrencyValueBRL(saldoInicialMes);
+      if (entradasMesCard) entradasMesCard.textContent = formatCurrencyValueBRL(entradasMes);
+      if (saidasMesCard) saidasMesCard.textContent = formatCurrencyValueBRL(saidasMes);
+      if (saldoFinalMesCard) saldoFinalMesCard.textContent = formatCurrencyValueBRL(saldoFinalMes);
+      if (mesReferencia) mesReferencia.textContent = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    }
+
+    async function cadastrarFluxoCaixa() {
+      if (!ensurePermission('gastos.gerenciar')) return;
+
+      const ejcId = document.getElementById('fluxo_ejcId')?.value || '';
+      const tipoMovimento = document.getElementById('fluxo_tipoMovimento')?.value || 'entrada';
+      const categoria = document.getElementById('fluxo_categoria')?.value || 'Outros';
+      const descricao = document.getElementById('fluxo_descricao')?.value.trim() || '';
+      const valor = document.getElementById('fluxo_valor')?.value.trim() || '';
+      const dataMovimento = document.getElementById('fluxo_dataMovimento')?.value || '';
+      const origemDestino = document.getElementById('fluxo_origemDestino')?.value.trim() || '';
+      const responsavel = document.getElementById('fluxo_responsavel')?.value.trim() || '';
+      const formaPagamento = document.getElementById('fluxo_formaPagamento')?.value.trim() || '';
+      const observacoes = document.getElementById('fluxo_observacoes')?.value.trim() || '';
+
+      if (!ejcId) {
+        await appAlert('Selecione o EJC do movimento de caixa.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      if (!descricao || !valor || !dataMovimento) {
+        await appAlert('Preencha descrição, valor e data do movimento.', 'warning', 'Dados incompletos');
+        return;
+      }
+
+      try {
+        const response = await fetch('/admin/cadastrar-fluxo-caixa', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ejcId,
+            tipoMovimento,
+            categoria,
+            descricao,
+            valor,
+            dataMovimento,
+            origemDestino,
+            responsavel,
+            formaPagamento,
+            observacoes,
+          }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          await appAlert('Movimento de caixa cadastrado com sucesso.', 'success', 'Sucesso');
+          document.getElementById('formFluxoCaixa')?.reset();
+          const dataInput = document.getElementById('fluxo_dataMovimento');
+          if (dataInput) {
+            dataInput.value = new Date().toISOString().slice(0, 10);
+          }
+          initFluxoCaixaPremiumInputs();
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao cadastrar movimento de caixa.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao cadastrar movimento de caixa.', 'danger', 'Erro');
+      }
+    }
+
+    async function deletarFluxoCaixa(movimentoId, descricao) {
+      if (!ensurePermission('gastos.gerenciar')) return;
+      if (!await appConfirm(`Deseja excluir o movimento "${descricao}"?`, 'Confirmar exclusão')) return;
+
+      try {
+        const response = await fetch(`/admin/deletar-fluxo-caixa/${movimentoId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          await appAlert('Movimento removido com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao remover movimento.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao remover movimento.', 'danger', 'Erro');
+      }
+    }
+
+    function renderVinculadosSubequipe() {
+      const subequipeSelecionada = document.getElementById('visualizar_subequipe').value;
+      const tabela = document.getElementById('tabela-vinculados-subequipe');
+      if (!tabela) return;
+
+      const tbody = tabela.querySelector('tbody');
+      if (!tbody) return;
+
+      if (!subequipeSelecionada) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Selecione uma sub-equipe para visualizar os vinculados.</td></tr>';
+        return;
+      }
+
+      const agrupadoPorAno = new Map();
+
+      (encontreiros || []).forEach((pessoa) => {
+        const historico = Array.isArray(pessoa.subequipeCoordenacoes) ? pessoa.subequipeCoordenacoes : [];
+        const entradas = historico.filter((item) => String(item?.subequipeId || '') === String(subequipeSelecionada));
+        if (entradas.length === 0) return;
+
+        entradas.forEach((entrada) => {
+          const anoNum = Number.parseInt(String(entrada?.anoVigencia || ''), 10);
+          const anoKey = Number.isFinite(anoNum) ? String(anoNum) : 'Sem ano';
+
+          if (!agrupadoPorAno.has(anoKey)) {
+            agrupadoPorAno.set(anoKey, new Map());
+          }
+
+          const pessoasAno = agrupadoPorAno.get(anoKey);
+          const pessoaKey = String(pessoa._id || pessoa.id || pessoa.nomeCompleto || Math.random());
+
+          if (!pessoasAno.has(pessoaKey)) {
+            pessoasAno.set(pessoaKey, {
+              nome: pessoa.nomeCompleto || '-',
+              tipo: pessoa.tipo === 'tios' ? 'Tios' : 'Jovens',
+              coordenacoes: new Set(),
+            });
+          }
+
+          const pessoaItem = pessoasAno.get(pessoaKey);
+          pessoaItem.coordenacoes.add(entrada?.subequipeNome || '-');
+        });
+      });
+
+      if (agrupadoPorAno.size === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="empty-state">Nenhuma pessoa vinculada nesta sub-equipe.</td></tr>';
+        return;
+      }
+
+      const anosOrdenados = Array.from(agrupadoPorAno.keys()).sort((a, b) => {
+        const aNum = Number.parseInt(a, 10);
+        const bNum = Number.parseInt(b, 10);
+        const aValido = Number.isFinite(aNum);
+        const bValido = Number.isFinite(bNum);
+
+        if (aValido && bValido) return bNum - aNum;
+        if (aValido) return -1;
+        if (bValido) return 1;
+        return a.localeCompare(b, 'pt-BR');
+      });
+
+      const linhas = [];
+
+      anosOrdenados.forEach((ano) => {
+        linhas.push(`<tr class="table-light"><td colspan="4"><strong>Ano ${escapeHtml(ano)}</strong></td></tr>`);
+
+        const pessoasMap = agrupadoPorAno.get(ano);
+        const pessoasOrdenadas = Array.from(pessoasMap.values()).sort((p1, p2) =>
+          String(p1.nome || '').localeCompare(String(p2.nome || ''), 'pt-BR')
+        );
+
+        pessoasOrdenadas.forEach((pessoa) => {
+          linhas.push(`<tr>
+            <td>${escapeHtml(pessoa.nome || '-')}</td>
+            <td>${escapeHtml(pessoa.tipo || '-')}</td>
+            <td>${escapeHtml(ano)}</td>
+            <td>${escapeHtml(Array.from(pessoa.coordenacoes).join(', ') || '-')}</td>
+          </tr>`);
+        });
+      });
+
+      tbody.innerHTML = linhas.join('');
     }
 
     async function criarEjc() {
@@ -3785,21 +6040,175 @@
       if (chevron) chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
     }
 
+    function carregarEncontrosImportacao() {
+      const origemNode = document.getElementById('import_encontroOrigemId');
+      const destinoNode = document.getElementById('import_ejcSelecionado');
+      if (!origemNode || !destinoNode) return;
+
+      const encontrosOrdenados = [...(Array.isArray(ejcs) ? ejcs : [])].sort((a, b) => {
+        if (!!a.ativo === !!b.ativo) {
+          return String(a.nome || '').localeCompare(String(b.nome || ''));
+        }
+        return a.ativo ? -1 : 1;
+      });
+
+      const origemAtual = origemNode.value;
+      const destinoAtual = destinoNode.value;
+      origemNode.innerHTML = '<option value="">-- Selecione o encontro de origem --</option>';
+      destinoNode.innerHTML = '<option value="">-- Selecione o encontro de destino --</option>';
+
+      encontrosOrdenados.forEach((item) => {
+        const optionLabel = `${item.nome || 'Encontro sem nome'}${item.ativo ? ' (ativo)' : ''}`;
+        const origemOption = document.createElement('option');
+        origemOption.value = String(item._id || '');
+        origemOption.textContent = optionLabel;
+        origemNode.appendChild(origemOption);
+
+        const destinoOption = document.createElement('option');
+        destinoOption.value = String(item._id || '');
+        destinoOption.textContent = optionLabel;
+        destinoNode.appendChild(destinoOption);
+      });
+
+      if (origemAtual) origemNode.value = origemAtual;
+      const encontroAtivo = encontrosOrdenados.find((item) => item && item.ativo);
+      destinoNode.value = destinoAtual || (encontroAtivo ? String(encontroAtivo._id) : '');
+      carregarResumoEncontroOrigem();
+    }
+
+    async function carregarResumoEncontroOrigem() {
+      const resumoNode = document.getElementById('import_encontro_resumo');
+      const origemNode = document.getElementById('import_encontroOrigemId');
+      const sourceType = (document.getElementById('import_sourceType') || {}).value;
+      const tipoImportacao = (document.getElementById('import_tipoImportacao') || {}).value;
+      if (!resumoNode) return;
+
+      if (tipoImportacao !== 'encontro_completo' || sourceType !== 'sistema') {
+        resumoNode.className = 'alert alert-secondary mb-0';
+        resumoNode.textContent = 'Selecione o encontro de destino e informe o banco externo. O resumo previo so aparece ao copiar de um encontro interno.';
+        return;
+      }
+
+      const encontroOrigemId = origemNode && origemNode.value ? String(origemNode.value) : '';
+      if (!encontroOrigemId) {
+        resumoNode.className = 'alert alert-secondary mb-0';
+        resumoNode.textContent = 'Selecione um encontro de origem para ver o resumo prévio da estrutura.';
+        return;
+      }
+
+      resumoNode.className = 'alert alert-info mb-0';
+      resumoNode.textContent = 'Carregando resumo do encontro de origem...';
+
+      try {
+        const response = await fetch(`/api/admin/ejcs/${encodeURIComponent(encontroOrigemId)}/resumo-importacao`);
+        const result = await response.json();
+        if (!result.success) {
+          resumoNode.className = 'alert alert-warning mb-0';
+          resumoNode.textContent = result.error || 'Nao foi possivel carregar o resumo do encontro selecionado.';
+          return;
+        }
+
+        const resumo = result.resumo || {};
+        resumoNode.className = 'alert alert-light border mb-0';
+        resumoNode.innerHTML = `
+          <strong>Resumo do encontro de origem:</strong> ${resumo.nome || 'Nao informado'}<br>
+          Equipes: <strong>${resumo.equipes || 0}</strong> | 
+          Círculos: <strong>${resumo.circulos || 0}</strong> | 
+          Encontreiros: <strong>${resumo.encontreiros || 0}</strong> | 
+          Vínculos: <strong>${resumo.vinculos || 0}</strong>
+        `;
+      } catch (error) {
+        resumoNode.className = 'alert alert-warning mb-0';
+        resumoNode.textContent = 'Falha ao carregar resumo do encontro de origem.';
+      }
+    }
+
     function atualizarCamposImportacao() {
-      const sourceType = document.getElementById('import_sourceType').value;
+      const tipoImportacao = document.getElementById('import_tipoImportacao').value;
+      const sourceTypeNode = document.getElementById('import_sourceType');
+      let sourceType = sourceTypeNode.value;
+      const contextTipoNode = document.getElementById('import_context_tipo');
+      const contextOrigemNode = document.getElementById('import_context_origem');
       const dbFields = document.getElementById('import_db_fields');
       const fileFields = document.getElementById('import_file_fields');
+      const encontroCompletoFields = document.getElementById('import_encontro_completo_fields');
+      const origemSistemaWrap = document.getElementById('import_origem_sistema_wrap');
       const dbEngineEl = document.getElementById('import_dbEngine');
       const dbEngine = dbEngineEl ? dbEngineEl.value : 'mongodb';
       const labelConnection = document.getElementById('import_connection_label');
       const tableLabel = document.getElementById('import_table_label');
       const sqlQueryWrap = document.getElementById('import_sqlquery_wrap');
+      const completeCollectionFields = document.getElementById('import_complete_collection_fields');
       const connectionInput = document.getElementById('import_connectionString');
       const tableInput = document.getElementById('import_tableName');
+      const buttonText = document.getElementById('import_button_text');
+
+      // Atualizar texto do botão
+      if (buttonText) {
+        buttonText.textContent = tipoImportacao === 'encontro_completo' ? 'Importar Encontro Completo' : 'Importar Encontreiros';
+      }
+
+      if (tipoImportacao === 'encontro_completo' && sourceType === 'excel') {
+        sourceTypeNode.value = 'database';
+        sourceType = 'database';
+      }
+
+      if (tipoImportacao === 'encontro_completo' && sourceType === 'pdf') {
+        sourceTypeNode.value = 'database';
+        sourceType = 'database';
+      }
+
+      if (tipoImportacao !== 'encontro_completo' && sourceType === 'sistema') {
+        sourceTypeNode.value = 'database';
+        sourceType = 'database';
+      }
+
+      if (contextTipoNode) {
+        contextTipoNode.textContent = tipoImportacao === 'encontro_completo'
+          ? 'Encontro Completo (estrutura + pessoas)'
+          : 'Apenas Encontreiros';
+      }
+      if (contextOrigemNode) {
+        const sourceLabels = {
+          sistema: 'Encontro já criado no sistema',
+          database: 'Banco externo',
+          excel: 'Arquivo Excel',
+          pdf: 'Arquivo PDF',
+        };
+        contextOrigemNode.textContent = sourceLabels[sourceType] || 'Origem não informada';
+      }
+
+      // Mostrar/ocultar campos de encontro completo
+      if (tipoImportacao === 'encontro_completo') {
+        encontroCompletoFields.style.display = 'flex';
+        carregarEncontrosImportacao();
+        if (origemSistemaWrap) origemSistemaWrap.style.display = sourceType === 'sistema' ? 'block' : 'none';
+      } else {
+        encontroCompletoFields.style.display = 'none';
+        if (origemSistemaWrap) origemSistemaWrap.style.display = 'none';
+      }
+
+      if (tipoImportacao === 'encontro_completo' && sourceType === 'sistema') {
+        dbFields.style.display = 'none';
+        fileFields.style.display = 'none';
+        if (completeCollectionFields) completeCollectionFields.style.display = 'none';
+        if (tableInput) tableInput.parentElement.style.display = 'none';
+        if (buttonText) buttonText.textContent = 'Importar Estrutura do Encontro';
+        carregarResumoEncontroOrigem();
+        return;
+      }
 
       if (sourceType === 'database') {
         dbFields.style.display = 'flex';
         fileFields.style.display = 'none';
+
+        if (tipoImportacao === 'encontro_completo') {
+          if (completeCollectionFields) completeCollectionFields.style.display = 'flex';
+          if (tableInput) tableInput.parentElement.style.display = 'none';
+        } else {
+          if (completeCollectionFields) completeCollectionFields.style.display = 'none';
+          if (tableInput) tableInput.parentElement.style.display = 'block';
+        }
 
         if (dbEngine === 'mongodb') {
           labelConnection.textContent = 'URI do MongoDB Externo *';
@@ -3812,28 +6221,35 @@
           tableLabel.textContent = 'Tabela de Encontreiros';
           connectionInput.placeholder = 'postgresql://usuario:senha@host:5432/banco';
           tableInput.value = tableInput.value || 'encontro';
-          sqlQueryWrap.style.display = 'block';
+          sqlQueryWrap.style.display = 'none';
         } else {
           labelConnection.textContent = 'String de Conexao MySQL *';
           tableLabel.textContent = 'Tabela de Encontreiros';
           connectionInput.placeholder = 'mysql://usuario:senha@host:3306/banco';
           tableInput.value = tableInput.value || 'encontro';
-          sqlQueryWrap.style.display = 'block';
+          sqlQueryWrap.style.display = 'none';
         }
       } else {
         dbFields.style.display = 'none';
         fileFields.style.display = 'flex';
+        if (completeCollectionFields) completeCollectionFields.style.display = 'none';
+        if (tableInput) tableInput.parentElement.style.display = 'block';
       }
+
+      carregarResumoEncontroOrigem();
     }
 
     async function importarCadastros() {
       if (!ensurePermission('importacao.executar')) return;
+      const tipoImportacao = document.getElementById('import_tipoImportacao').value;
       const sourceType = document.getElementById('import_sourceType').value;
       const dbEngine = document.getElementById('import_dbEngine').value;
       const connectionString = document.getElementById('import_connectionString').value.trim();
       const databaseName = document.getElementById('import_databaseName').value.trim();
       const tableName = document.getElementById('import_tableName').value.trim() || 'Encontro';
-      const sqlQuery = document.getElementById('import_sqlQuery').value.trim();
+      const colecaoEquipesCompleta = (document.getElementById('import_completeColecaoEquipes') || {}).value?.trim?.() || 'Equipe';
+      const colecaoCirculosCompleta = (document.getElementById('import_completeColecaoCirculos') || {}).value?.trim?.() || 'Circulo';
+      const colecaoEncontreirosCompleta = (document.getElementById('import_completeColecaoEncontreiros') || {}).value?.trim?.() || 'Encontro';
       const limite = document.getElementById('import_limite').value;
       const atualizarExistentes = document.getElementById('import_atualizarExistentes').checked;
       const arquivoInput = document.getElementById('import_arquivo');
@@ -3843,22 +6259,49 @@
       resultBox.className = 'import-result';
       resultBox.textContent = '';
 
+      if (tipoImportacao === 'encontro_completo') {
+        const encontroOrigemId = document.getElementById('import_encontroOrigemId').value;
+        const ejcSelecionado = document.getElementById('import_ejcSelecionado').value;
+        if (sourceType === 'sistema' && !encontroOrigemId) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Selecione o encontro de origem para continuar.';
+          return;
+        }
+
+        if (!ejcSelecionado) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Selecione o encontro de destino para importar a estrutura completa.';
+          return;
+        }
+
+        if (sourceType === 'sistema' && encontroOrigemId === ejcSelecionado) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Escolha encontros diferentes para origem e destino.';
+          return;
+        }
+      }
+
       if (sourceType === 'database' && !connectionString) {
         resultBox.className = 'import-result error';
         resultBox.textContent = 'Informe a conexao do banco externo para continuar.';
         return;
       }
 
-      if (sourceType !== 'database' && (!arquivoInput.files || !arquivoInput.files[0])) {
+      if (sourceType !== 'database' && sourceType !== 'sistema' && (!arquivoInput.files || !arquivoInput.files[0])) {
         resultBox.className = 'import-result error';
         resultBox.textContent = 'Selecione um arquivo para importar.';
         return;
       }
 
-      if (!await appConfirm('Deseja iniciar a importacao de encontreiros agora?', 'Confirmar importacao')) return;
+      const confirmMsg = tipoImportacao === 'encontro_completo' 
+        ? 'Deseja importar o encontro completo agora? Isso incluira equipes, circulos e encontreiros no encontro de destino.'
+        : 'Deseja iniciar a importacao de encontreiros agora?';
+
+      if (!await appConfirm(confirmMsg, 'Confirmar importacao')) return;
 
       try {
         const formData = new FormData();
+        formData.append('tipoImportacao', tipoImportacao);
         formData.append('sourceType', sourceType);
         formData.append('dbEngine', dbEngine);
         formData.append('connectionString', connectionString);
@@ -3866,12 +6309,22 @@
         formData.append('databaseName', databaseName);
         formData.append('colecaoEncontreiros', tableName);
         formData.append('tableName', tableName);
-        formData.append('sqlQuery', sqlQuery);
         formData.append('limite', limite);
         formData.append('atualizarExistentes', atualizarExistentes ? 'true' : 'false');
         formData.append('fotoPadrao', fotoPadrao);
 
-        if (sourceType !== 'database' && arquivoInput.files && arquivoInput.files[0]) {
+        if (tipoImportacao === 'encontro_completo') {
+          formData.append('sourceEncontroId', document.getElementById('import_encontroOrigemId').value);
+          formData.append('ejcId', document.getElementById('import_ejcSelecionado').value);
+          formData.append('colecaoEquipes', colecaoEquipesCompleta);
+          formData.append('colecaoCirculos', colecaoCirculosCompleta);
+          formData.append('colecaoEncontreiros', colecaoEncontreirosCompleta);
+          formData.append('importarEquipes', document.getElementById('import_importarEquipes').checked ? 'true' : 'false');
+          formData.append('importarCirculos', document.getElementById('import_importarCirculos').checked ? 'true' : 'false');
+          formData.append('importarEncontreiros', document.getElementById('import_importarEncontreiros').checked ? 'true' : 'false');
+        }
+
+        if (sourceType !== 'database' && sourceType !== 'sistema' && arquivoInput.files && arquivoInput.files[0]) {
           formData.append('arquivo', arquivoInput.files[0]);
         }
 
@@ -3888,27 +6341,44 @@
 
         if (!result.success) {
           resultBox.className = 'import-result error';
-          const message = (result.error || 'Erro ao importar encontreiros.').toString();
+          const message = (result.error || 'Erro ao importar').toString();
           resultBox.textContent = message.replace(/<[^>]*>/g, '').slice(0, 300);
           return;
         }
 
         const s = result.summary;
         const origemLabel = result.sourceType === 'database' ? `${result.sourceType}/${result.dbEngine || dbEngine}` : result.sourceType;
-        const totalIgnorados = s.ignoradosExistentes + s.ignoradosDuplicadosImportacao + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
-        const totalPlaceholders = (s.placeholdersNome || 0) + (s.placeholdersEmail || 0);
-        const detalhePlaceholders = totalPlaceholders > 0
-          ? ` Campos preenchidos automaticamente: ${totalPlaceholders} (nome: ${s.placeholdersNome || 0}, email: ${s.placeholdersEmail || 0}).`
-          : '';
+        
+        if (tipoImportacao === 'encontro_completo') {
+          const equipesMsg = result.equipes ? `Equipes: ${result.equipes.importados || 0} import, ${result.equipes.atualizados || 0} atualiz. ` : '';
+          const circulosMsg = result.circulos ? `Círculos: ${result.circulos.importados || 0} import, ${result.circulos.atualizados || 0} atualiz. ` : '';
+          const encontreirosMsg = s ? `Encontreiros: ${s.importados} import, ${s.atualizados} atualiz.` : '';
+          const vinculosMsg = result.vinculos ? ` Vínculos: ${result.vinculos.importados || 0} copiados.` : '';
+          
+          if (!equipesMsg && !circulosMsg && !encontreirosMsg) {
+            resultBox.className = 'import-result error';
+            resultBox.textContent = `Nenhum dado foi importado (${origemLabel}). Verifique os dados do arquivo/banco.`;
+            return;
+          }
+          
+          resultBox.className = 'import-result success';
+          resultBox.textContent = `Encontro importado com sucesso (${origemLabel}). ${equipesMsg}${circulosMsg}${encontreirosMsg}${vinculosMsg}`;
+        } else {
+          const totalIgnorados = s.ignoradosExistentes + s.ignoradosDuplicadosImportacao + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
+          const totalPlaceholders = (s.placeholdersNome || 0) + (s.placeholdersEmail || 0);
+          const detalhePlaceholders = totalPlaceholders > 0
+            ? ` Campos preenchidos automaticamente: ${totalPlaceholders} (nome: ${s.placeholdersNome || 0}, email: ${s.placeholdersEmail || 0}).`
+            : '';
 
-        if ((s.importados + s.atualizados) === 0) {
-          resultBox.className = 'import-result error';
-          resultBox.textContent = `Nenhum cadastro foi salvo (${origemLabel}). Ignorados: ${totalIgnorados}. Verifique os dados do arquivo (tipo/foto/formato).`;
-          return;
+          if ((s.importados + s.atualizados) === 0) {
+            resultBox.className = 'import-result error';
+            resultBox.textContent = `Nenhum cadastro foi salvo (${origemLabel}). Ignorados: ${totalIgnorados}. Verifique os dados do arquivo (tipo/foto/formato).`;
+            return;
+          }
+
+          resultBox.className = 'import-result success';
+          resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados} (inclui ${s.ignoradosDuplicadosImportacao || 0} duplicados no arquivo). Erros: ${s.erros}.${detalhePlaceholders}`;
         }
-
-        resultBox.className = 'import-result success';
-        resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados} (inclui ${s.ignoradosDuplicadosImportacao || 0} duplicados no arquivo). Erros: ${s.erros}.${detalhePlaceholders}`;
 
         setTimeout(() => {
           recarregarMantendoAbaAtual();
@@ -4139,15 +6609,22 @@
     if (adminNivelNode) {
       adminNivelNode.addEventListener('change', () => {
         applyRoleDefaultPermissions('admin_nivel', '#admin_permissions .admin-perm-item');
+        const shouldExpand = shouldExpandExtraPermissionsForLevel(adminNivelNode.value);
+        toggleAdminPermissionsCollapse(shouldExpand);
       });
     }
 
     setupEventScopeControls();
+    atualizarCamposGasto();
+    bindGastosDashboardFilters();
+    renderGastosDashboard();
+    initFluxoCaixaPremiumInputs();
+    renderFluxoCaixaDashboard();
 
     carregarConfiguracoesBloqueio();
 
     // Recarregar quando a aba de admins for clicada (garante atualização ao trocar de aba)
-    const adminsTab = document.getElementById('admins-tab') || document.querySelector('[data-bs-target="#admins"]');
+    const adminsTab = document.getElementById('administradores-tab') || document.querySelector('[data-bs-target="#administradores"]');
     if (adminsTab) {
       adminsTab.addEventListener('shown.bs.tab', function() {
         carregarConfiguracoesBloqueio();
