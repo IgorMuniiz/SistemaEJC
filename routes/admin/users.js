@@ -156,6 +156,12 @@ router.post('/atualizar-admin/:id', checkAdminAuth, requireAdminPermission('admi
       admin.senha = await bcryptjs.hash(senha, 10);
     }
 
+    // Normaliza dataCriacao caso esteja em formato Extended JSON do MongoDB ({ $date: '...' })
+    if (admin.dataCriacao && !(admin.dataCriacao instanceof Date)) {
+      const raw = admin.dataCriacao;
+      admin.dataCriacao = new Date(raw?.$date ?? raw);
+    }
+
     await admin.save();
     if (isSelfUpdate) {
       const sessionData = buildAdminSessionData(admin);
