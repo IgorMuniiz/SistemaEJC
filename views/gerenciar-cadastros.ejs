@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-6">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260411-premium-light-28">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -231,7 +231,10 @@
               <strong class="stat-value"><%= (administradores || []).length %></strong>
             </article>
           </div>
-          <div class="admin-pill hero-admin-pill"><span class="hero-admin-avatar"><i class="fas fa-user-shield"></i></span><span class="hero-admin-meta"><small>Logado como</small><strong><%= adminUsername %></strong><small>Nivel: <%= adminNivelAtual %></small></span></div>
+          <div class="hero-admin-stack">
+            <div class="admin-pill hero-admin-pill"><span class="hero-admin-avatar"><i class="fas fa-user-shield"></i></span><span class="hero-admin-meta"><small>Logado como</small><strong><%= adminUsername %></strong><small>Nivel: <%= adminNivelAtual %></small></span></div>
+            <div class="hero-admin-theme-slot app-theme-toggle-dock app-theme-toggle-dock--manager" aria-hidden="true"></div>
+          </div>
         </header>
 
         <section class="manager-module-grid" aria-label="Atalhos da gestão">
@@ -2022,15 +2025,19 @@
               </div>
             </div>
 
-            <div class="gastos-table-shell">
-              <div class="gastos-table-head">
+            <div class="gastos-table-shell financeiro-collapsible-shell is-collapsed" data-collapsible-panel>
+              <button type="button" class="gastos-table-head gastos-table-toggle" aria-expanded="false" aria-controls="gastos_livro_lancamentos_panel" onclick="toggleFinanceiroPanel(this)">
                 <div>
                   <h5 class="mb-1"><i class="fas fa-receipt me-2"></i>Livro de lançamentos</h5>
-                  <p class="mb-0">Navegue por cada lançamento com contexto, responsáveis e classificação.</p>
+                  <p class="mb-0">Clique para visualizar os lançamentos com contexto, responsáveis e classificação.</p>
                 </div>
-                <span id="gastos_table_count_badge" class="gastos-table-badge"><%= gastosResumoData.quantidade %> registro(s)</span>
-              </div>
-              <div class="table-wrap gastos-table-wrap">
+                <div class="gastos-table-head-actions">
+                  <span id="gastos_table_count_badge" class="gastos-table-badge"><%= gastosResumoData.quantidade %> registro(s)</span>
+                  <span class="gastos-collapse-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                </div>
+              </button>
+              <div id="gastos_livro_lancamentos_panel" class="financeiro-collapsible-body" hidden>
+                <div class="table-wrap gastos-table-wrap">
               <table class="table table-hover gastos-table">
                 <thead>
                   <tr>
@@ -2085,8 +2092,9 @@
                   <% } %>
                 </tbody>
               </table>
+                </div>
+              </div>
             </div>
-          </div>
 
           <div class="financeiro-subsection">
             <div class="tab-workspace-head gastos-head">
@@ -2259,15 +2267,19 @@
               </div>
             </div>
 
-            <div class="gastos-table-shell">
-              <div class="gastos-table-head">
+            <div class="gastos-table-shell financeiro-collapsible-shell is-collapsed" data-collapsible-panel>
+              <button type="button" class="gastos-table-head gastos-table-toggle" aria-expanded="false" aria-controls="gastos_livro_caixa_panel" onclick="toggleFinanceiroPanel(this)">
                 <div>
                   <h5 class="mb-1"><i class="fas fa-book me-2"></i>Livro caixa</h5>
-                  <p class="mb-0">Registros completos de entrada e saída de valores.</p>
+                  <p class="mb-0">Clique para abrir os registros completos de entrada e saída de valores.</p>
                 </div>
-                <span id="fluxo_table_count_badge" class="gastos-table-badge"><%= fluxoResumoData.quantidade || 0 %> movimento(s)</span>
-              </div>
-              <div class="table-wrap gastos-table-wrap">
+                <div class="gastos-table-head-actions">
+                  <span id="fluxo_table_count_badge" class="gastos-table-badge"><%= fluxoResumoData.quantidade || 0 %> movimento(s)</span>
+                  <span class="gastos-collapse-icon" aria-hidden="true"><i class="fas fa-chevron-down"></i></span>
+                </div>
+              </button>
+              <div id="gastos_livro_caixa_panel" class="financeiro-collapsible-body" hidden>
+                <div class="table-wrap gastos-table-wrap">
                 <table class="table table-hover gastos-table">
                   <thead>
                     <tr>
@@ -2325,6 +2337,7 @@
                     <% } %>
                   </tbody>
                 </table>
+                </div>
               </div>
             </div>
           </div>
@@ -3181,7 +3194,7 @@
   </div>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js?v=20260406-adminfix-3"></script>
-  <script src="/js/page-transitions.js?v=20260406-adminfix-3"></script>
+  <script src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
@@ -5144,6 +5157,29 @@
       });
     }
 
+    function setFinanceiroPanelState(panel, expanded) {
+      if (!panel) return;
+      const trigger = panel.querySelector('.gastos-table-toggle');
+      const body = panel.querySelector('.financeiro-collapsible-body');
+      panel.classList.toggle('is-collapsed', !expanded);
+      panel.classList.toggle('is-expanded', expanded);
+      if (trigger) trigger.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      if (body) body.hidden = !expanded;
+    }
+
+    function toggleFinanceiroPanel(trigger) {
+      const panel = trigger?.closest?.('[data-collapsible-panel]');
+      if (!panel) return;
+      const expanded = trigger.getAttribute('aria-expanded') === 'true';
+      setFinanceiroPanelState(panel, !expanded);
+    }
+
+    function initFinanceiroPanels() {
+      document.querySelectorAll('#gastos [data-collapsible-panel]').forEach((panel) => {
+        setFinanceiroPanelState(panel, false);
+      });
+    }
+
     function atualizarCamposGasto() {
       const tipoLancamentoSelect = document.getElementById('gasto_tipoLancamento');
       const escopoSelect = document.getElementById('gasto_escopoTipo');
@@ -6615,6 +6651,7 @@
     }
 
     setupEventScopeControls();
+    initFinanceiroPanels();
     atualizarCamposGasto();
     bindGastosDashboardFilters();
     renderGastosDashboard();

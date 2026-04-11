@@ -1,10 +1,13 @@
-const CACHE_NAME = 'ejc-cache-v3-adminfix';
+const CACHE_NAME = 'ejc-cache-v4-light-ux';
 const ASSETS_TO_CACHE = [
   '/',
   '/inscricao',
   '/encontro',
   '/css/style.css',
+  '/css/ejc-home.css',
+  '/css/admin-saas.css',
   '/js/app.js',
+  '/js/page-transitions.js',
   '/images/tema.png',
   '/manifest.json',
 ];
@@ -32,8 +35,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Always fetch HTML navigations from network first so page updates appear immediately.
-  if (event.request.mode === 'navigate') {
+  const isNavigationRequest = event.request.mode === 'navigate';
+  const isStaticAsset = ['style', 'script', 'image', 'font'].includes(event.request.destination);
+
+  // Always fetch HTML navigations and static assets from network first so updates appear immediately.
+  if (isNavigationRequest || isStaticAsset) {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
@@ -41,7 +47,7 @@ self.addEventListener('fetch', (event) => {
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           return response;
         })
-        .catch(() => caches.match(event.request).then((cached) => cached || caches.match('/')))
+        .catch(() => caches.match(event.request).then((cached) => cached || (isNavigationRequest ? caches.match('/') : undefined)))
     );
     return;
   }

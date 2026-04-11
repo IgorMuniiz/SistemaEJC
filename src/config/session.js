@@ -9,12 +9,23 @@ const resolveSessionCookieSecure = (env = process.env) => {
   return 'auto';
 };
 
-const resolveSessionStoreMongoUrl = (env = process.env) => (
-  readRawEnvValue(env.SESSION_STORE_MONGO_URI)
-  || readRawEnvValue(env.MONGODB_URL)
-  || readRawEnvValue(env.MONGODB_URI)
-  || readRawEnvValue(env.MONGO_URI)
-);
+const resolveSessionStoreMongoUrl = (env = process.env) => {
+  const explicitSessionStoreUri = readRawEnvValue(env.SESSION_STORE_MONGO_URI);
+  if (explicitSessionStoreUri) {
+    return explicitSessionStoreUri;
+  }
+
+  const nodeEnv = normalizeEnvValue(env.NODE_ENV);
+  if (nodeEnv !== 'production') {
+    return '';
+  }
+
+  return (
+    readRawEnvValue(env.MONGODB_URL)
+    || readRawEnvValue(env.MONGODB_URI)
+    || readRawEnvValue(env.MONGO_URI)
+  );
+};
 
 const attachAsyncStoreGuards = (store, logger = console) => {
   if (store && store.clientP && typeof store.clientP.catch === 'function') {

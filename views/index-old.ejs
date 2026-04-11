@@ -5,14 +5,15 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Plataforma digital do EJC COP - Encontro de Jovens com Cristo" />
-  <meta name="theme-color" content="#0a0a14" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7fbff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0a0a14" />
   <title>EJC COP - Plataforma de Gestão e Inscrições</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
-  <link rel="preload" href="/css/ejc-home.css?v=20260406-ui-consistency-1" as="style" onload="this.onload=null;this.rel='stylesheet'">
-  <noscript><link rel="stylesheet" href="/css/ejc-home.css?v=20260406-ui-consistency-1"></noscript>
+  <link rel="preload" href="/css/ejc-home.css?v=20260411-premium-light-9" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/css/ejc-home.css?v=20260411-premium-light-9"></noscript>
   <link rel="preload" as="image" href="/img/images/tema.png?w=1280&h=720&fit=inside&format=webp&q=68" imagesrcset="/img/images/tema.png?w=960&h=540&fit=inside&format=webp&q=68 960w, /img/images/tema.png?w=1280&h=720&fit=inside&format=webp&q=68 1280w" imagesizes="100vw" fetchpriority="low">
   <link rel="manifest" href="/manifest.json" />
 </head>
@@ -69,7 +70,10 @@
           </div>
 
           <h1 class="hero-title">
-            <span class="gradient-text">Simplesmente Amar</span>
+            <span class="gradient-text">
+              <span class="hero-word hero-word--primary">Simplesmente</span>
+              <span class="hero-word hero-word--accent">Amar</span>
+            </span>
             <span class="hero-title-sub">Gerencie encontristas com mais eficiência e propósito</span>
           </h1>
 
@@ -169,7 +173,7 @@
 
   <!-- Footer -->
   <footer class="main-footer">
-    <p>&copy; 2026 EJC COP</p>
+    <p>&copy; 2026 EJC COP. Simplesmente Amar.</p>
   </footer>
 
   <script>
@@ -229,6 +233,6 @@
       window.addEventListener('resize', requestUpdate);
     }
   </script>
-  <script defer src="/js/page-transitions.js"></script>
+  <script defer src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
 </body>
 </html>

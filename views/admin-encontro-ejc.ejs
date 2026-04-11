@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-6">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260411-premium-light-28">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -330,7 +330,7 @@
   <script id="dados-vinculos" type="application/json"><%- JSON.stringify(vinculos || []) %></script>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/page-transitions.js"></script>
+  <script src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
   <script>
     const ejcId = '<%= ejc._id %>';
     const circulos = JSON.parse(document.getElementById('dados-circulos').textContent || '[]');
@@ -443,6 +443,43 @@
           <td>${acaoRemover}</td>
         </tr>
       `;
+    }
+
+    function transferRoleLabel(vinculo) {
+      if (vinculo.entidadeTipo === 'circulo') {
+        return vinculo.papel === 'moita'
+          ? `Moita${vinculo.descricaoPapel ? ` • ${vinculo.descricaoPapel}` : ''}`
+          : 'Membro';
+      }
+      return (vinculo.papel === 'coordenador' || vinculo.papel === 'coordenou')
+        ? 'Coordenação'
+        : 'Membro';
+    }
+
+    function getTransferDestinations(entidadeTipo, entidadeId) {
+      const colecao = entidadeTipo === 'circulo' ? circulos : equipes;
+      return colecao
+        .filter((item) => String(item._id) !== String(entidadeId))
+        .map((item) => ({
+          id: String(item._id),
+          nome: String(item.nome || ''),
+        }))
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
+    }
+
+    function getLinkedPeopleSelection(entidadeTipo, entidadeId) {
+      return vinculos
+        .filter((vinculo) => vinculo.entidadeTipo === entidadeTipo && String(vinculo.entidadeId) === String(entidadeId))
+        .map((vinculo) => {
+          const pessoa = personByVinculo(vinculo);
+          return {
+            pessoaId: String(vinculo.pessoaId || ''),
+            nome: String(pessoa?.nomeCompleto || 'Pessoa vinculada'),
+            tipo: personTipoLabel(vinculo, pessoa),
+            papel: transferRoleLabel(vinculo),
+          };
+        })
+        .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     }
 
     function getCirculoTheme(nome) {
@@ -880,6 +917,345 @@
       });
     }
 
+    function syncEntityEditorViewport(modalElement) {
+      const element = modalElement || document.getElementById('app-entity-editor-modal');
+      if (!element) return;
+
+      const viewportHeight = Math.max(
+        window.visualViewport?.height || 0,
+        window.innerHeight || 0,
+        document.documentElement?.clientHeight || 0,
+        320,
+      );
+      const viewportTop = Math.max(
+        window.scrollY || 0,
+        window.pageYOffset || 0,
+        document.documentElement?.scrollTop || 0,
+        0,
+      );
+      const gap = Number.parseFloat(getComputedStyle(element).getPropertyValue('--entity-modal-gap')) || 12;
+      const card = element.querySelector('.app-entity-editor-card');
+      const cardHeight = card
+        ? Math.min(card.scrollHeight || card.offsetHeight || 0, Math.max(viewportHeight - (gap * 2), 220))
+        : 0;
+      const centeredOffset = Math.max(gap, Math.round((viewportHeight - cardHeight) / 2));
+
+      document.documentElement.style.setProperty('--entity-modal-vh', `${viewportHeight}px`);
+      document.documentElement.style.setProperty('--entity-modal-page-top', `${viewportTop + centeredOffset}px`);
+    }
+
+    function ensureEntityEditorPopup() {
+      let modalElement = document.getElementById('app-entity-editor-modal');
+      if (modalElement) {
+        return {
+          element: modalElement,
+          instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+        };
+      }
+
+      modalElement = document.createElement('div');
+      modalElement.className = 'modal fade';
+      modalElement.id = 'app-entity-editor-modal';
+      modalElement.tabIndex = -1;
+      modalElement.setAttribute('aria-hidden', 'true');
+      modalElement.innerHTML = `
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable app-entity-editor-dialog">
+          <div class="modal-content border-0 shadow-lg app-input-card app-entity-editor-card">
+            <div class="modal-header app-input-header app-entity-editor-header">
+              <div class="app-entity-title-stack">
+                <span class="app-entity-kicker">Gestão rápida</span>
+                <h5 class="modal-title" id="app-entity-editor-title">Editar</h5>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body app-input-body app-entity-editor-body">
+              <div class="app-entity-hero">
+                <div class="app-entity-hero-copy">
+                  <label for="app-entity-editor-field" id="app-entity-editor-label" class="form-label app-entity-field-label">Novo valor</label>
+                  <input id="app-entity-editor-field" type="text" class="form-control app-input-field app-entity-name-field" maxlength="120" autocomplete="off">
+                  <small class="text-muted d-block mt-2" id="app-entity-editor-help">Confirme para salvar.</small>
+                </div>
+                <div class="app-entity-selection-pill" id="app-entity-selection-count">
+                  <i class="fas fa-user-check"></i>
+                  <span>0 pessoas marcadas</span>
+                </div>
+              </div>
+
+              <div class="app-entity-transfer-shell" id="app-entity-transfer-shell">
+                <div class="app-entity-transfer-head">
+                  <div>
+                    <label for="app-entity-transfer-destination" id="app-entity-transfer-label" class="form-label app-entity-section-title">Gerenciar pessoas vinculadas</label>
+                    <small class="text-muted d-block" id="app-entity-transfer-help"></small>
+                  </div>
+                  <div class="form-check form-switch app-entity-selectall-wrap" id="app-entity-transfer-selectall-wrap">
+                    <input class="form-check-input" type="checkbox" id="app-entity-transfer-selectall">
+                    <label class="form-check-label" for="app-entity-transfer-selectall">Selecionar todos</label>
+                  </div>
+                </div>
+
+                <div class="app-entity-action-grid" id="app-entity-action-group">
+                  <label class="app-entity-action-option is-active" data-action="transferir">
+                    <input type="radio" name="app-entity-link-action" value="transferir" checked>
+                    <span class="app-entity-action-title"><i class="fas fa-right-left me-1"></i>Transferir</span>
+                    <small>Mover os selecionados para outro círculo ou equipe.</small>
+                  </label>
+                  <label class="app-entity-action-option app-entity-action-danger" data-action="excluir">
+                    <input type="radio" name="app-entity-link-action" value="excluir">
+                    <span class="app-entity-action-title"><i class="fas fa-user-minus me-1"></i>Excluir vínculo</span>
+                    <small>Remover os selecionados deste círculo ou equipe.</small>
+                  </label>
+                </div>
+
+                <div class="app-entity-destination-wrap" id="app-entity-destination-wrap">
+                  <label for="app-entity-transfer-destination" class="form-label app-entity-destination-label">Destino da transferência</label>
+                  <select id="app-entity-transfer-destination" class="form-select app-entity-destination"></select>
+                </div>
+
+                <div class="app-entity-transfer-list" id="app-entity-transfer-list"></div>
+              </div>
+            </div>
+            <div class="modal-footer app-input-footer app-entity-editor-footer">
+              <button type="button" class="btn btn-outline-secondary" id="app-entity-editor-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary" id="app-entity-editor-confirm"><i class="fas fa-floppy-disk me-1"></i>Salvar alterações</button>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modalElement);
+
+      return {
+        element: modalElement,
+        instance: bootstrap.Modal.getOrCreateInstance(modalElement),
+      };
+    }
+
+    async function appEntityEditorPrompt({
+      title = 'Editar',
+      label = 'Novo valor',
+      value = '',
+      placeholder = '',
+      help = '',
+      confirmText = 'Salvar alterações',
+      transferLabel = 'Gerenciar pessoas vinculadas',
+      transferHelp = '',
+      transferOptions = [],
+      linkedPeople = [],
+      emptyTransferText = 'Nenhuma pessoa vinculada disponível para gerenciamento.',
+      defaultAction = 'transferir',
+    }) {
+      const { element, instance } = ensureEntityEditorPopup();
+      const titleEl = element.querySelector('#app-entity-editor-title');
+      const labelEl = element.querySelector('#app-entity-editor-label');
+      const inputEl = element.querySelector('#app-entity-editor-field');
+      const helpEl = element.querySelector('#app-entity-editor-help');
+      const selectionCountEl = element.querySelector('#app-entity-selection-count span');
+      const transferShell = element.querySelector('#app-entity-transfer-shell');
+      const transferLabelEl = element.querySelector('#app-entity-transfer-label');
+      const transferHelpEl = element.querySelector('#app-entity-transfer-help');
+      const transferSelect = element.querySelector('#app-entity-transfer-destination');
+      const destinationWrap = element.querySelector('#app-entity-destination-wrap');
+      const transferList = element.querySelector('#app-entity-transfer-list');
+      const actionOptions = Array.from(element.querySelectorAll('.app-entity-action-option'));
+      const actionInputs = Array.from(element.querySelectorAll('input[name="app-entity-link-action"]'));
+      const selectAllWrap = element.querySelector('#app-entity-transfer-selectall-wrap');
+      const selectAllCheckbox = element.querySelector('#app-entity-transfer-selectall');
+      const cancelBtn = element.querySelector('#app-entity-editor-cancel');
+      const confirmBtn = element.querySelector('#app-entity-editor-confirm');
+
+      titleEl.textContent = title;
+      labelEl.textContent = label;
+      inputEl.value = String(value || '');
+      inputEl.placeholder = String(placeholder || '');
+      helpEl.textContent = String(help || '');
+      helpEl.style.display = help ? '' : 'none';
+      confirmBtn.innerHTML = `<i class="fas fa-floppy-disk me-1"></i>${escapeHtml(confirmText)}`;
+
+      transferShell.style.display = '';
+      transferLabelEl.textContent = transferLabel;
+      transferHelpEl.textContent = String(transferHelp || '');
+      transferHelpEl.style.display = transferHelp ? '' : 'none';
+      transferSelect.innerHTML = ['<option value="">Selecione o destino</option>']
+        .concat((transferOptions || []).map((item) => `<option value="${escapeHtml(item.id)}">${escapeHtml(item.nome)}</option>`))
+        .join('');
+      transferSelect.disabled = !Array.isArray(transferOptions) || !transferOptions.length;
+
+      const hasLinkedPeople = Array.isArray(linkedPeople) && linkedPeople.length > 0;
+      selectAllCheckbox.checked = false;
+      selectAllWrap.style.display = hasLinkedPeople ? '' : 'none';
+
+      actionInputs.forEach((input) => {
+        input.checked = input.value === defaultAction;
+        input.disabled = !hasLinkedPeople;
+      });
+
+      if (hasLinkedPeople) {
+        transferList.innerHTML = linkedPeople.map((person) => `
+          <label class="app-entity-person-card" data-transfer-row="true">
+            <input class="form-check-input app-entity-person-check" type="checkbox" value="${escapeHtml(person.pessoaId)}" data-transfer-person="true">
+            <span class="app-entity-person-main">
+              <strong>${escapeHtml(person.nome)}</strong>
+              <small>${escapeHtml(person.tipo)}</small>
+            </span>
+            <span class="app-entity-person-role">${escapeHtml(person.papel)}</span>
+          </label>
+        `).join('');
+      } else {
+        transferList.innerHTML = `<div class="app-entity-empty-state"><i class="fas fa-users-slash"></i><p>${escapeHtml(emptyTransferText)}</p></div>`;
+      }
+
+      const getTransferCheckboxes = () => Array.from(transferList.querySelectorAll('input[data-transfer-person="true"]'));
+      const getSelectedAction = () => actionInputs.find((item) => item.checked)?.value || 'transferir';
+      const selectedIds = () => getTransferCheckboxes().filter((item) => item.checked).map((item) => String(item.value || ''));
+
+      const syncSelectAllState = () => {
+        const checkboxes = getTransferCheckboxes();
+        const total = checkboxes.length;
+        const checked = checkboxes.filter((item) => item.checked).length;
+        selectAllCheckbox.indeterminate = checked > 0 && checked < total;
+        selectAllCheckbox.checked = total > 0 && checked === total;
+      };
+
+      const updateSelectionCount = () => {
+        const totalSelecionados = selectedIds().length;
+        selectionCountEl.textContent = totalSelecionados === 1
+          ? '1 pessoa marcada'
+          : `${totalSelecionados} pessoas marcadas`;
+      };
+
+      const updateActionState = () => {
+        const acaoAtual = getSelectedAction();
+        const totalSelecionados = selectedIds().length;
+        destinationWrap.style.display = acaoAtual === 'transferir' ? '' : 'none';
+
+        actionOptions.forEach((option) => {
+          option.classList.toggle('is-active', option.getAttribute('data-action') === acaoAtual);
+        });
+
+        if (acaoAtual === 'excluir' && totalSelecionados > 0) {
+          confirmBtn.classList.remove('btn-primary');
+          confirmBtn.classList.add('btn-danger');
+          confirmBtn.innerHTML = '<i class="fas fa-user-minus me-1"></i>Excluir selecionados';
+        } else if (acaoAtual === 'transferir' && totalSelecionados > 0) {
+          confirmBtn.classList.remove('btn-danger');
+          confirmBtn.classList.add('btn-primary');
+          confirmBtn.innerHTML = '<i class="fas fa-right-left me-1"></i>Transferir selecionados';
+        } else {
+          confirmBtn.classList.remove('btn-danger');
+          confirmBtn.classList.add('btn-primary');
+          confirmBtn.innerHTML = `<i class="fas fa-floppy-disk me-1"></i>${escapeHtml(confirmText)}`;
+        }
+
+        updateSelectionCount();
+        syncSelectAllState();
+      };
+
+      return new Promise((resolve) => {
+        let resolved = false;
+        const viewportTarget = window.visualViewport || null;
+
+        const onViewportChange = () => {
+          syncEntityEditorViewport(element);
+        };
+
+        const cleanup = () => {
+          cancelBtn.removeEventListener('click', onCancel);
+          confirmBtn.removeEventListener('click', onConfirm);
+          inputEl.removeEventListener('keydown', onInputKeydown);
+          selectAllCheckbox.removeEventListener('change', onToggleAll);
+          transferList.removeEventListener('change', onListChange);
+          actionInputs.forEach((input) => input.removeEventListener('change', onActionChange));
+          element.removeEventListener('shown.bs.modal', onShown);
+          element.removeEventListener('hidden.bs.modal', onHidden);
+          window.removeEventListener('resize', onViewportChange);
+          window.removeEventListener('scroll', onViewportChange, true);
+          if (viewportTarget) {
+            viewportTarget.removeEventListener('resize', onViewportChange);
+            viewportTarget.removeEventListener('scroll', onViewportChange);
+          }
+        };
+
+        const settle = (payload) => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve(payload);
+        };
+
+        const onCancel = () => {
+          settle(null);
+          instance.hide();
+        };
+
+        const onConfirm = () => {
+          const acaoVinculo = getSelectedAction();
+          const gerenciarPessoaIds = selectedIds();
+          settle({
+            value: String(inputEl.value || ''),
+            acaoVinculo,
+            transferirParaId: acaoVinculo === 'transferir' ? String(transferSelect.value || '') : '',
+            gerenciarPessoaIds,
+            transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
+            removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
+          });
+          instance.hide();
+        };
+
+        const onInputKeydown = (event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            onConfirm();
+          }
+        };
+
+        const onToggleAll = () => {
+          getTransferCheckboxes().forEach((item) => {
+            item.checked = selectAllCheckbox.checked;
+          });
+          updateActionState();
+        };
+
+        const onListChange = (event) => {
+          if (event.target && event.target.matches('input[data-transfer-person="true"]')) {
+            const row = event.target.closest('[data-transfer-row="true"]');
+            if (row) {
+              row.classList.toggle('is-selected', event.target.checked);
+            }
+            updateActionState();
+          }
+        };
+
+        const onActionChange = () => updateActionState();
+
+        const onShown = () => {
+          syncEntityEditorViewport(element);
+          inputEl.focus();
+          inputEl.select();
+          updateActionState();
+        };
+
+        const onHidden = () => settle(null);
+
+        cancelBtn.addEventListener('click', onCancel);
+        confirmBtn.addEventListener('click', onConfirm);
+        inputEl.addEventListener('keydown', onInputKeydown);
+        selectAllCheckbox.addEventListener('change', onToggleAll);
+        transferList.addEventListener('change', onListChange);
+        actionInputs.forEach((input) => input.addEventListener('change', onActionChange));
+        element.addEventListener('shown.bs.modal', onShown, { once: true });
+        element.addEventListener('hidden.bs.modal', onHidden, { once: true });
+        window.addEventListener('resize', onViewportChange);
+        window.addEventListener('scroll', onViewportChange, true);
+        if (viewportTarget) {
+          viewportTarget.addEventListener('resize', onViewportChange);
+          viewportTarget.addEventListener('scroll', onViewportChange);
+        }
+
+        syncEntityEditorViewport(element);
+        updateActionState();
+        instance.show();
+      });
+    }
+
     function abrirExportacao(entidadeTipo, entidadeId, formato, botao) {
       if (!ensurePermission(entidadeTipo === 'circulo' ? 'encontros.gerenciar' : 'equipes.gerenciar')) return;
       if (!entidadeTipo || !entidadeId || !formato) return;
@@ -1202,23 +1578,51 @@
     async function editarCirculo(circuloId, nomeAtual) {
       if (!ensurePermission('encontros.gerenciar')) return;
       if (!circuloId) return;
-      const novoNome = String(await appPrompt({
-        title: 'Editar circulo',
-        label: 'Nome do circulo',
+
+      const editorData = await appEntityEditorPrompt({
+        title: 'Editar círculo',
+        label: 'Nome do círculo',
         value: nomeAtual || '',
-        placeholder: 'Digite o novo nome',
-        help: 'O nome sera atualizado neste EJC.',
-        confirmText: 'Salvar',
-      }) || '').trim();
-      if (!novoNome || novoNome === String(nomeAtual || '').trim()) return;
+        placeholder: 'Digite o nome do círculo',
+        help: 'Renomeie o círculo e escolha se deseja transferir ou excluir pessoas vinculadas sem sair desta tela.',
+        confirmText: 'Salvar alterações',
+        transferLabel: 'Gerenciar encontristas vinculados',
+        transferHelp: 'Marque as pessoas e escolha se deseja transferir para outro círculo ou apenas remover o vínculo.',
+        transferOptions: getTransferDestinations('circulo', circuloId),
+        linkedPeople: getLinkedPeopleSelection('circulo', circuloId),
+        emptyTransferText: 'Nenhum encontrista vinculado a este círculo no momento.',
+      });
+
+      if (!editorData) return;
+
+      const novoNome = String(editorData.value || '').trim();
+      const acaoVinculo = String(editorData.acaoVinculo || 'transferir');
+      const transferirParaId = String(editorData.transferirParaId || '').trim();
+      const gerenciarPessoaIds = Array.isArray(editorData.gerenciarPessoaIds)
+        ? editorData.gerenciarPessoaIds.filter(Boolean)
+        : [];
+
+      if (!novoNome) return await appAlert('Informe o nome do círculo.', 'warning', 'Campo obrigatório');
+      if (gerenciarPessoaIds.length && acaoVinculo === 'transferir' && !transferirParaId) {
+        return await appAlert('Escolha o círculo de destino para concluir a transferência.', 'warning', 'Transferência incompleta');
+      }
+      if (novoNome === String(nomeAtual || '').trim() && !gerenciarPessoaIds.length) return;
 
       const res = await fetch(`/admin/editar-circulo/${encodeURIComponent(circuloId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ejcId, nome: novoNome }),
+        body: JSON.stringify({
+          ejcId,
+          nome: novoNome,
+          acaoVinculo,
+          gerenciarPessoaIds,
+          transferirParaId,
+          transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
+          removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
+        }),
       });
       const data = await res.json();
-      if (!data.success) return await appAlert(data.error || 'Erro ao editar circulo.', 'danger', 'Erro');
+      if (!data.success) return await appAlert(data.error || 'Erro ao editar círculo.', 'danger', 'Erro');
       recarregarMantendoPainelAtual();
     }
 
@@ -1240,20 +1644,48 @@
     async function editarEquipe(equipeId, nomeAtual) {
       if (!ensurePermission('equipes.gerenciar')) return;
       if (!equipeId) return;
-      const novoNome = String(await appPrompt({
+
+      const editorData = await appEntityEditorPrompt({
         title: 'Editar equipe',
         label: 'Nome da equipe',
         value: nomeAtual || '',
-        placeholder: 'Digite o novo nome',
-        help: 'O nome e referencias de equipe serao atualizados.',
-        confirmText: 'Salvar',
-      }) || '').trim();
-      if (!novoNome || novoNome === String(nomeAtual || '').trim()) return;
+        placeholder: 'Digite o nome da equipe',
+        help: 'Renomeie a equipe e escolha se deseja transferir ou excluir os vínculos das pessoas selecionadas.',
+        confirmText: 'Salvar alterações',
+        transferLabel: 'Gerenciar pessoas vinculadas',
+        transferHelp: 'Marque os nomes, escolha a ação e aplique sem sair da tela.',
+        transferOptions: getTransferDestinations('equipe', equipeId),
+        linkedPeople: getLinkedPeopleSelection('equipe', equipeId),
+        emptyTransferText: 'Nenhuma pessoa vinculada a esta equipe no momento.',
+      });
+
+      if (!editorData) return;
+
+      const novoNome = String(editorData.value || '').trim();
+      const acaoVinculo = String(editorData.acaoVinculo || 'transferir');
+      const transferirParaId = String(editorData.transferirParaId || '').trim();
+      const gerenciarPessoaIds = Array.isArray(editorData.gerenciarPessoaIds)
+        ? editorData.gerenciarPessoaIds.filter(Boolean)
+        : [];
+
+      if (!novoNome) return await appAlert('Informe o nome da equipe.', 'warning', 'Campo obrigatório');
+      if (gerenciarPessoaIds.length && acaoVinculo === 'transferir' && !transferirParaId) {
+        return await appAlert('Escolha a equipe de destino para concluir a transferência.', 'warning', 'Transferência incompleta');
+      }
+      if (novoNome === String(nomeAtual || '').trim() && !gerenciarPessoaIds.length) return;
 
       const res = await fetch(`/admin/editar-equipe/${encodeURIComponent(equipeId)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ejcId, nome: novoNome }),
+        body: JSON.stringify({
+          ejcId,
+          nome: novoNome,
+          acaoVinculo,
+          gerenciarPessoaIds,
+          transferirParaId,
+          transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
+          removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
+        }),
       });
       const data = await res.json();
       if (!data.success) return await appAlert(data.error || 'Erro ao editar equipe.', 'danger', 'Erro');

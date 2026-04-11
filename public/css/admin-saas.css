@@ -958,6 +958,77 @@ body.admin-home-page {
   transform: translateX(4px);
 }
 
+body.admin-login-page .lp-card,
+body.admin-login-page .lp-card__body,
+body.admin-login-page .lp-input,
+body.admin-login-page .lp-submit,
+body.admin-login-page .lp-alert,
+body.admin-login-page .lp-back {
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease, background 0.24s ease, filter 0.24s ease;
+}
+
+body.admin-login-page .lp-card:hover {
+  transform: translateY(-4px) scale(1.008);
+}
+
+body.admin-login-page .lp-card:hover .lp-card__body {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 36px rgba(2, 6, 23, 0.12);
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-bg {
+  filter: saturate(1.08) contrast(1.04);
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-card {
+  box-shadow: 0 0 36px rgba(102, 126, 234, 0.2), 0 26px 68px rgba(0, 0, 0, 0.58);
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-card:hover {
+  filter: saturate(1.05);
+  box-shadow: 0 0 54px rgba(102, 126, 234, 0.28), 0 28px 74px rgba(0, 0, 0, 0.62);
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-submit {
+  background: linear-gradient(135deg, #667eea 0%, #7c3aed 58%, #a855f7 100%);
+  box-shadow: 0 10px 28px rgba(102, 126, 234, 0.36);
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-submit:hover {
+  box-shadow: 0 16px 38px rgba(102, 126, 234, 0.46), 0 0 0 1px rgba(196, 181, 253, 0.12) inset;
+}
+
+html[data-theme='dark'] body.admin-login-page .lp-input:focus {
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.16), 0 12px 28px rgba(76, 29, 149, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-bg {
+  filter: saturate(1.04) brightness(1.02);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-card:hover {
+  box-shadow: 0 28px 64px rgba(79, 126, 247, 0.16), 0 18px 34px rgba(15, 23, 42, 0.1);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-submit {
+  background: linear-gradient(135deg, #4f7ef7 0%, #7c3aed 100%);
+  box-shadow: 0 14px 30px rgba(79, 126, 247, 0.2);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-submit:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  box-shadow: 0 18px 36px rgba(79, 126, 247, 0.24), 0 0 0 1px rgba(255, 255, 255, 0.36) inset;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-input:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(79, 126, 247, 0.06);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-alert--info:hover,
+html[data-theme='light'] body.admin-login-page .lp-back:hover {
+  transform: translateY(-1px);
+}
+
 /* --- Sistema de reveal em cascata --- */
 .lp-reveal {
   opacity: 0;
@@ -3750,6 +3821,63 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       letter-spacing: .01em;
       color: rgba(248, 250, 252, 0.96);
     }
+    body.admin-panel.admin-manager-page .admin-form-card,
+    body.admin-panel.admin-manager-page .admin-config-card,
+    body.admin-panel.admin-manager-page .admin-mini-panel,
+    body.admin-panel.admin-manager-page .table-wrap,
+    body.admin-panel.admin-manager-page .admin-table-card,
+    body.admin-panel.admin-manager-page .tab-workspace-head {
+      color: rgba(248, 250, 252, 0.97);
+    }
+    body.admin-panel.admin-manager-page .text-muted,
+    body.admin-panel.admin-manager-page .muted,
+    body.admin-panel.admin-manager-page .form-text,
+    body.admin-panel.admin-manager-page .admin-helper-note,
+    body.admin-panel.admin-manager-page .gastos-kpi-meta,
+    body.admin-panel.admin-manager-page .edit-field-hint,
+    body.admin-panel.admin-manager-page small {
+      color: rgba(241, 245, 249, 0.88) !important;
+    }
+    body.admin-panel.admin-manager-page .admin-form-card p,
+    body.admin-panel.admin-manager-page .admin-form-card li,
+    body.admin-panel.admin-manager-page .admin-form-card span,
+    body.admin-panel.admin-manager-page .admin-form-card .form-label,
+    body.admin-panel.admin-manager-page .admin-form-card .field-label,
+    body.admin-panel.admin-manager-page .admin-form-card .form-check-label {
+      color: rgba(241, 245, 249, 0.96) !important;
+    }
+    body.admin-panel.admin-manager-page .admin-form-card .form-control,
+    body.admin-panel.admin-manager-page .admin-form-card .form-select,
+    body.admin-panel.admin-manager-page .admin-form-card textarea,
+    body.admin-panel.admin-manager-page .table-wrap .form-control,
+    body.admin-panel.admin-manager-page .table-wrap .form-select,
+    body.admin-panel.admin-manager-page .table-wrap textarea {
+      background: rgba(7, 15, 34, 0.9) !important;
+      color: #ffffff !important;
+      -webkit-text-fill-color: #ffffff !important;
+      border-color: rgba(148, 163, 184, 0.38) !important;
+    }
+    body.admin-panel.admin-manager-page .admin-form-card .form-control::placeholder,
+    body.admin-panel.admin-manager-page .admin-form-card textarea::placeholder,
+    body.admin-panel.admin-manager-page .admin-form-card input::placeholder,
+    body.admin-panel.admin-manager-page .table-wrap .form-control::placeholder,
+    body.admin-panel.admin-manager-page .table-wrap textarea::placeholder,
+    body.admin-panel.admin-manager-page .table-wrap input::placeholder {
+      color: rgba(226, 232, 240, 0.72) !important;
+      opacity: 1;
+    }
+    body.admin-panel.admin-manager-page .admin-form-card .form-select option,
+    body.admin-panel.admin-manager-page .table-wrap .form-select option {
+      background: rgba(15, 23, 42, 0.98);
+      color: #ffffff;
+    }
+    body.admin-panel.admin-manager-page .admin-form-card .form-control:disabled,
+    body.admin-panel.admin-manager-page .admin-form-card .form-select:disabled,
+    body.admin-panel.admin-manager-page .admin-form-card textarea:disabled {
+      color: rgba(241, 245, 249, 0.94) !important;
+      -webkit-text-fill-color: rgba(241, 245, 249, 0.94) !important;
+      opacity: 1;
+    }
     body.admin-panel.admin-manager-page .admin-config-card {
       position: relative;
       overflow: hidden;
@@ -5332,6 +5460,21 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page.admin-manager-revamp .admin-pill {
       align-self: flex-start;
       margin-top: 2px;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .hero-admin-stack {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 220px;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .hero-admin-theme-slot {
+      display: flex;
+      width: 100%;
+      justify-content: flex-start;
+      min-height: 38px;
+      padding-top: 10px;
+      padding-left: 4px;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .hero-admin-pill {
       min-width: 220px;
@@ -7561,6 +7704,11 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     /* ������ PILLS ��������������������������������������������������������������������������������������������������������������������������������������������� */
     body.admin-panel.admin-encontro-page .muted { color: var(--t3); font-size: .88rem; }
+    body.admin-panel.admin-encontro-page .text-muted,
+    body.admin-panel.admin-encontro-page small.text-muted,
+    body.admin-panel.admin-encontro-page .form-text {
+      color: rgba(241, 245, 249, 0.86) !important;
+    }
     body.admin-panel.admin-encontro-page .pill {
       display: inline-block; border-radius: 999px;
       padding: 3px 10px; font-size: .77rem; font-weight: 700; margin-right: 6px;
@@ -8529,6 +8677,347 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(6, 182, 212, 0.86));
       box-shadow: 0 14px 28px rgba(14, 165, 233, 0.2);
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp.modal-open {
+      overflow-y: auto !important;
+      padding-right: 0 !important;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal {
+      --entity-modal-gap: clamp(8px, 1.6vh, 14px);
+      --entity-modal-vh: 100dvh;
+      --entity-modal-page-top: 12px;
+      position: absolute !important;
+      inset: 0;
+      z-index: 1080;
+      padding: var(--entity-modal-gap);
+      overflow: visible !important;
+      overscroll-behavior: contain;
+      backdrop-filter: blur(4px);
+      min-height: max(var(--entity-modal-vh), 100%);
+      height: auto;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-dialog {
+      position: relative;
+      top: var(--entity-modal-page-top);
+      max-width: min(920px, calc(100vw - 18px));
+      margin: 0 auto var(--entity-modal-gap);
+      min-height: auto;
+      display: flex;
+      align-items: center;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+      width: 100%;
+      max-height: calc(var(--entity-modal-vh) - (var(--entity-modal-gap) * 2));
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.96)),
+        radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 42%);
+      box-shadow: 0 28px 70px rgba(2, 6, 23, 0.5);
+      color: rgba(241, 245, 249, 0.97);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
+      justify-content: space-between;
+      align-items: flex-start;
+      text-align: left;
+      padding: 22px 24px 12px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.28));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      background: rgba(14, 116, 144, 0.16);
+      color: rgba(191, 219, 254, 0.94);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title {
+      margin: 0;
+      font-size: 1.18rem;
+      font-weight: 800;
+      color: rgba(248, 250, 252, 0.98);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .btn-close {
+      filter: invert(1) brightness(1.15);
+      opacity: .8;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-body {
+      padding: 18px 24px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      text-align: left;
+      gap: 14px;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: start;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-hero-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      min-width: 0;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-field-label,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-section-title,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-label {
+      margin: 0;
+      font-size: .77rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(191, 219, 254, 0.84);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination {
+      min-height: 50px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.26);
+      background: rgba(15, 23, 42, 0.56);
+      color: rgba(248, 250, 252, 0.98);
+      font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field {
+      text-align: left;
+      padding-inline: 14px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field:focus,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination:focus {
+      border-color: rgba(96, 165, 250, 0.8);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+      background: rgba(15, 23, 42, 0.74);
+      color: rgba(248, 250, 252, 0.98);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-help,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-transfer-help {
+      color: rgba(203, 213, 225, 0.82) !important;
+      line-height: 1.5;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      background: rgba(14, 116, 144, 0.14);
+      color: rgba(224, 242, 254, 0.98);
+      font-size: .8rem;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill i {
+      color: rgba(103, 232, 249, 0.96);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell {
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.54), rgba(15, 23, 42, 0.24));
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap {
+      margin: 0;
+      padding: 8px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.42);
+      color: rgba(226, 232, 240, 0.94);
+      font-weight: 700;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap .form-check-input {
+      cursor: pointer;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-height: 84px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.42);
+      color: rgba(226, 232, 240, 0.94);
+      cursor: pointer;
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.32);
+      box-shadow: 0 10px 22px rgba(2, 6, 23, 0.2);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-title {
+      font-size: .92rem;
+      font-weight: 800;
+      color: rgba(248, 250, 252, 0.98);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option small {
+      color: rgba(191, 219, 254, 0.76);
+      line-height: 1.45;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option.is-active {
+      border-color: rgba(96, 165, 250, 0.56);
+      background: linear-gradient(145deg, rgba(30, 64, 175, 0.34), rgba(15, 23, 42, 0.62));
+      box-shadow: 0 14px 28px rgba(30, 64, 175, 0.2);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-danger.is-active {
+      border-color: rgba(248, 113, 113, 0.52);
+      background: linear-gradient(145deg, rgba(153, 27, 27, 0.34), rgba(69, 10, 10, 0.58));
+      box-shadow: 0 14px 28px rgba(127, 29, 29, 0.22);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-list {
+      display: grid;
+      gap: 8px;
+      max-height: min(calc(var(--entity-modal-vh, 100dvh) * 0.34), 320px);
+      overflow: auto;
+      padding-right: 2px;
+      scroll-behavior: smooth;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 13px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.4);
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(125, 211, 252, 0.28);
+      box-shadow: 0 10px 20px rgba(2, 6, 23, 0.18);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card.is-selected {
+      border-color: rgba(96, 165, 250, 0.5);
+      background: linear-gradient(145deg, rgba(30, 64, 175, 0.26), rgba(15, 23, 42, 0.56));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main strong {
+      color: rgba(248, 250, 252, 0.98);
+      font-size: .95rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main small {
+      color: rgba(191, 219, 254, 0.76);
+      font-size: .78rem;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      background: rgba(15, 23, 42, 0.64);
+      color: rgba(226, 232, 240, 0.94);
+      font-size: .72rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 150px;
+      border-radius: 16px;
+      border: 1px dashed rgba(148, 163, 184, 0.24);
+      background: rgba(15, 23, 42, 0.32);
+      color: rgba(191, 219, 254, 0.8);
+      text-align: center;
+      padding: 16px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state i {
+      font-size: 1.2rem;
+      color: rgba(125, 211, 252, 0.94);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 24px 22px;
+      border-top: 0;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm {
+      min-width: 160px;
+      min-height: 44px;
+      border-radius: 13px;
+      font-weight: 800;
+      letter-spacing: .02em;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel {
+      border-color: rgba(148, 163, 184, 0.3);
+      color: rgba(226, 232, 240, 0.94);
+      background: rgba(15, 23, 42, 0.46);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-primary {
+      border: 0;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(6, 182, 212, 0.88));
+      box-shadow: 0 14px 28px rgba(14, 165, 233, 0.2);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-danger {
+      border: 0;
+      background: linear-gradient(135deg, rgba(220, 38, 38, 0.96), rgba(249, 115, 22, 0.88));
+      box-shadow: 0 14px 28px rgba(220, 38, 38, 0.2);
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe:hover .pill.equipe.pill-equipe-premium {
       transform: translateY(-1px);
       border-color: rgba(103, 232, 249, 0.52);
@@ -8621,11 +9110,56 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-confirm {
         width: 100%;
       }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal {
+        --entity-modal-gap: 8px;
+        padding: 8px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-dialog {
+        max-width: 100%;
+        top: var(--entity-modal-page-top);
+        align-items: stretch;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+        max-height: calc(var(--entity-modal-vh, 100dvh) - 16px);
+        border-radius: 18px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-hero,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-head,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-grid {
+        grid-template-columns: 1fr;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card {
+        grid-template-columns: auto minmax(0, 1fr);
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
+        grid-column: 2;
+        justify-self: start;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm {
+        width: 100%;
+      }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-chip,
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill,
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-insight-pill {
         width: 100%;
         justify-content: flex-start;
+      }
+    }
+
+    @media (max-height: 780px) {
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-dialog {
+        align-items: flex-start;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+        max-height: calc(var(--entity-modal-vh, 100dvh) - 20px);
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-list {
+        max-height: min(calc(var(--entity-modal-vh, 100dvh) * 0.30), 240px);
       }
     }
 
@@ -10292,6 +10826,53 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table-b
   white-space: nowrap;
 }
 
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table-head-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-collapse-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  background: rgba(15, 23, 42, 0.65);
+  color: rgba(226, 232, 240, 0.92);
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table-toggle:hover .gastos-collapse-icon {
+  border-color: rgba(125, 211, 252, 0.42);
+  background: rgba(30, 41, 59, 0.9);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .financeiro-collapsible-shell.is-expanded .gastos-collapse-icon {
+  transform: rotate(180deg);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .financeiro-collapsible-body[hidden] {
+  display: none !important;
+}
+
 body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-kpi-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -10757,6 +11338,272 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-
   box-shadow: 0 14px 24px rgba(29, 78, 216, 0.28);
 }
 
+@media (prefers-color-scheme: light) {
+  :root {
+    --neutral-100: #0f172a;
+    --neutral-200: #334155;
+    --neutral-300: #475569;
+    --neutral-400: #64748b;
+    --bg-primary: #f5f8ff;
+    --bg-secondary: #edf3ff;
+    --bg-tertiary: #e6eefc;
+    --bg-elevated: rgba(255, 255, 255, 0.72);
+    --bg-glass: rgba(255, 255, 255, 0.78);
+    --bg-glass-strong: rgba(255, 255, 255, 0.9);
+    --border-primary: rgba(15, 23, 42, 0.08);
+    --border-elevated: rgba(15, 23, 42, 0.12);
+    --border-strong: rgba(37, 99, 235, 0.18);
+    --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 8px 20px rgba(15, 23, 42, 0.07);
+    --shadow-md: 0 14px 36px rgba(15, 23, 42, 0.1);
+    --shadow-lg: 0 18px 48px rgba(15, 23, 42, 0.12);
+    --shadow-xl: 0 24px 64px rgba(15, 23, 42, 0.14);
+    --shadow-glow: 0 0 32px rgba(59, 130, 246, 0.12);
+  }
+
+  body.admin-panel {
+    background:
+      radial-gradient(120% 90% at 10% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 55%),
+      radial-gradient(100% 80% at 92% 8%, rgba(139, 92, 246, 0.1) 0%, transparent 58%),
+      linear-gradient(180deg, #f7fbff 0%, #eef4ff 100%);
+    color: #0f172a;
+  }
+
+  body.admin-panel p,
+  body.admin-panel small,
+  body.admin-panel .text-muted,
+  body.admin-panel .form-text {
+    color: rgba(51, 65, 85, 0.82) !important;
+  }
+
+  body.admin-panel .admin-background {
+    background:
+      radial-gradient(circle at 15% 48%, rgba(136, 192, 185, 0.16) 0%, transparent 50%),
+      radial-gradient(circle at 82% 82%, rgba(207, 154, 103, 0.14) 0%, transparent 50%),
+      linear-gradient(155deg, #f7fbff 0%, #eef4ff 42%, #e5eefb 100%);
+  }
+
+  body.admin-home-page {
+    --studio-ink: #0f172a;
+    --studio-muted: #52607a;
+    --studio-surface: rgba(255, 255, 255, 0.88);
+  }
+
+  body.admin-panel .form-control,
+  body.admin-panel .form-select,
+  body.admin-panel textarea,
+  body.admin-panel input[type='text'],
+  body.admin-panel input[type='email'],
+  body.admin-panel input[type='tel'],
+  body.admin-panel input[type='number'],
+  body.admin-panel input[type='date'],
+  body.admin-panel input[type='password'] {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a !important;
+    caret-color: #0f172a;
+    color-scheme: light;
+    background: rgba(255, 255, 255, 0.96) !important;
+    border-color: rgba(148, 163, 184, 0.42) !important;
+    box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.08);
+  }
+
+  body.admin-panel .form-control::placeholder,
+  body.admin-panel textarea::placeholder,
+  body.admin-panel input::placeholder {
+    color: rgba(71, 85, 105, 0.66) !important;
+  }
+
+  body.admin-panel .form-select:not([multiple]),
+  body.admin-panel select:not([multiple]) {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  }
+
+  body.admin-panel .form-select option,
+  body.admin-panel select option,
+  body.admin-panel select optgroup {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  body.admin-panel input[type='date']::-webkit-calendar-picker-indicator,
+  body.admin-panel input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    filter: none;
+  }
+
+  body.admin-panel .form-control:-webkit-autofill,
+  body.admin-panel .form-control:-webkit-autofill:hover,
+  body.admin-panel .form-control:-webkit-autofill:focus,
+  body.admin-panel .form-select:-webkit-autofill,
+  body.admin-panel textarea:-webkit-autofill,
+  body.admin-panel input:-webkit-autofill {
+    -webkit-text-fill-color: #0f172a !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.98) inset !important;
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.98) inset !important;
+    border-color: rgba(37, 99, 235, 0.5) !important;
+  }
+
+  body.admin-panel.admin-encontro-page {
+    --s0: #f4f8ff;
+    --s1: rgba(255, 255, 255, 0.92);
+    --s2: #eef4ff;
+    --s3: #e5eefc;
+    --s4: #dbe7fb;
+    --border-sub: rgba(15, 23, 42, 0.08);
+    --border-main: rgba(37, 99, 235, 0.16);
+    --border-hi: rgba(37, 99, 235, 0.26);
+    --t1: #0f172a;
+    --t2: rgba(15, 23, 42, 0.78);
+    --t3: rgba(15, 23, 42, 0.58);
+    --accent: #2563eb;
+    --accent-light: #1d4ed8;
+    --accent-glow: rgba(37, 99, 235, 0.12);
+    --green: #15803d;
+    --green-dim: rgba(34, 197, 94, 0.12);
+    --green-border: rgba(34, 197, 94, 0.22);
+    --amber: #b45309;
+    --amber-dim: rgba(245, 158, 11, 0.12);
+    --amber-border: rgba(245, 158, 11, 0.24);
+    --red: #dc2626;
+    --red-dim: rgba(239, 68, 68, 0.1);
+    --red-border: rgba(239, 68, 68, 0.22);
+  }
+
+  body.admin-panel.admin-encontro-page .sidebar,
+  body.admin-panel.admin-encontro-page .surface,
+  body.admin-panel.admin-encontro-page .table-wrap {
+    background: rgba(255, 255, 255, 0.92);
+  }
+
+  body.admin-panel.admin-encontro-page .surface.create-surface-compact,
+  body.admin-panel.admin-encontro-page .surface.link-surface-wide,
+  body.admin-panel.admin-encontro-page .entity-card,
+  body.admin-panel.admin-encontro-page .multi-select-panel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 255, 0.92));
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
+  }
+
+  body.admin-panel.admin-encontro-page .entity-head,
+  body.admin-panel.admin-encontro-page .table thead th {
+    background: rgba(226, 236, 252, 0.92) !important;
+    border-color: rgba(37, 99, 235, 0.14) !important;
+  }
+
+  body.admin-panel.admin-encontro-page .topbar h1,
+  body.admin-panel.admin-encontro-page .entity-head strong,
+  body.admin-panel.admin-encontro-page .table,
+  body.admin-panel.admin-encontro-page .table td,
+  body.admin-panel.admin-encontro-page .field-label,
+  body.admin-panel.admin-encontro-page .entity-counter {
+    color: #0f172a !important;
+  }
+
+  body.admin-panel.admin-encontro-page .topbar p,
+  body.admin-panel.admin-encontro-page .muted,
+  body.admin-panel.admin-encontro-page .text-muted,
+  body.admin-panel.admin-encontro-page .form-text,
+  body.admin-panel.admin-encontro-page .sidebar .subtitle {
+    color: rgba(51, 65, 85, 0.78) !important;
+  }
+
+  body.admin-panel.admin-encontro-page .table tbody tr {
+    background: rgba(255, 255, 255, 0.66);
+    border-color: rgba(148, 163, 184, 0.22) !important;
+  }
+
+  body.admin-panel.admin-encontro-page .table tbody tr:nth-child(even) {
+    background: rgba(241, 245, 249, 0.88);
+  }
+
+  body.admin-panel.admin-encontro-page .table tbody tr:hover {
+    background: rgba(219, 234, 254, 0.72) !important;
+  }
+
+  body.admin-panel.admin-encontro-page .sidebar .btn-light {
+    background: rgba(255, 255, 255, 0.9) !important;
+    color: #334155 !important;
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.96)),
+      radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 42%);
+    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.18);
+    color: #0f172a;
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    background: linear-gradient(180deg, rgba(226, 236, 252, 0.95), rgba(255, 255, 255, 0.88));
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill {
+    border-color: rgba(37, 99, 235, 0.2);
+    background: rgba(37, 99, 235, 0.08);
+    color: #1d4ed8;
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-field-label,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-section-title,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-label,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option small,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main small,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-help,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-transfer-help {
+    color: rgba(51, 65, 85, 0.8) !important;
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-title,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main strong,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
+    color: #0f172a !important;
+  }
+
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state,
+  body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel {
+    background: rgba(255, 255, 255, 0.94);
+    color: #0f172a;
+    border-color: rgba(148, 163, 184, 0.24);
+    box-shadow: none;
+  }
+
+  body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .subequipe-feature-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .subequipe-feature-card-link,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-insight-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .financeiro-extrato-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-distribution-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-table-shell,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .slc-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .admin-form-card,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .admin-config-card {
+    background: linear-gradient(165deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 255, 0.92)) !important;
+    color: #0f172a !important;
+    border-color: rgba(148, 163, 184, 0.22) !important;
+    box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08) !important;
+  }
+
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-table thead th {
+    background: rgba(226, 236, 252, 0.92) !important;
+    color: #0f172a !important;
+    border-bottom-color: rgba(148, 163, 184, 0.22) !important;
+  }
+
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-table tbody td,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-table-head h5,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .gastos-insight-card strong,
+  body.admin-panel.admin-manager-page.admin-manager-revamp .subequipe-feature-head h5 {
+    color: #0f172a !important;
+  }
+}
+
 body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-feature-action:hover {
   transform: translateY(-1px);
   box-shadow: 0 18px 30px rgba(29, 78, 216, 0.34);
@@ -10768,4 +11615,1973 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-
   }
 }
 
+@media (prefers-color-scheme: light) {
+  body.admin-panel,
+  body.admin-panel .content-area,
+  body.admin-panel .surface,
+  body.admin-panel .table,
+  body.admin-panel .modal-content,
+  body.admin-panel .card-option,
+  body.admin-panel .admin-form-card,
+  body.admin-panel .admin-config-card,
+  body.admin-panel .slc-card,
+  body.admin-panel .principal-kpi-card,
+  body.admin-panel .subequipe-feature-card,
+  body.admin-panel .gastos-table-shell {
+    color: #0f172a !important;
+  }
+
+  body.admin-panel :is(
+    h1, h2, h3, h4, h5, h6,
+    label, legend, th, td, strong,
+    .card-title, .modal-title, .surface-head,
+    .entity-head strong, .workspace-title-main,
+    .workspace-title-sub, .user-info-badge strong,
+    .slc-title, .slc-kicker, .gastos-table-head h5,
+    .gastos-insight-card strong, .subequipe-feature-head h5
+  ) {
+    color: #0f172a !important;
+  }
+
+  body.admin-panel :is(
+    p, small, .text-muted, .form-text,
+    .card-description, .admin-header p, .sidebar .subtitle,
+    .slc-subtitle, .slc-exp, .slc-validity__label,
+    .slc-validity__hint, .gastos-table-head p,
+    .subequipe-feature-subtitle, .muted, .entity-counter
+  ) {
+    color: rgba(51, 65, 85, 0.82) !important;
+  }
+
+  body.admin-home-page .card-button {
+    color: #0f172a !important;
+    background: rgba(37, 99, 235, 0.1);
+    border-color: rgba(37, 99, 235, 0.2);
+  }
+
+  body.admin-home-page .card-option:hover .card-button {
+    color: #0f172a !important;
+    background: rgba(37, 99, 235, 0.14);
+  }
+
+  body.admin-panel .btn-primary,
+  body.admin-panel .btn-primary *,
+  body.admin-panel .btn-danger,
+  body.admin-panel .btn-danger *,
+  body.admin-panel .entity-export-btn,
+  body.admin-panel .entity-export-btn * {
+    color: #ffffff !important;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body.admin-panel,
+  body.admin-panel .content-area,
+  body.admin-panel .surface,
+  body.admin-panel .table,
+  body.admin-panel .modal-content,
+  body.admin-panel .card-option,
+  body.admin-panel .admin-form-card,
+  body.admin-panel .admin-config-card,
+  body.admin-panel .slc-card,
+  body.admin-panel .principal-kpi-card,
+  body.admin-panel .subequipe-feature-card,
+  body.admin-panel .gastos-table-shell {
+    color: #f8fafc !important;
+  }
+
+  body.admin-panel :is(
+    h1, h2, h3, h4, h5, h6,
+    label, legend, th, td, strong,
+    .card-title, .modal-title, .surface-head,
+    .entity-head strong, .workspace-title-main,
+    .workspace-title-sub, .user-info-badge strong,
+    .slc-title, .slc-kicker, .gastos-table-head h5,
+    .gastos-insight-card strong, .subequipe-feature-head h5
+  ) {
+    color: #f8fafc !important;
+  }
+
+  body.admin-panel :is(
+    p, small, .text-muted, .form-text,
+    .card-description, .admin-header p, .sidebar .subtitle,
+    .slc-subtitle, .slc-exp, .slc-validity__label,
+    .slc-validity__hint, .gastos-table-head p,
+    .subequipe-feature-subtitle, .muted, .entity-counter
+  ) {
+    color: rgba(226, 232, 240, 0.84) !important;
+  }
+}
+
 /* ============================================================================
+   THEME FINISHING LAYER - PROFESSIONAL LIGHT & DARK
+   ============================================================================ */
+html[data-theme='light'] body.admin-panel {
+  background:
+    radial-gradient(120% 90% at 10% 0%, rgba(56, 189, 248, 0.12) 0%, transparent 55%),
+    radial-gradient(100% 80% at 92% 8%, rgba(139, 92, 246, 0.1) 0%, transparent 58%),
+    linear-gradient(180deg, #f7fbff 0%, #eef4ff 100%) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .sidebar,
+  .workspace-hero,
+  .tab-workspace-head,
+  .surface,
+  .table-wrap,
+  .modal-content,
+  .admin-form-card,
+  .admin-config-card,
+  .admin-mini-panel,
+  .subequipe-feature-card,
+  .subequipe-feature-card-link,
+  .gastos-table-shell,
+  .principal-lite-hero,
+  .principal-lite-kpi,
+  .principal-lite-panel,
+  .principal-lite-module,
+  .principal-finance-board,
+  .principal-finance-card,
+  .principal-finance-stack-meta div,
+  .principal-finance-metric,
+  .slc-card,
+  .card-option,
+  #app-entity-editor-modal .app-entity-editor-card
+) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(243, 247, 255, 0.92)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #0f172a !important;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .table thead th,
+  .entity-head,
+  .surface-head,
+  .admin-card-head,
+  .principal-lite-panel-head,
+  .gastos-table-head,
+  #cadastroTabs
+) {
+  background: linear-gradient(180deg, rgba(233, 242, 255, 0.96), rgba(223, 234, 250, 0.92)) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html[data-theme='light'] body.admin-panel .table tbody tr {
+  background: rgba(255, 255, 255, 0.76) !important;
+}
+
+html[data-theme='light'] body.admin-panel .table tbody tr:nth-child(even) {
+  background: rgba(248, 250, 252, 0.92) !important;
+}
+
+html[data-theme='light'] body.admin-panel .table tbody tr:hover {
+  background: rgba(219, 234, 254, 0.74) !important;
+}
+
+html[data-theme='light'] body.admin-panel .table-light,
+html[data-theme='light'] body.admin-panel .table-light > * {
+  --bs-table-bg: rgba(226, 236, 252, 0.96) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  h1, h2, h3, h4, h5, h6,
+  strong, th, td, label, legend,
+  .card-title, .modal-title, .surface-head,
+  .workspace-title-main, .workspace-title-sub,
+  .slc-title, .admin-card-kicker,
+  .principal-lite-title-wrap h3,
+  .principal-lite-panel-head h6,
+  .principal-lite-module-top strong,
+  .principal-finance-board-head h6,
+  .principal-finance-card-head strong,
+  .principal-finance-donut-center strong
+) {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  p, small, .text-muted, .form-text, .muted,
+  .card-description, .admin-header p, .sidebar .subtitle,
+  .slc-subtitle, .slc-exp, .slc-validity__label,
+  .slc-validity__hint, .entity-counter,
+  .principal-lite-title-wrap p,
+  .principal-lite-module small,
+  .principal-finance-legend,
+  .principal-finance-kpi-card small,
+  .principal-finance-kpi-card span,
+  .principal-finance-stack-meta small,
+  .principal-finance-metric small,
+  .principal-finance-metric span,
+  .gastos-card-subtitle,
+  .gastos-kpi-meta,
+  .subequipe-feature-subtitle
+) {
+  color: rgba(51, 65, 85, 0.82) !important;
+}
+
+html[data-theme='light'] body.admin-login-page {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(96, 165, 250, 0.16), transparent 32%),
+    radial-gradient(circle at 88% 22%, rgba(196, 181, 253, 0.18), transparent 30%),
+    radial-gradient(circle at 76% 82%, rgba(244, 114, 182, 0.12), transparent 26%),
+    linear-gradient(145deg, #eef6ff 0%, #f6f8ff 52%, #f9f4ff 100%) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-grid {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.04) 1px, transparent 1px);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-back {
+  color: #334155;
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-back__arrow {
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-back:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(96, 165, 250, 0.34);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-card {
+  background: linear-gradient(145deg, rgba(96, 165, 250, 0.64) 0%, rgba(129, 140, 248, 0.5) 48%, rgba(244, 114, 182, 0.34) 100%);
+  box-shadow: 0 24px 60px rgba(37, 99, 235, 0.12), 0 18px 34px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-card__body {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(246, 249, 255, 0.92));
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-topline {
+  background: linear-gradient(90deg, transparent 5%, rgba(59, 130, 246, 0.72) 40%, rgba(168, 85, 247, 0.46) 70%, transparent 95%);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-icon {
+  background: linear-gradient(135deg, #4f7ef7 0%, #8b5cf6 100%);
+  box-shadow: 0 10px 28px rgba(79, 126, 247, 0.28);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-icon__ring {
+  border-color: rgba(79, 126, 247, 0.26);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-header h1 {
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 62%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #0f172a;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55), 0 10px 24px rgba(79, 126, 247, 0.08);
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-header p {
+  color: #64748b;
+  opacity: 1 !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-alert--info {
+  background: rgba(239, 246, 255, 0.92);
+  color: #1e3a8a;
+  border-color: rgba(96, 165, 250, 0.24);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-alert--error {
+  background: rgba(254, 242, 242, 0.96);
+  color: #b91c1c;
+  border-color: rgba(248, 113, 113, 0.24);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-label {
+  color: #475569;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-label__icon {
+  color: #4f46e5;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-input {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(148, 163, 184, 0.24);
+  color: #0f172a;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.82) inset;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-input::placeholder {
+  color: #94a3b8;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-input:hover {
+  background: rgba(255, 255, 255, 0.99);
+  border-color: rgba(96, 165, 250, 0.26);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-input:focus {
+  background: #ffffff;
+  border-color: rgba(79, 126, 247, 0.52);
+  box-shadow: 0 0 0 4px rgba(79, 126, 247, 0.12), 0 10px 24px rgba(79, 126, 247, 0.08);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-eye-btn {
+  color: #94a3b8;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-eye-btn:hover {
+  color: #4f46e5;
+  background: rgba(79, 70, 229, 0.08);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-submit {
+  background: linear-gradient(135deg, #4f7ef7 0%, #8b5cf6 100%);
+  box-shadow: 0 16px 32px rgba(79, 126, 247, 0.22);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-submit:hover {
+  box-shadow: 0 20px 36px rgba(79, 126, 247, 0.26);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-card {
+  box-shadow: 0 32px 72px rgba(79, 126, 247, 0.16), 0 16px 30px rgba(236, 72, 153, 0.08);
+}
+
+html[data-theme='light'] body.admin-login-page .lp-card__body {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.2), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(246, 249, 255, 0.94)) !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-header h1 {
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 42%, #7c3aed 82%, #ec4899 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-header p {
+  color: #475569 !important;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-alert--info {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.95)) !important;
+  color: #1e3a8a !important;
+  border-color: rgba(96, 165, 250, 0.32) !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-login-page .lp-icon {
+  background: linear-gradient(135deg, #2563eb 0%, #8b5cf6 55%, #ec4899 100%) !important;
+  box-shadow: 0 16px 34px rgba(79, 126, 247, 0.28) !important;
+}
+
+html[data-theme='light'] body.admin-home-page {
+  --studio-ink: #0f172a;
+  --studio-muted: rgba(51, 65, 85, 0.84);
+  --studio-surface: rgba(255, 255, 255, 0.94);
+}
+
+html[data-theme='light'] body.admin-home-page .admin-header h1 {
+  background: none !important;
+  -webkit-text-fill-color: #0f172a !important;
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-home-page .user-info-badge {
+  background: linear-gradient(130deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.92)) !important;
+  border-color: rgba(37, 99, 235, 0.18) !important;
+  color: #1e293b !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .user-info-badge strong {
+  color: #0f172a !important;
+}
+
+/* ----------------------------------------------------------------------------
+   ADMIN HOME - LIGHT THEME PREMIUM POLISH
+   ---------------------------------------------------------------------------- */
+html[data-theme='light'] body.admin-home-page .admin-home-container {
+  max-width: 1460px;
+}
+
+html[data-theme='light'] body.admin-home-page .admin-header {
+  max-width: 820px;
+  margin: 0 auto var(--space-12);
+  text-align: center;
+}
+
+html[data-theme='light'] body.admin-home-page .admin-header h1 {
+  background: linear-gradient(135deg, #0b1324 0%, #1d4ed8 55%, #7c3aed 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+}
+
+html[data-theme='light'] body.admin-home-page .admin-header p {
+  color: #475569 !important;
+  max-width: 720px;
+  margin: 10px auto 0;
+}
+
+html[data-theme='light'] body.admin-home-page .user-info-badge i {
+  color: #2563eb !important;
+}
+
+html[data-theme='light'] body.admin-home-page .cards-grid {
+  align-items: stretch;
+}
+
+html[data-theme='light'] body.admin-home-page .card-option {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(243, 247, 255, 0.94)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 22px 44px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.76) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-option:hover {
+  transform: translateY(-10px) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 30px 60px rgba(37, 99, 235, 0.12), 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-icon {
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-option:nth-child(1) .card-icon {
+  background: linear-gradient(135deg, #2563eb 0%, #38bdf8 48%, #8b5cf6 100%) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-option:nth-child(2) .card-icon {
+  background: linear-gradient(135deg, #7c3aed 0%, #ec4899 50%, #fb7185 100%) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-option:nth-child(3) .card-icon {
+  background: linear-gradient(135deg, #0f766e 0%, #10b981 52%, #f59e0b 100%) !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-description {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-home-page .card-button {
+  margin-top: auto;
+  color: #0f172a !important;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.78), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+html[data-theme='light'] body.admin-home-page .card-option:hover .card-button {
+  color: #1d4ed8 !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .topbar.workspace-hero-manager {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .topbar.workspace-hero-manager::before {
+  mix-blend-mode: normal;
+  opacity: 0.58;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .workspace-title,
+  .workspace-title-kicker,
+  .workspace-title-main,
+  .manager-module-title,
+  .workspace-stat-card .stat-value,
+  .hero-admin-meta strong,
+  .principal-finance-category-item .category-top strong,
+  .principal-finance-extrato-list .extrato-row strong
+) {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .workspace-hero-note,
+  .workspace-hero-main p,
+  .manager-module-subtitle,
+  .manager-shortcut-hint,
+  .manager-shortcut-chip small,
+  .workspace-stat-card .stat-label,
+  .hero-admin-meta small,
+  .principal-finance-legend,
+  .principal-finance-empty,
+  .principal-finance-category-item .category-top,
+  .principal-finance-extrato-list .extrato-row
+) {
+  color: rgba(51, 65, 85, 0.84) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .event-scope-switch,
+  .hero-strip-pill,
+  .workspace-stat-card,
+  .hero-admin-pill,
+  .manager-module-card,
+  .manager-module-card.active,
+  .manager-shortcut-hint,
+  .manager-shortcut-chip,
+  .principal-finance-category-panel,
+  .principal-finance-extrato-panel
+) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(243, 247, 255, 0.94)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .workspace-title-icon,
+  .manager-module-icon
+) {
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.95)) !important;
+  border-color: rgba(37, 99, 235, 0.22) !important;
+  color: #1d4ed8 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .manager-module-count {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.18) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .manager-shortcut-chip kbd {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(37, 99, 235, 0.2) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .event-scope-btn {
+  color: #334155 !important;
+  font-weight: 700;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .event-scope-btn:not(.active) {
+  color: #334155 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .event-scope-btn i,
+  .hero-strip-pill i
+) {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .event-scope-btn:hover:not(:disabled) {
+  color: #0f172a !important;
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.16) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .event-scope-btn.active {
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.4) !important;
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%) !important;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .event-scope-btn.active i {
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .principal-finance-empty {
+  background: rgba(248, 250, 252, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.26) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-kpi-card,
+  .principal-finance-donut-center,
+  .admin-mini-panel,
+  .admin-switch-row
+) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 255, 0.95)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .principal-finance-donut-center {
+  box-shadow: inset 0 0 0 1px rgba(37, 99, 235, 0.12) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-kpi-card strong,
+  .principal-finance-donut-center strong,
+  .admin-mini-panel-head .card-title,
+  .admin-switch-row .form-check-label
+) {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-kpi-card small,
+  .principal-finance-kpi-card span,
+  .principal-finance-donut-center span,
+  .principal-finance-board-head span,
+  .principal-finance-card-head span,
+  .admin-mini-panel-subtitle,
+  .admin-config-card .form-check-label,
+  .admin-config-card p,
+  .admin-config-card li,
+  .admin-block-fields .text-muted,
+  .admin-block-fields small
+) {
+  color: rgba(51, 65, 85, 0.84) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-kpi-card .kpi-icon,
+  .admin-mini-panel-head .card-title i
+) {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #1d4ed8 !important;
+  border-color: rgba(37, 99, 235, 0.2) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-card-head span,
+  .principal-finance-board-head span
+) {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.16) !important;
+  color: #334155 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  .principal-finance-category-item .category-bar,
+  .principal-finance-extrato-list .extrato-bar
+) {
+  background: rgba(226, 232, 240, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  #admins-list-card,
+  #admins-audit-card,
+  .admin-admins-card,
+  .admin-table-shell
+) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 255, 0.95)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  #admins-list-card .admin-card-kicker,
+  #admins-audit-card .admin-card-kicker,
+  #admins-list-card .admin-card-subtitle,
+  #admins-audit-card .admin-card-subtitle,
+  #admins-list-card .table tbody small,
+  #admins-audit-card .table tbody small
+) {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  #admins-list-card .table thead th,
+  #admins-audit-card .table thead th
+) {
+  background: linear-gradient(180deg, #edf4ff 0%, #dfeafe 100%) !important;
+  color: #334155 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  #admins-list-card .table tbody td,
+  #admins-list-card .table tbody td strong,
+  #admins-audit-card .table tbody td,
+  #admins-audit-card .table tbody td strong
+) {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(
+  #admins-list-card .status-badge,
+  #admins-audit-card .status-badge
+) {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #1d4ed8 !important;
+  border: 1px solid rgba(37, 99, 235, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(.btn-edit, .js-edit-admin) {
+  background: rgba(37, 99, 235, 0.12) !important;
+  color: #1d4ed8 !important;
+  border-color: rgba(37, 99, 235, 0.28) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(.btn-edit, .js-edit-admin):hover {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(.btn-delete, .js-delete-admin) {
+  background: rgba(239, 68, 68, 0.1) !important;
+  color: #b91c1c !important;
+  border-color: rgba(239, 68, 68, 0.26) !important;
+  opacity: 1 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(.btn-delete, .js-delete-admin):hover {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page :is(.search-toolbar, .transfer-lote-bar) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 255, 0.93)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .search-toolbar {
+  justify-content: space-between !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .search-input-wrap {
+  flex: 1 1 320px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .search-input-wrap i {
+  color: #60a5fa !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .search-input {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.96)) !important;
+  color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .search-input::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .btn-clear-search {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.95)) !important;
+  color: #1e40af !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .btn-clear-search:hover {
+  background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+  color: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.4) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .topbar.workspace-hero-manager {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(96, 165, 250, 0.16), transparent 45%),
+    radial-gradient(100% 120% at 100% 0%, rgba(167, 139, 250, 0.12), transparent 42%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 255, 0.97) 56%, rgba(238, 244, 255, 0.95) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  box-shadow:
+    0 24px 54px rgba(37, 99, 235, 0.1),
+    0 12px 26px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .topbar.workspace-hero-manager::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.32;
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.32), transparent 38%, transparent 65%, rgba(191, 219, 254, 0.12));
+  pointer-events: none;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .topbar.workspace-hero-manager > * {
+  position: relative;
+  z-index: 1;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-main {
+  display: inline-block;
+  background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 58%, #ec4899 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: #1d4ed8 !important;
+  text-shadow: none !important;
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-kicker {
+  color: #1e40af !important;
+  letter-spacing: 0.18em;
+  font-weight: 900;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-icon {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.16), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .event-scope-switch,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .hero-strip-pill {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(241, 246, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .hero-strip-pill {
+  color: #334155 !important;
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .hero-strip-pill strong {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-copy {
+  padding: 10px 14px 11px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(241, 246, 255, 0.96)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.24) !important;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-main {
+  color: #1d4ed8 !important;
+  text-shadow: none !important;
+  font-size: clamp(1.46rem, 2.55vw, 2.12rem) !important;
+  font-weight: 900 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-title-kicker {
+  color: #1e40af !important;
+  letter-spacing: 0.18em !important;
+  font-weight: 900 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .event-scope-btn {
+  color: #1e293b !important;
+  font-weight: 800 !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .event-scope-btn.active {
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 100%) !important;
+  border-color: rgba(37, 99, 235, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .event-scope-btn.active i {
+  color: #ffffff !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-stats {
+  gap: 10px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-stat-card {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(245, 248, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.18) !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.08), 0 6px 14px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.9), rgba(129, 140, 248, 0.7), transparent);
+  opacity: 0.9;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .workspace-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.11), 0 8px 18px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .hero-admin-pill {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.18), transparent 55%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94)) !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  box-shadow: 0 14px 32px rgba(37, 99, 235, 0.09), 0 6px 14px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .hero-admin-avatar {
+  background: linear-gradient(145deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.26) !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card {
+  border-color: rgba(96, 165, 250, 0.16) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.28), transparent 40%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.99), rgba(244, 247, 255, 0.95)) !important;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.07), 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card:hover {
+  transform: translateY(-3px) scale(1.01);
+  border-color: rgba(59, 130, 246, 0.32) !important;
+  box-shadow: 0 20px 36px rgba(37, 99, 235, 0.11), 0 10px 20px rgba(15, 23, 42, 0.05) !important;
+  filter: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card.active {
+  border-color: rgba(59, 130, 246, 0.32) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.32), transparent 42%),
+    linear-gradient(145deg, rgba(219, 234, 254, 0.92), rgba(238, 244, 255, 0.98)) !important;
+  box-shadow: 0 22px 42px rgba(37, 99, 235, 0.14), 0 0 0 1px rgba(96, 165, 250, 0.14) inset !important;
+  animation: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-icon {
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-count {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp :is(.workspace-title-icon, .hero-admin-avatar, .manager-module-icon, .sidebar .menu-link i) {
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='principal-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='principal-tab'] i {
+  color: #047857 !important;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(236, 253, 245, 0.98)) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='encontristas-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='encontristas-tab'] i {
+  color: #1d4ed8 !important;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(239, 246, 255, 0.98)) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='encontreiros-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='encontreiros-tab'] i {
+  color: #4338ca !important;
+  background: linear-gradient(145deg, rgba(129, 140, 248, 0.22), rgba(238, 242, 255, 0.98)) !important;
+  border-color: rgba(129, 140, 248, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='tios-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='tios-tab'] i {
+  color: #be185d !important;
+  background: linear-gradient(145deg, rgba(244, 114, 182, 0.2), rgba(253, 242, 248, 0.98)) !important;
+  border-color: rgba(244, 114, 182, 0.3) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='aprovacoes-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='aprovacoes-tab'] i {
+  color: #b45309 !important;
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.22), rgba(255, 251, 235, 0.98)) !important;
+  border-color: rgba(245, 158, 11, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='encontros-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='encontros-tab'] i {
+  color: #0f766e !important;
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.22), rgba(236, 254, 255, 0.98)) !important;
+  border-color: rgba(6, 182, 212, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .manager-module-card[data-tab-target='administradores-tab'] .manager-module-icon,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-tab-target='administradores-tab'] i {
+  color: #7c3aed !important;
+  background: linear-gradient(145deg, rgba(192, 132, 252, 0.22), rgba(245, 243, 255, 0.98)) !important;
+  border-color: rgba(168, 85, 247, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link[data-menu-title='Sair'] i {
+  color: #e11d48 !important;
+  background: linear-gradient(145deg, rgba(251, 113, 133, 0.22), rgba(255, 241, 242, 0.98)) !important;
+  border-color: rgba(244, 63, 94, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(240, 246, 255, 0.9)) !important;
+  border-color: rgba(96, 165, 250, 0.16) !important;
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.08), 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .brand-text {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar-note {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(239, 246, 255, 0.88)) !important;
+  border-color: rgba(96, 165, 250, 0.18) !important;
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link {
+  color: #334155 !important;
+  border-color: transparent !important;
+}
+
+/* ----------------------------------------------------------------------------
+   ADMIN ENCONTRO - LIGHT THEME PREMIUM POLISH
+   ---------------------------------------------------------------------------- */
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.1), transparent 30%),
+    radial-gradient(circle at 100% 0%, rgba(167, 139, 250, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .content-area {
+  gap: 18px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-hero {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(96, 165, 250, 0.2), transparent 46%),
+    radial-gradient(100% 120% at 100% 0%, rgba(167, 139, 250, 0.14), transparent 40%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.99), rgba(246, 249, 255, 0.97) 56%, rgba(238, 244, 255, 0.95) 100%) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  box-shadow: 0 24px 54px rgba(37, 99, 235, 0.1), 0 12px 26px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-title-encontro .workspace-title-kicker {
+  color: #2563eb !important;
+  letter-spacing: 0.16em;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-title-encontro .workspace-title-main {
+  background: linear-gradient(135deg, #0f172a 0%, #2563eb 55%, #6366f1 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-title-encontro .workspace-title-icon {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.16), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.3) !important;
+  color: #2563eb !important;
+  box-shadow: 0 14px 30px rgba(37, 99, 235, 0.12) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(243, 247, 255, 0.94)) !important;
+  border-color: rgba(96, 165, 250, 0.18) !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill {
+  color: #334155 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill i {
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto auto 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.9), rgba(129, 140, 248, 0.72), transparent);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:nth-child(1)::after {
+  background: linear-gradient(90deg, #22c55e, #86efac, transparent);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:nth-child(2)::after {
+  background: linear-gradient(90deg, #2563eb, #60a5fa, transparent);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:nth-child(3)::after {
+  background: linear-gradient(90deg, #06b6d4, #67e8f9, transparent);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:nth-child(4)::after {
+  background: linear-gradient(90deg, #8b5cf6, #c4b5fd, transparent);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.workspace-stat-card .stat-label, .panel-premium-kicker, .panel-premium-copy, .field-label, .multi-select-help, .muted) {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.workspace-stat-card .stat-value, .panel-premium-head h2, .surface-head span, .encontro-module-title) {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card {
+  border-color: rgba(96, 165, 250, 0.18) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.24), transparent 38%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.99), rgba(244, 247, 255, 0.95)) !important;
+  color: #0f172a !important;
+  box-shadow: 0 16px 32px rgba(37, 99, 235, 0.08), 0 8px 18px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover {
+  transform: translateY(-4px) scale(1.01);
+  border-color: rgba(59, 130, 246, 0.32) !important;
+  box-shadow: 0 20px 38px rgba(37, 99, 235, 0.12), 0 10px 20px rgba(15, 23, 42, 0.05) !important;
+  filter: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card.active {
+  border-color: rgba(59, 130, 246, 0.32) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.32), transparent 42%),
+    linear-gradient(145deg, rgba(219, 234, 254, 0.94), rgba(238, 244, 255, 0.99)) !important;
+  box-shadow: 0 22px 42px rgba(37, 99, 235, 0.14), 0 0 0 1px rgba(96, 165, 250, 0.14) inset !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-icon {
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(1) .encontro-module-icon {
+  color: #047857 !important;
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(236, 253, 245, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(2) .encontro-module-icon {
+  color: #1d4ed8 !important;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.2), rgba(239, 246, 255, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(3) .encontro-module-icon {
+  color: #b45309 !important;
+  background: linear-gradient(145deg, rgba(251, 191, 36, 0.24), rgba(255, 251, 235, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(4) .encontro-module-icon {
+  color: #7c3aed !important;
+  background: linear-gradient(145deg, rgba(192, 132, 252, 0.24), rgba(245, 243, 255, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(5) .encontro-module-icon {
+  color: #0f766e !important;
+  background: linear-gradient(145deg, rgba(34, 211, 238, 0.24), rgba(236, 254, 255, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-count {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  color: #1d4ed8 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.panel-premium-head, .panel-create-col .surface, .panel-link-col .surface, .panel-list-surface) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.2), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 247, 255, 0.95)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08), 0 8px 16px rgba(37, 99, 235, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head-circulos {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.14), transparent 40%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(240, 247, 255, 0.96)) !important;
+  border-color: rgba(59, 130, 246, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head-equipes {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(16, 185, 129, 0.14), transparent 40%),
+    linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(240, 253, 250, 0.96)) !important;
+  border-color: rgba(16, 185, 129, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head::before {
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.56), transparent 42%, transparent 70%, rgba(191, 219, 254, 0.14));
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-chip {
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.72), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  color: #334155 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-chip i {
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head {
+  background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head span {
+  gap: 8px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head i,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head h2 i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 10px;
+  margin-right: 0 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-circulos :is(.surface-head i, .panel-premium-head h2 i) {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(239, 246, 255, 0.98)) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-equipes :is(.surface-head i, .panel-premium-head h2 i) {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.18), rgba(236, 253, 245, 0.98)) !important;
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.create-form-wrap, .link-bar-shell, .multi-select-panel, .multi-check-toggle) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.95)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 10px 22px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .link-form-grid-modern > [class*='col-'] {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 248, 255, 0.96)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .link-form-grid-modern .col-link-action {
+  background: linear-gradient(145deg, rgba(219, 234, 254, 0.95), rgba(238, 242, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.26) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.form-control, .form-select, .multi-filter-input, .app-entity-name-field, .app-entity-destination) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.97)) !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.form-control, .form-select, .multi-filter-input)::placeholder {
+  color: #64748b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.form-control, .form-select, .multi-filter-input, .app-entity-name-field, .app-entity-destination):focus {
+  background: #ffffff !important;
+  border-color: rgba(59, 130, 246, 0.38) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 12px 24px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .search-input-shell {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 248, 255, 0.96)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 8px 18px rgba(15, 23, 42, 0.04);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .multi-check-toggle {
+  color: #334155 !important;
+  font-weight: 700;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .multi-check-toggle i {
+  color: #2563eb !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .search-icon {
+  color: #60a5fa !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .btn-clear-mini {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.96)) !important;
+  color: #1e40af !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .btn-clear-mini:hover {
+  background: linear-gradient(135deg, #2563eb, #60a5fa) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.panel-create-col .btn-primary, .link-action-btn) {
+  min-height: 46px;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 55%, #7c3aed 100%) !important;
+  border: 0 !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.panel-create-col .btn-primary, .link-action-btn):hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .link-action-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #3b82f6 45%, #6366f1 100%) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card {
+  position: relative;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.995), rgba(245, 248, 255, 0.96)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08), 0 8px 16px rgba(37, 99, 235, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  border-radius: 14px 0 0 14px;
+  background: linear-gradient(180deg, #93c5fd, #c4b5fd);
+  opacity: 0.9;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover {
+  transform: translateY(-4px) scale(1.005);
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  box-shadow: 0 22px 40px rgba(37, 99, 235, 0.12), 0 10px 18px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-amarelo::before { background: linear-gradient(180deg, #f59e0b, #fcd34d); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-azul::before { background: linear-gradient(180deg, #2563eb, #60a5fa); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-laranja::before { background: linear-gradient(180deg, #ea580c, #fb923c); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-verde::before { background: linear-gradient(180deg, #16a34a, #4ade80); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-vermelho::before { background: linear-gradient(180deg, #dc2626, #f87171); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-rosa::before { background: linear-gradient(180deg, #db2777, #f9a8d4); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-roxo::before { background: linear-gradient(180deg, #7c3aed, #c4b5fd); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-preto::before { background: linear-gradient(180deg, #334155, #94a3b8); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-branco::before { background: linear-gradient(180deg, #cbd5e1, #f8fafc); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo.theme-default::before { background: linear-gradient(180deg, #64748b, #cbd5e1); }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe::before { background: linear-gradient(180deg, #10b981, #5eead4); }
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head {
+  background: linear-gradient(180deg, #eef4ff 0%, #f8fbff 100%) !important;
+  border-bottom-color: rgba(148, 163, 184, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo .entity-head {
+  background: linear-gradient(110deg, rgba(219, 234, 254, 0.9), rgba(248, 251, 255, 1)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe .entity-head {
+  background: linear-gradient(110deg, rgba(220, 252, 231, 0.9), rgba(248, 255, 251, 1)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head::before,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head::after {
+  opacity: 0.8;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.entity-kicker, .entity-insight-pill, .entity-insight-pill i) {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-insight-pill {
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.7), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-insight-pill i {
+  color: #2563eb !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.entity-title.entity-title-circulo, .entity-title.entity-title-equipe, .entity-head strong) {
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-equipe {
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-amarelo { color: #b45309 !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-azul { color: #1d4ed8 !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-laranja { color: #c2410c !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-verde { color: #15803d !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-vermelho { color: #b91c1c !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-rosa { color: #be185d !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-roxo { color: #6d28d9 !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-preto { color: #334155 !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-branco { color: #0f172a !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-title.entity-title-circulo.theme-default { color: #1e293b !important; }
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb {
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-amarelo { box-shadow: 0 12px 24px rgba(245, 158, 11, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-azul { box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-laranja { box-shadow: 0 12px 24px rgba(234, 88, 12, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-verde { box-shadow: 0 12px 24px rgba(22, 163, 74, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-vermelho { box-shadow: 0 12px 24px rgba(220, 38, 38, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-rosa { box-shadow: 0 12px 24px rgba(219, 39, 119, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-circulo.theme-roxo { box-shadow: 0 12px 24px rgba(124, 58, 237, 0.18) !important; }
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-equipe { box-shadow: 0 12px 24px rgba(16, 185, 129, 0.18) !important; }
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-orb.entity-orb-equipe {
+  background: linear-gradient(145deg, rgba(16, 185, 129, 0.2), rgba(236, 253, 245, 0.98)) !important;
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.circulo,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.equipe.pill-equipe-premium {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 8px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.equipe.pill-equipe-premium {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.16), rgba(236, 253, 245, 0.98)) !important;
+  color: #047857 !important;
+  border-color: rgba(16, 185, 129, 0.26) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.04) !important;
+  box-shadow: inset 3px 0 0 rgba(59, 130, 246, 0.34);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .table-wrap {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 248, 255, 0.93)) !important;
+  border-color: rgba(148, 163, 184, 0.2) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .table thead th {
+  background: linear-gradient(180deg, #edf4ff 0%, #dfeafe 100%) !important;
+  color: #334155 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .table td {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel {
+  border-radius: 18px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-list-surface,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface {
+  backdrop-filter: blur(10px);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-list-surface,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-create-col .surface,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-link-col .surface {
+  border-radius: 18px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head {
+  position: relative;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head::after,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head::after {
+  content: '';
+  position: absolute;
+  inset: auto 16px 0 16px;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(96, 165, 250, 0.22), rgba(167, 139, 250, 0.14), transparent);
+  pointer-events: none;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-body {
+  padding: 18px 18px 16px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.workspace-title-main, .panel-premium-head h2, .entity-title, .surface-head span, .encontro-module-title) {
+  letter-spacing: -0.02em;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .field-label {
+  font-size: 0.76rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(.encontro-module-card, .workspace-stat-card, .hero-strip-pill, .panel-premium-chip, .entity-card, .btn, .multi-check-toggle, .btn-clear-mini) {
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill:hover,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 22px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:hover {
+  transform: translateY(-2px);
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head span,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head h2 {
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-copy,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .multi-select-help,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .muted {
+  line-height: 1.6;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-copy {
+  max-width: 760px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .muted {
+  font-weight: 600;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link:hover,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link.active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.94)) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link i {
+  filter: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .main-panel {
+  background: transparent !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #cadastroTabs {
+  padding: 6px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(241, 245, 255, 0.88));
+  border: 1px solid rgba(96, 165, 250, 0.14);
+  box-shadow: 0 10px 24px rgba(37, 99, 235, 0.06);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #cadastroTabs .nav-link {
+  color: #475569 !important;
+  border-radius: 12px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #cadastroTabs .nav-link:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+  color: #1e293b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #cadastroTabs .nav-link.active {
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 100%) !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .tab-content > .tab-pane {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(245, 248, 255, 0.9)) !important;
+  border: 1px solid rgba(96, 165, 250, 0.14) !important;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.06), 0 8px 16px rgba(15, 23, 42, 0.03) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .table-wrap {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.95)) !important;
+  border-color: rgba(96, 165, 250, 0.14) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75), 0 10px 22px rgba(37, 99, 235, 0.05) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp thead th {
+  background: linear-gradient(180deg, #f8fbff 0%, #e8f1ff 100%) !important;
+  color: #334155 !important;
+  border-bottom: 1px solid rgba(96, 165, 250, 0.16) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp tbody tr {
+  background: rgba(255, 255, 255, 0.9) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp tbody tr:nth-child(even) {
+  background: rgba(247, 250, 255, 0.96) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp tbody tr:hover {
+  background: rgba(232, 242, 255, 0.94) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp td {
+  color: #334155 !important;
+  border-color: rgba(148, 163, 184, 0.14) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp td:nth-child(2) {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .transfer-lote-bar small {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 255, 0.94)) !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-card.approval-metric-card-attention {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 243, 199, 0.7)) !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-card.approval-metric-card-critical {
+  background: linear-gradient(180deg, rgba(255, 241, 242, 0.98), rgba(254, 226, 226, 0.74)) !important;
+  border-color: rgba(239, 68, 68, 0.28) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-icon {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-icon-pending {
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(245, 158, 11, 0.24) !important;
+  color: #b45309 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-icon-ok {
+  background: rgba(16, 185, 129, 0.12) !important;
+  border-color: rgba(16, 185, 129, 0.22) !important;
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-icon-info {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: rgba(59, 130, 246, 0.22) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-label {
+  color: #64748b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-value {
+  color: #0f172a !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .approval-metric-note {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn {
+  color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 255, 0.94)) !important;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-pdf {
+  color: #b91c1c !important;
+  border-color: rgba(239, 68, 68, 0.26) !important;
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.98), rgba(255, 255, 255, 0.95)) !important;
+  box-shadow: 0 10px 22px rgba(239, 68, 68, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-report {
+  color: #a16207 !important;
+  border-color: rgba(245, 158, 11, 0.28) !important;
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.98), rgba(255, 255, 255, 0.95)) !important;
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-image {
+  color: #0f766e !important;
+  border-color: rgba(6, 182, 212, 0.28) !important;
+  background: linear-gradient(135deg, rgba(236, 254, 255, 0.98), rgba(255, 255, 255, 0.95)) !important;
+  box-shadow: 0 10px 22px rgba(6, 182, 212, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn:hover {
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-pdf:hover {
+  background: linear-gradient(135deg, #dc2626, #f87171) !important;
+  box-shadow: 0 14px 28px rgba(220, 38, 38, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-report:hover {
+  background: linear-gradient(135deg, #d97706, #fbbf24) !important;
+  box-shadow: 0 14px 28px rgba(217, 119, 6, 0.22) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .export-btn.export-btn-image:hover {
+  background: linear-gradient(135deg, #0891b2, #67e8f9) !important;
+  box-shadow: 0 14px 28px rgba(8, 145, 178, 0.22) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   ADMIN DASHBOARD - LIGHT THEME PREMIUM POLISH
+   ---------------------------------------------------------------------------- */
+html[data-theme='light'] body.admin-panel.admin-dashboard-page {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.12), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(167, 139, 250, 0.08), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-bg {
+  background:
+    radial-gradient(circle at 12% 18%, rgba(59, 130, 246, 0.12), transparent 34%),
+    radial-gradient(circle at 84% 12%, rgba(139, 92, 246, 0.1), transparent 28%),
+    linear-gradient(180deg, rgba(248, 251, 255, 0.92), rgba(238, 244, 255, 0.86)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page :is(.topbar, .event-filter-banner, .quick-workbench, .strategy-strip, .stat-tile, .section-panel, .pcard, .topbar-user, .event-scope-switch, .motion-mode-switch, .live-badge) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.18), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 248, 255, 0.95)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08), 0 8px 18px rgba(37, 99, 235, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page :is(.topbar-name, .db-header-title, .section-panel-title, .strategy-card-title, .stat-tile-num, .pcard-title, .approval-head-main, .topbar-link, .topbar-logout) {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page :is(.topbar-sub, .db-header-sub, .approval-head-sub, .strategy-card-text, .stat-tile-lbl, .event-filter-banner span, .pcard-meta, .quick-filter-field span) {
+  color: #475569 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .topbar-logo,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .topbar-user-avatar {
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.18), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  color: #1d4ed8 !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .btn-action-primary {
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 55%, #7c3aed 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 14px 28px rgba(37, 99, 235, 0.18) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .btn-action-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(37, 99, 235, 0.24) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .event-scope-btn,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .motion-mode-btn,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .batch-btn,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .status-tab,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .export-btn {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 255, 0.95)) !important;
+  border-color: rgba(96, 165, 250, 0.2) !important;
+  color: #334155 !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .event-scope-btn.active,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .motion-mode-btn.active {
+  background: linear-gradient(135deg, #2563eb 0%, #60a5fa 100%) !important;
+  color: #ffffff !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile:hover,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .strategy-card:hover,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 36px rgba(37, 99, 235, 0.11), 0 10px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page :is(.quick-filter-field select, .quick-filter-field input) {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.28) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page :is(.quick-filter-field select, .quick-filter-field input):focus {
+  border-color: rgba(59, 130, 246, 0.38) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 10px 22px rgba(37, 99, 235, 0.08) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .live-badge {
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .menu-btn,
+  .nav-tabs .nav-link,
+  .admin-card-badge,
+  .card-button,
+  .subeq-chip,
+  .import-ux-chip,
+  .import-context-pill,
+  .gastos-summary-badge,
+  .tab-chip
+) {
+  background: rgba(37, 99, 235, 0.08) !important;
+  border-color: rgba(37, 99, 235, 0.16) !important;
+  color: #1e293b !important;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .form-control,
+  .form-select,
+  textarea,
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='date'],
+  input[type='password']
+) {
+  background: rgba(248, 250, 252, 0.96) !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06) !important;
+}
+
+html[data-theme='dark'] body.admin-panel {
+  background:
+    radial-gradient(120% 90% at 10% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 55%),
+    radial-gradient(100% 80% at 92% 8%, rgba(139, 92, 246, 0.1) 0%, transparent 58%),
+    linear-gradient(180deg, #06080f 0%, #0b1220 100%) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] body.admin-panel :is(
+  .principal-lite-hero,
+  .principal-lite-kpi,
+  .principal-lite-panel,
+  .principal-lite-module,
+  .principal-finance-stack-meta div,
+  .principal-finance-metric,
+  .admin-form-card,
+  .admin-config-card,
+  .admin-mini-panel,
+  .table-wrap,
+  .gastos-table-shell,
+  .subequipe-feature-card,
+  .subequipe-feature-card-link
+) {
+  background: linear-gradient(180deg, rgba(8, 15, 30, 0.94), rgba(15, 23, 42, 0.8)) !important;
+  border-color: rgba(148, 163, 184, 0.18) !important;
+  color: #f8fafc !important;
+  box-shadow: 0 18px 36px rgba(2, 6, 23, 0.28) !important;
+}
+
+html[data-theme='dark'] body.admin-panel .table-light,
+html[data-theme='dark'] body.admin-panel .table-light > * {
+  --bs-table-bg: rgba(15, 23, 42, 0.9) !important;
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] body.admin-panel :is(
+  h1, h2, h3, h4, h5, h6,
+  strong, th, td, label, legend,
+  .card-title, .modal-title, .surface-head,
+  .workspace-title-main, .workspace-title-sub,
+  .slc-title, .admin-card-kicker,
+  .principal-lite-title-wrap h3,
+  .principal-lite-panel-head h6,
+  .principal-lite-module-top strong,
+  .principal-finance-board-head h6,
+  .principal-finance-card-head strong,
+  .principal-finance-donut-center strong
+) {
+  color: #f8fafc !important;
+}
+
+html[data-theme='dark'] body.admin-panel :is(
+  p, small, .text-muted, .form-text, .muted,
+  .card-description, .admin-header p, .sidebar .subtitle,
+  .slc-subtitle, .slc-exp, .slc-validity__label,
+  .slc-validity__hint, .entity-counter,
+  .principal-lite-title-wrap p,
+  .principal-lite-module small,
+  .principal-finance-legend,
+  .principal-finance-kpi-card small,
+  .principal-finance-kpi-card span,
+  .principal-finance-stack-meta small,
+  .principal-finance-metric small,
+  .principal-finance-metric span,
+  .gastos-card-subtitle,
+  .gastos-kpi-meta,
+  .subequipe-feature-subtitle
+) {
+  color: rgba(226, 232, 240, 0.84) !important;
+}
+
+/* ============================================================================ */
