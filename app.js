@@ -590,6 +590,173 @@ const vinculoSchema = new mongoose.Schema({
 
 const VinculoEncontro = mongoose.model('VinculoEncontro', vinculoSchema);
 
+const extractEntityLinkSelection = (body = {}) => {
+  const pessoaIdsRaw = Array.isArray(body.gerenciarPessoaIds)
+    ? body.gerenciarPessoaIds
+    : Array.isArray(body.transferirPessoaIds)
+      ? body.transferirPessoaIds
+      : Array.isArray(body.removerPessoaIds)
+        ? body.removerPessoaIds
+        : Array.isArray(body.pessoaIds)
+          ? body.pessoaIds
+          : [];
+
+  const acaoBruta = normalizeTextInput(body.acaoVinculo || body.linkAction || body.gerenciarAcao).toLowerCase();
+  const acao = ['excluir', 'remover', 'transferir'].includes(acaoBruta)
+    ? (acaoBruta === 'remover' ? 'excluir' : acaoBruta)
+    : (Array.isArray(body.removerPessoaIds) ? 'excluir' : 'transferir');
+
+  return {
+    acao,
+    destinoId: normalizeTextInput(body.transferirParaId || body.destinoId || body.entidadeDestinoId),
+    pessoaIds: [...new Set(
+      pessoaIdsRaw
+        .map((id) => normalizeTextInput(id))
+        .filter(Boolean)
+    )],
+  };
+};
+
+async function syncEquipeHistoryAfterTransfer({ pessoaId, papel, origemNomes = [], destinoNome }) {
+  const papelNormalizado = normalizeTextInput(papel).toLowerCase();
+  const field = ['coordenador', 'coordenou'].includes(papelNormalizado) ? 'equipeCoordenou' : 'equipeServiu';
+  const nomesParaRemover = [...new Set(
+    origemNomes
+      .map((nome) => normalizeTextInput(nome))
+      .filter(Boolean)
+  )];
+
+  const update = {};
+  if (nomesParaRemover.length) {
+    update.$pull = { [field]: { $in: nomesParaRemover } };
+  }
+  if (destinoNome) {
+    update.$addToSet = { [field]: destinoNome };
+  }
+
+  if (Object.keys(update).length) {
+    await Encontro.updateOne({ _id: pessoaId }, update);
+  }
+}
+
+async function transferSelectedEntityLinks({
+  ejcId,
+  entidadeTipo,
+  origemId,
+  destinoId,
+  pessoaIds,
+  origemNomes = [],
+  destinoNome = '',
+}) {
+  if (!destinoId || !Array.isArray(pessoaIds) || !pessoaIds.length) {
+    return { transferidos: 0, mesclados: 0, ignorados: 0, removidos: 0 };
+  }
+
+  const vinculosSelecionados = await VinculoEncontro.find({
+    ejcId,
+    entidadeTipo,
+    entidadeId: origemId,
+    pessoaId: { $in: pessoaIds },
+  }).lean();
+
+  if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
+    return { transferidos: 0, mesclados: 0, ignorados: pessoaIds.length, removidos: 0 };
+  }
+
+  let transferidos = 0;
+  let mesclados = 0;
+
+  for (const vinculo of vinculosSelecionados) {
+    const duplicado = await VinculoEncontro.findOne({
+      _id: { $ne: vinculo._id },
+      ejcId,
+      entidadeTipo,
+      entidadeId: destinoId,
+      pessoaTipo: vinculo.pessoaTipo,
+      pessoaId: vinculo.pessoaId,
+      papel: vinculo.papel,
+      descricaoPapel: normalizeTextInput(vinculo.descricaoPapel),
+    });
+
+    if (duplicado) {
+      await VinculoEncontro.deleteOne({ _id: vinculo._id });
+      mesclados += 1;
+    } else {
+      await VinculoEncontro.updateOne(
+        { _id: vinculo._id },
+        {
+          $set: {
+            entidadeId: destinoId,
+          },
+        }
+      );
+      transferidos += 1;
+    }
+
+    if (entidadeTipo === 'equipe' && vinculo.pessoaTipo === 'encontreiro') {
+      await syncEquipeHistoryAfterTransfer({
+        pessoaId: vinculo.pessoaId,
+        papel: vinculo.papel,
+        origemNomes,
+        destinoNome,
+      });
+    }
+  }
+
+  return {
+    transferidos,
+    mesclados,
+    removidos: 0,
+    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+  };
+}
+
+async function removeSelectedEntityLinks({
+  ejcId,
+  entidadeTipo,
+  origemId,
+  pessoaIds,
+  origemNomes = [],
+}) {
+  if (!Array.isArray(pessoaIds) || !pessoaIds.length) {
+    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+  }
+
+  const vinculosSelecionados = await VinculoEncontro.find({
+    ejcId,
+    entidadeTipo,
+    entidadeId: origemId,
+    pessoaId: { $in: pessoaIds },
+  }).lean();
+
+  if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
+    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: pessoaIds.length };
+  }
+
+  let removidos = 0;
+
+  for (const vinculo of vinculosSelecionados) {
+    await VinculoEncontro.deleteOne({ _id: vinculo._id });
+    removidos += 1;
+
+    if (entidadeTipo === 'equipe' && vinculo.pessoaTipo === 'encontreiro') {
+      await syncEquipeHistoryAfterTransfer({
+        pessoaId: vinculo.pessoaId,
+        papel: vinculo.papel,
+        origemNomes,
+        destinoNome: '',
+      });
+    }
+  }
+
+  return {
+    transferidos: 0,
+    mesclados: 0,
+    removidos,
+    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+  };
+}
+
 const parsePositiveInt = (value, fallback, min, max) => {
   const parsed = Number.parseInt(String(value || ''), 10);
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) return fallback;
@@ -735,6 +902,13 @@ const setStaticCacheHeaders = (res, filePath) => {
     '.css', '.js', '.mjs', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.mp4', '.webm'
   ]);
 
+  if (!IS_PRODUCTION && ['.css', '.js', '.mjs', '.html'].includes(ext)) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return;
+  }
+
   if (immutableExt.has(ext)) {
     res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
     return;
@@ -805,13 +979,13 @@ app.get('/img/:bucket/:file', async (req, res) => {
 
 // static files
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '30d',
+  maxAge: IS_PRODUCTION ? '30d' : 0,
   etag: true,
   lastModified: true,
   setHeaders: setStaticCacheHeaders,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '7d',
+  maxAge: IS_PRODUCTION ? '7d' : 0,
   etag: true,
   lastModified: true,
   setHeaders: setStaticCacheHeaders,
@@ -833,6 +1007,9 @@ const adminLoginLimiter = createAdminLoginLimiter({ env: process.env });
 const adminWriteLimiter = createAdminWriteLimiter();
 
 app.use(adminWriteLimiter);
+
+// health/readiness devem responder mesmo quando a camada de sessão ou Mongo estiver degradada
+app.use(createSystemRouter({ mongoose }));
 
 const sessionStore = createSessionStore({
   env: process.env,
@@ -975,7 +1152,6 @@ const adminCsrfGuard = (req, res, next) => {
 
 app.use(ensureAdminCsrfToken);
 app.use(adminCsrfGuard);
-app.use(createSystemRouter({ mongoose }));
 
 const normalizeAdminEventScopeInput = (value) => {
   const raw = normalizeTextInput(value).toLowerCase();
@@ -2059,20 +2235,32 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
 
     doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 10, y + 98).lineTo(textX + textWidth - 18, y + 98).stroke();
 
-    doc.fillColor('#1f2f46').font('Times-BoldItalic').fontSize(nameFontSize).text(displayName, textX + 6, y + 109, {
+    doc.fillColor('#1f2f46').font('Times-BoldItalic').fontSize(nameFontSize).text(displayName, textX + 6, y + 105, {
       width: textWidth - 18,
       align: 'center',
       lineGap: 2,
       ellipsis: true,
-      height: 52,
+      height: 40,
       valign: 'center',
     });
 
+    const tipoPessoaCracha = normalizeTextInput(entry?.pessoaTipo).toLowerCase();
+    const mostrarFraseCrachaEncontrista = ['encontrista', 'encontreiro', 'jovem', 'jovens'].includes(tipoPessoaCracha) || !tipoPessoaCracha;
+    if (mostrarFraseCrachaEncontrista) {
+      doc.save();
+      doc.fillColor('#7a4b1f').font('Times-BoldItalic').fontSize(12.6).text('E sem eu perceber, vou sendo trasformado.', textX + 4, y + cardHeight - 73, {
+        width: textWidth - 14,
+        align: 'center',
+        lineGap: 1,
+      });
+      doc.restore();
+    }
+
     doc.save();
     doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 14, y + cardHeight - 42).lineTo(textX + textWidth - 22, y + cardHeight - 42).stroke();
-    doc.roundedRect(textX + 26, y + cardHeight - 30, textWidth - 48, 16, 8).fill('#fffaf0');
-    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(7.2).text(ejcName || 'EJC', textX + 26, y + cardHeight - 24.2, {
-      width: textWidth - 48,
+    doc.roundedRect(textX + 18, y + cardHeight - 31, textWidth - 32, 19, 9).fill('#fffaf0');
+    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(10.2).text(ejcName || 'EJC', textX + 18, y + cardHeight - 24.2, {
+      width: textWidth - 32,
       align: 'center',
       lineBreak: false,
       ellipsis: true,
@@ -6908,12 +7096,28 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
     const { id } = req.params;
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
+    const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
       return res.status(400).json({ success: false, error: 'Dados invalidos para editar circulo.' });
     }
     if (!nome) {
       return res.status(400).json({ success: false, error: 'Nome do circulo e obrigatorio.' });
+    }
+    if (solicitouGerenciamento) {
+      if (!gerenciarPessoaIds.length) {
+        return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
+      }
+
+      if (acaoVinculo !== 'excluir') {
+        if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
+          return res.status(400).json({ success: false, error: 'Selecione um circulo de destino valido para a transferencia.' });
+        }
+        if (String(transferirParaId) === String(id)) {
+          return res.status(400).json({ success: false, error: 'Escolha um circulo diferente do atual para concluir a transferencia.' });
+        }
+      }
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -6935,7 +7139,41 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
     circulo.nome = nome;
     circulo.nomeNormalizado = nomeNormalizado;
     await circulo.save();
-    return res.json({ success: true, message: 'Circulo atualizado com sucesso.' });
+
+    let transferSummary = { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+    if (solicitouGerenciamento) {
+      if (acaoVinculo === 'excluir') {
+        transferSummary = await removeSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'circulo',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+        });
+      } else {
+        const circuloDestino = await Circulo.findOne({ _id: transferirParaId, ejcId });
+        if (!circuloDestino) {
+          return res.status(404).json({ success: false, error: 'Circulo de destino nao encontrado neste EJC.' });
+        }
+
+        transferSummary = await transferSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'circulo',
+          origemId: id,
+          destinoId: transferirParaId,
+          pessoaIds: gerenciarPessoaIds,
+        });
+      }
+    }
+
+    const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
+    const totalRemovidas = transferSummary.removidos || 0;
+    const message = totalRemovidas
+      ? `Circulo atualizado com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalMovidas
+        ? `Circulo atualizado com sucesso. ${totalMovidas} pessoa(s) movida(s).`
+        : 'Circulo atualizado com sucesso.';
+
+    return res.json({ success: true, message, transferSummary });
   } catch (err) {
     console.error('Erro ao editar circulo:', err);
     return res.status(500).json({ success: false, error: 'Erro ao editar circulo.' });
@@ -6977,12 +7215,28 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
     const { id } = req.params;
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
+    const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
       return res.status(400).json({ success: false, error: 'Dados invalidos para editar equipe.' });
     }
     if (!nome) {
       return res.status(400).json({ success: false, error: 'Nome da equipe e obrigatorio.' });
+    }
+    if (solicitouGerenciamento) {
+      if (!gerenciarPessoaIds.length) {
+        return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
+      }
+
+      if (acaoVinculo !== 'excluir') {
+        if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
+          return res.status(400).json({ success: false, error: 'Selecione uma equipe de destino valida para a transferencia.' });
+        }
+        if (String(transferirParaId) === String(id)) {
+          return res.status(400).json({ success: false, error: 'Escolha uma equipe diferente da atual para concluir a transferencia.' });
+        }
+      }
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -7030,7 +7284,52 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
       );
     }
 
-    return res.json({ success: true, message: 'Equipe atualizada com sucesso.' });
+    let transferSummary = { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+    if (solicitouGerenciamento) {
+      if (acaoVinculo === 'excluir') {
+        transferSummary = await removeSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'equipe',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+          origemNomes: [nomeReferenciaAntigo, nomeReferenciaNovo],
+        });
+      } else {
+        let equipeDestino = await Equipe.findOne({ _id: transferirParaId, ejcId });
+        if (!equipeDestino) {
+          const equipeDestinoLegada = await Equipe.findById(transferirParaId);
+          if (equipeDestinoLegada && !equipeDestinoLegada.ejcId) {
+            equipeDestinoLegada.ejcId = ejcId;
+            await equipeDestinoLegada.save();
+            equipeDestino = equipeDestinoLegada;
+          }
+        }
+
+        if (!equipeDestino) {
+          return res.status(404).json({ success: false, error: 'Equipe de destino nao encontrada neste EJC.' });
+        }
+
+        transferSummary = await transferSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'equipe',
+          origemId: id,
+          destinoId: transferirParaId,
+          pessoaIds: gerenciarPessoaIds,
+          origemNomes: [nomeReferenciaAntigo, nomeReferenciaNovo],
+          destinoNome: normalizeTextInput(equipeDestino.nomeReferencia || equipeDestino.nome),
+        });
+      }
+    }
+
+    const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
+    const totalRemovidas = transferSummary.removidos || 0;
+    const message = totalRemovidas
+      ? `Equipe atualizada com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalMovidas
+        ? `Equipe atualizada com sucesso. ${totalMovidas} pessoa(s) movida(s).`
+        : 'Equipe atualizada com sucesso.';
+
+    return res.json({ success: true, message, transferSummary });
   } catch (err) {
     console.error('Erro ao editar equipe:', err);
     return res.status(500).json({ success: false, error: 'Erro ao editar equipe.' });

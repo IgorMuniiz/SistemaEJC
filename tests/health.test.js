@@ -16,10 +16,11 @@ test('GET /healthz retorna 200 e status ok', async () => {
   assert.ok(response.headers['content-security-policy-report-only']);
 });
 
-test('GET /readyz retorna 503 quando Mongo nao esta conectado', async () => {
+test('GET /readyz retorna 200 com status degradado quando Mongo nao esta conectado', async () => {
   const response = await request(app).get('/readyz');
 
-  assert.equal(response.status, 503);
+  assert.equal(response.status, 200);
   assert.equal(response.body.status, 'degraded');
   assert.equal(response.body.mongo, 'disconnected');
+  assert.equal(response.body.ready, false);
 });

@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260406-ui-consistency-6">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260411-premium-light-28">
   <style>
     body.admin-panel.quadrante-editor-page {
       background: radial-gradient(1200px 700px at 10% 5%, rgba(30, 41, 59, .55), transparent 60%), linear-gradient(180deg, #030712 0%, #020617 100%);
@@ -294,6 +294,68 @@
 
     .qe-file-input { display: none; }
 
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page {
+      background:
+        radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.12), transparent 34%),
+        radial-gradient(circle at 100% 0%, rgba(167, 139, 250, 0.08), transparent 28%),
+        linear-gradient(180deg, #f8fbff 0%, #eef4ff 100%);
+      color: #0f172a;
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-card,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-pages,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview {
+      background:
+        radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.18), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 248, 255, 0.95));
+      border-color: rgba(148, 163, 184, 0.22);
+      box-shadow: 0 16px 32px rgba(15, 23, 42, 0.08), 0 8px 18px rgba(37, 99, 235, 0.04);
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-head,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-head,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-info-bar,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-footer {
+      background: linear-gradient(180deg, #edf4ff 0%, #f8fbff 100%);
+      border-color: rgba(148, 163, 184, 0.18);
+      color: #334155;
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-head h1,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-head h2,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-pages-title,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-source-title,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-page-name {
+      color: #0f172a;
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page :is(.qe-meta, .qe-source-meta, .qe-source-kind, .qe-preview-info-counter, .qe-status, .qe-preview-selected-empty) {
+      color: #475569;
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-source-item,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-page-item {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 255, 0.95));
+      border-color: rgba(148, 163, 184, 0.22);
+      box-shadow: 0 10px 22px rgba(15, 23, 42, 0.04);
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-page-item.is-selected {
+      border-color: rgba(59, 130, 246, 0.36);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 12px 24px rgba(37, 99, 235, 0.08);
+      background: linear-gradient(145deg, rgba(219, 234, 254, 0.94), rgba(255, 255, 255, 0.98));
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-page-grip,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-info-source {
+      color: #2563eb;
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-nav-prev,
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-nav-next {
+      background: rgba(255, 255, 255, 0.96);
+      border-color: rgba(96, 165, 250, 0.24);
+      color: #1d4ed8;
+      box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+    }
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-nav-prev:hover:not(:disabled),
+    html[data-theme='light'] body.admin-panel.quadrante-editor-page .qe-preview-nav-next:hover:not(:disabled) {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color: #ffffff;
+    }
+
     @media (max-width: 1120px) {
       .qe-shell { grid-template-columns: 1fr; }
       .qe-left-body { max-height: 380px; }
@@ -365,7 +427,7 @@
   <script id="quadrante-meta-data" type="application/json"><%- JSON.stringify({ ejcId: String(ejc._id || ''), ejcNome: String(ejc.nome || 'ejc') }) %></script>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/page-transitions.js"></script>
+  <script src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
   <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
   <script>
     const sourceSeed = JSON.parse(document.getElementById('quadrante-sources-data').textContent || '[]');
