@@ -13,6 +13,13 @@
             font-weight: normal;
             font-style: normal;
         }
+        @font-face {
+            font-family: 'Kunstler Script';
+            src: url('/fonts/kunstler-script.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
 
         * {
             margin: 0;
@@ -28,38 +35,53 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
+            gap: 0rem;
         }
 
         .message {
             font-family: 'Tempting', cursive;
+            font-size: 5rem;
+            color: #fff;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+        } 
+
+        .message.kunstler {
+            font-family: 'Kunstler Script', cursive;
             font-size: 8rem;
             color: #fff;
             text-align: center;
-        }
+            margin: 0;
+            padding: 0;            
+        }        
 
         .rose-img {
-            width: 460px;
+            width: 260px;
             height: auto;
         }
 
         @media (max-width: 1024px) {
-            .message { font-size: 6rem; }
+            .message { font-size: 5rem; }
+            .message.kunstler { font-size: 6rem; }
             .rose-img { width: 220px; }
         }
 
         @media (max-width: 768px) {
             .message { font-size: 4.0rem; }
+            .message.kunstler { font-size: 6rem; }
             .rose-img { width: 180px; }
         }
 
         @media (max-width: 480px) {
             .message { font-size: 2.5rem; }
+            .message.kunstler { font-size: 3rem; }
             .rose-img { width: 140px; }
         }
 
         @media (max-width: 360px) {
             .message { font-size: 2.0rem; }
+            .message.kunstler { font-size: 3rem; }
             .rose-img { width: 110px; }
         }
         .footer {
@@ -79,7 +101,10 @@
     <div class="message">
         Simplesmente amar...
     </div>
-    <img class="rose-img" src="images/rosa-simplesmente-amar-sem-fundo.png" alt="O importante é a rosa">    
+    <img class="rose-img" src="images/rosa-simplesmente-amar-sem-fundo.png" alt="O importante é a Rosa">
+    <div class="message kunstler">
+        O importante é a Rosa
+    </div>    
     <footer class="footer">
         <p>&copy; 2026 EJC COP</p>
     </footer>
