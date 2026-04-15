@@ -8406,20 +8406,227 @@ app.post('/admin/vincular-encontreiro-subequipe', checkAdminAuth, requireAdminPe
 });
 
 // POST /admin/importar-cadastros - Importar somente cadastros de encontreiros
-app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
-  const summary = {
-    totalLidos: 0,
-    importados: 0,
-    atualizados: 0,
-    ignoradosExistentes: 0,
-    ignoradosDuplicadosImportacao: 0,
-    ignoradosSemCampos: 0,
-    ignoradosSemFoto: 0,
-    ignoradosTipoInvalido: 0,
-    placeholdersNome: 0,
-    placeholdersEmail: 0,
-    erros: 0,
+const createEncontreirosImportSummary = () => ({
+  totalLidos: 0,
+  importados: 0,
+  atualizados: 0,
+  ignoradosExistentes: 0,
+  ignoradosDuplicadosImportacao: 0,
+  ignoradosSemCampos: 0,
+  ignoradosSemFoto: 0,
+  ignoradosTipoInvalido: 0,
+  placeholdersNome: 0,
+  placeholdersEmail: 0,
+  erros: 0,
+});
+
+const buildEncontreirosImportReportBase = ({ sourceType, dbEngine, dryRun, limite, atualizarExistentes }) => ({
+  tipoImportacao: 'encontreiros',
+  fase: dryRun ? 'preview' : 'resultado',
+  sourceType,
+  dbEngine: sourceType === 'database' ? dbEngine : null,
+  limite,
+  atualizarExistentes: !!atualizarExistentes,
+  totais: {},
+  amostras: [],
+});
+
+const pushEncontreirosImportSample = (report, sample) => {
+  if (!report || !Array.isArray(report.amostras) || report.amostras.length >= 12) return;
+  report.amostras.push(sample);
+};
+
+const finalizeEncontreirosImportReport = (report, summary) => {
+  const ignoradosTotal = Number(summary.ignoradosExistentes || 0)
+    + Number(summary.ignoradosDuplicadosImportacao || 0)
+    + Number(summary.ignoradosSemCampos || 0)
+    + Number(summary.ignoradosSemFoto || 0)
+    + Number(summary.ignoradosTipoInvalido || 0);
+  const placeholdersTotal = Number(summary.placeholdersNome || 0) + Number(summary.placeholdersEmail || 0);
+
+  report.totais = {
+    totalLidos: Number(summary.totalLidos || 0),
+    importados: Number(summary.importados || 0),
+    atualizados: Number(summary.atualizados || 0),
+    ignoradosTotal,
+    ignoradosExistentes: Number(summary.ignoradosExistentes || 0),
+    ignoradosDuplicadosImportacao: Number(summary.ignoradosDuplicadosImportacao || 0),
+    ignoradosSemCampos: Number(summary.ignoradosSemCampos || 0),
+    ignoradosSemFoto: Number(summary.ignoradosSemFoto || 0),
+    ignoradosTipoInvalido: Number(summary.ignoradosTipoInvalido || 0),
+    placeholdersNome: Number(summary.placeholdersNome || 0),
+    placeholdersEmail: Number(summary.placeholdersEmail || 0),
+    placeholdersTotal,
+    erros: Number(summary.erros || 0),
   };
+
+  return report;
+};
+
+const processEncontreirosImportRows = async ({
+  importRows,
+  atualizarExistentes,
+  fotoPadrao,
+  sourceType,
+  dbEngine,
+  limite,
+  dryRun,
+}) => {
+  const summary = createEncontreirosImportSummary();
+  const report = buildEncontreirosImportReportBase({ sourceType, dbEngine, dryRun, limite, atualizarExistentes });
+  const defaultTipoImportacao = sourceType === 'database' ? '' : 'jovens';
+  const fallbackFotoImportacao = normalizeTextInput(fotoPadrao) || ensureImportPlaceholderImage();
+  const seenImportKeys = new Set();
+
+  summary.totalLidos = Array.isArray(importRows) ? importRows.length : 0;
+
+  for (let index = 0; index < importRows.length; index += 1) {
+    const rawRow = importRows[index];
+    try {
+      const row = mapToEncontroPayload(rawRow, fotoPadrao, {
+        defaultTipo: defaultTipoImportacao,
+        fallbackFoto: fallbackFotoImportacao,
+      });
+
+      let placeholderNome = false;
+      let placeholderEmail = false;
+
+      if (!row.nomeCompleto) {
+        row.nomeCompleto = `Importado sem nome #${index + 1}`;
+        summary.placeholdersNome += 1;
+        placeholderNome = true;
+      }
+
+      if (!row.email) {
+        row.email = `importado-sem-email-${Date.now()}-${index + 1}@pendente.local`;
+        summary.placeholdersEmail += 1;
+        placeholderEmail = true;
+      }
+
+      const dedupEmail = row.email && !String(row.email).includes('@pendente.local')
+        ? String(row.email).toLowerCase()
+        : '';
+      const dedupPhone = normalizePhoneDigits(row.telefone);
+      const dedupName = normalizeTextInput(row.nomeCompleto).toLowerCase();
+      const dedupKey = [dedupEmail || '-', dedupPhone || '-', dedupName || '-'].join('|');
+
+      if (seenImportKeys.has(dedupKey)) {
+        summary.ignoradosDuplicadosImportacao += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo || '-',
+          acao: 'ignorado',
+          motivo: 'Duplicado dentro da própria importação',
+        });
+        continue;
+      }
+      seenImportKeys.add(dedupKey);
+
+      if (!row.tipo) {
+        summary.ignoradosTipoInvalido += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: '-',
+          acao: 'ignorado',
+          motivo: 'Tipo de encontreiro inválido ou ausente',
+        });
+        continue;
+      }
+
+      const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email, row.telefone);
+
+      if (existente) {
+        if (!atualizarExistentes) {
+          summary.ignoradosExistentes += 1;
+          pushEncontreirosImportSample(report, {
+            nomeCompleto: row.nomeCompleto,
+            email: row.email,
+            tipo: row.tipo,
+            acao: 'ignorado',
+            motivo: 'Cadastro já existe e atualização está desativada',
+          });
+          continue;
+        }
+
+        const fotoFinal = row.foto || existente.foto;
+        if (!fotoFinal) {
+          summary.ignoradosSemFoto += 1;
+          pushEncontreirosImportSample(report, {
+            nomeCompleto: row.nomeCompleto,
+            email: row.email,
+            tipo: row.tipo,
+            acao: 'ignorado',
+            motivo: 'Cadastro existente sem foto válida para atualização',
+          });
+          continue;
+        }
+
+        if (!dryRun) {
+          Object.assign(existente, row, { foto: fotoFinal });
+          await existente.save();
+        }
+
+        summary.atualizados += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo,
+          acao: dryRun ? 'atualizar' : 'atualizado',
+          motivo: placeholderNome || placeholderEmail
+            ? 'Atualização prevista com preenchimento automático de campos ausentes'
+            : 'Cadastro existente será atualizado',
+        });
+        continue;
+      }
+
+      if (!row.foto) {
+        summary.ignoradosSemFoto += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo,
+          acao: 'ignorado',
+          motivo: 'Novo cadastro sem foto válida',
+        });
+        continue;
+      }
+
+      if (!dryRun) {
+        await Encontro.create(row);
+      }
+
+      summary.importados += 1;
+      pushEncontreirosImportSample(report, {
+        nomeCompleto: row.nomeCompleto,
+        email: row.email,
+        tipo: row.tipo,
+        acao: dryRun ? 'importar' : 'importado',
+        motivo: placeholderNome || placeholderEmail
+          ? 'Novo cadastro com preenchimento automático de campos ausentes'
+          : 'Novo cadastro pronto para importação',
+      });
+    } catch (err) {
+      summary.erros += 1;
+      pushEncontreirosImportSample(report, {
+        nomeCompleto: normalizeTextInput(rawRow?.nomeCompleto || rawRow?.nome || `Linha ${index + 1}`),
+        email: normalizeTextInput(rawRow?.email),
+        tipo: normalizeTextInput(rawRow?.tipo),
+        acao: 'erro',
+        motivo: normalizeTextInput(err.message) || 'Falha inesperada ao processar registro',
+      });
+    }
+  }
+
+  return {
+    summary,
+    report: finalizeEncontreirosImportReport(report, summary),
+  };
+};
+
+app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
+  const summary = createEncontreirosImportSummary();
 
   const importRows = [];
 
@@ -8659,6 +8866,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
     const sourceType = normalizeTextInput(req.body.sourceType || 'database').toLowerCase();
     const atualizarExistentes = normalizeBooleanInput(req.body.atualizarExistentes);
     const fotoPadrao = normalizeTextInput(req.body.fotoPadrao);
+    const dryRun = normalizeBooleanInput(req.body.dryRun);
 
     const limiteInformado = Number.parseInt(req.body.limite, 10);
     const limite = Number.isFinite(limiteInformado)
@@ -8691,9 +8899,6 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       const circuloRows = [];
       const encontreirosRows = [];
       const vinculoRows = [];
-      const equipeIdMap = new Map();
-      const circuloIdMap = new Map();
-      const encontreiroIdMap = new Map();
 
       if (sourceType === 'sistema') {
         if (!sourceEncontroId || !mongoose.Types.ObjectId.isValid(sourceEncontroId)) {
@@ -8770,6 +8975,43 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
         return res.status(400).json({ success: false, error: 'Importacao de encontro completo via arquivo ainda nao e suportada. Use importacao via banco de dados.' });
       }
 
+      const reportBase = {
+        tipoImportacao: 'encontro_completo',
+        fase: dryRun ? 'preview' : 'resultado',
+        sourceType,
+        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+        limite,
+        destino: {
+          id: String(ejcExistente._id || ''),
+          nome: ejcExistente.nome || 'Encontro de destino',
+        },
+        origem: sourceType === 'sistema'
+          ? {
+              id: String(sourceEncontroId || ''),
+              nome: sourceEncontroId ? String((await Ejc.findById(sourceEncontroId).select('nome').lean())?.nome || 'Encontro de origem') : '',
+            }
+          : null,
+        selecao: {
+          importarEquipes,
+          importarCirculos,
+          importarEncontreiros,
+        },
+        carregados: {
+          equipes: equipeRows.length,
+          circulos: circuloRows.length,
+          encontreiros: encontreirosRows.length,
+          vinculos: vinculoRows.length,
+        },
+      };
+
+      if (dryRun) {
+        return res.json({
+          success: true,
+          preview: true,
+          report: reportBase,
+        });
+      }
+
       const transactionResult = await processarImportacaoCompletaTransacional({
         sourceType,
         atualizarExistentes,
@@ -8812,6 +9054,15 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
         vinculos: transactionResult.vinculoSummary,
         sourceType,
         dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+        report: {
+          ...reportBase,
+          resultado: {
+            equipes: transactionResult.equipeSummary,
+            circulos: transactionResult.circuloSummary,
+            encontreiros: transactionResult.encontreiraSummary,
+            vinculos: transactionResult.vinculoSummary,
+          },
+        },
       });
     }
 
@@ -8878,78 +9129,30 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       }
     }
 
-    summary.totalLidos = importRows.length;
+    const dbEngine = sourceType === 'database'
+      ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase()
+      : null;
+    const processResult = await processEncontreirosImportRows({
+      importRows,
+      atualizarExistentes,
+      fotoPadrao,
+      sourceType,
+      dbEngine,
+      limite,
+      dryRun,
+    });
 
-    // Em importacao por arquivo, assume "jovens" quando o tipo nao vier informado.
-    const defaultTipoImportacao = sourceType === 'database' ? '' : 'jovens';
-    const fallbackFotoImportacao = normalizeTextInput(fotoPadrao) || ensureImportPlaceholderImage();
-    const seenImportKeys = new Set();
+    Object.assign(summary, processResult.summary);
 
-    for (let index = 0; index < importRows.length; index += 1) {
-      const rawRow = importRows[index];
-      try {
-        const row = mapToEncontroPayload(rawRow, fotoPadrao, {
-          defaultTipo: defaultTipoImportacao,
-          fallbackFoto: fallbackFotoImportacao,
-        });
-
-        if (!row.nomeCompleto) {
-          row.nomeCompleto = `Importado sem nome #${index + 1}`;
-          summary.placeholdersNome += 1;
-        }
-
-        if (!row.email) {
-          row.email = `importado-sem-email-${Date.now()}-${index + 1}@pendente.local`;
-          summary.placeholdersEmail += 1;
-        }
-
-        const dedupEmail = row.email && !String(row.email).includes('@pendente.local')
-          ? String(row.email).toLowerCase()
-          : '';
-        const dedupPhone = normalizePhoneDigits(row.telefone);
-        const dedupName = normalizeTextInput(row.nomeCompleto).toLowerCase();
-        const dedupKey = [dedupEmail || '-', dedupPhone || '-', dedupName || '-'].join('|');
-
-        if (seenImportKeys.has(dedupKey)) {
-          summary.ignoradosDuplicadosImportacao += 1;
-          continue;
-        }
-        seenImportKeys.add(dedupKey);
-
-        if (!row.tipo) {
-          summary.ignoradosTipoInvalido += 1;
-          continue;
-        }
-
-        const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email, row.telefone);
-
-        if (existente) {
-          if (!atualizarExistentes) {
-            summary.ignoradosExistentes += 1;
-            continue;
-          }
-
-          Object.assign(existente, row);
-          if (!existente.foto) {
-            summary.ignoradosSemFoto += 1;
-            continue;
-          }
-
-          await existente.save();
-          summary.atualizados += 1;
-          continue;
-        }
-
-        if (!row.foto) {
-          summary.ignoradosSemFoto += 1;
-          continue;
-        }
-
-        await Encontro.create(row);
-        summary.importados += 1;
-      } catch (err) {
-        summary.erros += 1;
-      }
+    if (dryRun) {
+      return res.json({
+        success: true,
+        preview: true,
+        sourceType,
+        dbEngine,
+        summary,
+        report: processResult.report,
+      });
     }
 
     await logAdminAction(req, {
@@ -8957,7 +9160,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       targetType: 'encontreiro',
       metadata: {
         sourceType,
-        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : '',
+        dbEngine: dbEngine || '',
         summary,
       },
     });
@@ -8966,8 +9169,9 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       success: true,
       message: 'Importacao de encontreiros concluida.',
       sourceType,
-      dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+      dbEngine,
       summary,
+      report: processResult.report,
     });
   } catch (err) {
     await logAdminAction(req, {

@@ -6339,6 +6339,223 @@
       }
     }
 
+    function escapeImportHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatImportNumber(value) {
+      return Number(value || 0).toLocaleString('pt-BR');
+    }
+
+    function getImportSourceLabel(sourceType, dbEngine) {
+      const labels = {
+        sistema: 'Encontro já criado no sistema',
+        database: `Banco externo${dbEngine ? ` (${dbEngine})` : ''}`,
+        excel: 'Arquivo Excel',
+        pdf: 'Arquivo PDF',
+      };
+
+      return labels[sourceType] || 'Origem não informada';
+    }
+
+    function renderImportSamples(report) {
+      const amostras = Array.isArray(report && report.amostras) ? report.amostras : [];
+      if (amostras.length === 0) {
+        return '<div class="import-report-empty">Nenhuma amostra detalhada disponível para esta operação.</div>';
+      }
+
+      const rows = amostras.map((item) => `
+        <tr>
+          <td>${escapeImportHtml(item.nomeCompleto || '-')}</td>
+          <td>${escapeImportHtml(item.email || '-')}</td>
+          <td>${escapeImportHtml(item.tipo || '-')}</td>
+          <td><span class="import-report-badge badge-${escapeImportHtml(item.acao || 'info')}">${escapeImportHtml(item.acao || '-')}</span></td>
+          <td>${escapeImportHtml(item.motivo || '-')}</td>
+        </tr>
+      `).join('');
+
+      return `
+        <div class="import-report-table-wrap">
+          <table class="table table-sm import-report-table">
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Email</th>
+                <th>Tipo</th>
+                <th>Ação</th>
+                <th>Motivo</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderEncontreirosImportReport(result, phase) {
+      const report = result.report || {};
+      const totais = report.totais || {};
+      const titulo = phase === 'preview' ? 'Relatório pré-importação' : 'Relatório pós-importação';
+      const subtitulo = phase === 'preview'
+        ? 'Prévia calculada com a mesma validação da importação real, sem gravar nada no banco.'
+        : 'Resultado detalhado da importação executada.';
+
+      return `
+        <div class="import-report-shell">
+          <div class="import-report-head">
+            <div>
+              <strong>${titulo}</strong>
+              <p>${subtitulo}</p>
+            </div>
+            <span class="import-report-chip">${escapeImportHtml(getImportSourceLabel(result.sourceType, result.dbEngine))}</span>
+          </div>
+          <div class="import-report-grid">
+            <article class="import-report-metric"><span>Lidos</span><strong>${formatImportNumber(totais.totalLidos)}</strong></article>
+            <article class="import-report-metric success"><span>${phase === 'preview' ? 'Importar' : 'Importados'}</span><strong>${formatImportNumber(totais.importados)}</strong></article>
+            <article class="import-report-metric info"><span>${phase === 'preview' ? 'Atualizar' : 'Atualizados'}</span><strong>${formatImportNumber(totais.atualizados)}</strong></article>
+            <article class="import-report-metric warning"><span>Ignorados</span><strong>${formatImportNumber(totais.ignoradosTotal)}</strong></article>
+            <article class="import-report-metric danger"><span>Erros</span><strong>${formatImportNumber(totais.erros)}</strong></article>
+            <article class="import-report-metric"><span>Campos automáticos</span><strong>${formatImportNumber(totais.placeholdersTotal)}</strong></article>
+          </div>
+          <div class="import-report-breakdown">
+            <span>Existentes ignorados: <strong>${formatImportNumber(totais.ignoradosExistentes)}</strong></span>
+            <span>Duplicados na origem: <strong>${formatImportNumber(totais.ignoradosDuplicadosImportacao)}</strong></span>
+            <span>Sem foto: <strong>${formatImportNumber(totais.ignoradosSemFoto)}</strong></span>
+            <span>Tipo inválido: <strong>${formatImportNumber(totais.ignoradosTipoInvalido)}</strong></span>
+            <span>Nome preenchido automaticamente: <strong>${formatImportNumber(totais.placeholdersNome)}</strong></span>
+            <span>Email preenchido automaticamente: <strong>${formatImportNumber(totais.placeholdersEmail)}</strong></span>
+          </div>
+          <div class="import-report-section">
+            <h6>Amostra de decisões</h6>
+            ${renderImportSamples(report)}
+          </div>
+          ${phase === 'result' ? '<div class="import-report-actions"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="recarregarMantendoAbaAtual()"><i class="fas fa-rotate me-1"></i>Atualizar painel com os dados importados</button></div>' : ''}
+        </div>
+      `;
+    }
+
+    function renderEncontroCompletoImportReport(result, phase) {
+      const report = result.report || {};
+      const carregados = report.carregados || {};
+      const selecao = report.selecao || {};
+      const resultado = report.resultado || {};
+      const titulo = phase === 'preview' ? 'Relatório pré-importação' : 'Relatório pós-importação';
+
+      const resultadoHtml = phase === 'result'
+        ? `
+          <div class="import-report-section">
+            <h6>Resultado aplicado</h6>
+            <div class="import-report-grid compact">
+              <article class="import-report-metric success"><span>Equipes</span><strong>${formatImportNumber((resultado.equipes || {}).importados)}/${formatImportNumber((resultado.equipes || {}).atualizados)}</strong><small>import./atualiz.</small></article>
+              <article class="import-report-metric success"><span>Círculos</span><strong>${formatImportNumber((resultado.circulos || {}).importados)}/${formatImportNumber((resultado.circulos || {}).atualizados)}</strong><small>import./atualiz.</small></article>
+              <article class="import-report-metric success"><span>Encontreiros</span><strong>${formatImportNumber((resultado.encontreiros || {}).importados)}/${formatImportNumber((resultado.encontreiros || {}).atualizados)}</strong><small>import./atualiz.</small></article>
+              <article class="import-report-metric info"><span>Vínculos</span><strong>${formatImportNumber((resultado.vinculos || {}).importados)}</strong><small>copiados</small></article>
+            </div>
+          </div>
+        `
+        : '';
+
+      return `
+        <div class="import-report-shell">
+          <div class="import-report-head">
+            <div>
+              <strong>${titulo}</strong>
+              <p>${phase === 'preview' ? 'Prévia estrutural da importação completa, sem gravar nada no encontro de destino.' : 'Resultado detalhado da importação completa executada.'}</p>
+            </div>
+            <span class="import-report-chip">${escapeImportHtml(getImportSourceLabel(report.sourceType, report.dbEngine))}</span>
+          </div>
+          <div class="import-report-breakdown two-cols">
+            <span>Destino: <strong>${escapeImportHtml((report.destino || {}).nome || '-')}</strong></span>
+            <span>Origem: <strong>${escapeImportHtml((report.origem || {}).nome || 'Banco externo')}</strong></span>
+            <span>Importar equipes: <strong>${selecao.importarEquipes ? 'Sim' : 'Não'}</strong></span>
+            <span>Importar círculos: <strong>${selecao.importarCirculos ? 'Sim' : 'Não'}</strong></span>
+            <span>Importar encontreiros: <strong>${selecao.importarEncontreiros ? 'Sim' : 'Não'}</strong></span>
+            <span>Limite aplicado: <strong>${formatImportNumber(report.limite)}</strong></span>
+          </div>
+          <div class="import-report-grid compact">
+            <article class="import-report-metric"><span>Equipes carregadas</span><strong>${formatImportNumber(carregados.equipes)}</strong></article>
+            <article class="import-report-metric"><span>Círculos carregados</span><strong>${formatImportNumber(carregados.circulos)}</strong></article>
+            <article class="import-report-metric"><span>Encontreiros carregados</span><strong>${formatImportNumber(carregados.encontreiros)}</strong></article>
+            <article class="import-report-metric"><span>Vínculos carregados</span><strong>${formatImportNumber(carregados.vinculos)}</strong></article>
+          </div>
+          ${resultadoHtml}
+          ${phase === 'result' ? '<div class="import-report-actions"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="recarregarMantendoAbaAtual()"><i class="fas fa-rotate me-1"></i>Atualizar painel com os dados importados</button></div>' : ''}
+        </div>
+      `;
+    }
+
+    function renderImportReport(result, phase) {
+      if (result && result.report && result.report.tipoImportacao === 'encontro_completo') {
+        return renderEncontroCompletoImportReport(result, phase);
+      }
+
+      return renderEncontreirosImportReport(result, phase);
+    }
+
+    function setImportResultState(kind, html) {
+      const resultBox = document.getElementById('import_result');
+      if (!resultBox) return;
+      resultBox.className = `import-result ${kind}`;
+      resultBox.innerHTML = html;
+    }
+
+    function buildImportacaoFormData(payload) {
+      const formData = new FormData();
+      formData.append('tipoImportacao', payload.tipoImportacao);
+      formData.append('sourceType', payload.sourceType);
+      formData.append('dbEngine', payload.dbEngine);
+      formData.append('connectionString', payload.connectionString);
+      formData.append('mongoUri', payload.connectionString);
+      formData.append('databaseName', payload.databaseName);
+      formData.append('colecaoEncontreiros', payload.tableName);
+      formData.append('tableName', payload.tableName);
+      formData.append('limite', payload.limite);
+      formData.append('atualizarExistentes', payload.atualizarExistentes ? 'true' : 'false');
+      formData.append('fotoPadrao', payload.fotoPadrao);
+      formData.append('dryRun', payload.dryRun ? 'true' : 'false');
+
+      if (payload.tipoImportacao === 'encontro_completo') {
+        formData.append('sourceEncontroId', payload.encontroOrigemId || '');
+        formData.append('ejcId', payload.ejcSelecionado || '');
+        formData.append('colecaoEquipes', payload.colecaoEquipesCompleta || 'Equipe');
+        formData.append('colecaoCirculos', payload.colecaoCirculosCompleta || 'Circulo');
+        formData.append('colecaoEncontreiros', payload.colecaoEncontreirosCompleta || 'Encontro');
+        formData.append('importarEquipes', payload.importarEquipes ? 'true' : 'false');
+        formData.append('importarCirculos', payload.importarCirculos ? 'true' : 'false');
+        formData.append('importarEncontreiros', payload.importarEncontreiros ? 'true' : 'false');
+      }
+
+      if (payload.sourceType !== 'database' && payload.sourceType !== 'sistema' && payload.arquivo) {
+        formData.append('arquivo', payload.arquivo);
+      }
+
+      return formData;
+    }
+
+    async function executarImportacaoRequest(payload) {
+      const response = await fetch('/admin/importar-cadastros', {
+        method: 'POST',
+        body: buildImportacaoFormData(payload),
+      });
+
+      const responseType = response.headers.get('content-type') || '';
+      const isJson = responseType.includes('application/json');
+      const result = isJson
+        ? await response.json()
+        : { success: false, error: await response.text() };
+
+      if (!response.ok || !result.success) {
+        throw new Error((result.error || 'Erro ao importar').toString().replace(/<[^>]*>/g, '').slice(0, 500));
+      }
+
+      return result;
+    }
+
     function atualizarCamposImportacao() {
       const tipoImportacao = document.getElementById('import_tipoImportacao').value;
       const sourceTypeNode = document.getElementById('import_sourceType');
@@ -6470,138 +6687,72 @@
       const atualizarExistentes = document.getElementById('import_atualizarExistentes').checked;
       const arquivoInput = document.getElementById('import_arquivo');
       const fotoPadrao = document.getElementById('import_fotoPadrao').value.trim();
-      const resultBox = document.getElementById('import_result');
+      const payload = {
+        tipoImportacao,
+        sourceType,
+        dbEngine,
+        connectionString,
+        databaseName,
+        tableName,
+        colecaoEquipesCompleta,
+        colecaoCirculosCompleta,
+        colecaoEncontreirosCompleta,
+        limite,
+        atualizarExistentes,
+        fotoPadrao,
+        encontroOrigemId: document.getElementById('import_encontroOrigemId')?.value || '',
+        ejcSelecionado: document.getElementById('import_ejcSelecionado')?.value || '',
+        importarEquipes: document.getElementById('import_importarEquipes')?.checked || false,
+        importarCirculos: document.getElementById('import_importarCirculos')?.checked || false,
+        importarEncontreiros: document.getElementById('import_importarEncontreiros')?.checked || false,
+        arquivo: (arquivoInput.files && arquivoInput.files[0]) ? arquivoInput.files[0] : null,
+      };
 
-      resultBox.className = 'import-result';
-      resultBox.textContent = '';
+      setImportResultState('preview', '<div class="import-report-loading"><i class="fas fa-magnifying-glass-chart me-1"></i>Preparando relatório pré-importação...</div>');
 
       if (tipoImportacao === 'encontro_completo') {
-        const encontroOrigemId = document.getElementById('import_encontroOrigemId').value;
-        const ejcSelecionado = document.getElementById('import_ejcSelecionado').value;
-        if (sourceType === 'sistema' && !encontroOrigemId) {
-          resultBox.className = 'import-result error';
-          resultBox.textContent = 'Selecione o encontro de origem para continuar.';
+        if (sourceType === 'sistema' && !payload.encontroOrigemId) {
+          setImportResultState('error', 'Selecione o encontro de origem para continuar.');
           return;
         }
 
-        if (!ejcSelecionado) {
-          resultBox.className = 'import-result error';
-          resultBox.textContent = 'Selecione o encontro de destino para importar a estrutura completa.';
+        if (!payload.ejcSelecionado) {
+          setImportResultState('error', 'Selecione o encontro de destino para importar a estrutura completa.');
           return;
         }
 
-        if (sourceType === 'sistema' && encontroOrigemId === ejcSelecionado) {
-          resultBox.className = 'import-result error';
-          resultBox.textContent = 'Escolha encontros diferentes para origem e destino.';
+        if (sourceType === 'sistema' && payload.encontroOrigemId === payload.ejcSelecionado) {
+          setImportResultState('error', 'Escolha encontros diferentes para origem e destino.');
           return;
         }
       }
 
       if (sourceType === 'database' && !connectionString) {
-        resultBox.className = 'import-result error';
-        resultBox.textContent = 'Informe a conexao do banco externo para continuar.';
+        setImportResultState('error', 'Informe a conexao do banco externo para continuar.');
         return;
       }
 
-      if (sourceType !== 'database' && sourceType !== 'sistema' && (!arquivoInput.files || !arquivoInput.files[0])) {
-        resultBox.className = 'import-result error';
-        resultBox.textContent = 'Selecione um arquivo para importar.';
+      if (sourceType !== 'database' && sourceType !== 'sistema' && !payload.arquivo) {
+        setImportResultState('error', 'Selecione um arquivo para importar.');
         return;
       }
-
-      const confirmMsg = tipoImportacao === 'encontro_completo' 
-        ? 'Deseja importar o encontro completo agora? Isso incluira equipes, circulos e encontreiros no encontro de destino.'
-        : 'Deseja iniciar a importacao de encontreiros agora?';
-
-      if (!await appConfirm(confirmMsg, 'Confirmar importacao')) return;
 
       try {
-        const formData = new FormData();
-        formData.append('tipoImportacao', tipoImportacao);
-        formData.append('sourceType', sourceType);
-        formData.append('dbEngine', dbEngine);
-        formData.append('connectionString', connectionString);
-        formData.append('mongoUri', connectionString);
-        formData.append('databaseName', databaseName);
-        formData.append('colecaoEncontreiros', tableName);
-        formData.append('tableName', tableName);
-        formData.append('limite', limite);
-        formData.append('atualizarExistentes', atualizarExistentes ? 'true' : 'false');
-        formData.append('fotoPadrao', fotoPadrao);
+        const previewResult = await executarImportacaoRequest({ ...payload, dryRun: true });
+        setImportResultState('preview', renderImportReport(previewResult, 'preview'));
 
-        if (tipoImportacao === 'encontro_completo') {
-          formData.append('sourceEncontroId', document.getElementById('import_encontroOrigemId').value);
-          formData.append('ejcId', document.getElementById('import_ejcSelecionado').value);
-          formData.append('colecaoEquipes', colecaoEquipesCompleta);
-          formData.append('colecaoCirculos', colecaoCirculosCompleta);
-          formData.append('colecaoEncontreiros', colecaoEncontreirosCompleta);
-          formData.append('importarEquipes', document.getElementById('import_importarEquipes').checked ? 'true' : 'false');
-          formData.append('importarCirculos', document.getElementById('import_importarCirculos').checked ? 'true' : 'false');
-          formData.append('importarEncontreiros', document.getElementById('import_importarEncontreiros').checked ? 'true' : 'false');
-        }
+        const confirmMsg = tipoImportacao === 'encontro_completo'
+          ? 'O relatório pré-importação foi gerado. Deseja executar a importação completa agora?'
+          : 'O relatório pré-importação foi gerado. Deseja executar a importação agora?';
 
-        if (sourceType !== 'database' && sourceType !== 'sistema' && arquivoInput.files && arquivoInput.files[0]) {
-          formData.append('arquivo', arquivoInput.files[0]);
-        }
+        if (!await appConfirm(confirmMsg, 'Confirmar importação')) return;
 
-        const response = await fetch('/admin/importar-cadastros', {
-          method: 'POST',
-          body: formData
-        });
+        setImportResultState('preview', `${renderImportReport(previewResult, 'preview')}<div class="import-report-loading mt-3"><i class="fas fa-spinner fa-spin me-1"></i>Executando importação...</div>`);
 
-        const responseType = response.headers.get('content-type') || '';
-        const isJson = responseType.includes('application/json');
-        const result = isJson
-          ? await response.json()
-          : { success: false, error: await response.text() };
-
-        if (!result.success) {
-          resultBox.className = 'import-result error';
-          const message = (result.error || 'Erro ao importar').toString();
-          resultBox.textContent = message.replace(/<[^>]*>/g, '').slice(0, 300);
-          return;
-        }
-
-        const s = result.summary;
-        const origemLabel = result.sourceType === 'database' ? `${result.sourceType}/${result.dbEngine || dbEngine}` : result.sourceType;
-        
-        if (tipoImportacao === 'encontro_completo') {
-          const equipesMsg = result.equipes ? `Equipes: ${result.equipes.importados || 0} import, ${result.equipes.atualizados || 0} atualiz. ` : '';
-          const circulosMsg = result.circulos ? `Círculos: ${result.circulos.importados || 0} import, ${result.circulos.atualizados || 0} atualiz. ` : '';
-          const encontreirosMsg = s ? `Encontreiros: ${s.importados} import, ${s.atualizados} atualiz.` : '';
-          const vinculosMsg = result.vinculos ? ` Vínculos: ${result.vinculos.importados || 0} copiados.` : '';
-          
-          if (!equipesMsg && !circulosMsg && !encontreirosMsg) {
-            resultBox.className = 'import-result error';
-            resultBox.textContent = `Nenhum dado foi importado (${origemLabel}). Verifique os dados do arquivo/banco.`;
-            return;
-          }
-          
-          resultBox.className = 'import-result success';
-          resultBox.textContent = `Encontro importado com sucesso (${origemLabel}). ${equipesMsg}${circulosMsg}${encontreirosMsg}${vinculosMsg}`;
-        } else {
-          const totalIgnorados = s.ignoradosExistentes + s.ignoradosDuplicadosImportacao + s.ignoradosSemCampos + s.ignoradosSemFoto + s.ignoradosTipoInvalido;
-          const totalPlaceholders = (s.placeholdersNome || 0) + (s.placeholdersEmail || 0);
-          const detalhePlaceholders = totalPlaceholders > 0
-            ? ` Campos preenchidos automaticamente: ${totalPlaceholders} (nome: ${s.placeholdersNome || 0}, email: ${s.placeholdersEmail || 0}).`
-            : '';
-
-          if ((s.importados + s.atualizados) === 0) {
-            resultBox.className = 'import-result error';
-            resultBox.textContent = `Nenhum cadastro foi salvo (${origemLabel}). Ignorados: ${totalIgnorados}. Verifique os dados do arquivo (tipo/foto/formato).`;
-            return;
-          }
-
-          resultBox.className = 'import-result success';
-          resultBox.textContent = `Importacao concluida (${origemLabel}). Importados: ${s.importados}. Atualizados: ${s.atualizados}. Ignorados: ${totalIgnorados} (inclui ${s.ignoradosDuplicadosImportacao || 0} duplicados no arquivo). Erros: ${s.erros}.${detalhePlaceholders}`;
-        }
-
-        setTimeout(() => {
-          recarregarMantendoAbaAtual();
-        }, 1800);
+        const result = await executarImportacaoRequest({ ...payload, dryRun: false });
+        setImportResultState('success', renderImportReport(result, 'result'));
       } catch (error) {
-        resultBox.className = 'import-result error';
-        resultBox.textContent = 'Falha ao executar importacao. Verifique o arquivo (formato/tamanho) e tente novamente.';
+        setImportResultState('error', escapeImportHtml(error.message || 'Falha ao executar importação. Verifique os dados informados e tente novamente.'));
       }
     }
 

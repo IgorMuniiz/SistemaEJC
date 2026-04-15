@@ -3844,8 +3844,208 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       margin-top: 10px; border-radius: 10px;
       padding: 10px 12px; font-size: .86rem; display: none;
     }
+    body.admin-panel.admin-manager-page .import-result.preview {
+      display: block;
+      background: linear-gradient(180deg, rgba(8, 47, 73, 0.5), rgba(15, 23, 42, 0.68));
+      border: 1px solid rgba(103, 232, 249, 0.28);
+      color: rgba(226, 232, 240, 0.96);
+    }
     body.admin-panel.admin-manager-page .import-result.success { display: block; background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
     body.admin-panel.admin-manager-page .import-result.error { display: block; background: var(--red-dim);   border: 1px solid var(--red-border);   color: var(--red); }
+    body.admin-panel.admin-manager-page .import-report-loading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 40px;
+      color: rgba(224, 242, 254, 0.96);
+      font-weight: 700;
+    }
+    body.admin-panel.admin-manager-page .import-report-shell {
+      display: grid;
+      gap: 14px;
+      color: rgba(241, 245, 249, 0.96);
+    }
+    body.admin-panel.admin-manager-page .import-report-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    body.admin-panel.admin-manager-page .import-report-head strong {
+      display: block;
+      font-size: .96rem;
+      color: #f8fafc;
+    }
+    body.admin-panel.admin-manager-page .import-report-head p {
+      margin: 4px 0 0;
+      color: rgba(191, 219, 254, 0.84);
+      font-size: .78rem;
+      line-height: 1.5;
+    }
+    body.admin-panel.admin-manager-page .import-report-chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.3);
+      background: rgba(8, 47, 73, 0.32);
+      color: rgba(224, 242, 254, 0.96);
+      font-size: .74rem;
+      font-weight: 800;
+    }
+    body.admin-panel.admin-manager-page .import-report-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+    }
+    body.admin-panel.admin-manager-page .import-report-grid.compact {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+    body.admin-panel.admin-manager-page .import-report-metric {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: rgba(15, 23, 42, 0.5);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-manager-page .import-report-metric span,
+    body.admin-panel.admin-manager-page .import-report-metric small {
+      display: block;
+      color: rgba(191, 219, 254, 0.84);
+      font-size: .72rem;
+      font-weight: 700;
+    }
+    body.admin-panel.admin-manager-page .import-report-metric strong {
+      display: block;
+      margin-top: 4px;
+      color: #f8fafc;
+      font-size: 1.15rem;
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    body.admin-panel.admin-manager-page .import-report-metric.success {
+      border-color: rgba(74, 222, 128, 0.28);
+      background: rgba(20, 83, 45, 0.3);
+    }
+    body.admin-panel.admin-manager-page .import-report-metric.info {
+      border-color: rgba(125, 211, 252, 0.28);
+      background: rgba(8, 47, 73, 0.3);
+    }
+    body.admin-panel.admin-manager-page .import-report-metric.warning {
+      border-color: rgba(251, 191, 36, 0.28);
+      background: rgba(120, 53, 15, 0.28);
+    }
+    body.admin-panel.admin-manager-page .import-report-metric.danger {
+      border-color: rgba(248, 113, 113, 0.28);
+      background: rgba(127, 29, 29, 0.26);
+    }
+    body.admin-panel.admin-manager-page .import-report-breakdown {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    body.admin-panel.admin-manager-page .import-report-breakdown.two-cols span {
+      min-width: calc(50% - 4px);
+    }
+    body.admin-panel.admin-manager-page .import-report-breakdown span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 8px 11px;
+      border-radius: 10px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(15, 23, 42, 0.42);
+      color: rgba(226, 232, 240, 0.92);
+      font-size: .76rem;
+      font-weight: 700;
+    }
+    body.admin-panel.admin-manager-page .import-report-breakdown strong {
+      color: #f8fafc;
+    }
+    body.admin-panel.admin-manager-page .import-report-section h6 {
+      margin: 0 0 10px;
+      font-size: .82rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: rgba(186, 230, 253, 0.94);
+      font-weight: 800;
+    }
+    body.admin-panel.admin-manager-page .import-report-table-wrap {
+      overflow: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      background: rgba(2, 6, 23, 0.28);
+    }
+    body.admin-panel.admin-manager-page .import-report-table {
+      margin: 0;
+      color: rgba(241, 245, 249, 0.95);
+    }
+    body.admin-panel.admin-manager-page .import-report-table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: rgba(15, 23, 42, 0.96);
+      color: rgba(191, 219, 254, 0.88);
+      border-bottom-color: rgba(148, 163, 184, 0.26);
+      font-size: .72rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    body.admin-panel.admin-manager-page .import-report-table td {
+      background: transparent;
+      border-color: rgba(148, 163, 184, 0.12);
+      vertical-align: middle;
+      font-size: .8rem;
+    }
+    body.admin-panel.admin-manager-page .import-report-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      font-size: .69rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 800;
+      border: 1px solid transparent;
+    }
+    body.admin-panel.admin-manager-page .import-report-badge.badge-importado,
+    body.admin-panel.admin-manager-page .import-report-badge.badge-aprovado {
+      background: rgba(20, 83, 45, 0.32);
+      color: #86efac;
+      border-color: rgba(74, 222, 128, 0.28);
+    }
+    body.admin-panel.admin-manager-page .import-report-badge.badge-atualizado {
+      background: rgba(8, 47, 73, 0.34);
+      color: rgba(125, 211, 252, 0.98);
+      border-color: rgba(125, 211, 252, 0.3);
+    }
+    body.admin-panel.admin-manager-page .import-report-badge.badge-ignorado,
+    body.admin-panel.admin-manager-page .import-report-badge.badge-aviso {
+      background: rgba(120, 53, 15, 0.32);
+      color: #fcd34d;
+      border-color: rgba(251, 191, 36, 0.28);
+    }
+    body.admin-panel.admin-manager-page .import-report-badge.badge-erro {
+      background: rgba(127, 29, 29, 0.28);
+      color: #fca5a5;
+      border-color: rgba(248, 113, 113, 0.26);
+    }
+    body.admin-panel.admin-manager-page .import-report-empty {
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px dashed rgba(148, 163, 184, 0.24);
+      background: rgba(15, 23, 42, 0.32);
+      color: rgba(191, 219, 254, 0.84);
+      font-size: .8rem;
+    }
+    body.admin-panel.admin-manager-page .import-report-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
 
     body.admin-panel.admin-manager-page .admin-form-card {
       border-color: rgba(226, 232, 240, 0.22);
@@ -4331,6 +4531,19 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       }
       body.admin-panel.admin-manager-page .import-panel {
         padding: 10px 10px 8px !important;
+      }
+      body.admin-panel.admin-manager-page .import-report-grid,
+      body.admin-panel.admin-manager-page .import-report-grid.compact {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+      body.admin-panel.admin-manager-page .import-report-breakdown.two-cols span {
+        min-width: 100%;
+      }
+      body.admin-panel.admin-manager-page .import-report-actions {
+        justify-content: stretch;
+      }
+      body.admin-panel.admin-manager-page .import-report-actions .btn {
+        width: 100%;
       }
     }
     body.admin-panel.admin-manager-page .admin-admins-card .admin-card-badge {
