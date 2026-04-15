@@ -2527,8 +2527,13 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       opacity: 1;
       transform: translateY(0);
       transition: opacity var(--motion-fade), transform var(--motion-lift), padding var(--motion-smooth), max-height var(--motion-lift);
-      max-height: none;
-      overflow: visible;
+      max-height: min(72vh, 860px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(125, 211, 252, 0.5) rgba(15, 23, 42, 0.45);
     }
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente,
     body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado,
@@ -2536,15 +2541,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       max-height: min(72vh, 860px);
       overflow-y: auto;
       overflow-x: hidden;
-      scrollbar-gutter: stable;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(125, 211, 252, 0.5) rgba(15, 23, 42, 0.45);
     }
+    body.admin-panel.admin-dashboard-page .kanban-col::-webkit-scrollbar,
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar,
     body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar,
     body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar {
       width: 10px;
     }
+    body.admin-panel.admin-dashboard-page .kanban-col::-webkit-scrollbar-track,
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-track,
     body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-track,
     body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-track {
@@ -2552,6 +2556,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-radius: 999px;
       border: 1px solid rgba(148, 163, 184, 0.12);
     }
+    body.admin-panel.admin-dashboard-page .kanban-col::-webkit-scrollbar-thumb,
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-thumb,
     body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-thumb,
     body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-thumb {
@@ -2559,6 +2564,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-radius: 999px;
       border: 2px solid rgba(15, 23, 42, 0.55);
     }
+    body.admin-panel.admin-dashboard-page .kanban-col::-webkit-scrollbar-thumb:hover,
     body.admin-panel.admin-dashboard-page .section-panel.view-pendente .kanban-col.col-pendente::-webkit-scrollbar-thumb:hover,
     body.admin-panel.admin-dashboard-page .section-panel.view-aprovado .kanban-col.col-aprovado::-webkit-scrollbar-thumb:hover,
     body.admin-panel.admin-dashboard-page .section-panel.view-reprovado .kanban-col.col-reprovado::-webkit-scrollbar-thumb:hover {
@@ -6272,6 +6278,87 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border: 1px solid rgba(148, 163, 184, 0.14);
       overflow: hidden;
     }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.48));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-toolbar-main {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .88rem;
+      color: rgba(226, 232, 240, 0.94);
+      cursor: pointer;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-toggle input {
+      width: 16px;
+      height: 16px;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-counter {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.16);
+      border: 1px solid rgba(96, 165, 250, 0.22);
+      color: rgba(191, 219, 254, 0.96);
+      font-size: .82rem;
+      font-weight: 700;
+      letter-spacing: .01em;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-toolbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap {
+      max-height: min(27rem, 68vh);
+      overflow-y: auto;
+      overflow-x: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable both-edges;
+      -webkit-overflow-scrolling: touch;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell .table thead th,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap .table thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: rgba(15, 23, 42, 0.94);
+      backdrop-filter: blur(14px);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap .checkbox-col,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell .checkbox-col {
+      width: 46px;
+      text-align: center;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .approval-batch-check,
+    body.admin-panel.admin-manager-page.admin-manager-revamp [data-approval-master-type] {
+      width: 16px;
+      height: 16px;
+      accent-color: #38bdf8;
+      cursor: pointer;
+    }
     body.admin-panel.admin-manager-page.admin-manager-revamp .approval-actions-cell {
       white-space: nowrap;
     }
@@ -9598,8 +9685,20 @@ body.admin-panel.admin-manager-page.admin-manager-revamp .table-wrap {
   scrollbar-color: rgba(96, 165, 250, 0.65) rgba(15, 23, 42, 0.46);
 }
 
+body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell,
+body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(96, 165, 250, 0.65) rgba(15, 23, 42, 0.46);
+}
+
 body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline::-webkit-scrollbar,
 body.admin-panel.admin-manager-page.admin-manager-revamp .table-wrap::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell::-webkit-scrollbar,
+body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
@@ -9610,8 +9709,21 @@ body.admin-panel.admin-manager-page.admin-manager-revamp .table-wrap::-webkit-sc
   border-radius: 999px;
 }
 
+body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell::-webkit-scrollbar-track,
+body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 999px;
+}
+
 body.admin-panel.admin-manager-page.admin-manager-revamp .principal-timeline::-webkit-scrollbar-thumb,
 body.admin-panel.admin-manager-page.admin-manager-revamp .table-wrap::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.86), rgba(14, 116, 144, 0.92));
+  border-radius: 999px;
+  border: 2px solid rgba(15, 23, 42, 0.62);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell::-webkit-scrollbar-thumb,
+body.admin-panel.admin-manager-page.admin-manager-revamp .approval-table-wrap::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(59, 130, 246, 0.86), rgba(14, 116, 144, 0.92));
   border-radius: 999px;
   border: 2px solid rgba(15, 23, 42, 0.62);

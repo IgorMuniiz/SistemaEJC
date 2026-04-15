@@ -937,6 +937,150 @@
       });
     }
 
+    function getStatusCopy(status) {
+      if (status === 'aprovado') {
+        return {
+          cardClass: 'green-card',
+          metaClass: 'green',
+          label: 'Aprovado',
+          columnLabel: 'Aprovados',
+          emptyText: 'Nenhuma inscrição aprovada',
+          primaryAction: '<i class="fas fa-check"></i>Aprovar',
+          secondaryAction: '<i class="fas fa-xmark"></i>Desaprovar',
+        };
+      }
+
+      if (status === 'reprovado') {
+        return {
+          cardClass: 'red-card',
+          metaClass: 'red',
+          label: 'Reprovado',
+          columnLabel: 'Reprovados',
+          emptyText: 'Nenhuma inscrição reprovada',
+          primaryAction: '<i class="fas fa-rotate-left"></i>Reativar',
+          secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
+        };
+      }
+
+      return {
+        cardClass: 'amber-card',
+        metaClass: 'amber',
+        label: 'Pendente',
+        columnLabel: 'Pendentes',
+        emptyText: 'Nenhuma inscrição pendente',
+        primaryAction: '<i class="fas fa-check"></i>Aprovar',
+        secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
+      };
+    }
+
+    function getPanelByScope(scope) {
+      const panelName = scope === 'encontreiro' ? 'encontreiros' : 'encontristas';
+      return document.querySelector(`.approval-panel[data-approval-panel="${panelName}"]`);
+    }
+
+    function getColumnByStatus(scope, status) {
+      const panel = getPanelByScope(scope);
+      if (!panel) return null;
+
+      if (status === 'aprovado') return panel.querySelector('.kanban-col.col-aprovado');
+      if (status === 'reprovado') return panel.querySelector('.kanban-col.col-reprovado');
+      return panel.querySelector('.kanban-col.col-pendente');
+    }
+
+    function syncColumnEmptyState(scope, status) {
+      const column = getColumnByStatus(scope, status);
+      if (!column) return;
+
+      const existingDynamicEmpty = column.querySelector('.empty-col.dynamic-empty');
+      const staticEmpty = column.querySelector('.empty-col:not(.dynamic-empty)');
+      const cards = Array.from(column.querySelectorAll('.pcard'));
+
+      if (cards.length > 0) {
+        if (staticEmpty) staticEmpty.remove();
+        return;
+      }
+
+      if (existingDynamicEmpty || staticEmpty) return;
+
+      const copy = getStatusCopy(status);
+      const empty = document.createElement('div');
+      empty.className = 'empty-col';
+      empty.innerHTML = `<div class="empty-col-icon"><i class="fas fa-inbox"></i></div><p class="empty-col-text">${copy.emptyText}</p>`;
+      column.appendChild(empty);
+    }
+
+    function syncPanelMeta(scope) {
+      const panel = getPanelByScope(scope);
+      if (!panel) return;
+
+      const pendentes = panel.querySelectorAll('.pcard[data-status="pendente"]').length;
+      const aprovados = panel.querySelectorAll('.pcard[data-status="aprovado"]').length;
+      const reprovados = panel.querySelectorAll('.pcard[data-status="reprovado"]').length;
+      const chips = panel.querySelectorAll('.section-meta .meta-chip');
+
+      if (chips[0]) chips[0].innerHTML = `<i class="fas fa-clock"></i>${pendentes} pendente(s)`;
+      if (chips[1]) chips[1].innerHTML = `<i class="fas fa-check"></i>${aprovados} aprovado(s)`;
+      if (chips[2]) chips[2].innerHTML = `<i class="fas fa-xmark"></i>${reprovados} reprovado(s)`;
+    }
+
+    function rebuildCardActions(card, scope, status) {
+      const actions = card.querySelector('.pcard-actions');
+      if (!actions) return;
+
+      const id = card.dataset.id || '';
+      const copy = getStatusCopy(status);
+      actions.innerHTML = `
+        <button class="pcard-btn approve" onclick="aprovarCadastro('${id}', '${scope}')">${copy.primaryAction}</button>
+        <button class="pcard-btn reject" onclick="desaprovarCadastro('${id}', '${scope}')">${copy.secondaryAction}</button>
+        <button class="pcard-btn details" type="button" onclick="toggleCardDetails(this)"><i class="fas fa-eye"></i>Ver detalhes</button>
+      `;
+    }
+
+    function syncCardTimeline(card, status) {
+      const timelineStatus = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em análise';
+      const timelineValue = card.querySelector('.pcard-timeline li:last-child strong');
+      if (timelineValue) {
+        timelineValue.textContent = `${timelineStatus} • Equipe Admin`;
+      }
+    }
+
+    function moveApprovalCard(card, nextStatus) {
+      if (!card) return;
+
+      const scope = card.dataset.tipo || '';
+      const previousStatus = card.dataset.status || 'pendente';
+      const nextColumn = getColumnByStatus(scope, nextStatus);
+      if (!nextColumn) return;
+
+      const copy = getStatusCopy(nextStatus);
+      card.dataset.status = nextStatus;
+      card.classList.remove('amber-card', 'green-card', 'red-card', 'is-selected', 'is-removing');
+      card.classList.add(copy.cardClass);
+
+      const details = card.querySelector('.pcard-details');
+      if (details) {
+        details.classList.toggle('pcard-details-compact', nextStatus !== 'pendente');
+      }
+
+      const checkbox = card.querySelector('.batch-checkbox');
+      if (checkbox) checkbox.checked = false;
+
+      rebuildCardActions(card, scope, nextStatus);
+      syncCardTimeline(card, nextStatus);
+
+      const referenceNode = nextColumn.querySelector('.empty-col') || nextColumn.querySelector('.empty-col.dynamic-empty');
+      if (referenceNode) {
+        referenceNode.remove();
+      }
+      nextColumn.appendChild(card);
+
+      syncColumnEmptyState(scope, previousStatus);
+      syncColumnEmptyState(scope, nextStatus);
+      atualizarInterfaceLote(scope);
+      applyAdvancedFilters();
+      syncPanelMeta(scope);
+    }
+
     function applyAdvancedFilters() {
       const status = document.getElementById('filter-status')?.value || 'all';
       const team = document.getElementById('filter-team')?.value || 'all';
@@ -1055,11 +1199,7 @@
 
         const card = button?.closest('.pcard');
         if (card) {
-          card.classList.add('is-removing');
-          setTimeout(() => {
-            card.remove();
-            refreshVisibleCounts();
-          }, 320);
+          moveApprovalCard(card, action === 'aprovar' ? 'aprovado' : 'reprovado');
         }
       } catch (error) {
         if (button) button.disabled = false;
@@ -1317,7 +1457,10 @@
       try {
         const res  = await fetch('/admin/aprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
         const data = await res.json();
-        if (data.success) { await appAlert('Cadastro aprovado com sucesso.', 'success', 'Sucesso'); location.reload(); }
+        if (data.success) {
+          moveApprovalCard(document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`), 'aprovado');
+          await appAlert('Cadastro aprovado com sucesso.', 'success', 'Sucesso');
+        }
         else await appAlert('Erro: ' + (data.error || 'Falha ao aprovar'), 'danger', 'Erro');
       } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }
@@ -1327,7 +1470,10 @@
       try {
         const res  = await fetch('/admin/desaprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
         const data = await res.json();
-        if (data.success) { await appAlert('Cadastro desaprovado com sucesso.', 'success', 'Sucesso'); location.reload(); }
+        if (data.success) {
+          moveApprovalCard(document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`), 'reprovado');
+          await appAlert('Cadastro desaprovado com sucesso.', 'success', 'Sucesso');
+        }
         else await appAlert('Erro: ' + (data.error || 'Falha ao desaprovar'), 'danger', 'Erro');
       } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }

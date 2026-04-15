@@ -1327,6 +1327,27 @@
               </button>
             </div>
 
+            <div class="approval-batch-toolbar">
+              <div class="approval-batch-toolbar-main">
+                <label class="approval-batch-toggle" for="approval-select-all-visible">
+                  <input id="approval-select-all-visible" type="checkbox" onchange="toggleSelecionarTodosAprovacoes(this)">
+                  <span>Selecionar todos os visíveis</span>
+                </label>
+                <span id="approval-batch-counter" class="approval-batch-counter">0 selecionado(s)</span>
+              </div>
+              <div class="approval-batch-toolbar-actions">
+                <button id="btn-limpar-selecao-aprovacoes" class="btn btn-outline-secondary btn-sm" type="button" onclick="limparSelecaoAprovacoes()">
+                  <i class="fas fa-eraser me-1"></i>Limpar seleção
+                </button>
+                <button id="btn-aprovar-selecionados-aprovacoes" class="btn btn-approve btn-sm" type="button" onclick="executarAprovacaoLote('aprovar')" disabled>
+                  <i class="fas fa-check-double me-1"></i>Aprovar selecionados
+                </button>
+                <button id="btn-reprovar-selecionados-aprovacoes" class="btn btn-reject btn-sm" type="button" onclick="executarAprovacaoLote('desaprovar')" disabled>
+                  <i class="fas fa-ban me-1"></i>Reprovar selecionados
+                </button>
+              </div>
+            </div>
+
             <section class="approval-section">
               <div class="approval-section-head">
                 <div>
@@ -1339,6 +1360,7 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
+                    <th class="checkbox-col"><input type="checkbox" data-approval-master-type="encontrista" onchange="toggleSelecionarTodosAprovacoesPorTipo(this, 'encontrista')" title="Selecionar todos os encontristas visíveis"></th>
                     <th>Foto</th>
                     <th>Nome</th>
                     <th>EJC</th>
@@ -1349,10 +1371,13 @@
                 </thead>
                 <tbody>
                   <% if (encontristasPendentesAprovacoes.length === 0) { %>
-                    <tr><td colspan="6" class="empty-state">Todos os encontristas estão aprovados!</td></tr>
+                    <tr><td colspan="7" class="empty-state">Todos os encontristas estão aprovados!</td></tr>
                   <% } else { %>
                     <% encontristasPendentesAprovacoes.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
+                        <td class="checkbox-col">
+                          <input class="approval-batch-check" type="checkbox" value="<%= cadastro._id %>" data-approval-batch-type="encontrista" onchange="atualizarAprovacaoLoteUI()">
+                        </td>
                         <td>
                           <% if (cadastro.foto) { %>
                             <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
@@ -1392,6 +1417,7 @@
               <table class="table table-hover">
                 <thead>
                   <tr>
+                    <th class="checkbox-col"><input type="checkbox" data-approval-master-type="encontreiro" onchange="toggleSelecionarTodosAprovacoesPorTipo(this, 'encontreiro')" title="Selecionar todos os encontreiros visíveis"></th>
                     <th>Foto</th>
                     <th>Nome</th>
                     <th>Tipo</th>
@@ -1403,10 +1429,13 @@
                 </thead>
                 <tbody>
                   <% if (encontreirosPendentesAprovacoes.length === 0) { %>
-                    <tr><td colspan="7" class="empty-state">Todos os encontreiros estão aprovados!</td></tr>
+                    <tr><td colspan="8" class="empty-state">Todos os encontreiros estão aprovados!</td></tr>
                   <% } else { %>
                     <% encontreirosPendentesAprovacoes.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
+                        <td class="checkbox-col">
+                          <input class="approval-batch-check" type="checkbox" value="<%= cadastro._id %>" data-approval-batch-type="encontreiro" onchange="atualizarAprovacaoLoteUI()">
+                        </td>
                         <td>
                           <% if (cadastro.foto) { %>
                             <img src="/img/uploads/<%= encodeURIComponent(cadastro.foto) %>?w=120&h=120&fit=cover&format=webp" loading="lazy" decoding="async" alt="Foto" class="table-photo">
@@ -4138,10 +4167,25 @@
     configurarPesquisaPorAba('search-encontreiros', '#encontreiros');
     configurarPesquisaPorAba('search-tios', '#tios');
     configurarPesquisaPorAba('search-aprovacoes', '#aprovacoes');
+
+    const approvalSearchInput = document.getElementById('search-aprovacoes');
+    if (approvalSearchInput) {
+      approvalSearchInput.addEventListener('input', () => {
+        window.requestAnimationFrame(atualizarAprovacaoLoteUI);
+      });
+    }
+
     configurarBotaoLimparBusca('search-encontristas', 'clear-search-encontristas');
     configurarBotaoLimparBusca('search-encontreiros', 'clear-search-encontreiros');
     configurarBotaoLimparBusca('search-tios', 'clear-search-tios');
     configurarBotaoLimparBusca('search-aprovacoes', 'clear-search-aprovacoes');
+
+    const approvalSearchClearButton = document.getElementById('clear-search-aprovacoes');
+    if (approvalSearchClearButton) {
+      approvalSearchClearButton.addEventListener('click', () => {
+        window.requestAnimationFrame(atualizarAprovacaoLoteUI);
+      });
+    }
 
     document.querySelectorAll('#cadastroTabs .nav-link').forEach((botao) => {
       botao.addEventListener('shown.bs.tab', (event) => {
@@ -4158,6 +4202,7 @@
     restaurarAbaAtiva();
     promoverSecaoAdministradores();
     setupAdminKeyboardShortcuts();
+    atualizarAprovacaoLoteUI();
 
     function initSidebarDockGlow() {
       const sidebar = document.querySelector('.admin-shell .sidebar');
@@ -4493,6 +4538,141 @@
         checkbox.checked = !!master.checked;
       });
       atualizarTransferenciaLoteUI();
+    }
+
+    function isApprovalRowVisible(checkbox) {
+      const row = checkbox && checkbox.closest ? checkbox.closest('tr') : null;
+      return !!row && row.style.display !== 'none';
+    }
+
+    function getApprovalBatchCheckboxes(tipo = '') {
+      const selector = tipo
+        ? `.approval-batch-check[data-approval-batch-type="${tipo}"]`
+        : '.approval-batch-check';
+
+      return Array.from(document.querySelectorAll(selector));
+    }
+
+    function getAprovacoesSelecionadas() {
+      return getApprovalBatchCheckboxes()
+        .filter((checkbox) => checkbox.checked)
+        .map((checkbox) => ({
+          id: String(checkbox.value || '').trim(),
+          tipo: String(checkbox.dataset.approvalBatchType || '').trim(),
+        }))
+        .filter((item) => item.id && item.tipo);
+    }
+
+    function atualizarMasterAprovacoesPorTipo(tipo) {
+      const master = document.querySelector(`[data-approval-master-type="${tipo}"]`);
+      if (!master) return;
+
+      const visibles = getApprovalBatchCheckboxes(tipo).filter(isApprovalRowVisible);
+      const checkedCount = visibles.filter((checkbox) => checkbox.checked).length;
+      const allChecked = visibles.length > 0 && checkedCount === visibles.length;
+
+      master.checked = allChecked;
+      master.indeterminate = checkedCount > 0 && !allChecked;
+    }
+
+    function atualizarAprovacaoLoteUI() {
+      const selecionados = getAprovacoesSelecionadas();
+      const totalSelecionados = selecionados.length;
+      const contador = document.getElementById('approval-batch-counter');
+      const btnAprovar = document.getElementById('btn-aprovar-selecionados-aprovacoes');
+      const btnReprovar = document.getElementById('btn-reprovar-selecionados-aprovacoes');
+      const masterGlobal = document.getElementById('approval-select-all-visible');
+      const visiveis = getApprovalBatchCheckboxes().filter(isApprovalRowVisible);
+      const visiveisMarcados = visiveis.filter((checkbox) => checkbox.checked).length;
+      const allVisibleChecked = visiveis.length > 0 && visiveisMarcados === visiveis.length;
+
+      if (contador) contador.textContent = `${totalSelecionados} selecionado(s)`;
+      if (btnAprovar) btnAprovar.disabled = totalSelecionados === 0;
+      if (btnReprovar) btnReprovar.disabled = totalSelecionados === 0;
+
+      if (masterGlobal) {
+        masterGlobal.checked = allVisibleChecked;
+        masterGlobal.indeterminate = visiveisMarcados > 0 && !allVisibleChecked;
+      }
+
+      atualizarMasterAprovacoesPorTipo('encontrista');
+      atualizarMasterAprovacoesPorTipo('encontreiro');
+    }
+
+    function toggleSelecionarTodosAprovacoes(master) {
+      getApprovalBatchCheckboxes().forEach((checkbox) => {
+        if (!isApprovalRowVisible(checkbox)) return;
+        checkbox.checked = !!master.checked;
+      });
+      atualizarAprovacaoLoteUI();
+    }
+
+    function toggleSelecionarTodosAprovacoesPorTipo(master, tipo) {
+      getApprovalBatchCheckboxes(tipo).forEach((checkbox) => {
+        if (!isApprovalRowVisible(checkbox)) return;
+        checkbox.checked = !!master.checked;
+      });
+      atualizarAprovacaoLoteUI();
+    }
+
+    function limparSelecaoAprovacoes() {
+      getApprovalBatchCheckboxes().forEach((checkbox) => {
+        checkbox.checked = false;
+      });
+      atualizarAprovacaoLoteUI();
+    }
+
+    async function executarAprovacaoLote(action) {
+      if (!ensurePermission('cadastros.aprovar')) return;
+
+      const selecionados = getAprovacoesSelecionadas();
+      if (selecionados.length === 0) {
+        await appAlert('Selecione ao menos um cadastro para processar.', 'warning', 'Nenhum selecionado');
+        return;
+      }
+
+      const idsPorTipo = selecionados.reduce((acc, item) => {
+        if (!acc[item.tipo]) acc[item.tipo] = [];
+        acc[item.tipo].push(item.id);
+        return acc;
+      }, {});
+
+      const verbo = action === 'aprovar' ? 'aprovar' : 'reprovar';
+      const confirmar = await appConfirm(
+        `${verbo.charAt(0).toUpperCase() + verbo.slice(1)} ${selecionados.length} cadastro(s) selecionado(s)?`,
+        'Confirmar ação em lote'
+      );
+      if (!confirmar) return;
+
+      try {
+        let totalAtualizado = 0;
+        let totalNaoEncontrado = 0;
+
+        for (const [tipoLista, ids] of Object.entries(idsPorTipo)) {
+          const response = await fetch('/admin/aprovacao-lote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipoLista, action, ids }),
+          });
+
+          const result = await response.json();
+          if (!response.ok || !result.success) {
+            throw new Error(result.error || 'Nao foi possivel concluir a atualização em lote.');
+          }
+
+          totalAtualizado += Number(result.updatedCount || 0);
+          totalNaoEncontrado += Number(result.missingCount || 0);
+        }
+
+        await appAlert(
+          `Ação em lote concluída.\n\nAtualizados: ${totalAtualizado}\nNão encontrados: ${totalNaoEncontrado}`,
+          'success',
+          'Sucesso'
+        );
+        recarregarMantendoAbaAtual();
+      } catch (error) {
+        await appAlert('Erro ao processar seleção em lote: ' + (error.message || 'falha de conexão'), 'danger', 'Erro');
+      }
     }
 
     async function transferirSelecionadosEncontristas() {
