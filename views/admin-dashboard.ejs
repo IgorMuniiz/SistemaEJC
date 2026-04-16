@@ -34,7 +34,10 @@
         <span class="topbar-user-avatar"><%= ((adminUsername || 'A').trim().charAt(0) || 'A').toUpperCase() %></span>
         <span><%= adminUsername %></span>
       </span>
-      <a href="/admin/logout" class="topbar-logout"><i class="fas fa-arrow-right-from-bracket"></i>Sair</a>
+      <form action="/admin/logout" method="POST" class="topbar-logout-form">
+        <input type="hidden" name="_csrf" value="<%= adminCsrfToken %>">
+        <button type="submit" class="topbar-logout"><i class="fas fa-arrow-right-from-bracket"></i>Sair</button>
+      </form>
     </nav>
   </header>
 

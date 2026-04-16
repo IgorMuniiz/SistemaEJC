@@ -1017,6 +1017,7 @@ const sessionStore = createSessionStore({
   MongoStore,
   skipMongoConnect: SKIP_MONGO_CONNECT,
   logger: console,
+  preferredMongoUrl: mongoUri || mongoFallbackUri,
 });
 if (!sessionStore) {
   console.warn('Session store persistente indisponivel. Usando MemoryStore (nao recomendado em producao).');
@@ -1110,6 +1111,23 @@ const isSameOriginRequest = (req) => {
   return false;
 };
 
+const hasValidAdminCsrfToken = (req) => {
+  const expectedToken = normalizeTextInput(req.session?.adminCsrfToken);
+  const providedToken = normalizeTextInput(
+    req.get('x-csrf-token')
+      || req.get('x-admin-csrf')
+      || req.body?._csrf
+      || req.query?._csrf
+  );
+
+  return (
+    expectedToken
+    && providedToken
+    && providedToken.length === expectedToken.length
+    && crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))
+  );
+};
+
 const adminCsrfGuard = (req, res, next) => {
   const method = String(req.method || '').toUpperCase();
   const routePath = String(req.path || '');
@@ -1123,20 +1141,7 @@ const adminCsrfGuard = (req, res, next) => {
     return next();
   }
 
-  const expectedToken = normalizeTextInput(req.session?.adminCsrfToken);
-  const providedToken = normalizeTextInput(
-    req.get('x-csrf-token')
-      || req.get('x-admin-csrf')
-      || req.body?._csrf
-      || req.query?._csrf
-  );
-
-  if (
-    expectedToken
-    && providedToken
-    && providedToken.length === expectedToken.length
-    && crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))
-  ) {
+  if (hasValidAdminCsrfToken(req)) {
     return next();
   }
 
@@ -1419,21 +1424,27 @@ const verificarFormularioBloqueado = async (tipo) => {
 };
 
 const logAdminAction = async (req, payload) => {
-  try {
-    await AdminAuditLog.create({
-      adminId: req.session?.adminId || null,
-      adminUsername: req.session?.adminUsername || 'desconhecido',
-      action: payload.action,
-      targetType: payload.targetType || '',
-      targetId: payload.targetId ? String(payload.targetId) : '',
-      status: payload.status || 'success',
-      ip: getClientIp(req),
-      userAgent: String(req.headers['user-agent'] || ''),
-      metadata: payload.metadata || {},
-    });
-  } catch (err) {
-    console.error('Falha ao registrar auditoria:', err.message);
+  if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+    return false;
   }
+
+  const auditEntry = {
+    adminId: req.session?.adminId || null,
+    adminUsername: req.session?.adminUsername || 'desconhecido',
+    action: payload.action,
+    targetType: payload.targetType || '',
+    targetId: payload.targetId ? String(payload.targetId) : '',
+    status: payload.status || 'success',
+    ip: getClientIp(req),
+    userAgent: String(req.headers['user-agent'] || ''),
+    metadata: payload.metadata || {},
+  };
+
+  void AdminAuditLog.create(auditEntry).catch((err) => {
+    console.error('Falha ao registrar auditoria:', err.message);
+  });
+
+  return true;
 };
 
 const formatExportValue = (value) => {
@@ -9192,8 +9203,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
   }
 });
 
-// GET /admin/logout - Fazer logout
-app.get('/admin/logout', (req, res) => {
+const performAdminLogout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
@@ -9201,6 +9211,18 @@ app.get('/admin/logout', (req, res) => {
     res.clearCookie('ejc.sid');
     res.redirect('/');
   });
+};
+
+// POST /admin/logout - Fazer logout com protecao CSRF
+app.post('/admin/logout', checkAdminAuth, (req, res) => performAdminLogout(req, res));
+
+// GET /admin/logout - Mantido apenas para navegacao same-origin/tokenizada
+app.get('/admin/logout', checkAdminAuth, (req, res) => {
+  if (hasValidAdminCsrfToken(req) || isSameOriginRequest(req)) {
+    return performAdminLogout(req, res);
+  }
+
+  return res.status(405).send('Use POST /admin/logout para encerrar a sessao com seguranca.');
 });
 
 let serverInstance = null;

@@ -65,9 +65,12 @@
     </div>
 
     <div style="text-align: center; margin-top: 32px;" class="reveal-on-scroll reveal-up" data-reveal>
-      <a href="/admin/logout" class="logout-btn" style="text-decoration: none;">
-        <i class="fas fa-sign-out-alt"></i> Sair
-      </a>
+      <form action="/admin/logout" method="POST" style="display: inline-block;">
+        <input type="hidden" name="_csrf" value="<%= adminCsrfToken %>">
+        <button type="submit" class="logout-btn" style="text-decoration: none;">
+          <i class="fas fa-sign-out-alt"></i> Sair
+        </button>
+      </form>
     </div>
   </div>
 

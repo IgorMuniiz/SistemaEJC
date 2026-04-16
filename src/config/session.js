@@ -43,7 +43,14 @@ const attachAsyncStoreGuards = (store, logger = console) => {
   }
 };
 
-const createSessionStore = ({ env = process.env, mongoose, MongoStore, skipMongoConnect = false, logger = console }) => {
+const createSessionStore = ({
+  env = process.env,
+  mongoose,
+  MongoStore,
+  skipMongoConnect = false,
+  logger = console,
+  preferredMongoUrl = '',
+}) => {
   if (env.NODE_ENV === 'test' || skipMongoConnect) {
     return null;
   }
@@ -57,6 +64,22 @@ const createSessionStore = ({ env = process.env, mongoose, MongoStore, skipMongo
     if (sessionMongoUrl) {
       const store = MongoStore.create({
         mongoUrl: sessionMongoUrl,
+        mongoOptions: {
+          serverSelectionTimeoutMS: 10000,
+        },
+        collectionName: 'sessions',
+        ttl: 60 * 60 * 24,
+        autoRemove: 'native',
+        touchAfter: 24 * 3600,
+      });
+      attachAsyncStoreGuards(store, logger);
+      return store;
+    }
+
+    const fallbackMongoUrl = readRawEnvValue(preferredMongoUrl);
+    if (fallbackMongoUrl) {
+      const store = MongoStore.create({
+        mongoUrl: fallbackMongoUrl,
         mongoOptions: {
           serverSelectionTimeoutMS: 10000,
         },

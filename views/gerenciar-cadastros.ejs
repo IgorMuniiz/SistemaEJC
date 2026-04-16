@@ -169,7 +169,10 @@
           <button type="button" class="menu-link" data-menu-title="Sub-Equipes" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar"><i class="fas fa-diagram-project"></i><span class="menu-label">Sub-Equipes</span></button>
           <button type="button" class="menu-link" data-menu-title="Financeiro" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar"><i class="fas fa-wallet"></i><span class="menu-label">Financeiro</span></button>
           <a href="#administradores" class="menu-link" data-menu-title="Administradores" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></a>
-          <a href="/admin/logout" class="menu-link" data-menu-title="Sair"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></a>
+          <form action="/admin/logout" method="POST" class="menu-logout-form">
+            <input type="hidden" name="_csrf" value="<%= adminCsrfToken %>">
+            <button type="submit" class="menu-link" data-menu-title="Sair"><i class="fas fa-right-from-bracket"></i><span class="menu-label">Sair</span></button>
+          </form>
         </nav>
 
         <div class="sidebar-note">

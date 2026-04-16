@@ -13,7 +13,7 @@
    - `GET /admin/dashboard` - Painel de administração
    - `POST /admin/aprovar` - Aprovar um cadastro
    - `POST /admin/desaprovar` - Desaprovar um cadastro
-   - `GET /admin/logout` - Fazer logout
+    - `POST /admin/logout` - Fazer logout
 
 ### 3. **Novas Páginas**
    - `admin-login.ejs` - Formulário de login bonito
