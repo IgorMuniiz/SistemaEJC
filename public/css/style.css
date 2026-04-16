@@ -562,6 +562,11 @@ h1 {
   transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
 }
 
+.final-question-box-lg {
+  padding: 14px;
+  min-height: 198px;
+}
+
 .final-question-box:focus-within {
   border-color: rgba(125, 211, 252, 0.82);
   box-shadow: 0 12px 28px rgba(5, 18, 42, 0.3), 0 0 0 1px rgba(125, 211, 252, 0.3) inset;
@@ -571,6 +576,11 @@ h1 {
 .final-question-input {
   background: rgba(6, 14, 30, 0.74) !important;
   border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+.final-question-textarea-lg {
+  min-height: 112px !important;
+  resize: vertical;
 }
 
 .final-question-input::placeholder {
@@ -583,6 +593,127 @@ h1 {
   color: rgba(191, 211, 252, 0.82);
   font-size: 0.74rem;
   line-height: 1.45;
+}
+
+.compact-response-textarea {
+  min-height: 96px !important;
+}
+
+.upload-field-shell {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(78, 142, 255, 0.26);
+  background: linear-gradient(180deg, rgba(18, 36, 69, 0.52), rgba(9, 20, 40, 0.36));
+  transition: border-color 0.24s ease, box-shadow 0.24s ease, transform 0.24s ease;
+}
+
+.upload-field-shell:focus-within {
+  border-color: rgba(125, 211, 252, 0.82);
+  box-shadow: 0 12px 28px rgba(5, 18, 42, 0.3), 0 0 0 1px rgba(125, 211, 252, 0.3) inset;
+  transform: translateY(-1px);
+}
+
+.upload-field-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.upload-field-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, rgba(78, 142, 255, 0.22), rgba(123, 103, 255, 0.2));
+  color: #9bc2ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.upload-field-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.upload-field-label {
+  margin-bottom: 4px;
+}
+
+.upload-field-hint {
+  display: block;
+  color: rgba(191, 211, 252, 0.82);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.form-control-file-modern {
+  padding: 10px !important;
+  background: rgba(6, 14, 30, 0.78) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  color: rgba(237, 242, 255, 0.96) !important;
+}
+
+.form-control-file-modern::file-selector-button {
+  margin-right: 12px;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4e8eff 0%, #7b67ff 100%);
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  box-shadow: 0 10px 22px rgba(78, 142, 255, 0.3);
+}
+
+.form-control-file-modern:hover::file-selector-button {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 26px rgba(78, 142, 255, 0.34);
+}
+
+.upload-field-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.upload-file-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 7px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(232, 239, 255, 0.84);
+  font-size: 0.8rem;
+  line-height: 1.3;
+}
+
+.upload-file-pill.has-file {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(52, 211, 153, 0.28);
+  color: #d1fae5;
+}
+
+.upload-file-pill i {
+  flex: 0 0 auto;
+}
+
+.upload-file-pill,
+.upload-file-spec {
+  word-break: break-word;
+}
+
+.upload-file-spec {
+  color: rgba(191, 211, 252, 0.78);
+  font-size: 0.75rem;
 }
 
 .review-summary-card {
@@ -1492,4 +1623,422 @@ input::placeholder {
   background: linear-gradient(180deg, rgba(78, 142, 255, 0.9), rgba(123, 103, 255, 0.85));
   border-radius: 999px;
   border: 2px solid rgba(8, 15, 31, 0.6);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --color-primary: #2563eb;
+    --color-primary-dark: #1d4ed8;
+    --color-success: #0f9f6e;
+    --color-success-dark: #0a7d57;
+    --color-violet: #7c3aed;
+    --color-text-light: #0f172a;
+    --color-text-gray: #52607a;
+    --color-text-dark: #0f172a;
+    --bg-gradient: linear-gradient(140deg, #f7fbff, #eef4ff 58%, #e6eefc);
+    --bg-card: rgba(255, 255, 255, 0.82);
+    --bg-white: #ffffff;
+    --shadow-sm: 0 6px 16px rgba(37, 99, 235, 0.1);
+    --shadow-md: 0 12px 24px rgba(15, 23, 42, 0.12);
+    --shadow-lg: 0 18px 42px rgba(15, 23, 42, 0.14);
+    --shadow-form: 0 24px 52px rgba(15, 23, 42, 0.12);
+    --ux-ring: rgba(37, 99, 235, 0.48);
+    --ux-ring-shadow: 0 0 0 1px rgba(37, 99, 235, 0.3), 0 0 0 6px rgba(59, 130, 246, 0.14);
+  }
+
+  body {
+    color: var(--color-text-light);
+    color-scheme: light;
+    background: var(--bg-gradient);
+  }
+
+  body::before {
+    background: rgba(78, 142, 255, 0.18);
+  }
+
+  body::after {
+    background: rgba(123, 103, 255, 0.14);
+  }
+
+  .portal-grid {
+    background:
+      linear-gradient(rgba(15, 23, 42, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(15, 23, 42, 0.045) 1px, transparent 1px);
+  }
+
+  .inicio,
+  .form-card,
+  .portal-success-shell,
+  .review-summary-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+  }
+
+  body,
+  .inicio,
+  .form-card,
+  .portal-success-shell,
+  .review-summary-card {
+    color: #0f172a;
+  }
+
+  body :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong) {
+    color: #0f172a !important;
+  }
+
+  body :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text) {
+    color: rgba(51, 65, 85, 0.82) !important;
+  }
+
+  .btn-primary,
+  .btn-primary *,
+  .btn-success,
+  .btn-success *,
+  .btn-glass,
+  .btn-glass * {
+    color: #ffffff !important;
+  }
+
+  .form-control,
+  .form-select,
+  textarea,
+  input[type='text'],
+  input[type='email'],
+  input[type='tel'],
+  input[type='number'],
+  input[type='date'],
+  input[type='password'] {
+    color-scheme: light;
+    -webkit-text-fill-color: #0f172a;
+    caret-color: #0f172a;
+  }
+
+  .form-select:not([multiple]),
+  select:not([multiple]) {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+  }
+
+  select option,
+  select optgroup {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  input[type='date']::-webkit-calendar-picker-indicator,
+  input[type='datetime-local']::-webkit-calendar-picker-indicator {
+    filter: none;
+  }
+
+  .form-control:-webkit-autofill,
+  .form-control:-webkit-autofill:hover,
+  .form-control:-webkit-autofill:focus,
+  .form-select:-webkit-autofill,
+  textarea:-webkit-autofill,
+  input:-webkit-autofill {
+    -webkit-text-fill-color: #0f172a !important;
+    -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.96) inset !important;
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.96) inset !important;
+    border-color: rgba(37, 99, 235, 0.48) !important;
+  }
+
+  .form-control::placeholder,
+  textarea::placeholder,
+  input::placeholder {
+    color: rgba(71, 85, 105, 0.7);
+  }
+
+  * {
+    scrollbar-color: rgba(37, 99, 235, 0.62) rgba(148, 163, 184, 0.18);
+  }
+
+  *::-webkit-scrollbar-track {
+    background: rgba(148, 163, 184, 0.18);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(78, 142, 255, 0.88), rgba(123, 103, 255, 0.7));
+    border: 2px solid rgba(241, 245, 249, 0.92);
+  }
+}
+
+html[data-theme='light'] body {
+  background: linear-gradient(140deg, #f7fbff, #eef4ff 58%, #e6eefc) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] :is(.inicio, .form-card, .portal-success-shell, .review-summary-card) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(244, 248, 255, 0.92)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12) !important;
+}
+
+html[data-theme='light'] :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong) {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text) {
+  color: rgba(51, 65, 85, 0.82) !important;
+}
+
+html[data-theme='light'] :is(.inicio, .form-card, .portal-success-shell, .review-summary-card, .success-card) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.24), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 248, 255, 0.93)) !important;
+  box-shadow: 0 24px 54px rgba(37, 99, 235, 0.1), 0 10px 20px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme='light'] :is(.btn-primary, .btn-success, .success-action, .btn-glass) {
+  border: 1px solid rgba(96, 165, 250, 0.18) !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.16) !important;
+}
+
+html[data-theme='light'] .btn-primary,
+html[data-theme='light'] .success-action {
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 48%, #7c3aed 100%) !important;
+}
+
+html[data-theme='light'] .btn-success {
+  background: linear-gradient(135deg, #059669 0%, #10b981 52%, #34d399 100%) !important;
+}
+
+html[data-theme='light'] .btn-glass {
+  color: #1d4ed8 !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(255, 255, 255, 0.95)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+}
+
+html[data-theme='light'] :is(.success-icon, .portal-success-icon, .review-summary-head i) {
+  color: #2563eb !important;
+  filter: drop-shadow(0 10px 18px rgba(59, 130, 246, 0.22));
+}
+
+html[data-theme='light'] .portal-success-icon {
+  background: linear-gradient(135deg, #2563eb 0%, #10b981 55%, #8b5cf6 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.22) !important;
+}
+
+html[data-theme='light'] .review-summary-item {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(240, 246, 255, 0.9)) !important;
+  border-color: rgba(96, 165, 250, 0.16) !important;
+}
+
+html[data-theme='light'] .review-summary-item span {
+  color: #64748b !important;
+}
+
+html[data-theme='light'] .upload-field-shell {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.98)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 16px 32px rgba(148, 163, 184, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme='light'] .upload-field-icon {
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.95), rgba(238, 242, 255, 0.94));
+  color: #2563eb;
+}
+
+html[data-theme='light'] .upload-field-hint,
+html[data-theme='light'] .upload-file-spec {
+  color: rgba(71, 85, 105, 0.82);
+}
+
+html[data-theme='light'] .form-control-file-modern {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(148, 163, 184, 0.34) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] .upload-file-pill {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #334155;
+}
+
+html[data-theme='light'] .upload-file-pill.has-file {
+  background: rgba(220, 252, 231, 0.9);
+  border-color: rgba(34, 197, 94, 0.24);
+  color: #166534;
+}
+
+html[data-theme='light'] :is(.portal-blocked-card) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 248, 255, 0.93)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.1) !important;
+}
+
+html[data-theme='light'] .portal-blocked-text {
+  color: rgba(51, 65, 85, 0.82) !important;
+}
+
+html[data-theme='light'] .portal-blocked-link {
+  color: #1d4ed8 !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+}
+
+html[data-theme='light'] .portal-blocked-link:hover {
+  color: #0f172a !important;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.95), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(59, 130, 246, 0.26) !important;
+}
+
+html[data-theme='light'] .tipo-btn:not(.btn-primary) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 255, 0.92)) !important;
+  color: #334155 !important;
+  border-color: rgba(96, 165, 250, 0.16) !important;
+}
+
+html[data-theme='light'] .tipo-btn:not(.btn-primary):hover {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.96)) !important;
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] .form-card {
+  position: relative;
+  overflow: hidden;
+}
+
+html[data-theme='light'] .form-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.18), transparent 32%),
+    linear-gradient(110deg, rgba(255, 255, 255, 0.36), transparent 36%, transparent 70%, rgba(59, 130, 246, 0.08));
+}
+
+html[data-theme='light'] .form-label {
+  color: #334155 !important;
+}
+
+html[data-theme='light'] .form-shell-title {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] :is(.form-control, .form-select, textarea):focus {
+  background: #ffffff !important;
+  border-color: rgba(59, 130, 246, 0.42) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12), 0 10px 22px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   LIGHT THEME PREMIUM POLISH
+   ---------------------------------------------------------------------------- */
+html[data-theme='light'] :is(.portal-back-link, .form-progress-shell, .form-stepper-item, .step-choice, .step-consent-box, .form-step-summary, .review-summary-card, .review-summary-item, .final-question-box) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 248, 255, 0.94)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06) !important;
+}
+
+html[data-theme='light'] .portal-back-link {
+  color: #0f172a !important;
+}
+
+html[data-theme='light'] .portal-back-link:hover {
+  color: #1d4ed8 !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.96)) !important;
+}
+
+html[data-theme='light'] .form-progress-head,
+html[data-theme='light'] .form-stepper-item,
+html[data-theme='light'] .form-step-summary span,
+html[data-theme='light'] .review-summary-item span,
+html[data-theme='light'] .form-stepper-copy small,
+html[data-theme='light'] .final-question-hint {
+  color: #52607a !important;
+}
+
+html[data-theme='light'] :is(.form-progress-head strong, .form-stepper-copy strong, .form-step-summary strong, .review-summary-item strong) {
+  color: #0b1324 !important;
+}
+
+html[data-theme='light'] .form-stepper-index {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #1d4ed8 !important;
+  border-color: rgba(96, 165, 250, 0.24) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.76);
+}
+
+html[data-theme='light'] .form-stepper-item.is-active {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(139, 92, 246, 0.08)) !important;
+  border-color: rgba(59, 130, 246, 0.32) !important;
+}
+
+html[data-theme='light'] .form-stepper-item.is-complete {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(37, 99, 235, 0.08)) !important;
+  border-color: rgba(16, 185, 129, 0.26) !important;
+}
+
+html[data-theme='light'] :is(.form-control, .form-select, textarea) {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] .input-group-text {
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.78), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.18) !important;
+  color: #2563eb !important;
+}
+
+html[data-theme='light'] :is(.form-section-title i, .review-summary-head i, .success-icon) {
+  color: #2563eb !important;
+  filter: drop-shadow(0 10px 18px rgba(59, 130, 246, 0.2));
+}
+
+html[data-theme='dark'] :is(.inicio, .form-card, .portal-success-shell, .review-summary-card) {
+  background: linear-gradient(180deg, rgba(8, 15, 31, 0.9), rgba(15, 23, 42, 0.78)) !important;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 22px 44px rgba(2, 6, 23, 0.26) !important;
+}
+
+html[data-theme='dark'] body,
+html[data-theme='dark'] body {
+  background: var(--bg-gradient) !important;
+  color: var(--color-text-light) !important;
+  color-scheme: dark !important;
+}
+
+html[data-theme='dark'] body::before,
+html[data-theme='dark'] body::before {
+  background: rgba(78, 142, 255, 0.35) !important;
+}
+
+html[data-theme='dark'] body::after,
+html[data-theme='dark'] body::after {
+  background: rgba(123, 103, 255, 0.3) !important;
+}
+
+html[data-theme='dark'] .portal-grid,
+html[data-theme='dark'] .portal-grid {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px) !important;
+}
+
+html[data-theme='dark'] body :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong),
+html[data-theme='dark'] :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong) {
+  color: #f7f9ff !important;
+}
+
+html[data-theme='dark'] body :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text),
+html[data-theme='dark'] :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text) {
+  color: rgba(185, 199, 232, 0.82) !important;
+}
+
+html[data-theme='dark'] .portal-back-link,
+html[data-theme='dark'] .form-progress-head,
+html[data-theme='dark'] .form-stepper-item,
+html[data-theme='dark'] .form-step-summary span,
+html[data-theme='dark'] .review-summary-item span,
+html[data-theme='dark'] .form-stepper-copy small,
+html[data-theme='dark'] .final-question-hint,
+html[data-theme='dark'] .final-question-hint {
+  color: rgba(185, 199, 232, 0.8) !important;
 }
