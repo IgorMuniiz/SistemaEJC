@@ -53,6 +53,28 @@ const vapidKeys = configureWebPush({
 });
 
 const app = express();
+
+if (!IS_PRODUCTION) {
+  try {
+    const livereload = require('livereload');
+    const connectLivereload = require('connect-livereload');
+    const liveReloadServer = livereload.createServer({
+      exts: ['ejs', 'html', 'htm', 'css', 'js', 'png', 'gif', 'jpg', 'svg'],
+    });
+    liveReloadServer.watch([
+      path.join(__dirname, 'views'),
+      path.join(__dirname, 'public'),
+      path.join(__dirname, 'src'),
+    ]);
+    app.use(connectLivereload());
+    liveReloadServer.server.once('connection', () => {
+      setTimeout(() => liveReloadServer.refresh('/'), 100);
+    });
+  } catch (e) {
+    console.warn('[DEV] livereload não disponível:', e.message);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
@@ -604,6 +626,173 @@ const vinculoSchema = new mongoose.Schema({
 
 const VinculoEncontro = mongoose.model('VinculoEncontro', vinculoSchema);
 
+const extractEntityLinkSelection = (body = {}) => {
+  const pessoaIdsRaw = Array.isArray(body.gerenciarPessoaIds)
+    ? body.gerenciarPessoaIds
+    : Array.isArray(body.transferirPessoaIds)
+      ? body.transferirPessoaIds
+      : Array.isArray(body.removerPessoaIds)
+        ? body.removerPessoaIds
+        : Array.isArray(body.pessoaIds)
+          ? body.pessoaIds
+          : [];
+
+  const acaoBruta = normalizeTextInput(body.acaoVinculo || body.linkAction || body.gerenciarAcao).toLowerCase();
+  const acao = ['excluir', 'remover', 'transferir'].includes(acaoBruta)
+    ? (acaoBruta === 'remover' ? 'excluir' : acaoBruta)
+    : (Array.isArray(body.removerPessoaIds) ? 'excluir' : 'transferir');
+
+  return {
+    acao,
+    destinoId: normalizeTextInput(body.transferirParaId || body.destinoId || body.entidadeDestinoId),
+    pessoaIds: [...new Set(
+      pessoaIdsRaw
+        .map((id) => normalizeTextInput(id))
+        .filter(Boolean)
+    )],
+  };
+};
+
+async function syncEquipeHistoryAfterTransfer({ pessoaId, papel, origemNomes = [], destinoNome }) {
+  const papelNormalizado = normalizeTextInput(papel).toLowerCase();
+  const field = ['coordenador', 'coordenou'].includes(papelNormalizado) ? 'equipeCoordenou' : 'equipeServiu';
+  const nomesParaRemover = [...new Set(
+    origemNomes
+      .map((nome) => normalizeTextInput(nome))
+      .filter(Boolean)
+  )];
+
+  const update = {};
+  if (nomesParaRemover.length) {
+    update.$pull = { [field]: { $in: nomesParaRemover } };
+  }
+  if (destinoNome) {
+    update.$addToSet = { [field]: destinoNome };
+  }
+
+  if (Object.keys(update).length) {
+    await Encontro.updateOne({ _id: pessoaId }, update);
+  }
+}
+
+async function transferSelectedEntityLinks({
+  ejcId,
+  entidadeTipo,
+  origemId,
+  destinoId,
+  pessoaIds,
+  origemNomes = [],
+  destinoNome = '',
+}) {
+  if (!destinoId || !Array.isArray(pessoaIds) || !pessoaIds.length) {
+    return { transferidos: 0, mesclados: 0, ignorados: 0, removidos: 0 };
+  }
+
+  const vinculosSelecionados = await VinculoEncontro.find({
+    ejcId,
+    entidadeTipo,
+    entidadeId: origemId,
+    pessoaId: { $in: pessoaIds },
+  }).lean();
+
+  if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
+    return { transferidos: 0, mesclados: 0, ignorados: pessoaIds.length, removidos: 0 };
+  }
+
+  let transferidos = 0;
+  let mesclados = 0;
+
+  for (const vinculo of vinculosSelecionados) {
+    const duplicado = await VinculoEncontro.findOne({
+      _id: { $ne: vinculo._id },
+      ejcId,
+      entidadeTipo,
+      entidadeId: destinoId,
+      pessoaTipo: vinculo.pessoaTipo,
+      pessoaId: vinculo.pessoaId,
+      papel: vinculo.papel,
+      descricaoPapel: normalizeTextInput(vinculo.descricaoPapel),
+    });
+
+    if (duplicado) {
+      await VinculoEncontro.deleteOne({ _id: vinculo._id });
+      mesclados += 1;
+    } else {
+      await VinculoEncontro.updateOne(
+        { _id: vinculo._id },
+        {
+          $set: {
+            entidadeId: destinoId,
+          },
+        }
+      );
+      transferidos += 1;
+    }
+
+    if (entidadeTipo === 'equipe' && vinculo.pessoaTipo === 'encontreiro') {
+      await syncEquipeHistoryAfterTransfer({
+        pessoaId: vinculo.pessoaId,
+        papel: vinculo.papel,
+        origemNomes,
+        destinoNome,
+      });
+    }
+  }
+
+  return {
+    transferidos,
+    mesclados,
+    removidos: 0,
+    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+  };
+}
+
+async function removeSelectedEntityLinks({
+  ejcId,
+  entidadeTipo,
+  origemId,
+  pessoaIds,
+  origemNomes = [],
+}) {
+  if (!Array.isArray(pessoaIds) || !pessoaIds.length) {
+    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+  }
+
+  const vinculosSelecionados = await VinculoEncontro.find({
+    ejcId,
+    entidadeTipo,
+    entidadeId: origemId,
+    pessoaId: { $in: pessoaIds },
+  }).lean();
+
+  if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
+    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: pessoaIds.length };
+  }
+
+  let removidos = 0;
+
+  for (const vinculo of vinculosSelecionados) {
+    await VinculoEncontro.deleteOne({ _id: vinculo._id });
+    removidos += 1;
+
+    if (entidadeTipo === 'equipe' && vinculo.pessoaTipo === 'encontreiro') {
+      await syncEquipeHistoryAfterTransfer({
+        pessoaId: vinculo.pessoaId,
+        papel: vinculo.papel,
+        origemNomes,
+        destinoNome: '',
+      });
+    }
+  }
+
+  return {
+    transferidos: 0,
+    mesclados: 0,
+    removidos,
+    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+  };
+}
+
 const parsePositiveInt = (value, fallback, min, max) => {
   const parsed = Number.parseInt(String(value || ''), 10);
   if (!Number.isFinite(parsed) || parsed < min || parsed > max) return fallback;
@@ -737,7 +926,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // compress text assets to reduce transfer size in Lighthouse.
-app.use(compression({ threshold: 1024 }));
+if (IS_PRODUCTION) {
+  app.use(compression({ threshold: 1024 }));
+}
 
 app.use(helmet(buildHelmetConfig()));
 app.use(attachRequestContext());
@@ -748,6 +939,13 @@ const setStaticCacheHeaders = (res, filePath) => {
   const immutableExt = new Set([
     '.css', '.js', '.mjs', '.png', '.jpg', '.jpeg', '.webp', '.svg', '.gif', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.mp4', '.webm'
   ]);
+
+  if (!IS_PRODUCTION && ['.css', '.js', '.mjs', '.html'].includes(ext)) {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    return;
+  }
 
   if (immutableExt.has(ext)) {
     res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
@@ -819,13 +1017,13 @@ app.get('/img/:bucket/:file', async (req, res) => {
 
 // static files
 app.use(express.static(path.join(__dirname, 'public'), {
-  maxAge: '30d',
+  maxAge: IS_PRODUCTION ? '30d' : 0,
   etag: true,
   lastModified: true,
   setHeaders: setStaticCacheHeaders,
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  maxAge: '7d',
+  maxAge: IS_PRODUCTION ? '7d' : 0,
   etag: true,
   lastModified: true,
   setHeaders: setStaticCacheHeaders,
@@ -848,12 +1046,16 @@ const adminWriteLimiter = createAdminWriteLimiter();
 
 app.use(adminWriteLimiter);
 
+// health/readiness devem responder mesmo quando a camada de sessão ou Mongo estiver degradada
+app.use(createSystemRouter({ mongoose }));
+
 const sessionStore = createSessionStore({
   env: process.env,
   mongoose,
   MongoStore,
   skipMongoConnect: SKIP_MONGO_CONNECT,
   logger: console,
+  preferredMongoUrl: mongoUri || mongoFallbackUri,
 });
 if (!sessionStore) {
   console.warn('Session store persistente indisponivel. Usando MemoryStore (nao recomendado em producao).');
@@ -947,6 +1149,23 @@ const isSameOriginRequest = (req) => {
   return false;
 };
 
+const hasValidAdminCsrfToken = (req) => {
+  const expectedToken = normalizeTextInput(req.session?.adminCsrfToken);
+  const providedToken = normalizeTextInput(
+    req.get('x-csrf-token')
+      || req.get('x-admin-csrf')
+      || req.body?._csrf
+      || req.query?._csrf
+  );
+
+  return (
+    expectedToken
+    && providedToken
+    && providedToken.length === expectedToken.length
+    && crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))
+  );
+};
+
 const adminCsrfGuard = (req, res, next) => {
   const method = String(req.method || '').toUpperCase();
   const routePath = String(req.path || '');
@@ -960,20 +1179,7 @@ const adminCsrfGuard = (req, res, next) => {
     return next();
   }
 
-  const expectedToken = normalizeTextInput(req.session?.adminCsrfToken);
-  const providedToken = normalizeTextInput(
-    req.get('x-csrf-token')
-      || req.get('x-admin-csrf')
-      || req.body?._csrf
-      || req.query?._csrf
-  );
-
-  if (
-    expectedToken
-    && providedToken
-    && providedToken.length === expectedToken.length
-    && crypto.timingSafeEqual(Buffer.from(providedToken), Buffer.from(expectedToken))
-  ) {
+  if (hasValidAdminCsrfToken(req)) {
     return next();
   }
 
@@ -989,7 +1195,6 @@ const adminCsrfGuard = (req, res, next) => {
 
 app.use(ensureAdminCsrfToken);
 app.use(adminCsrfGuard);
-app.use(createSystemRouter({ mongoose }));
 
 const normalizeAdminEventScopeInput = (value) => {
   const raw = normalizeTextInput(value).toLowerCase();
@@ -1257,21 +1462,27 @@ const verificarFormularioBloqueado = async (tipo) => {
 };
 
 const logAdminAction = async (req, payload) => {
-  try {
-    await AdminAuditLog.create({
-      adminId: req.session?.adminId || null,
-      adminUsername: req.session?.adminUsername || 'desconhecido',
-      action: payload.action,
-      targetType: payload.targetType || '',
-      targetId: payload.targetId ? String(payload.targetId) : '',
-      status: payload.status || 'success',
-      ip: getClientIp(req),
-      userAgent: String(req.headers['user-agent'] || ''),
-      metadata: payload.metadata || {},
-    });
-  } catch (err) {
-    console.error('Falha ao registrar auditoria:', err.message);
+  if (!mongoose.connection || mongoose.connection.readyState !== 1) {
+    return false;
   }
+
+  const auditEntry = {
+    adminId: req.session?.adminId || null,
+    adminUsername: req.session?.adminUsername || 'desconhecido',
+    action: payload.action,
+    targetType: payload.targetType || '',
+    targetId: payload.targetId ? String(payload.targetId) : '',
+    status: payload.status || 'success',
+    ip: getClientIp(req),
+    userAgent: String(req.headers['user-agent'] || ''),
+    metadata: payload.metadata || {},
+  };
+
+  void AdminAuditLog.create(auditEntry).catch((err) => {
+    console.error('Falha ao registrar auditoria:', err.message);
+  });
+
+  return true;
 };
 
 const formatExportValue = (value) => {
@@ -2073,20 +2284,32 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
 
     doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 10, y + 98).lineTo(textX + textWidth - 18, y + 98).stroke();
 
-    doc.fillColor('#1f2f46').font('Times-BoldItalic').fontSize(nameFontSize).text(displayName, textX + 6, y + 109, {
+    doc.fillColor('#1f2f46').font('Times-BoldItalic').fontSize(nameFontSize).text(displayName, textX + 6, y + 105, {
       width: textWidth - 18,
       align: 'center',
       lineGap: 2,
       ellipsis: true,
-      height: 52,
+      height: 40,
       valign: 'center',
     });
 
+    const tipoPessoaCracha = normalizeTextInput(entry?.pessoaTipo).toLowerCase();
+    const mostrarFraseCrachaEncontrista = ['encontrista', 'encontreiro', 'jovem', 'jovens'].includes(tipoPessoaCracha) || !tipoPessoaCracha;
+    if (mostrarFraseCrachaEncontrista) {
+      doc.save();
+      doc.fillColor('#7a4b1f').font('Times-BoldItalic').fontSize(12.6).text('E sem eu perceber, vou sendo trasformado.', textX + 4, y + cardHeight - 73, {
+        width: textWidth - 14,
+        align: 'center',
+        lineGap: 1,
+      });
+      doc.restore();
+    }
+
     doc.save();
     doc.strokeColor('#d7e2ef').lineWidth(0.8).moveTo(textX + 14, y + cardHeight - 42).lineTo(textX + textWidth - 22, y + cardHeight - 42).stroke();
-    doc.roundedRect(textX + 26, y + cardHeight - 30, textWidth - 48, 16, 8).fill('#fffaf0');
-    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(7.2).text(ejcName || 'EJC', textX + 26, y + cardHeight - 24.2, {
-      width: textWidth - 48,
+    doc.roundedRect(textX + 18, y + cardHeight - 31, textWidth - 32, 19, 9).fill('#fffaf0');
+    doc.fillColor(palette.chipText).font('Helvetica-Bold').fontSize(10.2).text(ejcName || 'EJC', textX + 18, y + cardHeight - 24.2, {
+      width: textWidth - 32,
       align: 'center',
       lineBreak: false,
       ellipsis: true,
@@ -7010,12 +7233,28 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
     const { id } = req.params;
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
+    const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
       return res.status(400).json({ success: false, error: 'Dados invalidos para editar circulo.' });
     }
     if (!nome) {
       return res.status(400).json({ success: false, error: 'Nome do circulo e obrigatorio.' });
+    }
+    if (solicitouGerenciamento) {
+      if (!gerenciarPessoaIds.length) {
+        return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
+      }
+
+      if (acaoVinculo !== 'excluir') {
+        if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
+          return res.status(400).json({ success: false, error: 'Selecione um circulo de destino valido para a transferencia.' });
+        }
+        if (String(transferirParaId) === String(id)) {
+          return res.status(400).json({ success: false, error: 'Escolha um circulo diferente do atual para concluir a transferencia.' });
+        }
+      }
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -7037,7 +7276,41 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
     circulo.nome = nome;
     circulo.nomeNormalizado = nomeNormalizado;
     await circulo.save();
-    return res.json({ success: true, message: 'Circulo atualizado com sucesso.' });
+
+    let transferSummary = { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+    if (solicitouGerenciamento) {
+      if (acaoVinculo === 'excluir') {
+        transferSummary = await removeSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'circulo',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+        });
+      } else {
+        const circuloDestino = await Circulo.findOne({ _id: transferirParaId, ejcId });
+        if (!circuloDestino) {
+          return res.status(404).json({ success: false, error: 'Circulo de destino nao encontrado neste EJC.' });
+        }
+
+        transferSummary = await transferSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'circulo',
+          origemId: id,
+          destinoId: transferirParaId,
+          pessoaIds: gerenciarPessoaIds,
+        });
+      }
+    }
+
+    const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
+    const totalRemovidas = transferSummary.removidos || 0;
+    const message = totalRemovidas
+      ? `Circulo atualizado com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalMovidas
+        ? `Circulo atualizado com sucesso. ${totalMovidas} pessoa(s) movida(s).`
+        : 'Circulo atualizado com sucesso.';
+
+    return res.json({ success: true, message, transferSummary });
   } catch (err) {
     console.error('Erro ao editar circulo:', err);
     return res.status(500).json({ success: false, error: 'Erro ao editar circulo.' });
@@ -7079,12 +7352,28 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
     const { id } = req.params;
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
+    const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
       return res.status(400).json({ success: false, error: 'Dados invalidos para editar equipe.' });
     }
     if (!nome) {
       return res.status(400).json({ success: false, error: 'Nome da equipe e obrigatorio.' });
+    }
+    if (solicitouGerenciamento) {
+      if (!gerenciarPessoaIds.length) {
+        return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
+      }
+
+      if (acaoVinculo !== 'excluir') {
+        if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
+          return res.status(400).json({ success: false, error: 'Selecione uma equipe de destino valida para a transferencia.' });
+        }
+        if (String(transferirParaId) === String(id)) {
+          return res.status(400).json({ success: false, error: 'Escolha uma equipe diferente da atual para concluir a transferencia.' });
+        }
+      }
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -7132,7 +7421,52 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
       );
     }
 
-    return res.json({ success: true, message: 'Equipe atualizada com sucesso.' });
+    let transferSummary = { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
+    if (solicitouGerenciamento) {
+      if (acaoVinculo === 'excluir') {
+        transferSummary = await removeSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'equipe',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+          origemNomes: [nomeReferenciaAntigo, nomeReferenciaNovo],
+        });
+      } else {
+        let equipeDestino = await Equipe.findOne({ _id: transferirParaId, ejcId });
+        if (!equipeDestino) {
+          const equipeDestinoLegada = await Equipe.findById(transferirParaId);
+          if (equipeDestinoLegada && !equipeDestinoLegada.ejcId) {
+            equipeDestinoLegada.ejcId = ejcId;
+            await equipeDestinoLegada.save();
+            equipeDestino = equipeDestinoLegada;
+          }
+        }
+
+        if (!equipeDestino) {
+          return res.status(404).json({ success: false, error: 'Equipe de destino nao encontrada neste EJC.' });
+        }
+
+        transferSummary = await transferSelectedEntityLinks({
+          ejcId,
+          entidadeTipo: 'equipe',
+          origemId: id,
+          destinoId: transferirParaId,
+          pessoaIds: gerenciarPessoaIds,
+          origemNomes: [nomeReferenciaAntigo, nomeReferenciaNovo],
+          destinoNome: normalizeTextInput(equipeDestino.nomeReferencia || equipeDestino.nome),
+        });
+      }
+    }
+
+    const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
+    const totalRemovidas = transferSummary.removidos || 0;
+    const message = totalRemovidas
+      ? `Equipe atualizada com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalMovidas
+        ? `Equipe atualizada com sucesso. ${totalMovidas} pessoa(s) movida(s).`
+        : 'Equipe atualizada com sucesso.';
+
+    return res.json({ success: true, message, transferSummary });
   } catch (err) {
     console.error('Erro ao editar equipe:', err);
     return res.status(500).json({ success: false, error: 'Erro ao editar equipe.' });
@@ -8209,20 +8543,227 @@ app.post('/admin/vincular-encontreiro-subequipe', checkAdminAuth, requireAdminPe
 });
 
 // POST /admin/importar-cadastros - Importar somente cadastros de encontreiros
-app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
-  const summary = {
-    totalLidos: 0,
-    importados: 0,
-    atualizados: 0,
-    ignoradosExistentes: 0,
-    ignoradosDuplicadosImportacao: 0,
-    ignoradosSemCampos: 0,
-    ignoradosSemFoto: 0,
-    ignoradosTipoInvalido: 0,
-    placeholdersNome: 0,
-    placeholdersEmail: 0,
-    erros: 0,
+const createEncontreirosImportSummary = () => ({
+  totalLidos: 0,
+  importados: 0,
+  atualizados: 0,
+  ignoradosExistentes: 0,
+  ignoradosDuplicadosImportacao: 0,
+  ignoradosSemCampos: 0,
+  ignoradosSemFoto: 0,
+  ignoradosTipoInvalido: 0,
+  placeholdersNome: 0,
+  placeholdersEmail: 0,
+  erros: 0,
+});
+
+const buildEncontreirosImportReportBase = ({ sourceType, dbEngine, dryRun, limite, atualizarExistentes }) => ({
+  tipoImportacao: 'encontreiros',
+  fase: dryRun ? 'preview' : 'resultado',
+  sourceType,
+  dbEngine: sourceType === 'database' ? dbEngine : null,
+  limite,
+  atualizarExistentes: !!atualizarExistentes,
+  totais: {},
+  amostras: [],
+});
+
+const pushEncontreirosImportSample = (report, sample) => {
+  if (!report || !Array.isArray(report.amostras) || report.amostras.length >= 12) return;
+  report.amostras.push(sample);
+};
+
+const finalizeEncontreirosImportReport = (report, summary) => {
+  const ignoradosTotal = Number(summary.ignoradosExistentes || 0)
+    + Number(summary.ignoradosDuplicadosImportacao || 0)
+    + Number(summary.ignoradosSemCampos || 0)
+    + Number(summary.ignoradosSemFoto || 0)
+    + Number(summary.ignoradosTipoInvalido || 0);
+  const placeholdersTotal = Number(summary.placeholdersNome || 0) + Number(summary.placeholdersEmail || 0);
+
+  report.totais = {
+    totalLidos: Number(summary.totalLidos || 0),
+    importados: Number(summary.importados || 0),
+    atualizados: Number(summary.atualizados || 0),
+    ignoradosTotal,
+    ignoradosExistentes: Number(summary.ignoradosExistentes || 0),
+    ignoradosDuplicadosImportacao: Number(summary.ignoradosDuplicadosImportacao || 0),
+    ignoradosSemCampos: Number(summary.ignoradosSemCampos || 0),
+    ignoradosSemFoto: Number(summary.ignoradosSemFoto || 0),
+    ignoradosTipoInvalido: Number(summary.ignoradosTipoInvalido || 0),
+    placeholdersNome: Number(summary.placeholdersNome || 0),
+    placeholdersEmail: Number(summary.placeholdersEmail || 0),
+    placeholdersTotal,
+    erros: Number(summary.erros || 0),
   };
+
+  return report;
+};
+
+const processEncontreirosImportRows = async ({
+  importRows,
+  atualizarExistentes,
+  fotoPadrao,
+  sourceType,
+  dbEngine,
+  limite,
+  dryRun,
+}) => {
+  const summary = createEncontreirosImportSummary();
+  const report = buildEncontreirosImportReportBase({ sourceType, dbEngine, dryRun, limite, atualizarExistentes });
+  const defaultTipoImportacao = sourceType === 'database' ? '' : 'jovens';
+  const fallbackFotoImportacao = normalizeTextInput(fotoPadrao) || ensureImportPlaceholderImage();
+  const seenImportKeys = new Set();
+
+  summary.totalLidos = Array.isArray(importRows) ? importRows.length : 0;
+
+  for (let index = 0; index < importRows.length; index += 1) {
+    const rawRow = importRows[index];
+    try {
+      const row = mapToEncontroPayload(rawRow, fotoPadrao, {
+        defaultTipo: defaultTipoImportacao,
+        fallbackFoto: fallbackFotoImportacao,
+      });
+
+      let placeholderNome = false;
+      let placeholderEmail = false;
+
+      if (!row.nomeCompleto) {
+        row.nomeCompleto = `Importado sem nome #${index + 1}`;
+        summary.placeholdersNome += 1;
+        placeholderNome = true;
+      }
+
+      if (!row.email) {
+        row.email = `importado-sem-email-${Date.now()}-${index + 1}@pendente.local`;
+        summary.placeholdersEmail += 1;
+        placeholderEmail = true;
+      }
+
+      const dedupEmail = row.email && !String(row.email).includes('@pendente.local')
+        ? String(row.email).toLowerCase()
+        : '';
+      const dedupPhone = normalizePhoneDigits(row.telefone);
+      const dedupName = normalizeTextInput(row.nomeCompleto).toLowerCase();
+      const dedupKey = [dedupEmail || '-', dedupPhone || '-', dedupName || '-'].join('|');
+
+      if (seenImportKeys.has(dedupKey)) {
+        summary.ignoradosDuplicadosImportacao += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo || '-',
+          acao: 'ignorado',
+          motivo: 'Duplicado dentro da própria importação',
+        });
+        continue;
+      }
+      seenImportKeys.add(dedupKey);
+
+      if (!row.tipo) {
+        summary.ignoradosTipoInvalido += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: '-',
+          acao: 'ignorado',
+          motivo: 'Tipo de encontreiro inválido ou ausente',
+        });
+        continue;
+      }
+
+      const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email, row.telefone);
+
+      if (existente) {
+        if (!atualizarExistentes) {
+          summary.ignoradosExistentes += 1;
+          pushEncontreirosImportSample(report, {
+            nomeCompleto: row.nomeCompleto,
+            email: row.email,
+            tipo: row.tipo,
+            acao: 'ignorado',
+            motivo: 'Cadastro já existe e atualização está desativada',
+          });
+          continue;
+        }
+
+        const fotoFinal = row.foto || existente.foto;
+        if (!fotoFinal) {
+          summary.ignoradosSemFoto += 1;
+          pushEncontreirosImportSample(report, {
+            nomeCompleto: row.nomeCompleto,
+            email: row.email,
+            tipo: row.tipo,
+            acao: 'ignorado',
+            motivo: 'Cadastro existente sem foto válida para atualização',
+          });
+          continue;
+        }
+
+        if (!dryRun) {
+          Object.assign(existente, row, { foto: fotoFinal });
+          await existente.save();
+        }
+
+        summary.atualizados += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo,
+          acao: dryRun ? 'atualizar' : 'atualizado',
+          motivo: placeholderNome || placeholderEmail
+            ? 'Atualização prevista com preenchimento automático de campos ausentes'
+            : 'Cadastro existente será atualizado',
+        });
+        continue;
+      }
+
+      if (!row.foto) {
+        summary.ignoradosSemFoto += 1;
+        pushEncontreirosImportSample(report, {
+          nomeCompleto: row.nomeCompleto,
+          email: row.email,
+          tipo: row.tipo,
+          acao: 'ignorado',
+          motivo: 'Novo cadastro sem foto válida',
+        });
+        continue;
+      }
+
+      if (!dryRun) {
+        await Encontro.create(row);
+      }
+
+      summary.importados += 1;
+      pushEncontreirosImportSample(report, {
+        nomeCompleto: row.nomeCompleto,
+        email: row.email,
+        tipo: row.tipo,
+        acao: dryRun ? 'importar' : 'importado',
+        motivo: placeholderNome || placeholderEmail
+          ? 'Novo cadastro com preenchimento automático de campos ausentes'
+          : 'Novo cadastro pronto para importação',
+      });
+    } catch (err) {
+      summary.erros += 1;
+      pushEncontreirosImportSample(report, {
+        nomeCompleto: normalizeTextInput(rawRow?.nomeCompleto || rawRow?.nome || `Linha ${index + 1}`),
+        email: normalizeTextInput(rawRow?.email),
+        tipo: normalizeTextInput(rawRow?.tipo),
+        acao: 'erro',
+        motivo: normalizeTextInput(err.message) || 'Falha inesperada ao processar registro',
+      });
+    }
+  }
+
+  return {
+    summary,
+    report: finalizeEncontreirosImportReport(report, summary),
+  };
+};
+
+app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('importacao.executar'), importUploadSingle, async (req, res) => {
+  const summary = createEncontreirosImportSummary();
 
   const importRows = [];
 
@@ -8462,6 +9003,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
     const sourceType = normalizeTextInput(req.body.sourceType || 'database').toLowerCase();
     const atualizarExistentes = normalizeBooleanInput(req.body.atualizarExistentes);
     const fotoPadrao = normalizeTextInput(req.body.fotoPadrao);
+    const dryRun = normalizeBooleanInput(req.body.dryRun);
 
     const limiteInformado = Number.parseInt(req.body.limite, 10);
     const limite = Number.isFinite(limiteInformado)
@@ -8494,9 +9036,6 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       const circuloRows = [];
       const encontreirosRows = [];
       const vinculoRows = [];
-      const equipeIdMap = new Map();
-      const circuloIdMap = new Map();
-      const encontreiroIdMap = new Map();
 
       if (sourceType === 'sistema') {
         if (!sourceEncontroId || !mongoose.Types.ObjectId.isValid(sourceEncontroId)) {
@@ -8573,6 +9112,43 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
         return res.status(400).json({ success: false, error: 'Importacao de encontro completo via arquivo ainda nao e suportada. Use importacao via banco de dados.' });
       }
 
+      const reportBase = {
+        tipoImportacao: 'encontro_completo',
+        fase: dryRun ? 'preview' : 'resultado',
+        sourceType,
+        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+        limite,
+        destino: {
+          id: String(ejcExistente._id || ''),
+          nome: ejcExistente.nome || 'Encontro de destino',
+        },
+        origem: sourceType === 'sistema'
+          ? {
+              id: String(sourceEncontroId || ''),
+              nome: sourceEncontroId ? String((await Ejc.findById(sourceEncontroId).select('nome').lean())?.nome || 'Encontro de origem') : '',
+            }
+          : null,
+        selecao: {
+          importarEquipes,
+          importarCirculos,
+          importarEncontreiros,
+        },
+        carregados: {
+          equipes: equipeRows.length,
+          circulos: circuloRows.length,
+          encontreiros: encontreirosRows.length,
+          vinculos: vinculoRows.length,
+        },
+      };
+
+      if (dryRun) {
+        return res.json({
+          success: true,
+          preview: true,
+          report: reportBase,
+        });
+      }
+
       const transactionResult = await processarImportacaoCompletaTransacional({
         sourceType,
         atualizarExistentes,
@@ -8615,6 +9191,15 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
         vinculos: transactionResult.vinculoSummary,
         sourceType,
         dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+        report: {
+          ...reportBase,
+          resultado: {
+            equipes: transactionResult.equipeSummary,
+            circulos: transactionResult.circuloSummary,
+            encontreiros: transactionResult.encontreiraSummary,
+            vinculos: transactionResult.vinculoSummary,
+          },
+        },
       });
     }
 
@@ -8681,78 +9266,30 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       }
     }
 
-    summary.totalLidos = importRows.length;
+    const dbEngine = sourceType === 'database'
+      ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase()
+      : null;
+    const processResult = await processEncontreirosImportRows({
+      importRows,
+      atualizarExistentes,
+      fotoPadrao,
+      sourceType,
+      dbEngine,
+      limite,
+      dryRun,
+    });
 
-    // Em importacao por arquivo, assume "jovens" quando o tipo nao vier informado.
-    const defaultTipoImportacao = sourceType === 'database' ? '' : 'jovens';
-    const fallbackFotoImportacao = normalizeTextInput(fotoPadrao) || ensureImportPlaceholderImage();
-    const seenImportKeys = new Set();
+    Object.assign(summary, processResult.summary);
 
-    for (let index = 0; index < importRows.length; index += 1) {
-      const rawRow = importRows[index];
-      try {
-        const row = mapToEncontroPayload(rawRow, fotoPadrao, {
-          defaultTipo: defaultTipoImportacao,
-          fallbackFoto: fallbackFotoImportacao,
-        });
-
-        if (!row.nomeCompleto) {
-          row.nomeCompleto = `Importado sem nome #${index + 1}`;
-          summary.placeholdersNome += 1;
-        }
-
-        if (!row.email) {
-          row.email = `importado-sem-email-${Date.now()}-${index + 1}@pendente.local`;
-          summary.placeholdersEmail += 1;
-        }
-
-        const dedupEmail = row.email && !String(row.email).includes('@pendente.local')
-          ? String(row.email).toLowerCase()
-          : '';
-        const dedupPhone = normalizePhoneDigits(row.telefone);
-        const dedupName = normalizeTextInput(row.nomeCompleto).toLowerCase();
-        const dedupKey = [dedupEmail || '-', dedupPhone || '-', dedupName || '-'].join('|');
-
-        if (seenImportKeys.has(dedupKey)) {
-          summary.ignoradosDuplicadosImportacao += 1;
-          continue;
-        }
-        seenImportKeys.add(dedupKey);
-
-        if (!row.tipo) {
-          summary.ignoradosTipoInvalido += 1;
-          continue;
-        }
-
-        const existente = await findExistingByNameOrEmail(Encontro, row.nomeCompleto, row.email, row.telefone);
-
-        if (existente) {
-          if (!atualizarExistentes) {
-            summary.ignoradosExistentes += 1;
-            continue;
-          }
-
-          Object.assign(existente, row);
-          if (!existente.foto) {
-            summary.ignoradosSemFoto += 1;
-            continue;
-          }
-
-          await existente.save();
-          summary.atualizados += 1;
-          continue;
-        }
-
-        if (!row.foto) {
-          summary.ignoradosSemFoto += 1;
-          continue;
-        }
-
-        await Encontro.create(row);
-        summary.importados += 1;
-      } catch (err) {
-        summary.erros += 1;
-      }
+    if (dryRun) {
+      return res.json({
+        success: true,
+        preview: true,
+        sourceType,
+        dbEngine,
+        summary,
+        report: processResult.report,
+      });
     }
 
     await logAdminAction(req, {
@@ -8760,7 +9297,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       targetType: 'encontreiro',
       metadata: {
         sourceType,
-        dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : '',
+        dbEngine: dbEngine || '',
         summary,
       },
     });
@@ -8769,8 +9306,9 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       success: true,
       message: 'Importacao de encontreiros concluida.',
       sourceType,
-      dbEngine: sourceType === 'database' ? normalizeTextInput(req.body.dbEngine || 'mongodb').toLowerCase() : null,
+      dbEngine,
       summary,
+      report: processResult.report,
     });
   } catch (err) {
     await logAdminAction(req, {
@@ -8791,8 +9329,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
   }
 });
 
-// GET /admin/logout - Fazer logout
-app.get('/admin/logout', (req, res) => {
+const performAdminLogout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error('Logout error:', err);
@@ -8800,6 +9337,18 @@ app.get('/admin/logout', (req, res) => {
     res.clearCookie('ejc.sid');
     res.redirect('/');
   });
+};
+
+// POST /admin/logout - Fazer logout com protecao CSRF
+app.post('/admin/logout', checkAdminAuth, (req, res) => performAdminLogout(req, res));
+
+// GET /admin/logout - Mantido apenas para navegacao same-origin/tokenizada
+app.get('/admin/logout', checkAdminAuth, (req, res) => {
+  if (hasValidAdminCsrfToken(req) || isSameOriginRequest(req)) {
+    return performAdminLogout(req, res);
+  }
+
+  return res.status(405).send('Use POST /admin/logout para encerrar a sessao com seguranca.');
 });
 
 let serverInstance = null;

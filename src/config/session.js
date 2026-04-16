@@ -9,12 +9,23 @@ const resolveSessionCookieSecure = (env = process.env) => {
   return 'auto';
 };
 
-const resolveSessionStoreMongoUrl = (env = process.env) => (
-  readRawEnvValue(env.SESSION_STORE_MONGO_URI)
-  || readRawEnvValue(env.MONGODB_URL)
-  || readRawEnvValue(env.MONGODB_URI)
-  || readRawEnvValue(env.MONGO_URI)
-);
+const resolveSessionStoreMongoUrl = (env = process.env) => {
+  const explicitSessionStoreUri = readRawEnvValue(env.SESSION_STORE_MONGO_URI);
+  if (explicitSessionStoreUri) {
+    return explicitSessionStoreUri;
+  }
+
+  const nodeEnv = normalizeEnvValue(env.NODE_ENV);
+  if (nodeEnv !== 'production') {
+    return '';
+  }
+
+  return (
+    readRawEnvValue(env.MONGODB_URL)
+    || readRawEnvValue(env.MONGODB_URI)
+    || readRawEnvValue(env.MONGO_URI)
+  );
+};
 
 const attachAsyncStoreGuards = (store, logger = console) => {
   if (store && store.clientP && typeof store.clientP.catch === 'function') {
@@ -32,7 +43,14 @@ const attachAsyncStoreGuards = (store, logger = console) => {
   }
 };
 
-const createSessionStore = ({ env = process.env, mongoose, MongoStore, skipMongoConnect = false, logger = console }) => {
+const createSessionStore = ({
+  env = process.env,
+  mongoose,
+  MongoStore,
+  skipMongoConnect = false,
+  logger = console,
+  preferredMongoUrl = '',
+}) => {
   if (env.NODE_ENV === 'test' || skipMongoConnect) {
     return null;
   }
@@ -46,6 +64,22 @@ const createSessionStore = ({ env = process.env, mongoose, MongoStore, skipMongo
     if (sessionMongoUrl) {
       const store = MongoStore.create({
         mongoUrl: sessionMongoUrl,
+        mongoOptions: {
+          serverSelectionTimeoutMS: 10000,
+        },
+        collectionName: 'sessions',
+        ttl: 60 * 60 * 24,
+        autoRemove: 'native',
+        touchAfter: 24 * 3600,
+      });
+      attachAsyncStoreGuards(store, logger);
+      return store;
+    }
+
+    const fallbackMongoUrl = readRawEnvValue(preferredMongoUrl);
+    if (fallbackMongoUrl) {
+      const store = MongoStore.create({
+        mongoUrl: fallbackMongoUrl,
         mongoOptions: {
           serverSelectionTimeoutMS: 10000,
         },

@@ -1601,7 +1601,7 @@ function GenericForm() {
             <>
               {isEncontro && (
                 <>
-                  <h3 className="text-center mb-3 text-white">Tipo de inscrição</h3>
+                  <h3 className="text-center mb-3 form-shell-title">Tipo de inscrição</h3>
                   <div className="d-grid gap-2 d-md-flex justify-content-center mb-4">
                     <button
                       type="button"

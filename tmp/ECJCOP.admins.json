@@ -1,0 +1,21 @@
+[{
+  "_id": {
+    "$oid": "69daa417d1cdb945bae44b86"
+  },
+  "username": "admindirigencia",
+  "senha": "$2b$10$Uh4bwfokYyJP7m4Q/Bvw/eZRs09b/SVx4ZYKFTbOp34opASYL2yVa",
+  "nivelAcesso": "super_admin",
+  "permissoes": [],
+  "bloquearFormularioEncontrista": false,
+  "bloquearFormularioEncontreiros": false,
+  "dataInicioBloquearEncontrista": null,
+  "dataFimBloquearEncontrista": null,
+  "dataInicioBloquearEncontreiros": null,
+  "dataFimBloquearEncontreiros": null,
+  "motivoBloquearEncontrista": "",
+  "motivoBloquearEncontreiros": "",
+  "dataCriacao": {
+    "$date": "2026-04-11T19:42:15.337Z"
+  },
+  "__v": 0
+}]

@@ -90,6 +90,8 @@ VAPID_PRIVATE_KEY=
 
 Use [DEPLOY_CHECKLIST.md](DEPLOY_CHECKLIST.md), [.env.example](.env.example) e [.env.production.example](.env.production.example) como base antes de publicar.
 
+O projeto tambem inclui [Dockerfile](Dockerfile) e [render.yaml](render.yaml) para deploy em plataformas baseadas em container.
+
 ## 📝 Notas
 
 - Cada cadastro de "Encontro" agora tem um campo `aprovado` (boolean)

@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EJC COP - Plataforma de Gestão e Inscrições</title>
+    <style>
+        @font-face {
+            font-family: 'Tempting';
+            src: url('public/fonts/tempting.otf') format('opentype'),
+                    url('public/fonts/tempting.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            color: #fff;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .message {
+            font-family: 'Tempting', cursive;
+            font-size: 8rem;
+            color: #fff;
+            text-align: center;
+        }
+
+        .rose-img {
+            width: 460px;
+            height: auto;
+        }
+
+        @media (max-width: 1024px) {
+            .message { font-size: 6rem; }
+            .rose-img { width: 220px; }
+        }
+
+        @media (max-width: 768px) {
+            .message { font-size: 4.0rem; }
+            .rose-img { width: 180px; }
+        }
+
+        @media (max-width: 480px) {
+            .message { font-size: 2.5rem; }
+            .rose-img { width: 140px; }
+        }
+
+        @media (max-width: 360px) {
+            .message { font-size: 2.0rem; }
+            .rose-img { width: 110px; }
+        }
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            padding: 12px;
+            font-family: sans-serif;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="message">
+        Simplesmente amar...
+    </div>
+    <img class="rose-img" src="public/images/rosa-simplesmente-amar-sem-fundo.png" alt="O importante é a rosa">
+    <footer class="footer">
+        <p>&copy; 2026 EJC COP</p>
+    </footer>
+</body>
+</html>

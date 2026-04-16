@@ -5,6 +5,8 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="Bem-vindo ao EJC COP - Escolha seu tipo de inscrição" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f7fbff" />
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090b14" />
   <title>EJC COP - Escolha sua Inscrição</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -450,6 +452,111 @@
         opacity: 0.3;
       }
     }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg-primary: #f7fbff;
+        --bg-elevated: rgba(255, 255, 255, 0.8);
+        --bg-elevated-strong: rgba(255, 255, 255, 0.94);
+        --line: rgba(15, 23, 42, 0.12);
+        --line-strong: rgba(37, 99, 235, 0.24);
+        --ink-main: #0f172a;
+        --ink-muted: rgba(51, 65, 85, 0.78);
+        --shadow-soft: 0 20px 46px rgba(15, 23, 42, 0.12);
+        --shadow-glow: 0 0 42px rgba(79, 143, 255, 0.12);
+      }
+
+      body {
+        color-scheme: light;
+        background:
+          radial-gradient(circle at 12% 10%, rgba(79, 143, 255, 0.12) 0%, transparent 34%),
+          radial-gradient(circle at 88% 16%, rgba(123, 97, 255, 0.1) 0%, transparent 38%),
+          radial-gradient(circle at 48% 90%, rgba(20, 185, 133, 0.08) 0%, transparent 35%),
+          var(--bg-primary);
+      }
+
+      .home-shell {
+        border-color: rgba(148, 163, 184, 0.22);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(246, 249, 255, 0.88));
+        box-shadow: 0 24px 52px rgba(15, 23, 42, 0.1), 0 0 36px rgba(79, 143, 255, 0.1);
+      }
+
+      .hero {
+        border-right-color: rgba(148, 163, 184, 0.18);
+        background:
+          linear-gradient(175deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.58)),
+          repeating-linear-gradient(
+            -45deg,
+            rgba(79, 143, 255, 0.05),
+            rgba(79, 143, 255, 0.05) 10px,
+            rgba(15, 23, 42, 0.015) 10px,
+            rgba(15, 23, 42, 0.015) 20px
+          );
+      }
+
+      .actions,
+      .logo-wrap,
+      .choice-card,
+      .admin-link a,
+      .metric-chip {
+        box-shadow: 0 10px 22px rgba(15, 23, 42, 0.06);
+      }
+
+      .actions {
+        background:
+          radial-gradient(circle at 12% 10%, rgba(79, 143, 255, 0.12), transparent 44%),
+          linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(247, 250, 255, 0.62));
+      }
+
+      .logo-wrap,
+      .choice-card,
+      .admin-link a,
+      .metric-chip {
+        border-color: rgba(148, 163, 184, 0.18);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(243, 247, 255, 0.88));
+      }
+
+      .hero-title {
+        background: linear-gradient(115deg, #0f172a 0%, #2563eb 52%, #0f766e 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .ambient-layer {
+        background:
+          linear-gradient(rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+      }
+
+      .choice-card:hover,
+      .admin-link a:hover {
+        color: #0f172a;
+      }
+
+      .choice-card:hover {
+        border-color: rgba(59, 130, 246, 0.24);
+        background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(255, 255, 255, 0.96));
+      }
+
+      .choice-title {
+        color: #0f172a;
+      }
+
+      .choice-description,
+      .brand-text,
+      .choice-arrow,
+      .admin-link a,
+      .metric-chip {
+        color: rgba(51, 65, 85, 0.8);
+      }
+
+      .admin-link a:hover,
+      .choice-card:hover .choice-description,
+      .choice-card:hover .choice-arrow {
+        color: #334155;
+      }
+    }
   </style>
 </head>
 <body>
@@ -529,6 +636,6 @@
       });
     });
   </script>
-  <script src="/js/page-transitions.js"></script>
+  <script src="/js/page-transitions.js?v=20260415-theme-toggle-26"></script>
 </body>
 </html>

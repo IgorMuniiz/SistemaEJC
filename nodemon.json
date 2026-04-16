@@ -1,0 +1,5 @@
+{
+  "watch": ["app.js", "routes", "src", "views", "public"],
+  "ext": "js,mjs,json,ejs,html,css",
+  "ignore": ["node_modules", "uploads", "tmp", "tests"]
+}

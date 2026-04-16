@@ -26,6 +26,7 @@ const SubEquipe = mongoose.model('SubEquipe');
 const Cadastro = mongoose.model('Cadastro_EJC');
 const Encontro = mongoose.model('Encontro');
 const Equipe = mongoose.model('Equipe');
+const Circulo = mongoose.model('Circulo');
 const Ejc = mongoose.model('Ejc');
 const VinculoEncontro = mongoose.model('VinculoEncontro');
 const GastoEncontro = mongoose.model('GastoEncontro');
@@ -566,6 +567,104 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equi
   assert.deepEqual(payloadAtualizado.equipeCoordenou, ['Secretaria']);
 });
 
+test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta quando a auditoria fica pendente', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const VinculoEncontro = mongoose.model('VinculoEncontro');
+  const originalFindById = Encontro.findById;
+  const originalFindByIdAndUpdate = Encontro.findByIdAndUpdate;
+  const originalDeleteMany = VinculoEncontro.deleteMany;
+  const originalAuditCreate = AdminAuditLog.create;
+
+  const cadastroId = '507f1f77bcf86cd799439109';
+  const cadastroAtual = {
+    _id: cadastroId,
+    nomeCompleto: 'Carlos Sem Bloqueio',
+    tipo: 'jovens',
+    tiosCategoria: '',
+    tiosGrupoId: '',
+    tioParceiroId: null,
+  };
+
+  Encontro.findById = async () => cadastroAtual;
+  Encontro.findByIdAndUpdate = async (_id, payload) => ({
+    ...cadastroAtual,
+    ...payload,
+    _id: cadastroId,
+  });
+  VinculoEncontro.deleteMany = async () => ({ acknowledged: true, deletedCount: 0 });
+  AdminAuditLog.create = () => new Promise(() => {});
+
+  t.after(() => {
+    Encontro.findById = originalFindById;
+    Encontro.findByIdAndUpdate = originalFindByIdAndUpdate;
+    VinculoEncontro.deleteMany = originalDeleteMany;
+    AdminAuditLog.create = originalAuditCreate;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const startedAt = Date.now();
+  const response = await asSameOrigin(
+    agent.post(`/admin/atualizar-cadastro/encontreiro/${cadastroId}`).type('form').send({
+      nomeCompleto: 'Carlos Sem Bloqueio',
+      ejc: 'EJC 2026',
+      logradouro: 'Rua B',
+      bairro: 'Centro',
+      telefone: '88999999999',
+      email: 'carlos.sem.bloqueio@example.com',
+      instagram: '@carlos',
+      dataNascimento: '1990-05-10',
+      statusAprovacao: 'aprovado',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: 'false',
+      equipeServiu: 'Sala',
+      equipeCoordenou: '',
+      ehAlergico: 'nao',
+      intolerante: '',
+      alergiaDescricao: '',
+      temRelacionamento: '',
+      observacoes: 'Teste de auditoria',
+    })
+  );
+  const durationMs = Date.now() - startedAt;
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(durationMs < 1500, `A resposta demorou ${durationMs}ms e nao deveria aguardar a auditoria`);
+});
+
+test('GET /admin/logout sem origem confiavel nao encerra a sessao', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const logoutResponse = await agent.get('/admin/logout');
+  assert.equal(logoutResponse.status, 405);
+
+  const protectedResponse = await agent.get('/admin/home');
+  assert.equal(protectedResponse.status, 302);
+  assert.equal(protectedResponse.headers.location, '/admin/gerenciar-cadastros');
+});
+
+test('POST /admin/logout same-origin encerra a sessao do admin', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const logoutResponse = await asSameOrigin(agent.post('/admin/logout').type('form').send({}));
+  assert.equal(logoutResponse.status, 302);
+  assert.equal(logoutResponse.headers.location, '/');
+
+  const protectedResponse = await agent.get('/admin/home');
+  assert.equal(protectedResponse.status, 302);
+  assert.equal(protectedResponse.headers.location, '/admin/login');
+});
+
 const findRowByName = (sheet, nome) => {
   for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber += 1) {
     const row = sheet.getRow(rowNumber);
@@ -825,4 +924,297 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
 
   assert.equal(findRowByName(salaSheet, 'Tia Maria'), null);
   assert.ok(findRowByName(secretariaSheet, 'Tia Maria'), 'Ela deve continuar disponível nas demais equipes');
+});
+
+test('POST /admin/editar-circulo/:id transfere pessoas selecionadas para outro círculo', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439151';
+  const circuloId = '507f1f77bcf86cd799439152';
+  const destinoId = '507f1f77bcf86cd799439153';
+  const pessoaId = '507f1f77bcf86cd799439154';
+  const vinculoId = '507f1f77bcf86cd799439155';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalCirculoFindOne = Circulo.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoFindOne = VinculoEncontro.findOne;
+  const originalVinculoUpdateOne = VinculoEncontro.updateOne;
+
+  const circuloDoc = {
+    _id: circuloId,
+    ejcId,
+    nome: 'Círculo Azul',
+    nomeNormalizado: 'ejc teste::círculo azul',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Circulo.findOne = (query) => {
+    if (String(query?._id) === circuloId && String(query?.ejcId) === ejcId) {
+      return circuloDoc;
+    }
+    if (String(query?._id) === destinoId && String(query?.ejcId) === ejcId) {
+      return { _id: destinoId, ejcId, nome: 'Círculo Verde' };
+    }
+    if (query && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        _id: vinculoId,
+        ejcId,
+        entidadeTipo: 'circulo',
+        entidadeId: circuloId,
+        pessoaTipo: 'encontrista',
+        pessoaId,
+        papel: 'membro',
+        descricaoPapel: '',
+      },
+    ]),
+  });
+
+  VinculoEncontro.findOne = async () => null;
+
+  const transferUpdates = [];
+  VinculoEncontro.updateOne = async (filter, update) => {
+    transferUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Circulo.findOne = originalCirculoFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.findOne = originalVinculoFindOne;
+    VinculoEncontro.updateOne = originalVinculoUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-circulo/${circuloId}`))
+    .send({
+      ejcId,
+      nome: 'Círculo Azul',
+      transferirPessoaIds: [pessoaId],
+      transferirParaId: destinoId,
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(
+    transferUpdates.some(({ update }) => String(update?.$set?.entidadeId || '') === destinoId),
+    'O vínculo selecionado deveria ser atualizado para o círculo de destino',
+  );
+});
+
+test('POST /admin/editar-equipe/:id transfere vínculos e atualiza o histórico do encontreiro', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439161';
+  const equipeId = '507f1f77bcf86cd799439162';
+  const destinoId = '507f1f77bcf86cd799439163';
+  const pessoaId = '507f1f77bcf86cd799439164';
+  const vinculoId = '507f1f77bcf86cd799439165';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalEquipeFindById = Equipe.findById;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoFindOne = VinculoEncontro.findOne;
+  const originalVinculoUpdateOne = VinculoEncontro.updateOne;
+  const originalEncontroUpdateOne = Encontro.updateOne;
+
+  const equipeDoc = {
+    _id: equipeId,
+    ejcId,
+    nome: 'Liturgia',
+    ejcNome: 'EJC Teste',
+    nomeReferencia: 'EJC Teste - Liturgia',
+    nomeNormalizado: 'ejc teste::liturgia',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Equipe.findOne = (query) => {
+    if (String(query?._id) === equipeId && String(query?.ejcId) === ejcId) {
+      return equipeDoc;
+    }
+    if (query && query.nomeNormalizado && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    if (String(query?._id) === destinoId && String(query?.ejcId) === ejcId) {
+      return { _id: destinoId, ejcId, nome: 'Recepção', nomeReferencia: 'EJC Teste - Recepção' };
+    }
+    return null;
+  };
+
+  Equipe.findById = async (id) => {
+    if (String(id) === destinoId) {
+      return { _id: destinoId, ejcId, nome: 'Recepção', nomeReferencia: 'EJC Teste - Recepção' };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        _id: vinculoId,
+        ejcId,
+        entidadeTipo: 'equipe',
+        entidadeId: equipeId,
+        pessoaTipo: 'encontreiro',
+        pessoaId,
+        papel: 'membro',
+        descricaoPapel: '',
+      },
+    ]),
+  });
+
+  VinculoEncontro.findOne = async () => null;
+
+  const transferUpdates = [];
+  VinculoEncontro.updateOne = async (filter, update) => {
+    transferUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  const historyUpdates = [];
+  Encontro.updateOne = async (filter, update) => {
+    historyUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    Equipe.findById = originalEquipeFindById;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.findOne = originalVinculoFindOne;
+    VinculoEncontro.updateOne = originalVinculoUpdateOne;
+    Encontro.updateOne = originalEncontroUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-equipe/${equipeId}`))
+    .send({
+      ejcId,
+      nome: 'Liturgia',
+      transferirPessoaIds: [pessoaId],
+      transferirParaId: destinoId,
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(
+    transferUpdates.some(({ update }) => String(update?.$set?.entidadeId || '') === destinoId),
+    'O vínculo selecionado deveria ser atualizado para a equipe de destino',
+  );
+  assert.ok(historyUpdates.length > 0, 'O histórico do encontreiro deve ser sincronizado após a transferência');
+});
+
+test('POST /admin/editar-equipe/:id remove pessoas selecionadas da equipe', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439171';
+  const equipeId = '507f1f77bcf86cd799439172';
+  const pessoaId = '507f1f77bcf86cd799439173';
+  const vinculoId = '507f1f77bcf86cd799439174';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoDeleteOne = VinculoEncontro.deleteOne;
+  const originalEncontroUpdateOne = Encontro.updateOne;
+
+  const equipeDoc = {
+    _id: equipeId,
+    ejcId,
+    nome: 'Acolhida',
+    ejcNome: 'EJC Teste',
+    nomeReferencia: 'EJC Teste - Acolhida',
+    nomeNormalizado: 'ejc teste::acolhida',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Equipe.findOne = (query) => {
+    if (String(query?._id) === equipeId && String(query?.ejcId) === ejcId) {
+      return equipeDoc;
+    }
+    if (query && query.nomeNormalizado && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        _id: vinculoId,
+        ejcId,
+        entidadeTipo: 'equipe',
+        entidadeId: equipeId,
+        pessoaTipo: 'encontreiro',
+        pessoaId,
+        papel: 'membro',
+        descricaoPapel: '',
+      },
+    ]),
+  });
+
+  const deletedIds = [];
+  VinculoEncontro.deleteOne = async (filter) => {
+    deletedIds.push(String(filter?._id || ''));
+    return { acknowledged: true, deletedCount: 1 };
+  };
+
+  const historyUpdates = [];
+  Encontro.updateOne = async (filter, update) => {
+    historyUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.deleteOne = originalVinculoDeleteOne;
+    Encontro.updateOne = originalEncontroUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-equipe/${equipeId}`))
+    .send({
+      ejcId,
+      nome: 'Acolhida',
+      acaoVinculo: 'excluir',
+      gerenciarPessoaIds: [pessoaId],
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(deletedIds.includes(vinculoId), 'O vínculo selecionado deveria ser excluído da equipe');
+  assert.ok(
+    historyUpdates.some(({ update }) => Array.isArray(update?.$pull?.equipeServiu?.$in)),
+    'O histórico do encontreiro deve remover a equipe excluída',
+  );
 });

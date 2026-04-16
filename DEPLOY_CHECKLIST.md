@@ -33,3 +33,11 @@
 2. Confirme que as permissoes dos admins estao corretas.
 3. Verifique logs de startup para erros de sessao, Mongo e VAPID.
 4. Se a aplicacao estiver atras de proxy, confirme que o login admin continua persistindo apos redirect.
+
+## 5. Deploy alternativo por container
+
+1. O projeto inclui [Dockerfile](Dockerfile), [.dockerignore](.dockerignore) e [render.yaml](render.yaml).
+2. Para subir localmente com container, rode `docker build -t ejc-sistema .` e depois `docker run --env-file .env -p 3000:3000 ejc-sistema`.
+3. Em plataformas compatíveis com Docker, configure as variáveis do bloco Ambiente e use `/healthz` como health check.
+4. Em Render, o arquivo [render.yaml](render.yaml) já aponta para deploy web com health check em `/healthz`.
+5. Se usar outra plataforma, mantenha `HOST=0.0.0.0`, `NODE_ENV=production` e `PORT` fornecida pelo ambiente.

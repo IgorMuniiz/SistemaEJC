@@ -1,10 +1,34 @@
+const readRawEnvValue = (value) => String(value || '').trim();
+
+const deriveLocalMongoUri = (value, defaultDbName = 'ECJCOP') => {
+  const raw = readRawEnvValue(value);
+  const dbNameMatch = raw.match(/\/([^/?]+)(?:\?|$)/);
+  const dbName = dbNameMatch && dbNameMatch[1] ? dbNameMatch[1] : defaultDbName;
+  return `mongodb://127.0.0.1:27017/${dbName}`;
+};
+
+const isLocalMongoUri = (value) => /mongodb(?:\+srv)?:\/\/(?:[^@/]+@)?(?:127\.0\.0\.1|localhost)/i.test(readRawEnvValue(value));
+
 const resolveMongoConfig = ({ env = process.env, isProduction = false } = {}) => {
-  const explicitMongoUri = String(env.MONGODB_URL || env.MONGODB_URI || env.MONGO_URI || '').trim();
+  const explicitMongoUri = readRawEnvValue(env.MONGODB_URL || env.MONGODB_URI || env.MONGO_URI);
+  const explicitFallbackUri = readRawEnvValue(env.MONGODB_FALLBACK_URL);
+
+  if (!isProduction) {
+    const localPreferredUri = explicitMongoUri
+      ? (isLocalMongoUri(explicitMongoUri) ? explicitMongoUri : deriveLocalMongoUri(explicitMongoUri))
+      : 'mongodb://127.0.0.1:27017/ejc_sistema';
+
+    return {
+      explicitMongoUri,
+      mongoUri: localPreferredUri,
+      mongoFallbackUri: explicitFallbackUri || (explicitMongoUri && explicitMongoUri !== localPreferredUri ? explicitMongoUri : 'mongodb://127.0.0.1:27017/ECJCOP'),
+    };
+  }
 
   return {
     explicitMongoUri,
-    mongoUri: explicitMongoUri || (isProduction ? '' : 'mongodb://127.0.0.1:27017/ejc_sistema'),
-    mongoFallbackUri: String(env.MONGODB_FALLBACK_URL || '').trim() || (isProduction ? '' : 'mongodb://127.0.0.1:27017/ECJCOP'),
+    mongoUri: explicitMongoUri || '',
+    mongoFallbackUri: explicitFallbackUri || '',
   };
 };
 
