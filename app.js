@@ -110,21 +110,33 @@ registerMongoObservers({ mongoose, logger: console });
 const cadastroSchema = new mongoose.Schema({
   nomeCompleto: { type: String, required: true },
   comoQuerSerChamado: { type: String, default: '' },
+  genero: { type: String, enum: ['masculino', 'feminino', 'outros'], default: 'outros' },
   ejc: { type: String, default: 'Nao informado' },
   ejcVinculadoId: { type: mongoose.Schema.Types.ObjectId, ref: 'Ejc', default: null },
   ejcVinculadoNome: { type: String, default: '', trim: true },
   cep: { type: String, default: '' },
+  complementoReferencia: { type: String, default: '' },
+  comQuemReside: { type: String, default: '' },
+  paisVivosContato: { type: String, default: '' },
   estadoCivil: { type: String, default: '' },
   nomeMae: { type: String, default: '' },
   telefoneMae: { type: String, default: '' },
   nomePai: { type: String, default: '' },
   telefonePai: { type: String, default: '' },
+  possuiFilhos: { type: String, default: '' },
+  filhosDetalhes: { type: String, default: '' },
+  grauEscolaridade: { type: String, default: '' },
+  talentoHabilidadeArtistica: { type: String, default: '' },
+  tamanhoCamisa: { type: String, default: '' },
   paroquiaFrequenta: { type: String, default: '' },
   participaMovimentoIgreja: { type: String, default: '' },
+  religiosidadeAtual: { type: String, default: '' },
   conhecidoInscricaoHoje: { type: String, default: '' },
   conhecidoFezEjc: { type: String, default: '' },
   inscricaoAnterior: { type: String, default: '' },
   instrumentoMusical: { type: String, default: '' },
+  quadroSaude: { type: String, default: '' },
+  medicamentoControlado: { type: String, default: '' },
   expectativaXixEjcCop: { type: String, default: '' },
   logradouro: { type: String, required: true },
   bairro: { type: String, required: true },
@@ -135,6 +147,7 @@ const cadastroSchema = new mongoose.Schema({
   alergiaDescricao: { type: String, default: '' },
   email: { type: String, default: '' },
   instagram: { type: String },
+  disponibilidadeEncontro: { type: Boolean, default: false },
   subequipeCoordenou: { type: [String], default: [] },
   subequipeCoordenacoes: {
     type: [{
@@ -146,6 +159,7 @@ const cadastroSchema = new mongoose.Schema({
     default: [],
   },
   foto: { type: String, required: true },
+  observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false },
   statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
   lgpdConsentimento: { type: Boolean, default: false },
@@ -4213,21 +4227,35 @@ app.get('/export-encontrista-excel', async (req, res) => {
 
     worksheet.columns = [
       { header: 'Nome Completo', key: 'nome', width: 36 },
+      { header: 'Como quer ser chamado', key: 'comoQuerSerChamado', width: 24 },
+      { header: 'Genero', key: 'genero', width: 14 },
       { header: 'EJC', key: 'ejc', width: 12 },
       { header: 'Telefone', key: 'telefone', width: 18 },
+      { header: 'Instagram', key: 'instagram', width: 20 },
       { header: 'Email', key: 'email', width: 32 },
       { header: 'CEP', key: 'cep', width: 14 },
+      { header: 'Complemento/Referencia', key: 'complementoReferencia', width: 28 },
+      { header: 'Com quem reside', key: 'comQuemReside', width: 28 },
+      { header: 'Pais vivos/contato', key: 'paisVivosContato', width: 32 },
       { header: 'Estado Civil', key: 'estadoCivil', width: 18 },
       { header: 'Nome Mae', key: 'nomeMae', width: 28 },
       { header: 'Telefone Mae', key: 'telefoneMae', width: 18 },
       { header: 'Nome Pai', key: 'nomePai', width: 28 },
       { header: 'Telefone Pai', key: 'telefonePai', width: 18 },
+      { header: 'Possui filhos', key: 'possuiFilhos', width: 16 },
+      { header: 'Filhos (detalhes)', key: 'filhosDetalhes', width: 28 },
+      { header: 'Escolaridade', key: 'grauEscolaridade', width: 22 },
+      { header: 'Talento/Habilidade', key: 'talentoHabilidadeArtistica', width: 32 },
+      { header: 'Tamanho Camisa', key: 'tamanhoCamisa', width: 18 },
       { header: 'Paroquia', key: 'paroquiaFrequenta', width: 26 },
+      { header: 'Como se considera hoje', key: 'religiosidadeAtual', width: 28 },
       { header: 'Movimento Igreja', key: 'participaMovimentoIgreja', width: 24 },
       { header: 'Conhecido Inscricao', key: 'conhecidoInscricaoHoje', width: 24 },
       { header: 'Conhecido Fez EJC', key: 'conhecidoFezEjc', width: 24 },
       { header: 'Inscricao Anterior', key: 'inscricaoAnterior', width: 24 },
       { header: 'Instrumento/Canto', key: 'instrumentoMusical', width: 24 },
+      { header: 'Quadro de Saude', key: 'quadroSaude', width: 28 },
+      { header: 'Medicamento Controlado', key: 'medicamentoControlado', width: 28 },
       { header: 'Expectativa', key: 'expectativaXixEjcCop', width: 40 },
       { header: 'Intolerancias', key: 'intolerante', width: 24 },
       { header: 'É alérgico?', key: 'ehAlergico', width: 14 },
@@ -4235,7 +4263,8 @@ app.get('/export-encontrista-excel', async (req, res) => {
       { header: 'Logradouro', key: 'logradouro', width: 32 },
       { header: 'Bairro', key: 'bairro', width: 24 },
       { header: 'Data Nascimento', key: 'dataNascimento', width: 16 },
-      { header: 'Instagram', key: 'instagram', width: 20 },
+      { header: 'Disponibilidade confirmada', key: 'disponibilidadeEncontro', width: 22 },
+      { header: 'Observacoes', key: 'observacoes', width: 34 },
       { header: 'Aprovado', key: 'aprovado', width: 12 },
     ];
 
@@ -4277,21 +4306,35 @@ app.get('/export-encontrista-excel', async (req, res) => {
     entries.forEach((entry, idx) => {
       const row = worksheet.addRow({
         nome: entry.nomeCompleto || '',
+        comoQuerSerChamado: entry.comoQuerSerChamado || '',
+        genero: entry.genero || '',
         ejc: entry.ejc || '',
         telefone: entry.telefone || '',
+        instagram: entry.instagram || '',
         email: entry.email || '',
         cep: entry.cep || '',
+        complementoReferencia: entry.complementoReferencia || '',
+        comQuemReside: entry.comQuemReside || '',
+        paisVivosContato: entry.paisVivosContato || '',
         estadoCivil: entry.estadoCivil || '',
         nomeMae: entry.nomeMae || '',
         telefoneMae: entry.telefoneMae || '',
         nomePai: entry.nomePai || '',
         telefonePai: entry.telefonePai || '',
+        possuiFilhos: entry.possuiFilhos || '',
+        filhosDetalhes: entry.filhosDetalhes || '',
+        grauEscolaridade: entry.grauEscolaridade || '',
+        talentoHabilidadeArtistica: entry.talentoHabilidadeArtistica || '',
+        tamanhoCamisa: entry.tamanhoCamisa || '',
         paroquiaFrequenta: entry.paroquiaFrequenta || '',
+        religiosidadeAtual: entry.religiosidadeAtual || '',
         participaMovimentoIgreja: entry.participaMovimentoIgreja || '',
         conhecidoInscricaoHoje: entry.conhecidoInscricaoHoje || '',
         conhecidoFezEjc: entry.conhecidoFezEjc || '',
         inscricaoAnterior: entry.inscricaoAnterior || '',
         instrumentoMusical: entry.instrumentoMusical || '',
+        quadroSaude: entry.quadroSaude || '',
+        medicamentoControlado: entry.medicamentoControlado || '',
         expectativaXixEjcCop: entry.expectativaXixEjcCop || '',
         intolerante: entry.intolerante || '',
         ehAlergico: normalizeTextInput(entry.ehAlergico).toLowerCase() === 'sim' ? 'Sim' : 'Nao',
@@ -4301,7 +4344,8 @@ app.get('/export-encontrista-excel', async (req, res) => {
         dataNascimento: entry.dataNascimento
           ? new Date(entry.dataNascimento).toLocaleDateString('pt-BR')
           : '',
-        instagram: entry.instagram || '',
+        disponibilidadeEncontro: entry.disponibilidadeEncontro ? 'SIM' : 'NAO',
+        observacoes: entry.observacoes || '',
         aprovado: entry.aprovado ? 'SIM' : 'NAO',
       });
 
@@ -4620,6 +4664,16 @@ app.post(
   upload.single('foto'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
+    body('comoQuerSerChamado').notEmpty().withMessage('Como quer ser chamado é obrigatório'),
+    body('genero').custom((value) => {
+      if (!normalizeTextInput(value)) {
+        throw new Error('Genero é obrigatório');
+      }
+      if (!['masculino', 'feminino', 'outros'].includes(normalizeGeneroEncontro(value))) {
+        throw new Error('Genero inválido');
+      }
+      return true;
+    }),
     body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
     body('cep').notEmpty().withMessage('CEP é obrigatório'),
     body('estadoCivil').notEmpty().withMessage('Estado civil é obrigatório'),
@@ -4628,7 +4682,7 @@ app.post(
     body('nomePai').notEmpty().withMessage('Nome do pai é obrigatório'),
     body('telefonePai').notEmpty().withMessage('Telefone do pai é obrigatório'),
     body('paroquiaFrequenta').notEmpty().withMessage('Paróquia é obrigatória'),
-    body('participaMovimentoIgreja').notEmpty().withMessage('Movimento da igreja é obrigatório'),
+    body('participaMovimentoIgreja').notEmpty().withMessage('Movimento ou pastoral é obrigatório'),
     body('conhecidoInscricaoHoje').notEmpty().withMessage('Informe conhecido na inscrição de hoje'),
     body('conhecidoFezEjc').notEmpty().withMessage('Informe conhecido que já fez EJC'),
     body('inscricaoAnterior').notEmpty().withMessage('Informe inscrição anterior'),
@@ -4637,6 +4691,14 @@ app.post(
     body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
     body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
+    body('instagram').notEmpty().withMessage('Instagram é obrigatório'),
+    body('filhosDetalhes').custom((value, { req }) => {
+      const possuiFilhos = normalizeTextInput(req.body.possuiFilhos).toLowerCase() === 'sim';
+      if (possuiFilhos && !normalizeTextInput(value)) {
+        throw new Error('Se possui filhos, informe quantos e a idade.');
+      }
+      return true;
+    }),
     body('ehAlergico').optional({ checkFalsy: true }).isIn(['sim', 'nao']).withMessage('Campo de alergia inválido'),
     body('alergiaDescricao').custom((value, { req }) => {
       const ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim';
@@ -4646,6 +4708,11 @@ app.post(
       return true;
     }),
     body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email inválido'),
+    body('disponibilidadeEncontro').custom((value) => {
+      const ok = value === true || value === 'true' || value === 'on' || value === '1';
+      if (!ok) throw new Error('Confirme a disponibilidade para os dias do encontro.');
+      return true;
+    }),
     body('lgpdConsentimento').custom((value) => {
       const ok = value === true || value === 'true' || value === 'on' || value === '1';
       if (!ok) throw new Error('É obrigatório aceitar os termos de privacidade (LGPD).');
@@ -4693,6 +4760,10 @@ app.post(
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
         || req.body.lgpdConsentimento === true;
+      const disponibilidadeEncontro = req.body.disponibilidadeEncontro === 'true'
+        || req.body.disponibilidadeEncontro === 'on'
+        || req.body.disponibilidadeEncontro === '1'
+        || req.body.disponibilidadeEncontro === true;
 
       if (!req.file && !cadastroExistente) {
         const allErrors = [{ msg: 'Foto é obrigatória' }];
@@ -4708,20 +4779,32 @@ app.post(
       const cadastroData = {
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
+        genero: normalizeGeneroEncontro(req.body.genero),
         ejc: normalizeTextInput(req.body.ejc) || cadastroExistente?.ejc || 'Nao informado',
         ...eventLinkData,
         cep: req.body.cep || '',
+        complementoReferencia: req.body.complementoReferencia || '',
+        comQuemReside: req.body.comQuemReside || '',
+        paisVivosContato: req.body.paisVivosContato || '',
         estadoCivil: req.body.estadoCivil || '',
         nomeMae: req.body.nomeMae || '',
         telefoneMae: req.body.telefoneMae || '',
         nomePai: req.body.nomePai || '',
         telefonePai: req.body.telefonePai || '',
+        possuiFilhos: req.body.possuiFilhos || '',
+        filhosDetalhes: req.body.possuiFilhos === 'sim' ? (req.body.filhosDetalhes || '') : '',
+        grauEscolaridade: req.body.grauEscolaridade || '',
+        talentoHabilidadeArtistica: req.body.talentoHabilidadeArtistica || '',
+        tamanhoCamisa: req.body.tamanhoCamisa || '',
         paroquiaFrequenta: req.body.paroquiaFrequenta || '',
         participaMovimentoIgreja: req.body.participaMovimentoIgreja || '',
+        religiosidadeAtual: req.body.religiosidadeAtual || '',
         conhecidoInscricaoHoje: req.body.conhecidoInscricaoHoje || '',
         conhecidoFezEjc: req.body.conhecidoFezEjc || '',
         inscricaoAnterior: req.body.inscricaoAnterior || '',
         instrumentoMusical: req.body.instrumentoMusical || '',
+        quadroSaude: req.body.quadroSaude || '',
+        medicamentoControlado: req.body.medicamentoControlado || '',
         expectativaXixEjcCop: req.body.expectativaXixEjcCop || '',
         logradouro: req.body.logradouro,
         bairro: req.body.bairro,
@@ -4732,6 +4815,8 @@ app.post(
         alergiaDescricao: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '',
         email: req.body.email || '',
         instagram: req.body.instagram || '',
+        disponibilidadeEncontro,
+        observacoes: req.body.observacoes || '',
         aprovado: false,
         statusAprovacao: 'pendente',
         lgpdConsentimento,
@@ -5849,18 +5934,31 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
     };
 
     if (tipo === 'encontrista') {
+      const hasField = (fieldName) => Object.prototype.hasOwnProperty.call(req.body, fieldName);
       updateData.cep = req.body.cep || '';
+      updateData.genero = hasField('genero') ? normalizeGeneroEncontro(req.body.genero) : (cadastroAtual.genero || 'outros');
+      updateData.complementoReferencia = hasField('complementoReferencia') ? (req.body.complementoReferencia || '') : (cadastroAtual.complementoReferencia || '');
+      updateData.comQuemReside = hasField('comQuemReside') ? (req.body.comQuemReside || '') : (cadastroAtual.comQuemReside || '');
+      updateData.paisVivosContato = hasField('paisVivosContato') ? (req.body.paisVivosContato || '') : (cadastroAtual.paisVivosContato || '');
       updateData.estadoCivil = req.body.estadoCivil || '';
       updateData.nomeMae = req.body.nomeMae || '';
       updateData.telefoneMae = req.body.telefoneMae || '';
       updateData.nomePai = req.body.nomePai || '';
       updateData.telefonePai = req.body.telefonePai || '';
+      updateData.possuiFilhos = hasField('possuiFilhos') ? (req.body.possuiFilhos || '') : (cadastroAtual.possuiFilhos || '');
+      updateData.filhosDetalhes = hasField('filhosDetalhes') ? (req.body.filhosDetalhes || '') : (cadastroAtual.filhosDetalhes || '');
+      updateData.grauEscolaridade = hasField('grauEscolaridade') ? (req.body.grauEscolaridade || '') : (cadastroAtual.grauEscolaridade || '');
+      updateData.talentoHabilidadeArtistica = hasField('talentoHabilidadeArtistica') ? (req.body.talentoHabilidadeArtistica || '') : (cadastroAtual.talentoHabilidadeArtistica || '');
+      updateData.tamanhoCamisa = hasField('tamanhoCamisa') ? (req.body.tamanhoCamisa || '') : (cadastroAtual.tamanhoCamisa || '');
       updateData.paroquiaFrequenta = req.body.paroquiaFrequenta || '';
       updateData.participaMovimentoIgreja = req.body.participaMovimentoIgreja || '';
+      updateData.religiosidadeAtual = hasField('religiosidadeAtual') ? (req.body.religiosidadeAtual || '') : (cadastroAtual.religiosidadeAtual || '');
       updateData.conhecidoInscricaoHoje = req.body.conhecidoInscricaoHoje || '';
       updateData.conhecidoFezEjc = req.body.conhecidoFezEjc || '';
       updateData.inscricaoAnterior = req.body.inscricaoAnterior || '';
       updateData.instrumentoMusical = req.body.instrumentoMusical || '';
+      updateData.quadroSaude = hasField('quadroSaude') ? (req.body.quadroSaude || '') : (cadastroAtual.quadroSaude || '');
+      updateData.medicamentoControlado = hasField('medicamentoControlado') ? (req.body.medicamentoControlado || '') : (cadastroAtual.medicamentoControlado || '');
       updateData.expectativaXixEjcCop = req.body.expectativaXixEjcCop || '';
       updateData.intolerante = req.body.intolerante_encontrista || req.body.intolerante || '';
       updateData.ehAlergico = normalizeTextInput(req.body.ehAlergico_encontrista || req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao';
@@ -5868,6 +5966,10 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
         ? normalizeTextInput(req.body.alergiaDescricao_encontrista || req.body.alergiaDescricao)
         : '';
       updateData.comoQuerSerChamado = req.body.comoQuerSerChamado || '';
+      updateData.disponibilidadeEncontro = hasField('disponibilidadeEncontro')
+        ? (req.body.disponibilidadeEncontro === true || req.body.disponibilidadeEncontro === 'true' || req.body.disponibilidadeEncontro === 'on' || req.body.disponibilidadeEncontro === '1')
+        : cadastroAtual.disponibilidadeEncontro === true;
+      updateData.observacoes = hasField('observacoes') ? (req.body.observacoes || '') : (cadastroAtual.observacoes || '');
     }
 
     // Campos específicos de encontreiros

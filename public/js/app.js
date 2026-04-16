@@ -29,6 +29,7 @@ function GenericForm() {
     cep: 'postal-code',
     bairro: 'address-level2',
     logradouro: 'street-address',
+    complementoReferencia: 'address-line2',
     email: 'email',
     instagram: 'username',
     nomeMae: 'name',
@@ -39,21 +40,36 @@ function GenericForm() {
 
   const [formData, setFormData] = useState({
     nomeCompleto: '',
+    comoQuerSerChamado: '',
+    genero: '',
+    dataNascimento: '',
+    telefone: '',
+    instagram: '',
+    email: '',
     cep: '',
+    complementoReferencia: '',
+    comQuemReside: '',
+    paisVivosContato: '',
     estadoCivil: '',
     nomeMae: '',
     telefoneMae: '',
     nomePai: '',
     telefonePai: '',
+    possuiFilhos: 'nao',
+    filhosDetalhes: '',
+    grauEscolaridade: '',
+    talentoHabilidadeArtistica: '',
+    tamanhoCamisa: '',
     paroquiaFrequenta: '',
     participaMovimentoIgreja: '',
+    religiosidadeAtual: '',
     conhecidoInscricaoHoje: '',
     conhecidoFezEjc: '',
     inscricaoAnterior: '',
     instrumentoMusical: '',
+    quadroSaude: '',
+    medicamentoControlado: '',
     expectativaXixEjcCop: '',
-    comoQuerSerChamado: '',
-    genero: '',
     ejc: '',
     qualEjcPertence: '',
     logradouro: '',
@@ -61,14 +77,11 @@ function GenericForm() {
     equipeServiu: [],
     equipeCoordenou: [],
     temVeiculoProprio: '',
-    dataNascimento: '',
-    telefone: '',
     intolerante: '',
     ehAlergico: 'nao',
     alergiaDescricao: '',
-    email: '',
     temRelacionamento: '',
-    instagram: '',
+    disponibilidadeEncontro: false,
     lgpdConsentimento: false,
     foto: null,
     observacoes: '',
@@ -524,6 +537,62 @@ function GenericForm() {
     changeStep(Math.max(currentStep - 1, 0));
   };
 
+  const calculateAge = (birthDate) => {
+    if (!birthDate) return '';
+
+    const today = new Date();
+    const birth = new Date(`${birthDate}T00:00:00`);
+    if (Number.isNaN(birth.getTime())) return '';
+
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+    const dayDiff = today.getDate() - birth.getDate();
+
+    if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
+      age -= 1;
+    }
+
+    return age >= 0 ? String(age) : '';
+  };
+
+  const renderPhotoUploadField = ({ pessoa, data, handleF, label = 'Anexar foto (JPG ou PNG) *' }) => {
+    const fileName = data?.foto?.name || '';
+
+    return (
+      <div className="upload-field-shell">
+        <div className="upload-field-head">
+          <div className="upload-field-icon" aria-hidden="true">
+            <i className="fas fa-cloud-arrow-up"></i>
+          </div>
+          <div className="upload-field-copy">
+            <label htmlFor={`foto-${pessoa}`} className="form-label upload-field-label">{label}</label>
+            <small className="upload-field-hint">
+              {fileName ? 'Arquivo selecionado. Revise abaixo antes de enviar.' : 'Selecione uma imagem nítida, preferencialmente em retrato.'}
+            </small>
+          </div>
+        </div>
+
+        <input
+          className="form-control form-control-file-modern"
+          type="file"
+          id={`foto-${pessoa}`}
+          name="foto"
+          accept="image/*"
+          onChange={handleF}
+          required
+        />
+
+        <div className="upload-field-meta" aria-live="polite">
+          <span className={`upload-file-pill${fileName ? ' has-file' : ''}`}>
+            <i className={`fas ${fileName ? 'fa-circle-check' : 'fa-image'}`}></i>
+            {fileName || 'Nenhum arquivo selecionado'}
+          </span>
+          <span className="upload-file-spec">Formatos aceitos: JPG e PNG.</span>
+        </div>
+      </div>
+    );
+  };
+
   const renderEncontristaStepFields = ({ pessoa, data, handleCh, handleF }) => (
     <>
       <section className={`form-step-panel${currentStep === 0 ? ' is-active' : ''}`} data-step-panel="0" hidden={currentStep !== 0}>
@@ -591,6 +660,13 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
+            <label htmlFor={`idade-${pessoa}`} className="form-label">
+              Idade
+            </label>
+            <input type="text" className="form-control" id={`idade-${pessoa}`} value={calculateAge(data.dataNascimento)} readOnly placeholder="Calculada automaticamente" />
+          </div>
+
+          <div className="mb-3">
             <label htmlFor={`telefone-${pessoa}`} className="form-label">
               Telefone (com WhatsApp) *
             </label>
@@ -604,12 +680,21 @@ function GenericForm() {
             <input type="text" className="form-control" id={`instagram-${pessoa}`} name="instagram" value={data.instagram} onChange={handleCh} required />
           </div>
         </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`email-${pessoa}`} className="form-label">
+              E-mail
+            </label>
+            <input type="email" className="form-control" id={`email-${pessoa}`} name="email" value={data.email} onChange={handleCh} placeholder="voce@email.com" />
+          </div>
+        </div>
       </section>
 
       <section className={`form-step-panel${currentStep === 1 ? ' is-active' : ''}`} data-step-panel="1" hidden={currentStep !== 1}>
         <div className="form-section-title">
           <i className="fas fa-location-dot"></i>
-          Endereco e referencia
+          Endereco e convivencia
         </div>
 
         <div className="form-row">
@@ -632,30 +717,35 @@ function GenericForm() {
           <label htmlFor={`logradouro-${pessoa}`} className="form-label">
             Logradouro *
           </label>
-          <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} placeholder="Rua, numero, complemento, bloco ou apartamento" required />
+          <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} placeholder="Rua e numero" required />
         </div>
 
         <div className="mb-3">
-          <label className="form-label">
-            Estado civil *
+          <label htmlFor={`complementoReferencia-${pessoa}`} className="form-label">
+            Complemento ou referencia
           </label>
-          <div className="step-radio-grid">
-            {['Solteiro (a)', 'Casado (a)', 'Divorciado (a)', 'Viuvo (a)', 'Noivo (a)', 'Amasiado (a) (Morando junto)'].map((opt) => (
-              <div className="form-check step-choice" key={`${pessoa || 'unico'}-estado-${opt}`}>
-                <input className="form-check-input" type="radio" id={`estadoCivil-${pessoa}-${opt}`} name="estadoCivil" value={opt} checked={data.estadoCivil === opt} onChange={handleCh} required />
-                <label className="form-check-label" htmlFor={`estadoCivil-${pessoa}-${opt}`}>
-                  {opt}
-                </label>
-              </div>
-            ))}
-          </div>
+          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia} onChange={handleCh} placeholder="Casa, bloco, ponto de referencia" />
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`comQuemReside-${pessoa}`} className="form-label">
+            Com quem voce reside no endereco acima?
+          </label>
+          <textarea className="form-control" id={`comQuemReside-${pessoa}`} name="comQuemReside" value={data.comQuemReside} onChange={handleCh} rows="3"></textarea>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`paisVivosContato-${pessoa}`} className="form-label">
+            Os pais sao vivos? Se sim, tem contato com eles?
+          </label>
+          <textarea className="form-control" id={`paisVivosContato-${pessoa}`} name="paisVivosContato" value={data.paisVivosContato} onChange={handleCh} rows="3"></textarea>
         </div>
       </section>
 
       <section className={`form-step-panel${currentStep === 2 ? ' is-active' : ''}`} data-step-panel="2" hidden={currentStep !== 2}>
         <div className="form-section-title">
           <i className="fas fa-people-roof"></i>
-          Familia e vivencia na igreja
+          Familia, saude e igreja
         </div>
 
         <div className="form-row">
@@ -680,68 +770,93 @@ function GenericForm() {
           </div>
         </div>
 
+        <div className="mb-3">
+          <label className="form-label">
+            Estado civil *
+          </label>
+          <div className="step-radio-grid">
+            {['Solteiro (a)', 'Casado (a)', 'Divorciado (a)', 'Viuvo (a)', 'Noivo (a)', 'Amasiado (a) (Morando junto)'].map((opt) => (
+              <div className="form-check step-choice" key={`${pessoa || 'unico'}-estado-${opt}`}>
+                <input className="form-check-input" type="radio" id={`estadoCivil-${pessoa}-${opt}`} name="estadoCivil" value={opt} checked={data.estadoCivil === opt} onChange={handleCh} required />
+                <label className="form-check-label" htmlFor={`estadoCivil-${pessoa}-${opt}`}>
+                  {opt}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paroquia frequenta? *</label>
-            <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta} onChange={handleCh} required />
+            <label htmlFor={`possuiFilhos-${pessoa}`} className="form-label">Possui filhos?</label>
+            <select className="form-control" id={`possuiFilhos-${pessoa}`} name="possuiFilhos" value={data.possuiFilhos || 'nao'} onChange={handleCh}>
+              <option value="nao">Nao</option>
+              <option value="sim">Sim</option>
+            </select>
           </div>
           <div className="mb-3">
-            <label htmlFor={`participaMovimentoIgreja-${pessoa}`} className="form-label">Participa de algum movimento da igreja? *</label>
-            <input type="text" className="form-control" id={`participaMovimentoIgreja-${pessoa}`} name="participaMovimentoIgreja" value={data.participaMovimentoIgreja} onChange={handleCh} required />
-          </div>
-        </div>
-      </section>
-
-      <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
-        <div className="form-section-title">
-          <i className="fas fa-flag-checkered"></i>
-          Finalizacao da inscricao
-        </div>
-
-        <div className="form-row">
-          <div className="mb-3 final-question-col">
-            <div className="final-question-box">
-            <label htmlFor={`conhecidoInscricaoHoje-${pessoa}`} className="form-label">Tem algum conhecido fazendo a inscricao hoje? *</label>
-            <input type="text" className="form-control final-question-input" id={`conhecidoInscricaoHoje-${pessoa}`} name="conhecidoInscricaoHoje" value={data.conhecidoInscricaoHoje} onChange={handleCh} placeholder="Ex: Nome do conhecido" required />
-            <small className="final-question-hint">Se nao houver, informe Nao.</small>
-            </div>
-          </div>
-          <div className="mb-3 final-question-col">
-            <div className="final-question-box">
-            <label htmlFor={`conhecidoFezEjc-${pessoa}`} className="form-label">Tem algum conhecido que ja fez EJC? *</label>
-            <input type="text" className="form-control final-question-input" id={`conhecidoFezEjc-${pessoa}`} name="conhecidoFezEjc" value={data.conhecidoFezEjc} onChange={handleCh} placeholder="Ex: Nome de quem ja fez" required />
-            <small className="final-question-hint">Ajuda a equipe na identificacao rapida.</small>
-            </div>
+            <label htmlFor={`filhosDetalhes-${pessoa}`} className="form-label">Se sim, quantos e qual a idade?</label>
+            <input type="text" className="form-control" id={`filhosDetalhes-${pessoa}`} name="filhosDetalhes" value={data.filhosDetalhes} onChange={handleCh} disabled={(data.possuiFilhos || 'nao') !== 'sim'} required={(data.possuiFilhos || 'nao') === 'sim'} />
           </div>
         </div>
 
         <div className="form-row">
-          <div className="mb-3 final-question-col">
-            <div className="final-question-box">
-            <label htmlFor={`inscricaoAnterior-${pessoa}`} className="form-label">Voce ja fez alguma inscricao antes? Se sim, qual EJC. *</label>
-            <input type="text" className="form-control final-question-input" id={`inscricaoAnterior-${pessoa}`} name="inscricaoAnterior" value={data.inscricaoAnterior} onChange={handleCh} placeholder="Ex: EJC 2023 ou Nao" required />
-            <small className="final-question-hint">Mantenha a resposta curta e objetiva.</small>
-            </div>
+          <div className="mb-3">
+            <label htmlFor={`grauEscolaridade-${pessoa}`} className="form-label">Qual seu grau de escolaridade?</label>
+            <select className="form-control" id={`grauEscolaridade-${pessoa}`} name="grauEscolaridade" value={data.grauEscolaridade} onChange={handleCh}>
+              <option value="">Selecione</option>
+              <option value="Fundamental incompleto">Fundamental incompleto</option>
+              <option value="Fundamental completo">Fundamental completo</option>
+              <option value="Medio incompleto">Medio incompleto</option>
+              <option value="Medio completo">Medio completo</option>
+              <option value="Superior incompleto">Superior incompleto</option>
+              <option value="Superior completo">Superior completo</option>
+              <option value="Pos-graduacao">Pos-graduacao</option>
+              <option value="Outro">Outro</option>
+            </select>
           </div>
-          <div className="mb-3 final-question-col">
-            <div className="final-question-box">
-            <label htmlFor={`instrumentoMusical-${pessoa}`} className="form-label">Toca algum instrumento musical ou canta? *</label>
-            <input type="text" className="form-control final-question-input" id={`instrumentoMusical-${pessoa}`} name="instrumentoMusical" value={data.instrumentoMusical} onChange={handleCh} placeholder="Ex: Violao, canto, teclado ou Nao" required />
-            <small className="final-question-hint">Informe a habilidade principal para apoio no encontro.</small>
-            </div>
+          <div className="mb-3">
+            <label htmlFor={`tamanhoCamisa-${pessoa}`} className="form-label">Qual o seu tamanho de camisa normalmente?</label>
+            <select className="form-control" id={`tamanhoCamisa-${pessoa}`} name="tamanhoCamisa" value={data.tamanhoCamisa} onChange={handleCh}>
+              <option value="">Selecione</option>
+              <option value="PP">PP</option>
+              <option value="P">P</option>
+              <option value="M">M</option>
+              <option value="G">G</option>
+              <option value="GG">GG</option>
+              <option value="XG">XG</option>
+            </select>
           </div>
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`expectativaXixEjcCop-${pessoa}`} className="form-label">Qual sua expectativa para o XIX ECJ COP? E porque quer fazer o encontro? *</label>
-          <textarea className="form-control" id={`expectativaXixEjcCop-${pessoa}`} name="expectativaXixEjcCop" value={data.expectativaXixEjcCop} onChange={handleCh} rows="3" required></textarea>
+          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artistica que goste de praticar?</label>
+          <textarea className="form-control" id={`talentoHabilidadeArtistica-${pessoa}`} name="talentoHabilidadeArtistica" value={data.talentoHabilidadeArtistica} onChange={handleCh} rows="3"></textarea>
         </div>
 
         <div className="form-row">
           <div className="mb-3">
+            <label htmlFor={`instrumentoMusical-${pessoa}`} className="form-label">Toca algum instrumento musical ou canta? *</label>
+            <input type="text" className="form-control" id={`instrumentoMusical-${pessoa}`} name="instrumentoMusical" value={data.instrumentoMusical} onChange={handleCh} placeholder="Ex: Violao, canto, teclado ou Nao" required />
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saude fisico ou mental? Qual?</label>
+            <input type="text" className="form-control" id={`quadroSaude-${pessoa}`} name="quadroSaude" value={data.quadroSaude} onChange={handleCh} />
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`medicamentoControlado-${pessoa}`} className="form-label">Faz o uso de algum medicamento controlado? Qual?</label>
+            <input type="text" className="form-control" id={`medicamentoControlado-${pessoa}`} name="medicamentoControlado" value={data.medicamentoControlado} onChange={handleCh} />
+          </div>
+          <div className="mb-3">
             <label htmlFor={`intolerante-${pessoa}`} className="form-label">Intolerancia ou restricao alimentar</label>
             <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
           </div>
+        </div>
+
+        <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
             <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
@@ -749,9 +864,6 @@ function GenericForm() {
               <option value="sim">Sim</option>
             </select>
           </div>
-        </div>
-
-        <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
             <input
@@ -766,15 +878,77 @@ function GenericForm() {
               required={(data.ehAlergico || 'nao') === 'sim'}
             />
           </div>
+        </div>
+
+        <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
+            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como voce se considera hoje?</label>
+            <input type="text" className="form-control" id={`religiosidadeAtual-${pessoa}`} name="religiosidadeAtual" value={data.religiosidadeAtual} onChange={handleCh} />
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paroquia frequenta? *</label>
+            <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta} onChange={handleCh} required />
           </div>
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
-          <textarea className="form-control" id={`observacoes-${pessoa}`} name="observacoes" value={data.observacoes} onChange={handleCh} rows="3"></textarea>
+          <label htmlFor={`participaMovimentoIgreja-${pessoa}`} className="form-label">Participa de algum movimento ou pastoral da igreja? *</label>
+          <input type="text" className="form-control" id={`participaMovimentoIgreja-${pessoa}`} name="participaMovimentoIgreja" value={data.participaMovimentoIgreja} onChange={handleCh} required />
+        </div>
+      </section>
+
+      <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
+        <div className="form-section-title">
+          <i className="fas fa-flag-checkered"></i>
+          Finalizacao da inscricao
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3 final-question-col">
+            <div className="final-question-box final-question-box-lg">
+              <label htmlFor={`conhecidoInscricaoHoje-${pessoa}`} className="form-label">Tem algum conhecido fazendo a inscricao hoje? *</label>
+              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoInscricaoHoje-${pessoa}`} name="conhecidoInscricaoHoje" value={data.conhecidoInscricaoHoje} onChange={handleCh} placeholder="Ex: Nome do conhecido ou Nao" rows="3" required></textarea>
+            </div>
+          </div>
+          <div className="mb-3 final-question-col">
+            <div className="final-question-box final-question-box-lg">
+              <label htmlFor={`conhecidoFezEjc-${pessoa}`} className="form-label">Tem algum conhecido que ja fez EJC? *</label>
+              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoFezEjc-${pessoa}`} name="conhecidoFezEjc" value={data.conhecidoFezEjc} onChange={handleCh} placeholder="Ex: Nome de quem ja fez ou Nao" rows="3" required></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`inscricaoAnterior-${pessoa}`} className="form-label">Voce ja fez alguma inscricao antes? Se sim, qual EJC. *</label>
+          <textarea className="form-control compact-response-textarea" id={`inscricaoAnterior-${pessoa}`} name="inscricaoAnterior" value={data.inscricaoAnterior} onChange={handleCh} rows="2" placeholder="Ex: Nao / EJC 2024" required></textarea>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`expectativaXixEjcCop-${pessoa}`} className="form-label">Qual sua expectativa para o XIX ECJ COP? E porque quer fazer o encontro? *</label>
+          <textarea className="form-control compact-response-textarea" id={`expectativaXixEjcCop-${pessoa}`} name="expectativaXixEjcCop" value={data.expectativaXixEjcCop} onChange={handleCh} rows="3" required></textarea>
+        </div>
+
+        <div className="mb-3">
+          <div className="final-question-box">
+            <label className="form-label d-block">O XIX EJC COP esta previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que voce esteja disponivel:</label>
+            <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sabado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
+            <div className="form-check">
+              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} required />
+              <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
+                Confirmo minha disponibilidade integral para os dias e horarios informados.
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            {renderPhotoUploadField({ pessoa, data, handleF, label: 'Anexar foto (JPG ou PNG) *' })}
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
+            <textarea className="form-control" id={`observacoes-${pessoa}`} name="observacoes" value={data.observacoes} onChange={handleCh} rows="3"></textarea>
+          </div>
         </div>
 
         {renderReviewSummary('Resumo da inscricao', [
@@ -782,6 +956,7 @@ function GenericForm() {
           ['Telefone', data.telefone],
           ['Instagram', data.instagram],
           ['Paroquia', data.paroquiaFrequenta],
+          ['Disponibilidade', data.disponibilidadeEncontro ? 'Confirmada' : 'Pendente'],
         ])}
 
         <div className="mb-3 form-check step-consent-box">
@@ -1016,8 +1191,7 @@ function GenericForm() {
             />
           </div>
           <div className="mb-3">
-            <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
+              {renderPhotoUploadField({ pessoa, data, handleF, label: 'Upload de foto (JPG ou PNG) *' })}
           </div>
         </div>
 
@@ -1244,8 +1418,7 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`foto-${pessoa}`} className="form-label">Upload de foto (JPG ou PNG) *</label>
-            <input className="form-control" type="file" id={`foto-${pessoa}`} name="foto" accept="image/*" onChange={handleF} required />
+            {renderPhotoUploadField({ pessoa, data, handleF, label: 'Upload de foto (JPG ou PNG) *' })}
           </div>
           <div className="mb-3">
             <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
@@ -1353,7 +1526,9 @@ function GenericForm() {
   };
 
   const getProgressState = () => {
-    const fieldsToTrack = ['nomeCompleto', 'comoQuerSerChamado', 'genero', 'dataNascimento', 'telefone', 'email'];
+    const fieldsToTrack = !isEncontro
+      ? ['nomeCompleto', 'comoQuerSerChamado', 'genero', 'dataNascimento', 'telefone', 'instagram']
+      : ['nomeCompleto', 'comoQuerSerChamado', 'genero', 'dataNascimento', 'telefone', 'email'];
 
     const countFilled = (data) => {
       let filled = fieldsToTrack.reduce((acc, field) => {
