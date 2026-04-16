@@ -567,6 +567,104 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equi
   assert.deepEqual(payloadAtualizado.equipeCoordenou, ['Secretaria']);
 });
 
+test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta quando a auditoria fica pendente', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const VinculoEncontro = mongoose.model('VinculoEncontro');
+  const originalFindById = Encontro.findById;
+  const originalFindByIdAndUpdate = Encontro.findByIdAndUpdate;
+  const originalDeleteMany = VinculoEncontro.deleteMany;
+  const originalAuditCreate = AdminAuditLog.create;
+
+  const cadastroId = '507f1f77bcf86cd799439109';
+  const cadastroAtual = {
+    _id: cadastroId,
+    nomeCompleto: 'Carlos Sem Bloqueio',
+    tipo: 'jovens',
+    tiosCategoria: '',
+    tiosGrupoId: '',
+    tioParceiroId: null,
+  };
+
+  Encontro.findById = async () => cadastroAtual;
+  Encontro.findByIdAndUpdate = async (_id, payload) => ({
+    ...cadastroAtual,
+    ...payload,
+    _id: cadastroId,
+  });
+  VinculoEncontro.deleteMany = async () => ({ acknowledged: true, deletedCount: 0 });
+  AdminAuditLog.create = () => new Promise(() => {});
+
+  t.after(() => {
+    Encontro.findById = originalFindById;
+    Encontro.findByIdAndUpdate = originalFindByIdAndUpdate;
+    VinculoEncontro.deleteMany = originalDeleteMany;
+    AdminAuditLog.create = originalAuditCreate;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const startedAt = Date.now();
+  const response = await asSameOrigin(
+    agent.post(`/admin/atualizar-cadastro/encontreiro/${cadastroId}`).type('form').send({
+      nomeCompleto: 'Carlos Sem Bloqueio',
+      ejc: 'EJC 2026',
+      logradouro: 'Rua B',
+      bairro: 'Centro',
+      telefone: '88999999999',
+      email: 'carlos.sem.bloqueio@example.com',
+      instagram: '@carlos',
+      dataNascimento: '1990-05-10',
+      statusAprovacao: 'aprovado',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: 'false',
+      equipeServiu: 'Sala',
+      equipeCoordenou: '',
+      ehAlergico: 'nao',
+      intolerante: '',
+      alergiaDescricao: '',
+      temRelacionamento: '',
+      observacoes: 'Teste de auditoria',
+    })
+  );
+  const durationMs = Date.now() - startedAt;
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(durationMs < 1500, `A resposta demorou ${durationMs}ms e nao deveria aguardar a auditoria`);
+});
+
+test('GET /admin/logout sem origem confiavel nao encerra a sessao', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const logoutResponse = await agent.get('/admin/logout');
+  assert.equal(logoutResponse.status, 405);
+
+  const protectedResponse = await agent.get('/admin/home');
+  assert.equal(protectedResponse.status, 302);
+  assert.equal(protectedResponse.headers.location, '/admin/gerenciar-cadastros');
+});
+
+test('POST /admin/logout same-origin encerra a sessao do admin', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const logoutResponse = await asSameOrigin(agent.post('/admin/logout').type('form').send({}));
+  assert.equal(logoutResponse.status, 302);
+  assert.equal(logoutResponse.headers.location, '/');
+
+  const protectedResponse = await agent.get('/admin/home');
+  assert.equal(protectedResponse.status, 302);
+  assert.equal(protectedResponse.headers.location, '/admin/login');
+});
+
 const findRowByName = (sheet, nome) => {
   for (let rowNumber = 2; rowNumber <= sheet.rowCount; rowNumber += 1) {
     const row = sheet.getRow(rowNumber);

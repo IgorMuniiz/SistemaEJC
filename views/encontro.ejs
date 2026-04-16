@@ -17,7 +17,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/style.css?v=20260411-premium-light-6" />
+  <link rel="stylesheet" href="/css/style.css?v=20260415-light-fix-13" />
 </head>
 <body class="portal-page">
   <div class="portal-ambient" aria-hidden="true">
@@ -28,14 +28,14 @@
   </div>
 
   <% if (locals.bloqueado) { %>
-  <main role="main" style="display:flex; align-items:center; justify-content:center; min-height:70vh; padding:2rem;">
-    <div class="text-center" style="max-width:520px;">
-      <div style="font-size:3.5rem; margin-bottom:1rem;">&#128274;</div>
-      <h2 style="color:var(--color-text-light); margin-bottom:1rem;">Inscri&ccedil;&otilde;es Encerradas</h2>
-      <p style="color:var(--color-text-gray); margin-bottom:1.5rem; line-height:1.6;">
+  <main role="main" class="portal-blocked-shell">
+    <div class="portal-blocked-card">
+      <div class="portal-blocked-icon">&#128274;</div>
+      <h2 class="portal-blocked-title">Inscri&ccedil;&otilde;es Encerradas</h2>
+      <p class="portal-blocked-text">
         <%= locals.motivoBloqueio || 'O formulário de inscrição para encontreiros está temporariamente indisponível.' %>
       </p>
-      <a href="/" style="display:inline-block; border:1.5px solid currentColor; color:var(--color-text-light); padding:0.6rem 1.6rem; border-radius:8px; text-decoration:none; transition:background 0.2s;" onmouseover="this.style.background='rgba(78,142,255,0.1)'" onmouseout="this.style.background='transparent'">&#8592; Voltar &agrave; p&aacute;gina inicial</a>
+      <a href="/" class="portal-blocked-link">&#8592; Voltar &agrave; p&aacute;gina inicial</a>
     </div>
   </main>
   <% } else { %>
@@ -89,6 +89,6 @@
     }
 
   </script>
-  <script defer src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
+  <script defer src="/js/page-transitions.js?v=20260415-theme-toggle-26"></script>
 </body>
 </html>

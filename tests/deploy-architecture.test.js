@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const { resolveSessionCookieSecure, resolveSessionStoreMongoUrl } = require('../src/config/session');
+const { resolveSessionCookieSecure, resolveSessionStoreMongoUrl, createSessionStore } = require('../src/config/session');
 const { resolveMongoConfig } = require('../src/config/mongo');
 const { executeLgpdRetention } = require('../src/services/lgpdRetentionService');
 
@@ -31,6 +31,20 @@ test('resolveSessionStoreMongoUrl nao herda Mongo remoto automaticamente em dese
   });
 
   assert.equal(result, '');
+});
+
+test('createSessionStore usa URI preferencial quando o Mongo principal ainda nao esta pronto', () => {
+  const store = createSessionStore({
+    env: { NODE_ENV: 'development' },
+    mongoose: { connection: { readyState: 0 } },
+    MongoStore: {
+      create: (options) => options,
+    },
+    preferredMongoUrl: 'mongodb://127.0.0.1:27017/ejc_sistema',
+  });
+
+  assert.equal(store.mongoUrl, 'mongodb://127.0.0.1:27017/ejc_sistema');
+  assert.equal(store.collectionName, 'sessions');
 });
 
 test('executeLgpdRetention retorna skipped quando o Mongo nao esta pronto', async () => {

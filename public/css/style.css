@@ -710,6 +710,10 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+.form-shell-title {
+  color: #f8fbff;
+}
+
 /* Botões de tipo de inscrição */
 .tipo-btn {
   padding: 16px 32px !important;
@@ -1233,6 +1237,64 @@ footer {
   justify-content: center;
 }
 
+.portal-blocked-shell {
+  width: 100%;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.portal-blocked-card {
+  width: min(100%, 520px);
+  text-align: center;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05)),
+    linear-gradient(130deg, rgba(78, 142, 255, 0.18), rgba(123, 103, 255, 0.12));
+  backdrop-filter: blur(18px);
+  box-shadow: 0 24px 52px rgba(4, 10, 24, 0.42);
+  padding: 2rem;
+}
+
+.portal-blocked-icon {
+  font-size: 3.5rem;
+  line-height: 1;
+  margin-bottom: 1rem;
+}
+
+.portal-blocked-title {
+  margin-bottom: 1rem;
+}
+
+.portal-blocked-text {
+  margin-bottom: 1.5rem;
+  color: var(--color-text-gray);
+  line-height: 1.7;
+}
+
+.portal-blocked-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1.5px solid currentColor;
+  color: var(--color-text-light);
+  padding: 0.7rem 1.5rem;
+  border-radius: 999px;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.portal-blocked-link:hover {
+  background: rgba(78, 142, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(125, 211, 252, 0.4);
+}
+
 .btn-glass {
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1697,6 +1759,30 @@ html[data-theme='light'] .review-summary-item span {
   color: #64748b !important;
 }
 
+html[data-theme='light'] :is(.portal-blocked-card) {
+  background:
+    radial-gradient(circle at 100% 0%, rgba(191, 219, 254, 0.22), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(244, 248, 255, 0.93)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  box-shadow: 0 24px 52px rgba(15, 23, 42, 0.1) !important;
+}
+
+html[data-theme='light'] .portal-blocked-text {
+  color: rgba(51, 65, 85, 0.82) !important;
+}
+
+html[data-theme='light'] .portal-blocked-link {
+  color: #1d4ed8 !important;
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(255, 255, 255, 0.96)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+}
+
+html[data-theme='light'] .portal-blocked-link:hover {
+  color: #0f172a !important;
+  background: linear-gradient(135deg, rgba(219, 234, 254, 0.95), rgba(255, 255, 255, 0.98)) !important;
+  border-color: rgba(59, 130, 246, 0.26) !important;
+}
+
 html[data-theme='light'] .tipo-btn:not(.btn-primary) {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(241, 245, 255, 0.92)) !important;
   color: #334155 !important;
@@ -1725,6 +1811,10 @@ html[data-theme='light'] .form-card::before {
 
 html[data-theme='light'] .form-label {
   color: #334155 !important;
+}
+
+html[data-theme='light'] .form-shell-title {
+  color: #0f172a !important;
 }
 
 html[data-theme='light'] :is(.form-control, .form-select, textarea):focus {
@@ -1803,4 +1893,49 @@ html[data-theme='dark'] :is(.inicio, .form-card, .portal-success-shell, .review-
   background: linear-gradient(180deg, rgba(8, 15, 31, 0.9), rgba(15, 23, 42, 0.78)) !important;
   border: 1px solid rgba(148, 163, 184, 0.18);
   box-shadow: 0 22px 44px rgba(2, 6, 23, 0.26) !important;
+}
+
+html[data-theme='dark'] body,
+html[data-theme='dark'] body {
+  background: var(--bg-gradient) !important;
+  color: var(--color-text-light) !important;
+  color-scheme: dark !important;
+}
+
+html[data-theme='dark'] body::before,
+html[data-theme='dark'] body::before {
+  background: rgba(78, 142, 255, 0.35) !important;
+}
+
+html[data-theme='dark'] body::after,
+html[data-theme='dark'] body::after {
+  background: rgba(123, 103, 255, 0.3) !important;
+}
+
+html[data-theme='dark'] .portal-grid,
+html[data-theme='dark'] .portal-grid {
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.028) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.028) 1px, transparent 1px) !important;
+}
+
+html[data-theme='dark'] body :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong),
+html[data-theme='dark'] :is(h1, h2, h3, h4, h5, h6, label, legend, .form-section-title, .card-title, .portal-success-title, strong) {
+  color: #f7f9ff !important;
+}
+
+html[data-theme='dark'] body :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text),
+html[data-theme='dark'] :is(p, small, .slogan, .text-muted, .form-text, .portal-success-text) {
+  color: rgba(185, 199, 232, 0.82) !important;
+}
+
+html[data-theme='dark'] .portal-back-link,
+html[data-theme='dark'] .form-progress-head,
+html[data-theme='dark'] .form-stepper-item,
+html[data-theme='dark'] .form-step-summary span,
+html[data-theme='dark'] .review-summary-item span,
+html[data-theme='dark'] .form-stepper-copy small,
+html[data-theme='dark'] .final-question-hint,
+html[data-theme='dark'] .final-question-hint {
+  color: rgba(185, 199, 232, 0.8) !important;
 }

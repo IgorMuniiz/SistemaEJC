@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ejc-cache-v4-light-ux';
+const CACHE_NAME = 'ejc-cache-v10-admin-batch-premium-15';
 const ASSETS_TO_CACHE = [
   '/',
   '/inscricao',

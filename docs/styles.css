@@ -1,0 +1,279 @@
+:root {
+  --bg: #f6efe5;
+  --panel: rgba(255, 250, 244, 0.78);
+  --panel-strong: rgba(255, 252, 248, 0.92);
+  --text: #2f241d;
+  --muted: #6e5d50;
+  --primary: #ae4f2e;
+  --primary-strong: #8c3618;
+  --line: rgba(97, 58, 36, 0.14);
+  --shadow: 0 24px 60px rgba(83, 47, 26, 0.18);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: 'Manrope', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(255, 214, 170, 0.7), transparent 32%),
+    radial-gradient(circle at bottom right, rgba(220, 126, 77, 0.26), transparent 28%),
+    linear-gradient(180deg, #fbf4ea 0%, var(--bg) 100%);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page-shell {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px 56px;
+}
+
+.ambient {
+  position: fixed;
+  border-radius: 999px;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-a {
+  top: 6%;
+  right: -60px;
+  width: 240px;
+  height: 240px;
+  background: rgba(223, 124, 61, 0.18);
+}
+
+.ambient-b {
+  bottom: 4%;
+  left: -40px;
+  width: 280px;
+  height: 280px;
+  background: rgba(255, 199, 129, 0.24);
+}
+
+.topbar,
+.hero,
+.info-grid,
+.footer {
+  position: relative;
+  z-index: 1;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 48px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'Sora', sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.brand img {
+  border-radius: 12px;
+  box-shadow: 0 10px 20px rgba(104, 60, 35, 0.14);
+}
+
+.repo-link {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.5);
+  padding: 12px 16px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 28px;
+  align-items: center;
+}
+
+.hero-copy,
+.hero-card,
+.info-card {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  backdrop-filter: blur(14px);
+  box-shadow: var(--shadow);
+}
+
+.hero-copy {
+  border-radius: 32px;
+  padding: 40px;
+}
+
+.eyebrow {
+  margin: 0 0 16px;
+  color: var(--primary-strong);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+h1 {
+  margin: 0;
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(2.6rem, 5vw, 5.4rem);
+  line-height: 0.95;
+}
+
+.lead {
+  margin: 22px 0 0;
+  max-width: 58ch;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.7;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 30px;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 20px;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.button-primary {
+  background: var(--primary);
+  color: #fff9f5;
+}
+
+.button-secondary {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.hero-card {
+  overflow: hidden;
+  border-radius: 28px;
+}
+
+.hero-image {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: #ead5c4;
+}
+
+.hero-card-body {
+  padding: 24px;
+  background: var(--panel-strong);
+}
+
+.hero-card-body strong {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.hero-card-body p,
+.info-card p,
+.footer p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+.status {
+  display: inline-block;
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: rgba(174, 79, 46, 0.12);
+  color: var(--primary-strong);
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 28px;
+}
+
+.info-card {
+  border-radius: 24px;
+  padding: 24px;
+}
+
+.info-card h2 {
+  margin: 0 0 10px;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.08rem;
+}
+
+.footer {
+  margin-top: 36px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .hero,
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-copy {
+    padding: 32px 24px;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding-top: 20px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-size: 2.7rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .button,
+  .repo-link {
+    width: 100%;
+  }
+}

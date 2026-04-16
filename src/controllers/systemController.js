@@ -1,10 +1,20 @@
 const isEnabled = (value) => ['1', 'true', 'yes', 'on', 'strict'].includes(String(value || '').trim().toLowerCase());
 
+const resolveStrictReadiness = (env = process.env) => {
+  const explicit = env.READINESS_STRICT || env.READYZ_STRICT || env.READINESS_REQUIRES_MONGO;
+  if (String(explicit || '').trim()) {
+    return isEnabled(explicit);
+  }
+
+  return String(env.NODE_ENV || '').trim().toLowerCase() === 'production';
+};
+
 const createSystemController = ({
   mongoose,
   now = () => new Date(),
   uptime = () => process.uptime(),
-  strictReadiness = isEnabled(process.env.READINESS_STRICT || process.env.READYZ_STRICT || process.env.READINESS_REQUIRES_MONGO),
+  env = process.env,
+  strictReadiness = resolveStrictReadiness(env),
 } = {}) => {
   const getTimestamp = () => now().toISOString();
 
@@ -60,4 +70,5 @@ const createSystemController = ({
 
 module.exports = {
   createSystemController,
+  resolveStrictReadiness,
 };
