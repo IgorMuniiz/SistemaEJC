@@ -13,4 +13,3 @@ playwright-report/
 test-results/
 uploads/*
 !uploads/.gitkeep
-.vercel

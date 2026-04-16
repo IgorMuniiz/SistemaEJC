@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260411-premium-light-29">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260416-batch-premium-33">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -1329,10 +1329,14 @@
 
             <div class="approval-batch-toolbar">
               <div class="approval-batch-toolbar-main">
+                <span class="approval-batch-kicker">Ação em lote</span>
                 <label class="approval-batch-toggle" for="approval-select-all-visible">
                   <input id="approval-select-all-visible" type="checkbox" onchange="toggleSelecionarTodosAprovacoes(this)">
                   <span>Selecionar todos os visíveis</span>
                 </label>
+              </div>
+              <div class="approval-batch-toolbar-status">
+                <span class="approval-batch-counter-label">Seleção atual</span>
                 <span id="approval-batch-counter" class="approval-batch-counter">0 selecionado(s)</span>
               </div>
               <div class="approval-batch-toolbar-actions">
@@ -3223,7 +3227,7 @@
   </div>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js?v=20260406-adminfix-3"></script>
-  <script src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
+  <script src="/js/page-transitions.js?v=20260415-theme-toggle-26"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>

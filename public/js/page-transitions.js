@@ -1453,9 +1453,6 @@
     const shouldPersist = options.persist !== false;
     document.documentElement.setAttribute('data-theme', resolvedTheme);
     document.documentElement.style.colorScheme = resolvedTheme;
-    if (document.body) {
-      document.body.setAttribute('data-theme', resolvedTheme);
-    }
     updateThemeMeta(resolvedTheme);
     syncThemeToggle(resolvedTheme);
 

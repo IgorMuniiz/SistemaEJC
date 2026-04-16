@@ -13,7 +13,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260411-premium-light-29">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260416-batch-premium-33">
 </head>
 <body class="admin-panel admin-dashboard-page is-loading">
   <div class="db-bg" aria-hidden="true"></div>
@@ -341,23 +341,33 @@
           </div>
         </div>
         <div class="export-row approval-head-tools">
+          <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontrista')">
+            <i class="fas fa-list-check"></i>Aprovação em massa
+          </button>
           <a href="/export?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontristas" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
         <div class="batch-toolbar approval-command-bar" data-batch-scope="encontrista">
-          <span class="batch-counter">0 selecionado(s)</span>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontrista','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
-          <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontrista','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
-          <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontrista','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontrista')"><i class="fas fa-check-double"></i>Todos</button>
-          <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar</button>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
-          <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+          <div class="batch-cluster batch-cluster-filter">
+            <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontrista','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
+            <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontrista','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
+            <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontrista','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+          </div>
+          <div class="batch-cluster batch-cluster-counter">
+            <span class="batch-counter-label">Seleção atual</span>
+            <span class="batch-counter">0 selecionado(s)</span>
+          </div>
+          <div class="batch-cluster batch-cluster-manage">
+            <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontrista')"><i class="fas fa-check-double"></i>Todos</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar seleção</button>
+          </div>
+          <div class="batch-cluster batch-cluster-actions">
+            <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
+            <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+          </div>
         </div>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vários cadastros e use os botões de aprovação ou reprovação em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -558,23 +568,33 @@
           </div>
         </div>
         <div class="export-row approval-head-tools">
+          <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontreiro')">
+            <i class="fas fa-list-check"></i>Aprovação em massa
+          </button>
           <a href="/export-encontro?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
           <a href="/export-images-encontreiros" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-images"></i>Imagens</a>
         </div>
         <div class="batch-toolbar approval-command-bar" data-batch-scope="encontreiro">
-          <span class="batch-counter">0 selecionado(s)</span>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontreiro','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
-          <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontreiro','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
-          <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontreiro','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontreiro')"><i class="fas fa-check-double"></i>Todos</button>
-          <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar</button>
-          <span class="batch-separator"></span>
-          <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
-          <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+          <div class="batch-cluster batch-cluster-filter">
+            <button type="button" class="batch-btn batch-filter-pending" onclick="selecionarPorStatusLote('encontreiro','pendente')"><i class="fas fa-clock"></i>Pendentes</button>
+            <button type="button" class="batch-btn batch-filter-approved" onclick="selecionarPorStatusLote('encontreiro','aprovado')"><i class="fas fa-circle-check"></i>Aprovados</button>
+            <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontreiro','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
+          </div>
+          <div class="batch-cluster batch-cluster-counter">
+            <span class="batch-counter-label">Seleção atual</span>
+            <span class="batch-counter">0 selecionado(s)</span>
+          </div>
+          <div class="batch-cluster batch-cluster-manage">
+            <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontreiro')"><i class="fas fa-check-double"></i>Todos</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar seleção</button>
+          </div>
+          <div class="batch-cluster batch-cluster-actions">
+            <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
+            <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
+          </div>
         </div>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vários cadastros e use os botões de aprovação ou reprovação em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -1356,6 +1376,25 @@
       atualizarInterfaceLote(scope);
     }
 
+    function focarAprovacaoEmMassa(scope) {
+      const toolbar = document.querySelector(`.approval-command-bar[data-batch-scope="${scope}"]`);
+      if (!toolbar) return;
+
+      toolbar.classList.remove('is-guided');
+      void toolbar.offsetWidth;
+      toolbar.classList.add('is-guided');
+      toolbar.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      const primeiroCheckbox = obterCheckboxesLote(scope)[0];
+      if (primeiroCheckbox) {
+        primeiroCheckbox.focus({ preventScroll: true });
+      }
+
+      window.setTimeout(() => {
+        toolbar.classList.remove('is-guided');
+      }, 1800);
+    }
+
     async function executarAcaoLote(scope, action) {
       const selecionados = obterCheckboxesLote(scope)
         .filter((checkbox) => checkbox.checked)
@@ -1478,7 +1517,7 @@
       } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
     }
   </script>
-  <script src="/js/page-transitions.js?v=20260411-theme-toggle-23"></script>
+  <script src="/js/page-transitions.js?v=20260415-theme-toggle-26"></script>
 </body>
 </html>
 
