@@ -82,6 +82,7 @@
       .app-btn-loading {
         position: relative;
         pointer-events: none;
+        filter: saturate(1.04);
       }
 
       button.app-btn-loading::after,
@@ -96,6 +97,7 @@
         border-top-color: transparent;
         animation: appSpin 680ms linear infinite;
         vertical-align: -0.12em;
+        filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.18));
       }
 
       .app-field-invalid {
@@ -125,17 +127,30 @@
       }
 
       .app-toast {
+        position: relative;
+        overflow: hidden;
         border-radius: 12px;
         border: 1px solid rgba(148, 163, 184, 0.32);
-        background: rgba(15, 23, 42, 0.9);
+        background:
+          radial-gradient(circle at top left, rgba(56, 189, 248, 0.12), transparent 26%),
+          rgba(15, 23, 42, 0.9);
         color: #e2e8f0;
         padding: 10px 12px;
         font-size: 0.87rem;
         line-height: 1.45;
-        box-shadow: 0 16px 36px rgba(2, 6, 23, 0.42);
+        box-shadow: 0 18px 40px rgba(2, 6, 23, 0.42);
+        backdrop-filter: blur(12px) saturate(1.06);
         opacity: 0;
         transform: translateY(8px);
         animation: appToastIn 200ms ease-out forwards;
+      }
+
+      .app-toast::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 36%);
       }
 
       .app-toast.app-toast-success {
@@ -152,11 +167,14 @@
         margin-top: 10px;
         border-radius: 10px;
         border: 1px solid rgba(148, 163, 184, 0.32);
-        background: rgba(15, 23, 42, 0.72);
+        background:
+          linear-gradient(180deg, rgba(15, 23, 42, 0.76), rgba(15, 23, 42, 0.62)),
+          linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 58%);
         color: #e2e8f0;
         font-size: 0.84rem;
         line-height: 1.4;
         padding: 9px 11px;
+        box-shadow: 0 12px 24px rgba(2, 6, 23, 0.16);
       }
 
       .app-inline-feedback.app-inline-feedback-success {

@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260416-batch-premium-34">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260417-admin-buttons-premium-38">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -330,7 +330,7 @@
   <script id="dados-vinculos" type="application/json"><%- JSON.stringify(vinculos || []) %></script>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
-  <script src="/js/page-transitions.js?v=20260415-theme-toggle-26"></script>
+  <script src="/js/page-transitions.js?v=20260417-premium-feedback-27"></script>
   <script>
     const ejcId = '<%= ejc._id %>';
     const circulos = JSON.parse(document.getElementById('dados-circulos').textContent || '[]');
@@ -756,18 +756,21 @@
       modalElement.tabIndex = -1;
       modalElement.setAttribute('aria-hidden', 'true');
       modalElement.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered">
-          <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header">
-              <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+        <div class="modal-dialog modal-dialog-centered app-popup-dialog">
+          <div class="modal-content border-0 shadow-lg app-popup-content app-popup-tone-primary">
+            <div class="modal-header app-popup-header">
+              <div class="app-popup-title-stack">
+                <span class="app-popup-kicker" id="app-popup-kicker">Ação rápida</span>
+                <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+              </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body">
+            <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
             </div>
-            <div class="modal-footer">
-              <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
-              <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
+            <div class="modal-footer app-popup-footer">
+              <button type="button" class="btn btn-outline-secondary app-popup-cancel" id="app-popup-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary app-popup-confirm" id="app-popup-confirm">OK</button>
             </div>
           </div>
         </div>
@@ -783,14 +786,26 @@
     function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary' }) {
       const { element, instance } = ensureAppPopup();
       const titleEl = element.querySelector('#app-popup-title');
+      const kickerEl = element.querySelector('#app-popup-kicker');
       const messageEl = element.querySelector('#app-popup-message');
       const confirmBtn = element.querySelector('#app-popup-confirm');
       const cancelBtn = element.querySelector('#app-popup-cancel');
+      const contentEl = element.querySelector('.app-popup-content');
+
+      const toneLabels = {
+        primary: 'Acao rapida',
+        warning: 'Atencao',
+        danger: 'Risco',
+        success: 'Concluido',
+      };
 
       titleEl.textContent = title || 'Aviso';
+      kickerEl.textContent = toneLabels[tone] || 'Acao rapida';
       messageEl.textContent = message || '';
       confirmBtn.textContent = confirmText;
-      confirmBtn.className = `btn btn-${tone}`;
+      confirmBtn.className = `btn btn-${tone} app-popup-confirm`;
+      contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
+      contentEl.classList.add(`app-popup-tone-${tone}`);
 
       if (cancelText) {
         cancelBtn.style.display = '';

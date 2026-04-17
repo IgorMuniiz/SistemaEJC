@@ -1993,6 +1993,81 @@ html[data-theme='light'] :is(.form-control, .form-select, textarea):focus {
    ---------------------------------------------------------------------------- */
 html[data-theme='light'] :is(.portal-back-link, .form-progress-shell, .form-stepper-item, .step-choice, .step-consent-box, .form-step-summary, .review-summary-card, .review-summary-item, .final-question-box) {
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(245, 248, 255, 0.94)) !important;
+
+}
+
+/* ----------------------------------------------------------------------------
+   BUTTON PREMIUM LAYER
+   ---------------------------------------------------------------------------- */
+:is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 14px 28px rgba(15, 23, 42, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+:is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -130%;
+  width: 72%;
+  height: 100%;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.26), transparent);
+  transition: left var(--transition-normal) ease;
+  pointer-events: none;
+}
+
+:is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn):hover::after {
+  left: 145%;
+}
+
+:is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn):hover {
+  box-shadow:
+    0 20px 36px rgba(15, 23, 42, 0.22),
+    0 8px 20px rgba(37, 99, 235, 0.14);
+}
+
+:is(.btn-primary, .btn-success, .success-action, .form-nav-btn-primary, .form-submit-btn) {
+  border: 1px solid rgba(191, 219, 254, 0.16);
+}
+
+:is(.btn-outline-light, .btn-outline-secondary, .btn-glass, .portal-blocked-link) {
+  border-width: 1px;
+  backdrop-filter: blur(12px) saturate(1.08);
+  -webkit-backdrop-filter: blur(12px) saturate(1.08);
+}
+
+html[data-theme='light'] :is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn) {
+  box-shadow:
+    0 16px 30px rgba(15, 23, 42, 0.1),
+    0 8px 18px rgba(37, 99, 235, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme='light'] :is(.btn, .portal-blocked-link, .success-action, .form-nav-btn, .form-submit-btn, .tipo-btn):hover {
+  box-shadow:
+    0 24px 40px rgba(15, 23, 42, 0.12),
+    0 12px 24px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94);
+}
+
+html[data-theme='light'] :is(.btn-primary, .success-action, .form-nav-btn-primary, .form-submit-btn) {
+  background: linear-gradient(135deg, #2563eb 0%, #4f8cff 46%, #0ea5e9 100%) !important;
+}
+
+html[data-theme='light'] .btn-success {
+  background: linear-gradient(135deg, #059669 0%, #10b981 52%, #34d399 100%) !important;
+}
+
+html[data-theme='light'] :is(.btn-outline-light, .btn-outline-secondary, .btn-glass, .portal-blocked-link) {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.97), rgba(241, 245, 249, 0.92)) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
   border-color: rgba(148, 163, 184, 0.22) !important;
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.06) !important;
 }

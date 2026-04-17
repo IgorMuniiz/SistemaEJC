@@ -1866,8 +1866,10 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       pointer-events: none;
       opacity: 0;
       transition: opacity var(--motion-fade);
-      background: linear-gradient(180deg, rgba(9, 11, 18, 0.68), rgba(9, 11, 18, 0.5));
-      backdrop-filter: blur(4px);
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.1), transparent 24%),
+        linear-gradient(180deg, rgba(9, 11, 18, 0.72), rgba(9, 11, 18, 0.54));
+      backdrop-filter: blur(8px) saturate(1.04);
     }
     body.admin-panel.admin-dashboard-page.is-loading .db-skeleton-layer { opacity: 1; }
     body.admin-panel.admin-dashboard-page.is-loaded .db-skeleton-layer { opacity: 0; }
@@ -1880,10 +1882,13 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-dashboard-page .db-skeleton-card,
     body.admin-panel.admin-dashboard-page .db-skeleton-panel {
       border-radius: 12px;
-      background: linear-gradient(110deg, rgba(255,255,255,.05) 20%, rgba(255,255,255,.12) 35%, rgba(255,255,255,.05) 50%);
+      background:
+        linear-gradient(110deg, rgba(255,255,255,.05) 20%, rgba(255,255,255,.14) 35%, rgba(255,255,255,.05) 50%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(30, 41, 59, 0.42));
       background-size: 220% 100%;
       animation: skeleton-shimmer 1.6s linear infinite;
       border: 1px solid rgba(255,255,255,.08);
+      box-shadow: 0 14px 30px rgba(2, 6, 23, 0.18);
     }
     body.admin-panel.admin-dashboard-page.motion-mode-executivo .db-skeleton-line,
     body.admin-panel.admin-dashboard-page.motion-mode-executivo .db-skeleton-card,
@@ -1910,19 +1915,31 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       display: flex; align-items: flex-start; gap: 13px;
       padding: 14px 18px; border-radius: 12px;
       font-size: .875rem; margin-bottom: 10px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.24);
+      backdrop-filter: blur(12px) saturate(1.06);
+      -webkit-backdrop-filter: blur(12px) saturate(1.06);
+    }
+    body.admin-panel.admin-dashboard-page .db-toast::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 36%);
     }
     body.admin-panel.admin-dashboard-page .db-toast.success {
-      background: var(--green-dim); border: 1px solid var(--green-border); color: #86efac;
+      background: linear-gradient(145deg, rgba(5, 46, 22, 0.88), rgba(6, 78, 59, 0.74)); border: 1px solid var(--green-border); color: #86efac;
     }
     body.admin-panel.admin-dashboard-page .db-toast.error {
-      background: var(--red-dim); border: 1px solid var(--red-border); color: #fca5a5;
+      background: linear-gradient(145deg, rgba(69, 10, 10, 0.9), rgba(127, 29, 29, 0.74)); border: 1px solid var(--red-border); color: #fca5a5;
     }
     body.admin-panel.admin-dashboard-page .db-toast-close {
-      margin-left: auto; background: none; border: none;
-      color: inherit; opacity: .6; cursor: pointer; padding: 0; line-height: 1;
-      font-size: 1rem;
+      margin-left: auto; background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.08);
+      color: inherit; opacity: .78; cursor: pointer; padding: 0; line-height: 1;
+      font-size: 1rem; width: 28px; height: 28px; border-radius: 999px;
     }
-    body.admin-panel.admin-dashboard-page .db-toast-close:hover { opacity: 1; }
+    body.admin-panel.admin-dashboard-page .db-toast-close:hover { opacity: 1; transform: rotate(4deg) scale(1.04); }
     /* ������ PAGE HEADER ������������������������������������������������������������������������������������������������������������������������������ */
     body.admin-panel.admin-dashboard-page .db-header {
       display: flex; align-items: flex-start; justify-content: space-between;
@@ -3995,6 +4012,11 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       min-height: 40px;
       color: rgba(224, 242, 254, 0.96);
       font-weight: 700;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(103, 232, 249, 0.22);
+      background: linear-gradient(145deg, rgba(8, 47, 73, 0.42), rgba(15, 23, 42, 0.58));
+      box-shadow: 0 14px 28px rgba(2, 6, 23, 0.18);
     }
     body.admin-panel.admin-manager-page .import-report-shell {
       display: grid;
@@ -9526,6 +9548,179 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: linear-gradient(135deg, rgba(37, 99, 235, 0.96), rgba(6, 182, 212, 0.86));
       box-shadow: 0 14px 28px rgba(14, 165, 233, 0.2);
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-dialog {
+      max-width: 560px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-content {
+      position: relative;
+      overflow: hidden;
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 26%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.96));
+      box-shadow:
+        0 30px 72px rgba(2, 6, 23, 0.46),
+        0 12px 28px rgba(37, 99, 235, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      color: rgba(241, 245, 249, 0.97);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-content::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 34%),
+        linear-gradient(180deg, transparent 0%, transparent 76%, rgba(37, 99, 235, 0.08) 100%);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-header,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-body,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-footer {
+      position: relative;
+      z-index: 1;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-header {
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+      background: linear-gradient(90deg, rgba(30, 64, 175, 0.24), rgba(15, 23, 42, 0.72));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-title-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-kicker {
+      display: inline-flex;
+      align-items: center;
+      align-self: flex-start;
+      padding: 5px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(125, 211, 252, 0.28);
+      background: rgba(14, 116, 144, 0.18);
+      color: rgba(191, 219, 254, 0.94);
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal #app-popup-title {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -.02em;
+      color: rgba(248, 250, 252, 0.98);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal #app-popup-message {
+      color: rgba(226, 232, 240, 0.9);
+      font-size: .96rem;
+      line-height: 1.65;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-body {
+      padding: 20px 22px 12px;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-footer {
+      gap: 10px;
+      padding: 0 22px 22px;
+      border-top: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(2, 6, 23, 0.14));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-cancel,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-confirm {
+      min-width: 140px;
+      min-height: 46px;
+      border-radius: 14px;
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-cancel {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: linear-gradient(180deg, rgba(51, 65, 85, 0.84), rgba(30, 41, 59, 0.9));
+      color: rgba(241, 245, 249, 0.96);
+      box-shadow: 0 10px 22px rgba(2, 6, 23, 0.16);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-confirm {
+      border: 0;
+      box-shadow: 0 16px 30px rgba(37, 99, 235, 0.24);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-warning .app-popup-header {
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.26), rgba(15, 23, 42, 0.72));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-danger .app-popup-header {
+      background: linear-gradient(90deg, rgba(239, 68, 68, 0.24), rgba(15, 23, 42, 0.72));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-success .app-popup-header {
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.22), rgba(15, 23, 42, 0.72));
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) {
+      backdrop-filter: blur(12px) saturate(1.06);
+      -webkit-backdrop-filter: blur(12px) saturate(1.06);
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-dialog {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: calc(100dvh - clamp(20px, 6vh, 56px));
+      margin: clamp(10px, 3vh, 28px) auto;
+      transform: translateY(18px) scale(.985);
+      transition: transform .24s ease, opacity .24s ease;
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal).show .modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-content {
+      width: 100%;
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .btn-close {
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .btn-close:hover {
+      opacity: 1;
+      transform: rotate(4deg) scale(1.02);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+      align-items: center;
+      padding: 20px 16px;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 28%),
+        linear-gradient(180deg, rgba(4, 9, 20, 0.88), rgba(2, 6, 23, 0.84));
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .modal-dialog {
+      margin: 0;
+      transform: translateY(18px) scale(.986);
+      transition: transform .24s ease, opacity .24s ease;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.show .modal-dialog {
+      transform: translateY(0) scale(1);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal {
+      position: relative;
+      box-shadow:
+        0 38px 100px rgba(2, 6, 23, 0.58),
+        0 14px 36px rgba(37, 99, 235, 0.1);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 28%),
+        linear-gradient(180deg, transparent 0%, transparent 80%, rgba(59, 130, 246, 0.08) 100%);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-body,
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer {
+      position: relative;
+      z-index: 1;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(2, 6, 23, 0.18));
+      border-top-color: rgba(148, 163, 184, 0.14) !important;
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp.modal-open {
       overflow-y: auto !important;
       padding-right: 0 !important;
@@ -9557,13 +9752,33 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       width: 100%;
       max-height: calc(var(--entity-modal-vh) - (var(--entity-modal-gap) * 2));
       border-radius: 26px;
+      position: relative;
       overflow: hidden;
       border: 1px solid rgba(148, 163, 184, 0.22);
       background:
         linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(2, 6, 23, 0.96)),
         radial-gradient(circle at top right, rgba(59, 130, 246, 0.18), transparent 42%);
-      box-shadow: 0 28px 70px rgba(2, 6, 23, 0.5);
+      box-shadow:
+        0 28px 70px rgba(2, 6, 23, 0.5),
+        0 10px 28px rgba(59, 130, 246, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
       color: rgba(241, 245, 249, 0.97);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 14% 12%, rgba(56, 189, 248, 0.18), transparent 26%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 24%, transparent 76%, rgba(59, 130, 246, 0.08));
+      opacity: .96;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-body,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+      position: relative;
+      z-index: 1;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
       justify-content: space-between;
@@ -9571,7 +9786,10 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       text-align: left;
       padding: 22px 24px 12px;
       border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-      background: linear-gradient(180deg, rgba(30, 41, 59, 0.78), rgba(15, 23, 42, 0.28));
+      background:
+        linear-gradient(180deg, rgba(30, 41, 59, 0.88), rgba(15, 23, 42, 0.34)),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.12), transparent 52%);
+      box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.05);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-title-stack {
       display: flex;
@@ -9592,12 +9810,14 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-weight: 800;
       letter-spacing: .08em;
       text-transform: uppercase;
+      box-shadow: 0 10px 24px rgba(2, 6, 23, 0.22);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title {
       margin: 0;
-      font-size: 1.18rem;
+      font-size: clamp(1.22rem, 1.8vw, 1.46rem);
       font-weight: 800;
       color: rgba(248, 250, 252, 0.98);
+      letter-spacing: -.02em;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .btn-close {
       filter: invert(1) brightness(1.15);
@@ -9639,13 +9859,15 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination {
-      min-height: 50px;
+      min-height: 54px;
       border-radius: 14px;
       border: 1px solid rgba(148, 163, 184, 0.26);
-      background: rgba(15, 23, 42, 0.56);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.52));
       color: rgba(248, 250, 252, 0.98);
       font-weight: 700;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 10px 20px rgba(2, 6, 23, 0.18);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field {
       text-align: left;
@@ -9654,7 +9876,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field:focus,
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination:focus {
       border-color: rgba(96, 165, 250, 0.8);
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+      box-shadow:
+        0 0 0 4px rgba(59, 130, 246, 0.16),
+        0 18px 32px rgba(2, 6, 23, 0.22);
       background: rgba(15, 23, 42, 0.74);
       color: rgba(248, 250, 252, 0.98);
     }
@@ -9676,6 +9900,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: .8rem;
       font-weight: 800;
       white-space: nowrap;
+      box-shadow: 0 12px 24px rgba(2, 6, 23, 0.2);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill i {
       color: rgba(103, 232, 249, 0.96);
@@ -9683,9 +9908,13 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell {
       border: 1px solid rgba(148, 163, 184, 0.18);
       border-radius: 18px;
-      background: linear-gradient(180deg, rgba(15, 23, 42, 0.54), rgba(15, 23, 42, 0.24));
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(15, 23, 42, 0.3)),
+        linear-gradient(135deg, rgba(14, 165, 233, 0.08), transparent 58%);
       padding: 14px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        0 18px 34px rgba(2, 6, 23, 0.18);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-head {
       display: flex;
@@ -9702,6 +9931,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       background: rgba(15, 23, 42, 0.42);
       color: rgba(226, 232, 240, 0.94);
       font-weight: 700;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap .form-check-input {
       cursor: pointer;
@@ -9721,10 +9951,11 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       padding: 12px 14px;
       border-radius: 16px;
       border: 1px solid rgba(148, 163, 184, 0.2);
-      background: rgba(15, 23, 42, 0.42);
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.56), rgba(15, 23, 42, 0.38));
       color: rgba(226, 232, 240, 0.94);
       cursor: pointer;
       transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
+      box-shadow: 0 12px 24px rgba(2, 6, 23, 0.14);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option:hover {
       transform: translateY(-1px);
@@ -9747,13 +9978,17 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option.is-active {
       border-color: rgba(96, 165, 250, 0.56);
-      background: linear-gradient(145deg, rgba(30, 64, 175, 0.34), rgba(15, 23, 42, 0.62));
-      box-shadow: 0 14px 28px rgba(30, 64, 175, 0.2);
+      background:
+        linear-gradient(145deg, rgba(30, 64, 175, 0.4), rgba(15, 23, 42, 0.62)),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.14), transparent 58%);
+      box-shadow: 0 18px 32px rgba(30, 64, 175, 0.24);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-danger.is-active {
       border-color: rgba(248, 113, 113, 0.52);
-      background: linear-gradient(145deg, rgba(153, 27, 27, 0.34), rgba(69, 10, 10, 0.58));
-      box-shadow: 0 14px 28px rgba(127, 29, 29, 0.22);
+      background:
+        linear-gradient(145deg, rgba(153, 27, 27, 0.42), rgba(69, 10, 10, 0.58)),
+        linear-gradient(90deg, rgba(251, 113, 133, 0.14), transparent 58%);
+      box-shadow: 0 18px 32px rgba(127, 29, 29, 0.24);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-wrap {
       display: flex;
@@ -9777,9 +10012,10 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       padding: 12px 13px;
       border-radius: 16px;
       border: 1px solid rgba(148, 163, 184, 0.16);
-      background: rgba(15, 23, 42, 0.4);
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.52), rgba(15, 23, 42, 0.34));
       cursor: pointer;
       transition: transform .16s ease, border-color .16s ease, background-color .16s ease, box-shadow .16s ease;
+      box-shadow: 0 8px 18px rgba(2, 6, 23, 0.14);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card:hover {
       transform: translateY(-1px);
@@ -9788,7 +10024,10 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card.is-selected {
       border-color: rgba(96, 165, 250, 0.5);
-      background: linear-gradient(145deg, rgba(30, 64, 175, 0.26), rgba(15, 23, 42, 0.56));
+      background:
+        linear-gradient(145deg, rgba(30, 64, 175, 0.34), rgba(15, 23, 42, 0.56)),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.1), transparent 60%);
+      box-shadow: 0 18px 30px rgba(30, 64, 175, 0.18);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main {
       display: flex;
@@ -9802,6 +10041,34 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
+      border: 1px solid rgba(125, 211, 252, 0.2);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.82), rgba(15, 23, 42, 0.76));
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state {
+      background:
+        linear-gradient(180deg, rgba(15, 23, 42, 0.56), rgba(15, 23, 42, 0.36)),
+        linear-gradient(135deg, rgba(14, 165, 233, 0.1), transparent 60%);
+      border-color: rgba(125, 211, 252, 0.22);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(2, 6, 23, 0.18));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel {
+      background: linear-gradient(180deg, rgba(51, 65, 85, 0.86), rgba(30, 41, 59, 0.92));
+      border-color: rgba(148, 163, 184, 0.22);
+      box-shadow: 0 12px 26px rgba(2, 6, 23, 0.22);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-primary {
+      background: linear-gradient(135deg, #2563eb, #0ea5e9);
+      box-shadow: 0 18px 32px rgba(37, 99, 235, 0.28);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-danger {
+      background: linear-gradient(135deg, #dc2626, #f43f5e);
+      box-shadow: 0 18px 32px rgba(220, 38, 38, 0.24);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main small {
       color: rgba(191, 219, 254, 0.76);
@@ -9959,6 +10226,24 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-confirm {
         width: 100%;
       }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-header {
+        padding: 16px 18px 12px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-body {
+        padding: 18px 18px 10px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-footer {
+        padding: 0 18px 18px;
+        flex-direction: column-reverse;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-cancel,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-confirm {
+        width: 100%;
+      }
+      body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-dialog {
+        min-height: calc(100dvh - 12px);
+        margin: 6px auto;
+      }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal {
         --entity-modal-gap: 8px;
         padding: 8px;
@@ -9972,17 +10257,40 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
         max-height: calc(var(--entity-modal-vh, 100dvh) - 16px);
         border-radius: 18px;
       }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
+        padding: 18px 18px 10px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-body {
+        padding: 16px 18px 18px;
+        gap: 12px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+        padding: 12px 18px 18px;
+        gap: 10px;
+      }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-hero,
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-head,
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
         grid-template-columns: 1fr;
         flex-direction: column;
       }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap {
+        width: 100%;
+      }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-grid {
         grid-template-columns: 1fr;
       }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell {
+        padding: 12px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-list {
+        max-height: min(calc(var(--entity-modal-vh, 100dvh) * 0.28), 260px);
+      }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card {
         grid-template-columns: auto minmax(0, 1fr);
+        padding: 12px;
       }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
         grid-column: 2;
@@ -9997,6 +10305,43 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-insight-pill {
         width: 100%;
         justify-content: flex-start;
+      }
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+        padding: 10px 8px;
+        align-items: stretch;
+      }
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .modal-dialog,
+      body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.is-encontreiro-view .modal-dialog {
+        width: min(100%, calc(100vw - 16px));
+        max-width: min(100%, calc(100vw - 16px));
+        margin: auto 0;
+      }
+    }
+
+    @media (max-width: 575px) {
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal {
+        --entity-modal-gap: 6px;
+        padding: 6px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+        border-radius: 16px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title {
+        font-size: 1.1rem;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-field-label,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-section-title,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-label {
+        letter-spacing: .06em;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination,
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill {
+        min-height: 50px;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option {
+        min-height: 78px;
       }
     }
 
@@ -11859,16 +12204,63 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-collaps
   border: 1px solid rgba(148, 163, 184, 0.26);
   background: rgba(15, 23, 42, 0.65);
   color: rgba(226, 232, 240, 0.92);
-  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.18);
 }
 
 body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table-toggle:hover .gastos-collapse-icon {
   border-color: rgba(125, 211, 252, 0.42);
   background: rgba(30, 41, 59, 0.9);
+  box-shadow: 0 14px 26px rgba(2, 6, 23, 0.24);
 }
 
 body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .financeiro-collapsible-shell.is-expanded .gastos-collapse-icon {
   transform: rotate(180deg);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp [data-bs-target="#admin_permissions_collapse"] {
+  position: relative;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp [data-bs-target="#admin_permissions_collapse"][aria-expanded="true"] {
+  box-shadow: 0 18px 30px rgba(37, 99, 235, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #admin_permissions_collapse {
+  margin-top: 10px !important;
+  padding: 12px;
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.62), rgba(15, 23, 42, 0.44)),
+    linear-gradient(135deg, rgba(56, 189, 248, 0.08), transparent 60%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 14px 30px rgba(2, 6, 23, 0.16);
+}
+
+body.admin-panel :is(button, .btn)[data-loading='1'],
+body.admin-panel :is(button, .btn).app-btn-loading {
+  cursor: progress;
+  filter: saturate(1.04);
+}
+
+body.admin-panel .spinner-border {
+  border-width: 0.14em;
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.18));
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page .import-report-loading {
+  color: #0f172a;
+  border-color: rgba(96, 165, 250, 0.22);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.92));
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #admin_permissions_collapse {
+  border-color: rgba(191, 219, 254, 0.82);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(243, 247, 255, 0.94)),
+    linear-gradient(135deg, rgba(59, 130, 246, 0.06), transparent 60%);
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .financeiro-collapsible-body[hidden] {
@@ -12525,55 +12917,477 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-
     color: #334155 !important;
   }
 
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal {
+    backdrop-filter: blur(12px) saturate(1.08);
+    -webkit-backdrop-filter: blur(12px) saturate(1.08);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp .modal-backdrop.show {
+    background: linear-gradient(180deg, rgba(226, 232, 240, 0.52), rgba(191, 219, 254, 0.34));
+    opacity: 1;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-content {
     background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.96)),
-      radial-gradient(circle at top right, rgba(59, 130, 246, 0.12), transparent 42%);
-    box-shadow: 0 28px 70px rgba(15, 23, 42, 0.18);
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 28%),
+      radial-gradient(circle at 88% 14%, rgba(125, 211, 252, 0.22), transparent 20%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 255, 0.97), rgba(239, 246, 255, 0.95)) !important;
+    border-color: rgba(191, 219, 254, 0.88) !important;
+    box-shadow:
+      0 30px 78px rgba(15, 23, 42, 0.14),
+      0 12px 28px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92) !important;
+    color: #0f172a !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-header {
+    background:
+      linear-gradient(180deg, rgba(231, 240, 255, 0.96), rgba(255, 255, 255, 0.9)) !important,
+      linear-gradient(90deg, rgba(59, 130, 246, 0.08), transparent 58%) !important;
+    border-bottom-color: rgba(191, 219, 254, 0.82) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-kicker {
+    border-color: rgba(59, 130, 246, 0.22);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(219, 234, 254, 0.92));
+    color: #2563eb;
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.08);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal #app-popup-title {
+    color: #0f172a !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal #app-popup-message {
+    color: rgba(51, 65, 85, 0.86) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-footer {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(241, 245, 249, 0.72)) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal #app-popup-cancel {
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.22), rgba(100, 116, 139, 0.28));
+    color: #f8fafc !important;
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 10px 22px rgba(100, 116, 139, 0.16);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal #app-popup-confirm.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    box-shadow: 0 18px 30px rgba(37, 99, 235, 0.22);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-tone-warning .app-popup-header {
+    background:
+      linear-gradient(180deg, rgba(255, 247, 237, 0.96), rgba(255, 255, 255, 0.9)) !important,
+      linear-gradient(90deg, rgba(245, 158, 11, 0.08), transparent 58%) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-tone-danger .app-popup-header {
+    background:
+      linear-gradient(180deg, rgba(254, 242, 242, 0.96), rgba(255, 255, 255, 0.9)) !important,
+      linear-gradient(90deg, rgba(239, 68, 68, 0.08), transparent 58%) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel:is(.admin-dashboard-page, .admin-manager-page, .admin-encontro-page) #app-popup-modal .app-popup-tone-success .app-popup-header {
+    background:
+      linear-gradient(180deg, rgba(240, 253, 244, 0.96), rgba(255, 255, 255, 0.9)) !important,
+      linear-gradient(90deg, rgba(34, 197, 94, 0.08), transparent 58%) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-card {
+    position: relative;
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 28%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 255, 0.97), rgba(239, 246, 255, 0.95));
+    border-color: rgba(191, 219, 254, 0.86);
+    box-shadow:
+      0 30px 78px rgba(15, 23, 42, 0.14),
+      0 12px 28px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.68), transparent 34%);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-header,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-body,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-header {
+    background: linear-gradient(180deg, rgba(231, 240, 255, 0.94), rgba(255, 255, 255, 0.9));
+    border-bottom-color: rgba(191, 219, 254, 0.82);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal #app-input-title,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal #app-input-label {
+    color: #0f172a !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-header .btn-close {
+    filter: none;
+    opacity: .72;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-field {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    color: #0f172a;
+    border-color: rgba(148, 163, 184, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.96),
+      0 10px 20px rgba(148, 163, 184, 0.08);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-field::placeholder {
+    color: rgba(100, 116, 139, 0.62);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-field:focus {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: rgba(96, 165, 250, 0.76);
+    box-shadow:
+      0 0 0 4px rgba(96, 165, 250, 0.18),
+      0 18px 28px rgba(59, 130, 246, 0.12);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal #app-input-help {
+    color: rgba(71, 85, 105, 0.84) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-footer {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(241, 245, 249, 0.72));
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-cancel {
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.22), rgba(100, 116, 139, 0.28));
+    color: #f8fafc;
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 10px 20px rgba(100, 116, 139, 0.16);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-confirm {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    box-shadow: 0 18px 32px rgba(37, 99, 235, 0.24);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
+      linear-gradient(180deg, rgba(226, 232, 240, 0.52), rgba(191, 219, 254, 0.34));
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal {
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.18), transparent 28%),
+      radial-gradient(circle at 88% 12%, rgba(125, 211, 252, 0.22), transparent 20%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 255, 0.97), rgba(239, 246, 255, 0.95)) !important;
+    border-color: rgba(191, 219, 254, 0.88) !important;
+    box-shadow:
+      0 34px 90px rgba(15, 23, 42, 0.16),
+      0 14px 32px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal::before {
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 32%),
+      linear-gradient(180deg, transparent 0%, transparent 78%, rgba(191, 219, 254, 0.14) 100%);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header {
+    background:
+      linear-gradient(180deg, rgba(231, 240, 255, 0.96), rgba(255, 255, 255, 0.9)) !important,
+      linear-gradient(90deg, rgba(59, 130, 246, 0.08), transparent 58%) !important;
+    border-bottom-color: rgba(191, 219, 254, 0.82) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-kicker {
+    color: #2563eb;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header .modal-title,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-head h6,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-identity h3 {
+    color: #0f172a !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-subtitle,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-head p,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-field-hint {
+    color: rgba(71, 85, 105, 0.82) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-body {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(241, 245, 249, 0.5));
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(241, 245, 249, 0.72));
+    border-top-color: rgba(191, 219, 254, 0.82) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
+    position: relative;
+    background:
+      radial-gradient(circle at top left, rgba(96, 165, 250, 0.2), transparent 28%),
+      radial-gradient(circle at 88% 14%, rgba(125, 211, 252, 0.24), transparent 22%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(246, 250, 255, 0.97) 48%, rgba(239, 246, 255, 0.95));
+    border: 1px solid rgba(191, 219, 254, 0.9);
+    box-shadow:
+      0 32px 80px rgba(15, 23, 42, 0.16),
+      0 12px 30px rgba(59, 130, 246, 0.1),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
     color: #0f172a;
   }
 
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
-    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-    background: linear-gradient(180deg, rgba(226, 236, 252, 0.95), rgba(255, 255, 255, 0.88));
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(135deg, rgba(255, 255, 255, 0.72), transparent 36%),
+      linear-gradient(180deg, transparent 0%, transparent 78%, rgba(191, 219, 254, 0.16) 100%);
+    opacity: 0.95;
   }
 
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-body,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-header {
+    border-bottom: 1px solid rgba(191, 219, 254, 0.86);
+    background:
+      linear-gradient(180deg, rgba(231, 240, 255, 0.96), rgba(255, 255, 255, 0.9)),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.08), transparent 58%);
+    box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.82);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-kicker {
+    border-color: rgba(59, 130, 246, 0.22);
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(219, 234, 254, 0.92));
+    color: #2563eb;
+    box-shadow: 0 8px 18px rgba(59, 130, 246, 0.1);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title {
+    color: #0f172a !important;
+    letter-spacing: -0.02em;
+    font-size: clamp(1.4rem, 2vw, 1.62rem);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .btn-close {
+    filter: none;
+    opacity: 0.72;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .btn-close:hover {
+    opacity: 1;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-hero {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 16px;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination {
+    min-height: 58px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
+    color: #0f172a;
+    border-color: rgba(148, 163, 184, 0.28);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.98),
+      0 10px 20px rgba(148, 163, 184, 0.08);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field {
+    font-size: 1.03rem;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field:focus,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination:focus {
+    background: #ffffff;
+    color: #0f172a;
+    border-color: rgba(96, 165, 250, 0.76);
+    box-shadow:
+      0 0 0 4px rgba(96, 165, 250, 0.18),
+      0 18px 28px rgba(59, 130, 246, 0.12);
+  }
+
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill {
-    border-color: rgba(37, 99, 235, 0.2);
-    background: rgba(37, 99, 235, 0.08);
-    color: #1d4ed8;
+    min-height: 42px;
+    padding: 0 16px;
+    border-color: rgba(125, 211, 252, 0.4);
+    background: linear-gradient(135deg, rgba(224, 242, 254, 0.98), rgba(219, 234, 254, 0.96));
+    color: #0369a1;
+    box-shadow: 0 12px 24px rgba(14, 165, 233, 0.1);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selection-pill i {
+    color: #38bdf8;
   }
 
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-field-label,
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-section-title,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-label,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option small,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main small,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-help,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-transfer-help {
-    color: rgba(51, 65, 85, 0.8) !important;
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination-label {
+    color: rgba(30, 41, 59, 0.88) !important;
   }
 
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-title,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-help,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-transfer-help,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option small,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main small {
+    color: rgba(71, 85, 105, 0.84) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell {
+    border-color: rgba(191, 219, 254, 0.82);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(241, 245, 249, 0.9)),
+      linear-gradient(135deg, rgba(191, 219, 254, 0.18), transparent 58%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.94),
+      0 18px 34px rgba(15, 23, 42, 0.08);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap {
+    background: rgba(255, 255, 255, 0.82);
+    color: #334155;
+    border-color: rgba(191, 219, 254, 0.82);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap .form-check-input {
+    border-color: rgba(96, 165, 250, 0.48);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+    color: #0f172a;
+    border-color: rgba(191, 219, 254, 0.66);
+    box-shadow: 0 12px 24px rgba(15, 23, 42, 0.06);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option:hover {
+    border-color: rgba(96, 165, 250, 0.78);
+    box-shadow: 0 18px 30px rgba(59, 130, 246, 0.14);
+  }
+
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-title,
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-main strong,
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
     color: #0f172a !important;
   }
 
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-name-field,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-destination,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-shell,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-selectall-wrap,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card,
-  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state,
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-option.is-active {
+    border-color: rgba(59, 130, 246, 0.56);
+    background:
+      linear-gradient(145deg, rgba(219, 234, 254, 0.98), rgba(239, 246, 255, 0.96)),
+      linear-gradient(90deg, rgba(96, 165, 250, 0.12), transparent 55%);
+    box-shadow:
+      0 18px 34px rgba(59, 130, 246, 0.16),
+      inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-danger {
+    border-color: rgba(252, 165, 165, 0.56);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-action-danger.is-active {
+    border-color: rgba(248, 113, 113, 0.62);
+    background:
+      linear-gradient(145deg, rgba(254, 242, 242, 0.98), rgba(255, 247, 237, 0.96)),
+      linear-gradient(90deg, rgba(248, 113, 113, 0.1), transparent 60%);
+    box-shadow: 0 18px 34px rgba(239, 68, 68, 0.14);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card {
+    border-color: rgba(226, 232, 240, 0.98);
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94));
+    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card:hover {
+    border-color: rgba(125, 211, 252, 0.76);
+    box-shadow: 0 18px 30px rgba(14, 165, 233, 0.12);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-card.is-selected {
+    border-color: rgba(59, 130, 246, 0.58);
+    background:
+      linear-gradient(145deg, rgba(219, 234, 254, 0.98), rgba(248, 250, 252, 0.94)),
+      linear-gradient(90deg, rgba(96, 165, 250, 0.14), transparent 62%);
+    box-shadow: 0 18px 32px rgba(59, 130, 246, 0.14);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-person-role {
+    background: linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(226, 232, 240, 0.9));
+    border-color: rgba(191, 219, 254, 0.78);
+    color: #1e293b !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.9)),
+      linear-gradient(135deg, rgba(191, 219, 254, 0.14), transparent 60%);
+    border-color: rgba(191, 219, 254, 0.84);
+    color: rgba(51, 65, 85, 0.84);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-empty-state i {
+    color: #38bdf8;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-transfer-list {
+    padding: 4px 2px 2px;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-footer {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(241, 245, 249, 0.72));
+  }
+
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel {
-    background: rgba(255, 255, 255, 0.94);
-    color: #0f172a;
-    border-color: rgba(148, 163, 184, 0.24);
-    box-shadow: none;
+    background: linear-gradient(180deg, rgba(148, 163, 184, 0.22), rgba(100, 116, 139, 0.28));
+    color: #f8fafc;
+    border-color: rgba(148, 163, 184, 0.22);
+    box-shadow: 0 10px 20px rgba(100, 116, 139, 0.16);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-cancel:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 28px rgba(100, 116, 139, 0.2);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-primary {
+    background: linear-gradient(135deg, #2563eb, #38bdf8);
+    box-shadow: 0 18px 32px rgba(37, 99, 235, 0.24);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 22px 36px rgba(37, 99, 235, 0.28);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal #app-entity-editor-confirm.btn-danger {
+    background: linear-gradient(135deg, #dc2626, #fb7185);
+    box-shadow: 0 18px 32px rgba(220, 38, 38, 0.22);
   }
 
   html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .principal-kpi-card,
@@ -14888,6 +15702,202 @@ html[data-theme='light'] body.admin-panel :is(
   -webkit-text-fill-color: #0f172a !important;
   border-color: rgba(148, 163, 184, 0.34) !important;
   box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.06) !important;
+}
+
+/* ----------------------------------------------------------------------------
+   BUTTON PREMIUM LAYER
+   ---------------------------------------------------------------------------- */
+body.admin-panel :is(
+  .btn:not(.btn-close),
+  .btn-action,
+  .batch-btn,
+  .export-btn,
+  .pcard-btn,
+  .event-scope-btn,
+  .motion-mode-btn,
+  .menu-btn,
+  .slc-btn,
+  .entity-export-btn,
+  .btn-clear-search,
+  .btn-clear-mini,
+  .beautiful-dialog-btn,
+  .audit-toggle-btn,
+  .card-button,
+  .logout-btn,
+  .lp-eye-btn
+) {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  box-shadow:
+    0 14px 28px rgba(2, 6, 23, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px) saturate(1.06);
+  -webkit-backdrop-filter: blur(12px) saturate(1.06);
+}
+
+body.admin-panel :is(
+  .btn:not(.btn-close),
+  .btn-action,
+  .batch-btn,
+  .export-btn,
+  .pcard-btn,
+  .event-scope-btn,
+  .motion-mode-btn,
+  .menu-btn,
+  .slc-btn,
+  .entity-export-btn,
+  .btn-clear-search,
+  .btn-clear-mini,
+  .beautiful-dialog-btn,
+  .audit-toggle-btn,
+  .card-button,
+  .logout-btn
+)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -135%;
+  width: 74%;
+  height: 100%;
+  background: linear-gradient(110deg, transparent, rgba(255, 255, 255, 0.24), transparent);
+  transition: left .34s ease;
+  pointer-events: none;
+}
+
+body.admin-panel :is(
+  .btn:not(.btn-close),
+  .btn-action,
+  .batch-btn,
+  .export-btn,
+  .pcard-btn,
+  .event-scope-btn,
+  .motion-mode-btn,
+  .menu-btn,
+  .slc-btn,
+  .entity-export-btn,
+  .btn-clear-search,
+  .btn-clear-mini,
+  .beautiful-dialog-btn,
+  .audit-toggle-btn,
+  .card-button,
+  .logout-btn
+):hover::after {
+  left: 150%;
+}
+
+body.admin-panel :is(
+  .btn:not(.btn-close):not(:disabled),
+  .btn-action:not(:disabled),
+  .batch-btn:not(:disabled),
+  .export-btn:not(:disabled),
+  .pcard-btn:not(:disabled),
+  .event-scope-btn:not(:disabled),
+  .motion-mode-btn:not(:disabled),
+  .menu-btn:not(:disabled),
+  .slc-btn:not(:disabled),
+  .entity-export-btn:not(:disabled),
+  .btn-clear-search:not(:disabled),
+  .btn-clear-mini:not(:disabled),
+  .beautiful-dialog-btn:not(:disabled),
+  .audit-toggle-btn:not(:disabled),
+  .card-button:not(:disabled),
+  .logout-btn:not(:disabled),
+  .lp-eye-btn:not(:disabled)
+):hover {
+  box-shadow:
+    0 22px 36px rgba(2, 6, 23, 0.24),
+    0 10px 24px rgba(59, 130, 246, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+body.admin-panel :is(
+  .btn-primary,
+  .btn-success,
+  .btn-danger,
+  .btn-warning,
+  .btn-action-primary,
+  .admin-primary-action,
+  .slc-btn--primary,
+  .entity-export-btn,
+  .batch-btn.batch-approve,
+  .batch-btn.batch-reject
+) {
+  box-shadow:
+    0 18px 32px rgba(37, 99, 235, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+body.admin-panel :is(
+  .btn-outline-secondary,
+  .btn-outline-primary,
+  .btn-outline-light,
+  .btn-secondary,
+  .btn-clear-search,
+  .btn-clear-mini,
+  .btn-action-ghost,
+  .gastos-filter-btn,
+  .menu-btn,
+  .event-scope-btn,
+  .motion-mode-btn,
+  .slc-btn--icon,
+  .beautiful-dialog-btn,
+  .audit-toggle-btn,
+  .lp-eye-btn
+) {
+  border-width: 1px;
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .btn:not(.btn-close),
+  .btn-action,
+  .batch-btn,
+  .export-btn,
+  .pcard-btn,
+  .event-scope-btn,
+  .motion-mode-btn,
+  .menu-btn,
+  .slc-btn,
+  .entity-export-btn,
+  .btn-clear-search,
+  .btn-clear-mini,
+  .beautiful-dialog-btn,
+  .audit-toggle-btn,
+  .card-button,
+  .logout-btn,
+  .lp-eye-btn
+) {
+  box-shadow:
+    0 16px 30px rgba(15, 23, 42, 0.1),
+    0 8px 18px rgba(37, 99, 235, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+html[data-theme='light'] body.admin-panel :is(
+  .btn:not(.btn-close):not(:disabled),
+  .btn-action:not(:disabled),
+  .batch-btn:not(:disabled),
+  .export-btn:not(:disabled),
+  .pcard-btn:not(:disabled),
+  .event-scope-btn:not(:disabled),
+  .motion-mode-btn:not(:disabled),
+  .menu-btn:not(:disabled),
+  .slc-btn:not(:disabled),
+  .entity-export-btn:not(:disabled),
+  .btn-clear-search:not(:disabled),
+  .btn-clear-mini:not(:disabled),
+  .beautiful-dialog-btn:not(:disabled),
+  .audit-toggle-btn:not(:disabled),
+  .card-button:not(:disabled),
+  .logout-btn:not(:disabled),
+  .lp-eye-btn:not(:disabled)
+):hover {
+  box-shadow:
+    0 22px 38px rgba(15, 23, 42, 0.12),
+    0 10px 24px rgba(37, 99, 235, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92);
 }
 
 html[data-theme='dark'] body.admin-panel {
