@@ -3141,6 +3141,26 @@
                         <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="3"></textarea>
                         <small class="edit-field-hint">Mantenha o histórico objetivo para facilitar consultas futuras.</small>
                       </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="edit_encontro_cep">
+                      </div>
+                      <div class="col-lg-8">
+                        <label class="form-label">Complemento ou referência</label>
+                        <input type="text" class="form-control" id="edit_encontro_complementoReferencia">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
+                        <textarea class="form-control" id="edit_encontro_talentoHabilidadeArtistica" rows="3"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Possui algum quadro de saúde físico ou mental? Qual?</label>
+                        <textarea class="form-control" id="edit_encontro_quadroSaude" rows="3"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Faz o uso de algum medicamento controlado? Qual?</label>
+                        <textarea class="form-control" id="edit_encontro_medicamentoControlado" rows="3"></textarea>
+                      </div>
                       <div class="col-12">
                         <label class="form-label">Intolerâncias / alergias</label>
                         <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="3"></textarea>
@@ -3155,6 +3175,18 @@
                       <div class="col-lg-8">
                         <label class="form-label">Se sim, a quê?</label>
                         <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2" placeholder="Ex: amendoim, dipirona, lactose"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Religiosamente, como você se considera hoje?</label>
+                        <input type="text" class="form-control" id="edit_encontro_religiosidadeAtual">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Qual Paróquia frequenta?</label>
+                        <input type="text" class="form-control" id="edit_encontro_paroquiaFrequenta">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Participa de algum movimento ou pastoral da igreja?</label>
+                        <input type="text" class="form-control" id="edit_encontro_participaMovimentoIgreja">
                       </div>
                     </div>
                   </section>
@@ -4372,6 +4404,14 @@
         atualizarCamposParceiroTios();
         document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
         document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
+        document.getElementById('edit_encontro_cep').value = cadastro.cep || '';
+        document.getElementById('edit_encontro_complementoReferencia').value = cadastro.complementoReferencia || '';
+        document.getElementById('edit_encontro_talentoHabilidadeArtistica').value = cadastro.talentoHabilidadeArtistica || '';
+        document.getElementById('edit_encontro_quadroSaude').value = cadastro.quadroSaude || '';
+        document.getElementById('edit_encontro_medicamentoControlado').value = cadastro.medicamentoControlado || '';
+        document.getElementById('edit_encontro_religiosidadeAtual').value = cadastro.religiosidadeAtual || '';
+        document.getElementById('edit_encontro_paroquiaFrequenta').value = cadastro.paroquiaFrequenta || '';
+        document.getElementById('edit_encontro_participaMovimentoIgreja').value = cadastro.participaMovimentoIgreja || '';
         document.getElementById('edit_intolerante').value = cadastro.intolerante || '';
         document.getElementById('edit_ehAlergico').value = String(cadastro.ehAlergico || '').toLowerCase() === 'sim' ? 'sim' : 'nao';
         document.getElementById('edit_alergiaDescricao').value = cadastro.alergiaDescricao || '';
@@ -4411,6 +4451,17 @@
       const formData = new FormData(document.getElementById('formEdicao'));
       const tipo = document.getElementById('edit_tipo').value;
       const id = document.getElementById('edit_id').value;
+
+      if (tipo === 'encontreiro') {
+        formData.set('cep', document.getElementById('edit_encontro_cep')?.value || '');
+        formData.set('complementoReferencia', document.getElementById('edit_encontro_complementoReferencia')?.value || '');
+        formData.set('talentoHabilidadeArtistica', document.getElementById('edit_encontro_talentoHabilidadeArtistica')?.value || '');
+        formData.set('quadroSaude', document.getElementById('edit_encontro_quadroSaude')?.value || '');
+        formData.set('medicamentoControlado', document.getElementById('edit_encontro_medicamentoControlado')?.value || '');
+        formData.set('religiosidadeAtual', document.getElementById('edit_encontro_religiosidadeAtual')?.value || '');
+        formData.set('paroquiaFrequenta', document.getElementById('edit_encontro_paroquiaFrequenta')?.value || '');
+        formData.set('participaMovimentoIgreja', document.getElementById('edit_encontro_participaMovimentoIgreja')?.value || '');
+      }
 
       try {
         const response = await fetch(`/admin/atualizar-cadastro/${tipo}/${id}`, {
