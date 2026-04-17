@@ -1015,6 +1015,13 @@ function GenericForm() {
             </div>
           </div>
         </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`idade-${pessoa}`} className="form-label">Idade</label>
+            <input type="text" className="form-control" id={`idade-${pessoa}`} value={calculateAge(data.dataNascimento)} readOnly placeholder="Calculada automaticamente" />
+          </div>
+        </div>
       </section>
 
       <section className={`form-step-panel${currentStep === 1 ? ' is-active' : ''}`} data-step-panel="1" hidden={currentStep !== 1}>
@@ -1123,6 +1130,10 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
+            <label htmlFor={`cep-${pessoa}`} className="form-label">CEP</label>
+            <input type="text" className="form-control" id={`cep-${pessoa}`} name="cep" value={data.cep || ''} onChange={handleCh} />
+          </div>
+          <div className="mb-3">
             <label htmlFor={`logradouro-${pessoa}`} className="form-label">Logradouro *</label>
             <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} required />
           </div>
@@ -1130,6 +1141,11 @@ function GenericForm() {
             <label htmlFor={`bairro-${pessoa}`} className="form-label">Bairro *</label>
             <input type="text" className="form-control" id={`bairro-${pessoa}`} name="bairro" value={data.bairro} onChange={handleCh} required />
           </div>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`complementoReferencia-${pessoa}`} className="form-label">Complemento ou referencia</label>
+          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia || ''} onChange={handleCh} placeholder="Casa, bloco, ponto de referencia" />
         </div>
 
         <div className="form-row">
@@ -1158,7 +1174,23 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
         <div className="form-section-title">
           <i className="fas fa-camera-retro"></i>
-          Finalizacao
+          Finalizacao e cuidados
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artistica que goste de praticar?</label>
+          <textarea className="form-control" id={`talentoHabilidadeArtistica-${pessoa}`} name="talentoHabilidadeArtistica" value={data.talentoHabilidadeArtistica || ''} onChange={handleCh} rows="3"></textarea>
+        </div>
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saude fisico ou mental? Qual?</label>
+            <input type="text" className="form-control" id={`quadroSaude-${pessoa}`} name="quadroSaude" value={data.quadroSaude || ''} onChange={handleCh} />
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`medicamentoControlado-${pessoa}`} className="form-label">Faz o uso de algum medicamento controlado? Qual?</label>
+            <input type="text" className="form-control" id={`medicamentoControlado-${pessoa}`} name="medicamentoControlado" value={data.medicamentoControlado || ''} onChange={handleCh} />
+          </div>
         </div>
 
         <div className="form-row">
@@ -1167,7 +1199,7 @@ function GenericForm() {
             <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
           </div>
           <div className="mb-3">
-            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">Possui alguma alergia?</label>
             <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
               <option value="nao">Nao</option>
               <option value="sim">Sim</option>
@@ -1177,6 +1209,22 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
+
+        <div className="form-row">
+          <div className="mb-3">
+            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como voce se considera hoje?</label>
+            <input type="text" className="form-control" id={`religiosidadeAtual-${pessoa}`} name="religiosidadeAtual" value={data.religiosidadeAtual || ''} onChange={handleCh} />
+          </div>
+          <div className="mb-3">
+            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paroquia frequenta? *</label>
+            <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta || ''} onChange={handleCh} required />
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <label htmlFor={`participaMovimentoIgreja-${pessoa}`} className="form-label">Participa de algum movimento ou pastoral da igreja?</label>
+          <input type="text" className="form-control" id={`participaMovimentoIgreja-${pessoa}`} name="participaMovimentoIgreja" value={data.participaMovimentoIgreja || ''} onChange={handleCh} />
+        </div>
             <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
             <input
               type="text"
@@ -1205,6 +1253,7 @@ function GenericForm() {
           ['EJC', data.ejc],
           ['Telefone', data.telefone],
           ['Email', data.email],
+          ['Paroquia', data.paroquiaFrequenta],
           ['Endereco', `${data.logradouro || ''}${data.logradouro && data.bairro ? ' - ' : ''}${data.bairro || ''}`],
         ])}
 

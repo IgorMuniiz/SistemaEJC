@@ -840,6 +840,7 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
   const originalEncontroFind = Encontro.find;
   const originalVinculoFind = VinculoEncontro.find;
   const originalEquipeFind = Equipe.find;
+  const findColumnByHeader = (worksheet, header) => worksheet.getRow(1).values.findIndex((value) => value === header);
 
   const tioId = '507f1f77bcf86cd799439121';
   const registros = [
@@ -919,8 +920,8 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
 
   const allRow = findRowByName(allSheet, 'Tia Maria');
   assert.ok(allRow, 'A aba consolidada deve conter a tia');
-  assert.equal(allRow.getCell(12).value, 'Sala');
-  assert.equal(allRow.getCell(13).value, 'Compras');
+  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Serviu')).value, 'Sala');
+  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Coordenou')).value, 'Compras');
 
   assert.equal(findRowByName(salaSheet, 'Tia Maria'), null);
   assert.ok(findRowByName(secretariaSheet, 'Tia Maria'), 'Ela deve continuar disponível nas demais equipes');
