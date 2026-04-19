@@ -78,7 +78,7 @@ const carregarDadosEncontroCompletoDeOrigemExterna = async ({
     let PgClient;
     try {
       ({ Client: PgClient } = require('pg'));
-    } catch (err) {
+    } catch {
       throw criarErroPublico(500, 'Dependencia "pg" nao instalada. Rode: npm install pg');
     }
 
@@ -123,7 +123,7 @@ const carregarDadosEncontroCompletoDeOrigemExterna = async ({
     let mysql;
     try {
       mysql = require('mysql2/promise');
-    } catch (err) {
+    } catch {
       throw criarErroPublico(500, 'Dependencia "mysql2" nao instalada. Rode: npm install mysql2');
     }
 
@@ -208,7 +208,7 @@ const carregarEncontreirosDeOrigemExterna = async ({
     let PgClient;
     try {
       ({ Client: PgClient } = require('pg'));
-    } catch (err) {
+    } catch {
       throw criarErroPublico(500, 'Dependencia "pg" nao instalada. Rode: npm install pg');
     }
 
@@ -234,7 +234,7 @@ const carregarEncontreirosDeOrigemExterna = async ({
     let mysql;
     try {
       mysql = require('mysql2/promise');
-    } catch (err) {
+    } catch {
       throw criarErroPublico(500, 'Dependencia "mysql2" nao instalada. Rode: npm install mysql2');
     }
 

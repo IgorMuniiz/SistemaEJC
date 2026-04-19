@@ -469,7 +469,7 @@ const validateAdminPassword = async (admin, plainPassword) => {
           }
           return true;
         }
-      } catch (_) {
+      } catch {
         // Ignore malformed legacy hash and keep trying remaining formats.
       }
       continue;
@@ -1870,7 +1870,7 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
         valign: photoValign,
       });
       doc.restore();
-    } catch (err) {
+    } catch {
       // Ignore image rendering failures and keep card printable.
     }
   }
@@ -2083,40 +2083,6 @@ const getCrachaPalette = (groupType, groupName = '') => {
   return resolveEquipeCrachaTheme(groupName);
 };
 
-const resolveCrachaRoleStyle = (entry, palette) => {
-  const papel = normalizeTextInput(entry?.papel).toLowerCase();
-  if (['coordenador', 'coordenou'].includes(papel)) {
-    return {
-      label: 'COORDENACAO',
-      fill: '#fff7ed',
-      color: '#c2410c',
-    };
-  }
-
-  if (papel === 'moita') {
-    const detalheMoita = normalizeTextInput(entry?.descricaoPapel);
-    return {
-      label: detalheMoita ? `MOITA • ${truncateText(detalheMoita, 16).toUpperCase()}` : 'MOITA',
-      fill: '#fef3c7',
-      color: '#92400e',
-    };
-  }
-
-  if (normalizeTextInput(entry?.tipo).toLowerCase() === 'tios') {
-    return {
-      label: 'APOIO TIOS',
-      fill: '#f5e8ff',
-      color: '#7c3aed',
-    };
-  }
-
-  return {
-    label: entry?.pessoaTipo === 'encontrista' ? 'ENCONTRISTA' : 'SERVICO',
-    fill: palette.soft,
-    color: palette.chipText,
-  };
-};
-
 const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
@@ -2163,7 +2129,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
     if (hasLogo) {
       try {
         doc.image(logoPath, pageMargin + 12, 31, { fit: [32, 32], align: 'center', valign: 'center' });
-      } catch (err) {
+      } catch {
         // ignore logo rendering problems
       }
     }
@@ -2226,7 +2192,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
           valign: 'center',
         });
         doc.restore();
-      } catch (err) {
+      } catch {
         // keep pdf generation resilient if the photo fails
       }
     } else if (artPath) {
@@ -2239,7 +2205,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
           valign: 'center',
         });
         doc.restore();
-      } catch (err) {
+      } catch {
         // keep pdf generation resilient if the decorative art fails
       }
     } else {
@@ -2260,7 +2226,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
           valign: 'center',
         });
         doc.restore();
-      } catch (err) {
+      } catch {
         // ignore decorative watermark failures
       }
     }
@@ -2371,7 +2337,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
   doc.end();
 };
 
-const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
+const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
@@ -2383,7 +2349,6 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   const gap = 12;
   const cardWidth = (515 - gap) / 2;
   const cardHeight = 126;
-  const rightX = left + cardWidth + gap;
   const topStart = 40;
   const bottomLimit = 790;
   const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
@@ -3580,7 +3545,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     // Cabeçalho da tabela de estatísticas
     const headerRow = dashboard.getRow(4);
     headerRow.height = 34;
-    ['B4', 'C4', 'D4', 'E4', 'F4'].forEach((cell, idx) => {
+    ['B4', 'C4', 'D4', 'E4', 'F4'].forEach((cell) => {
       const c = dashboard.getCell(cell);
       c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0B2545' } };
       c.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11, name: 'Segoe UI Semibold' };
@@ -4032,7 +3997,7 @@ app.get('/export-encontro-excel', async (req, res) => {
         row.height = 24;
 
         const bgColor = idx % 2 === 0 ? 'FFF8FBFF' : 'FFFFFFFF';
-        row.eachCell((cell, colNumber) => {
+        row.eachCell((cell) => {
           cell.fill = {
             type: 'pattern',
             pattern: 'solid',
@@ -4093,7 +4058,7 @@ app.get('/export-encontro-excel', async (req, res) => {
         observacoes: '',
       });
       summaryRow.height = 28;
-      summaryRow.eachCell((cell, colNumber) => {
+      summaryRow.eachCell((cell) => {
         cell.font = {
           bold: true,
           size: 10,
@@ -4522,7 +4487,7 @@ app.get('/inscricao', async (req, res) => {
       motivoBloqueio: bloqueio.motivo,
       ejcAtivo: encontroAtivo?.nome || '',
     });
-  } catch (err) {
+  } catch {
     res.render('inscricao', {
       errors: [],
       formData: {},
@@ -4581,7 +4546,7 @@ app.get('/encontro', async (req, res) => {
       motivoBloqueio: conviteValido ? '' : bloqueio.motivo,
       ejcAtivo: encontroAtivo?.nome || '',
     });
-  } catch (err) {
+  } catch {
     res.render('encontro', {
       errors: [],
       formData: {},
@@ -5809,7 +5774,7 @@ app.post('/admin/evento-scope', checkAdminAuth, requireAdminPermission('painel.v
     const scope = normalizeAdminEventScopeInput(req.body.scope);
     req.session.adminEventScope = scope;
     return res.json({ success: true, scope });
-  } catch (err) {
+  } catch {
     return res.status(500).json({ success: false, error: 'Erro ao atualizar escopo de evento.' });
   }
 });
@@ -8868,7 +8833,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
     let pdfParse;
     try {
       pdfParse = require('pdf-parse');
-    } catch (err) {
+    } catch {
       throw new Error('Leitura de PDF indisponivel. Instale a dependencia "pdf-parse".');
     }
 

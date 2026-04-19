@@ -36,7 +36,7 @@ async function loginAdmin(page) {
 
 test.describe('Rotas admin sem autenticação', () => {
   test('GET /admin redireciona para login se não autenticado', async ({ page }) => {
-    const response = await page.goto('/admin');
+    await page.goto('/admin');
     // Deve redirecionar para a página de login
     expect(page.url()).toMatch(/login/);
   });
@@ -179,7 +179,6 @@ test.describe('Seção Auditoria', () => {
     test.skip(!(await auditCard.isVisible()), 'Card de auditoria não encontrado');
 
     // Deve iniciar fechado (sem classe is-open, ou conteúdo oculto)
-    const content = page.locator('#admins-audit-content');
     const initiallyOpen = await auditCard.evaluate((el) => el.classList.contains('is-open'));
 
     const header = auditCard.locator('.admin-card-head').first();
