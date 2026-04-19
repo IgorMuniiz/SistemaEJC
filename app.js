@@ -7692,10 +7692,25 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
     const pessoas = await ModelPessoa.find({ _id: { $in: pessoaIds } });
     console.log('[VINCULAR] pessoas encontradas:', pessoas.length, 'de', pessoaIds.length, 'solicitadas');
     const pessoasMap = new Map(pessoas.map((p) => [String(p._id), p]));
+    const filtroDescricaoPapel = papel === 'moita' ? descricaoPapel : '';
+    const vinculosExistentes = await VinculoEncontro.find({
+      ejcId,
+      entidadeTipo,
+      entidadeId,
+      pessoaTipo,
+      pessoaId: { $in: pessoaIds },
+      papel,
+      descricaoPapel: filtroDescricaoPapel,
+    }).select('_id pessoaId').lean();
+    const vinculosExistentesMap = new Map(
+      vinculosExistentes.map((item) => [String(item.pessoaId), item])
+    );
 
     let vinculados = 0;
     let jaVinculados = 0;
     let naoEncontrados = 0;
+    const documentosVinculoParaCriar = [];
+    const updatesPessoa = [];
 
     for (const pessoaId of pessoaIds) {
       const pessoa = pessoasMap.get(String(pessoaId));
@@ -7706,24 +7721,16 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
 
       let shouldPersistPessoa = false;
 
-      const existente = await VinculoEncontro.findOne({
-        ejcId,
-        entidadeTipo,
-        entidadeId,
-        pessoaTipo,
-        pessoaId,
-        papel,
-        descricaoPapel: papel === 'moita' ? descricaoPapel : '',
-      });
+      const existente = vinculosExistentesMap.get(String(pessoaId));
       if (!existente) {
-        await VinculoEncontro.create({
+        documentosVinculoParaCriar.push({
           ejcId,
           entidadeTipo,
           entidadeId,
           pessoaTipo,
           pessoaId,
           papel,
-          descricaoPapel: papel === 'moita' ? descricaoPapel : '',
+          descricaoPapel: filtroDescricaoPapel,
         });
         vinculados += 1;
       } else {
@@ -7748,11 +7755,50 @@ app.post('/admin/vincular-encontro', checkAdminAuth, requireAdminPermission('enc
       }
 
       if (shouldPersistPessoa) {
-        await pessoa.save();
+        const updatePayload = {
+          ejcVinculadoId: ejc._id,
+          ejcVinculadoNome: ejc.nome,
+        };
+
+        if (entidadeTipo === 'equipe' && pessoaTipo === 'encontreiro') {
+          updatePayload.equipeServiu = Array.isArray(pessoa.equipeServiu) ? pessoa.equipeServiu : [];
+          updatePayload.equipeCoordenou = Array.isArray(pessoa.equipeCoordenou) ? pessoa.equipeCoordenou : [];
+        }
+
+        updatesPessoa.push({
+          updateOne: {
+            filter: { _id: pessoa._id },
+            update: { $set: updatePayload },
+          },
+        });
       }
     }
 
-    return res.json({ success: true, vinculados, jaVinculados, naoEncontrados });
+    let novosVinculos = [];
+    if (documentosVinculoParaCriar.length) {
+      novosVinculos = await VinculoEncontro.insertMany(documentosVinculoParaCriar, { ordered: false });
+    }
+
+    if (updatesPessoa.length) {
+      await ModelPessoa.bulkWrite(updatesPessoa, { ordered: false });
+    }
+
+    return res.json({
+      success: true,
+      vinculados,
+      jaVinculados,
+      naoEncontrados,
+      novosVinculos: novosVinculos.map((item) => ({
+        _id: item._id,
+        ejcId: item.ejcId,
+        entidadeTipo: item.entidadeTipo,
+        entidadeId: item.entidadeId,
+        pessoaTipo: item.pessoaTipo,
+        pessoaId: item.pessoaId,
+        papel: item.papel,
+        descricaoPapel: item.descricaoPapel || '',
+      })),
+    });
   } catch (err) {
     console.error('[VINCULAR] Erro ao vincular encontro:', err);
     return res.status(500).json({ success: false, error: 'Erro ao vincular.' });

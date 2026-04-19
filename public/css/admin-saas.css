@@ -9999,10 +9999,31 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-bottom: 1px solid rgba(148, 163, 184, 0.18);
       background: linear-gradient(90deg, rgba(30, 64, 175, 0.24), rgba(15, 23, 42, 0.72));
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-headline {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-orb {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.3), rgba(59, 130, 246, 0.16));
+      border: 1px solid rgba(125, 211, 252, 0.22);
+      color: rgba(224, 242, 254, 0.96);
+      box-shadow: 0 18px 30px rgba(14, 165, 233, 0.16);
+      flex: 0 0 auto;
+      font-size: 1.1rem;
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-title-stack {
       display: flex;
       flex-direction: column;
       gap: 4px;
+      min-width: 0;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-kicker {
       display: inline-flex;
@@ -10033,6 +10054,16 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-body {
       padding: 20px 22px 12px;
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-note {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(125, 211, 252, 0.14);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.72), rgba(2, 6, 23, 0.54));
+      color: rgba(191, 219, 254, 0.9);
+      font-size: .84rem;
+      line-height: 1.55;
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-footer {
       gap: 10px;
       padding: 0 22px 22px;
@@ -10060,15 +10091,42 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-warning .app-popup-header {
       background: linear-gradient(90deg, rgba(245, 158, 11, 0.26), rgba(15, 23, 42, 0.72));
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-warning .app-popup-orb {
+      background: linear-gradient(135deg, rgba(251, 191, 36, 0.28), rgba(245, 158, 11, 0.12));
+      border-color: rgba(252, 211, 77, 0.26);
+      color: rgba(254, 249, 195, 0.98);
+      box-shadow: 0 18px 30px rgba(245, 158, 11, 0.16);
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-danger .app-popup-header {
       background: linear-gradient(90deg, rgba(239, 68, 68, 0.24), rgba(15, 23, 42, 0.72));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-danger .app-popup-orb {
+      background: linear-gradient(135deg, rgba(248, 113, 113, 0.28), rgba(239, 68, 68, 0.12));
+      border-color: rgba(252, 165, 165, 0.26);
+      color: rgba(254, 226, 226, 0.98);
+      box-shadow: 0 18px 30px rgba(239, 68, 68, 0.16);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-success .app-popup-header {
       background: linear-gradient(90deg, rgba(34, 197, 94, 0.22), rgba(15, 23, 42, 0.72));
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .app-popup-tone-success .app-popup-orb {
+      background: linear-gradient(135deg, rgba(74, 222, 128, 0.28), rgba(34, 197, 94, 0.12));
+      border-color: rgba(134, 239, 172, 0.26);
+      color: rgba(220, 252, 231, 0.98);
+      box-shadow: 0 18px 30px rgba(34, 197, 94, 0.16);
+    }
     body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) {
       backdrop-filter: blur(12px) saturate(1.06);
       -webkit-backdrop-filter: blur(12px) saturate(1.06);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal {
+      padding: clamp(10px, 3vh, 28px);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal .modal-dialog.app-popup-dialog {
+      margin: 0 auto;
+      min-height: calc(100dvh - clamp(20px, 6vh, 56px));
+      align-items: center;
+      justify-content: center;
     }
     body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-dialog {
       display: flex;

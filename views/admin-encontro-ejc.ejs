@@ -54,27 +54,27 @@
             </span>
           </h1>
           <div class="workspace-hero-strip" aria-label="Destaques do encontro">
-            <span class="hero-strip-pill"><i class="fas fa-circle-notch"></i><%= totalVinculosCirculo %> vínculos em círculos</span>
-            <span class="hero-strip-pill"><i class="fas fa-people-group"></i><%= totalVinculosEquipe %> vínculos em equipes</span>
-            <span class="hero-strip-pill"><i class="fas fa-file-export"></i><%= totalPessoasVinculadas %> pessoas distribuídas</span>
+            <span class="hero-strip-pill"><i class="fas fa-circle-notch"></i><span id="hero-strip-circulos"><%= totalVinculosCirculo %> vínculos em círculos</span></span>
+            <span class="hero-strip-pill"><i class="fas fa-people-group"></i><span id="hero-strip-equipes"><%= totalVinculosEquipe %> vínculos em equipes</span></span>
+            <span class="hero-strip-pill"><i class="fas fa-file-export"></i><span id="hero-strip-distribuidos"><%= totalPessoasVinculadas %> pessoas distribuídas</span></span>
           </div>
         </div>
         <div class="workspace-stats" aria-label="Resumo da operacao">
           <article class="workspace-stat-card">
             <span class="stat-label">Circulos</span>
-            <strong class="stat-value"><%= (circulos || []).length %></strong>
+            <strong class="stat-value" id="stat-total-circulos"><%= (circulos || []).length %></strong>
           </article>
           <article class="workspace-stat-card">
             <span class="stat-label">Equipes</span>
-            <strong class="stat-value"><%= (equipes || []).length %></strong>
+            <strong class="stat-value" id="stat-total-equipes"><%= (equipes || []).length %></strong>
           </article>
           <article class="workspace-stat-card">
             <span class="stat-label">Vinculos Circulos</span>
-            <strong class="stat-value"><%= totalVinculosCirculo %></strong>
+            <strong class="stat-value" id="stat-vinculos-circulos"><%= totalVinculosCirculo %></strong>
           </article>
           <article class="workspace-stat-card">
             <span class="stat-label">Vinculos Equipes</span>
-            <strong class="stat-value"><%= totalVinculosEquipe %></strong>
+            <strong class="stat-value" id="stat-vinculos-equipes"><%= totalVinculosEquipe %></strong>
           </article>
         </div>
       </div>
@@ -85,28 +85,28 @@
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Círculos</span>
           </span>
-          <span class="encontro-module-count"><%= (circulos || []).length %></span>
+          <span class="encontro-module-count" id="module-count-circulos"><%= (circulos || []).length %></span>
         </button>
         <button type="button" class="encontro-module-card" data-panel-target="panel-equipes" data-required-permission="equipes.gerenciar" onclick="ativarPainel('panel-equipes')">
           <span class="encontro-module-icon"><i class="fas fa-people-group"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Equipes</span>
           </span>
-          <span class="encontro-module-count"><%= (equipes || []).length %></span>
+          <span class="encontro-module-count" id="module-count-equipes"><%= (equipes || []).length %></span>
         </button>
         <button type="button" class="encontro-module-card encontro-module-card-action" data-required-permission="encontros.gerenciar" onclick="gerarQuadrante(this)">
           <span class="encontro-module-icon"><i class="fas fa-file-pdf"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Quadrante</span>
           </span>
-          <span class="encontro-module-count"><%= totalPessoasVinculadas %></span>
+          <span class="encontro-module-count" id="module-count-quadrante"><%= totalPessoasVinculadas %></span>
         </button>
         <button type="button" class="encontro-module-card encontro-module-card-action" data-required-permission="encontros.gerenciar" onclick="gerarCrachasEjc(this)">
           <span class="encontro-module-icon"><i class="fas fa-id-badge"></i></span>
           <span class="encontro-module-copy">
             <span class="encontro-module-title">Crachás</span>
           </span>
-          <span class="encontro-module-count"><%= totalPessoasVinculadas %></span>
+          <span class="encontro-module-count" id="module-count-crachas"><%= totalPessoasVinculadas %></span>
         </button>
         <a class="encontro-module-card encontro-module-card-link" href="/admin/gerenciar-cadastros">
           <span class="encontro-module-icon"><i class="fas fa-arrow-left"></i></span>
@@ -124,7 +124,7 @@
           </div>
           <div class="panel-premium-chips">
             <span class="panel-premium-chip"><i class="fas fa-layer-group"></i><%= (circulos || []).length %> círculos</span>
-            <span class="panel-premium-chip"><i class="fas fa-link"></i><%= totalVinculosCirculo %> vínculos</span>
+              <span class="panel-premium-chip"><i class="fas fa-link"></i><span id="panel-chip-circulos"><%= totalVinculosCirculo %> vínculos</span></span>
           </div>
         </div>
         <div class="row g-3 mb-3 panel-intake-grid">
@@ -228,7 +228,7 @@
           </div>
           <div class="panel-premium-chips">
             <span class="panel-premium-chip"><i class="fas fa-people-group"></i><%= (equipes || []).length %> equipes</span>
-            <span class="panel-premium-chip"><i class="fas fa-link"></i><%= totalVinculosEquipe %> vínculos</span>
+              <span class="panel-premium-chip"><i class="fas fa-link"></i><span id="panel-chip-equipes"><%= totalVinculosEquipe %> vínculos</span></span>
           </div>
         </div>
         <div class="row g-3 mb-3 panel-intake-grid">
@@ -737,8 +737,120 @@
     }
 
     function renderAll() {
+      updateWorkspaceStats();
       renderListaCirculos();
       renderListaEquipes();
+    }
+
+    function updateWorkspaceStats() {
+      const totalCirculos = Array.isArray(circulos) ? circulos.length : 0;
+      const totalEquipes = Array.isArray(equipes) ? equipes.length : 0;
+      const totalVinculosCirculos = vinculos.filter((item) => item.entidadeTipo === 'circulo').length;
+      const totalVinculosEquipes = vinculos.filter((item) => item.entidadeTipo === 'equipe').length;
+      const totalDistribuidos = totalVinculosCirculos + totalVinculosEquipes;
+
+      const setText = (id, text) => {
+        const element = document.getElementById(id);
+        if (element) {
+          element.textContent = text;
+        }
+      };
+
+      setText('hero-strip-circulos', `${totalVinculosCirculos} vínculos em círculos`);
+      setText('hero-strip-equipes', `${totalVinculosEquipes} vínculos em equipes`);
+      setText('hero-strip-distribuidos', `${totalDistribuidos} pessoas distribuídas`);
+      setText('stat-total-circulos', String(totalCirculos));
+      setText('stat-total-equipes', String(totalEquipes));
+      setText('stat-vinculos-circulos', String(totalVinculosCirculos));
+      setText('stat-vinculos-equipes', String(totalVinculosEquipes));
+      setText('module-count-circulos', String(totalCirculos));
+      setText('module-count-equipes', String(totalEquipes));
+      setText('module-count-quadrante', String(totalDistribuidos));
+      setText('module-count-crachas', String(totalDistribuidos));
+      setText('panel-chip-circulos', `${totalVinculosCirculos} vínculos`);
+      setText('panel-chip-equipes', `${totalVinculosEquipes} vínculos`);
+    }
+
+    function getActionTriggerButton() {
+      const active = document.activeElement;
+      return active instanceof HTMLButtonElement ? active : null;
+    }
+
+    function setActionButtonBusy(button, isBusy, busyText = 'Processando...') {
+      if (!button) return;
+
+      if (isBusy) {
+        if (!button.dataset.originalHtml) {
+          button.dataset.originalHtml = button.innerHTML;
+        }
+        button.disabled = true;
+        button.classList.add('is-busy');
+        button.innerHTML = `<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>${escapeHtml(busyText)}`;
+        return;
+      }
+
+      button.disabled = false;
+      button.classList.remove('is-busy');
+      if (button.dataset.originalHtml) {
+        button.innerHTML = button.dataset.originalHtml;
+        delete button.dataset.originalHtml;
+      }
+    }
+
+    function resetMultiSelect(selectId, inputId) {
+      const { select, list } = getChecklistElements(selectId);
+      if (select) {
+        Array.from(select.options || []).forEach((option) => {
+          option.selected = false;
+        });
+      }
+
+      if (list) {
+        Array.from(list.querySelectorAll('input[type="checkbox"]')).forEach((checkbox) => {
+          checkbox.checked = false;
+        });
+        list.classList.add('d-none');
+      }
+
+      const input = inputId ? document.getElementById(inputId) : null;
+      if (input) {
+        input.value = '';
+      }
+
+      atualizarContadorSelecao(selectId);
+      if (inputId) {
+        filtrarSelectMulti(selectId, '');
+      }
+    }
+
+    function applyLocalVinculosUpdate({ entidadeTipo, pessoaTipo, papel, descricaoPapel = '', novosVinculos = [] }) {
+      if (!Array.isArray(novosVinculos) || !novosVinculos.length) return;
+
+      novosVinculos.forEach((vinculo) => {
+        vinculos.push(vinculo);
+
+        const pessoaMap = pessoaTipo === 'encontrista' ? mapEncontristas : mapEncontreiros;
+        const pessoa = pessoaMap[String(vinculo.pessoaId)];
+        if (!pessoa) return;
+
+        pessoa.ejcVinculadoId = ejcId;
+        const ejcNomeAtivo = '<%= escapeHtml(String(ejc.nome || "")) %>';
+        pessoa.ejcVinculadoNome = ejcNomeAtivo;
+
+        if (entidadeTipo === 'equipe' && pessoaTipo === 'encontreiro') {
+          const equipe = equipes.find((item) => String(item._id) === String(vinculo.entidadeId));
+          const equipeNome = equipe ? String(equipe.nomeReferencia || equipe.nome || '') : '';
+          if (!equipeNome) return;
+
+          const targetField = papel === 'coordenador' ? 'equipeCoordenou' : 'equipeServiu';
+          const listaAtual = Array.isArray(pessoa[targetField]) ? pessoa[targetField] : [];
+          if (!listaAtual.includes(equipeNome)) {
+            pessoa[targetField] = [...listaAtual, equipeNome];
+          }
+        }
+      });
+
+      renderAll();
     }
 
     function ensureAppPopup() {
@@ -759,14 +871,18 @@
         <div class="modal-dialog modal-dialog-centered app-popup-dialog">
           <div class="modal-content border-0 shadow-lg app-popup-content app-popup-tone-primary">
             <div class="modal-header app-popup-header">
-              <div class="app-popup-title-stack">
-                <span class="app-popup-kicker" id="app-popup-kicker">Ação rápida</span>
-                <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+              <div class="app-popup-headline">
+                <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
+                <div class="app-popup-title-stack">
+                  <span class="app-popup-kicker" id="app-popup-kicker">Ação rápida</span>
+                  <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+                </div>
               </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
+              <div class="app-popup-note" id="app-popup-note"></div>
             </div>
             <div class="modal-footer app-popup-footer">
               <button type="button" class="btn btn-outline-secondary app-popup-cancel" id="app-popup-cancel">Cancelar</button>
@@ -788,20 +904,41 @@
       const titleEl = element.querySelector('#app-popup-title');
       const kickerEl = element.querySelector('#app-popup-kicker');
       const messageEl = element.querySelector('#app-popup-message');
+      const noteEl = element.querySelector('#app-popup-note');
+      const orbEl = element.querySelector('#app-popup-orb');
       const confirmBtn = element.querySelector('#app-popup-confirm');
       const cancelBtn = element.querySelector('#app-popup-cancel');
       const contentEl = element.querySelector('.app-popup-content');
 
       const toneLabels = {
         primary: 'Acao rapida',
-        warning: 'Atencao',
-        danger: 'Risco',
+        warning: 'Confirmacao',
+        danger: 'Atencao',
         success: 'Concluido',
+      };
+      const toneNotes = {
+        primary: 'Siga com a ação e acompanhe o reflexo imediato na distribuição deste encontro.',
+        warning: 'Revise a operação antes de confirmar para evitar retrabalho manual.',
+        danger: 'Confira os dados com cuidado antes de seguir com esta alteração.',
+        success: 'A distribuição foi atualizada sem recarregar a tela e a operação já foi refletida abaixo.',
+      };
+      const toneIcons = {
+        primary: 'fa-sparkles',
+        warning: 'fa-shield-halved',
+        danger: 'fa-triangle-exclamation',
+        success: 'fa-circle-check',
       };
 
       titleEl.textContent = title || 'Aviso';
       kickerEl.textContent = toneLabels[tone] || 'Acao rapida';
       messageEl.textContent = message || '';
+      if (noteEl) {
+        noteEl.textContent = toneNotes[tone] || toneNotes.primary;
+        noteEl.style.display = noteEl.textContent ? '' : 'none';
+      }
+      if (orbEl) {
+        orbEl.innerHTML = `<i class="fas ${toneIcons[tone] || toneIcons.primary}"></i>`;
+      }
       confirmBtn.textContent = confirmText;
       confirmBtn.className = `btn btn-${tone} app-popup-confirm`;
       contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
@@ -1766,6 +1903,7 @@
 
     async function vincularEncontristaCirculo() {
       if (!ensurePermission('encontros.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
       try {
         const entidadeId = document.getElementById('circulo_id').value;
         const pessoaIds = Array.from(document.getElementById('encontrista_id').selectedOptions || [])
@@ -1780,6 +1918,7 @@
         }
 
         console.log('[VINCULAR CIRCULO]', { ejcId, entidadeId, pessoaIds, papel, descricaoPapel });
+        setActionButtonBusy(triggerButton, true, 'Vinculando...');
 
         const res = await fetch('/admin/vincular-encontro', {
           method: 'POST',
@@ -1805,14 +1944,28 @@
           return await appAlert(`Nenhum novo vinculo foi criado. Esses nomes podem ja estar vinculados nesse circulo. (ja vinculados: ${data.jaVinculados || 0}, nao encontrados: ${data.naoEncontrados || 0})`, 'warning', 'Sem alteracoes');
         }
 
-        recarregarMantendoPainelAtual();
+        applyLocalVinculosUpdate({
+          entidadeTipo: 'circulo',
+          pessoaTipo: 'encontrista',
+          papel,
+          descricaoPapel,
+          novosVinculos: Array.isArray(data.novosVinculos) ? data.novosVinculos : [],
+        });
+        resetMultiSelect('encontrista_id', 'filtro_encontrista');
+        document.getElementById('papel_circulo').value = 'membro';
+        document.getElementById('descricao_papel_moita').value = '';
+        alternarCampoMoita();
+        await appAlert(`${data.vinculados} vínculo(s) criado(s) com sucesso.`, 'success', 'Círculo atualizado');
       } catch (err) {
         await appAlert(`Falha ao vincular encontrista: ${err.message}`, 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
     async function vincularEncontreiroEquipeEJC() {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
       try {
         const entidadeId = document.getElementById('equipe_id').value;
         const pessoaIds = Array.from(document.getElementById('encontreiro_id').selectedOptions || [])
@@ -1825,6 +1978,7 @@
         }
 
         console.log('[VINCULAR EQUIPE]', { ejcId, entidadeId, pessoaIds, papel });
+        setActionButtonBusy(triggerButton, true, papel === 'coordenador' ? 'Registrando capitão...' : 'Vinculando...');
 
         const res = await fetch('/admin/vincular-encontro', {
           method: 'POST',
@@ -1842,9 +1996,24 @@
           return await appAlert(`Nenhum novo vinculo foi criado. Esses nomes podem ja estar vinculados nessa equipe. (ja vinculados: ${data.jaVinculados || 0}, nao encontrados: ${data.naoEncontrados || 0})`, 'warning', 'Sem alteracoes');
         }
 
-        recarregarMantendoPainelAtual();
+        applyLocalVinculosUpdate({
+          entidadeTipo: 'equipe',
+          pessoaTipo: 'encontreiro',
+          papel,
+          novosVinculos: Array.isArray(data.novosVinculos) ? data.novosVinculos : [],
+        });
+        resetMultiSelect('encontreiro_id', 'filtro_encontreiro');
+        await appAlert(
+          papel === 'coordenador'
+            ? `${data.vinculados} capitão(ões) registrado(s) com sucesso.`
+            : `${data.vinculados} vínculo(s) criado(s) com sucesso.`,
+          'success',
+          papel === 'coordenador' ? 'Capitão registrado' : 'Equipe atualizada'
+        );
       } catch (err) {
         await appAlert(`Falha ao vincular na equipe: ${err.message}`, 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
