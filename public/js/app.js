@@ -593,7 +593,49 @@ function GenericForm() {
     );
   };
 
-  const renderEncontristaStepFields = ({ pessoa, data, handleCh, handleF }) => (
+  const renderObservacoesField = ({
+    pessoa,
+    data,
+    handleCh,
+    label = 'Observacoes',
+    placeholder = '',
+    helperText = '',
+    required = false,
+    idSuffix = 'observacoes',
+    fieldType = 'textarea',
+  }) => (
+    <div className="mb-3">
+      <label htmlFor={`${idSuffix}-${pessoa}`} className="form-label">{label}</label>
+      {fieldType === 'date' ? (
+        <input
+          type="date"
+          className="form-control"
+          id={`${idSuffix}-${pessoa}`}
+          name="observacoes"
+          value={data.observacoes}
+          onChange={handleCh}
+          required={required}
+        />
+      ) : (
+        <textarea
+          className="form-control"
+          id={`${idSuffix}-${pessoa}`}
+          name="observacoes"
+          value={data.observacoes}
+          onChange={handleCh}
+          rows="3"
+          placeholder={placeholder}
+          required={required}
+        ></textarea>
+      )}
+      {helperText ? <small className="form-text text-light d-block mt-2">{helperText}</small> : null}
+    </div>
+  );
+
+  const renderEncontristaStepFields = ({ pessoa, data, handleCh, handleF }) => {
+    const isNoivo = data.estadoCivil === 'Noivo (a)';
+
+    return (
     <>
       <section className={`form-step-panel${currentStep === 0 ? ' is-active' : ''}`} data-step-panel="0" hidden={currentStep !== 0}>
         <div className="form-section-title">
@@ -786,6 +828,17 @@ function GenericForm() {
           </div>
         </div>
 
+        {isNoivo && renderObservacoesField({
+          pessoa,
+          data,
+          handleCh,
+          label: 'Data do casamento *',
+          helperText: 'Informe a data prevista do casamento.',
+          required: true,
+          idSuffix: 'observacoes-casamento',
+          fieldType: 'date',
+        })}
+
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`possuiFilhos-${pessoa}`} className="form-label">Possui filhos?</label>
@@ -945,10 +998,7 @@ function GenericForm() {
           <div className="mb-3">
             {renderPhotoUploadField({ pessoa, data, handleF, label: 'Anexar foto (JPG ou PNG) *' })}
           </div>
-          <div className="mb-3">
-            <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
-            <textarea className="form-control" id={`observacoes-${pessoa}`} name="observacoes" value={data.observacoes} onChange={handleCh} rows="3"></textarea>
-          </div>
+          {!isNoivo && renderObservacoesField({ pessoa, data, handleCh })}
         </div>
 
         {renderReviewSummary('Resumo da inscricao', [
@@ -967,7 +1017,8 @@ function GenericForm() {
         </div>
       </section>
     </>
-  );
+    );
+  };
 
   const renderEncontroJovemStepFields = ({ pessoa, data, handleCh, handleF, isTios }) => (
     <>

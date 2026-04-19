@@ -2366,6 +2366,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
   const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
 
   const drawPageTitle = () => {};
+
   const mmToPt = (mm) => (mm * 72) / 25.4;
 
   const getEquipeTipoOrder = (entry) => {
@@ -2544,7 +2545,6 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
       });
     }
 
-    // Mantem a linha logo abaixo do texto centralizado no bloco.
     doc.strokeColor('#e9eef5').lineWidth(0.9)
       .moveTo(headerLeft + 22, lineY)
       .lineTo(headerLeft + headerWidth - 22, lineY)
@@ -2572,7 +2572,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
     if (hasEquipeHeaderLogo) {
       doc.image(equipeHeaderLogoPath, startX, logoY, {
         fit: [logoSize, logoSize],
-        align: 'left',
+      align: 'left',
         valign: 'center',
       });
     }
@@ -2728,12 +2728,12 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
     );
 
     const equipePageMargin = mmToPt(15);
+    const equipeStartY = topStart;
     const equipeCardWidth = mmToPt(85);
     const equipeCardHeight = mmToPt(34);
     const equipePhotoWidth = mmToPt(24);
     const equipePhotoHeight = mmToPt(28);
     const equipeColGap = mmToPt(10);
-    // Espaçamento reduzido para caber 12 cards por folha (mantendo card height intacto).
     const equipeRowGap = mmToPt(5);
     const equipeCardOptions = {
       photoWidth: equipePhotoWidth,
@@ -2759,7 +2759,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
       outerInset: 4,
     };
 
-    let y = equipePageMargin;
+    let y = equipeStartY;
     y += drawEquipeHeader(group.nome, y);
 
     if (coordenadores.length > 0) {
@@ -2793,7 +2793,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle, groups }) => {
     }
 
     if (membros.length > 0) {
-      drawGrid(membros, y, {
+      y = drawGrid(membros, y, {
         left: equipePageMargin,
         gap: equipeColGap,
         rowGap: equipeRowGap,
@@ -4725,6 +4725,13 @@ app.post(
     body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
     body('cep').notEmpty().withMessage('CEP é obrigatório'),
     body('estadoCivil').notEmpty().withMessage('Estado civil é obrigatório'),
+    body('observacoes').custom((value, { req }) => {
+      const estadoCivil = normalizeTextInput(req.body.estadoCivil).toLowerCase();
+      if (estadoCivil === 'noivo (a)' && !normalizeTextInput(value)) {
+        throw new Error('Se o estado civil for Noivo(a), informe a data prevista do casamento.');
+      }
+      return true;
+    }),
     body('nomeMae').notEmpty().withMessage('Nome da mãe é obrigatório'),
     body('telefoneMae').notEmpty().withMessage('Telefone da mãe é obrigatório'),
     body('nomePai').notEmpty().withMessage('Nome do pai é obrigatório'),
@@ -7825,6 +7832,10 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
       return buildPdfEntryFromVinculo(v, pessoa, ejc.nome);
     });
 
+    if (formato !== 'excel' && !pdfEntries.length) {
+      return res.status(404).send('Nao ha vinculados para gerar este PDF.');
+    }
+
     const entidadeNome = entidade.nome || 'Sem nome';
     const arquivoBase = `${entidadeTipo}_${entidadeNome}`
       .normalize('NFD')
@@ -8087,10 +8098,15 @@ app.get('/admin/encontros/:ejcId/quadrante/editor', checkAdminAuth, requireAdmin
       return res.status(404).send('EJC nao encontrado.');
     }
 
-    const [circulos, equipes] = await Promise.all([
+    const [circulos, equipes, vinculos] = await Promise.all([
       Circulo.find({ ejcId }).sort({ nome: 1 }).select('nome').lean(),
       Equipe.find({ ejcId }).sort({ nome: 1 }).select('nome').lean(),
+      VinculoEncontro.find({ ejcId }).select('entidadeTipo entidadeId').lean(),
     ]);
+
+    const entidadesComVinculos = new Set(
+      (Array.isArray(vinculos) ? vinculos : []).map((item) => `${normalizeTextInput(item.entidadeTipo).toLowerCase()}:${String(item.entidadeId)}`)
+    );
 
     const quadranteSources = [
       ...circulos.map((item) => ({
@@ -8105,7 +8121,7 @@ app.get('/admin/encontros/:ejcId/quadrante/editor', checkAdminAuth, requireAdmin
         nome: item.nome || 'Equipe sem nome',
         url: `/admin/encontros/${encodeURIComponent(ejcId)}/export/equipe/${encodeURIComponent(String(item._id))}/pdf`,
       })),
-    ];
+    ].filter((item) => entidadesComVinculos.has(`${item.tipo}:${item.id.split('-').slice(1).join('-')}`));
 
     return res.render('admin-quadrante-editor', {
       adminUsername: req.session.adminUsername,
@@ -8276,7 +8292,7 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
         nome: group.nome,
         entries,
       };
-    });
+    }).filter((group) => Array.isArray(group.entries) && group.entries.length > 0);
 
     renderEstruturasPdf(res, {
       fileName,

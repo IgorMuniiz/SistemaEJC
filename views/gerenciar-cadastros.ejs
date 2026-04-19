@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260417-admin-buttons-premium-38">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260419-manager-all-feedback-42">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -2848,7 +2848,7 @@
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content edit-cadastro-modal">
         <div class="modal-header edit-modal-header">
-          <div>
+          <div class="edit-modal-header-copy">
             <p class="edit-modal-kicker">Central de edição</p>
             <h5 class="modal-title"><i class="fas fa-pen-to-square me-2"></i><span id="edit_modal_title">Editar Cadastro</span></h5>
             <p class="edit-modal-subtitle" id="edit_modal_subtitle">Revise os dados principais, ajuste as informações obrigatórias e salve sem sair da gestão.</p>
@@ -2862,9 +2862,16 @@
 
             <section class="edit-modal-hero">
               <div class="edit-modal-identity">
-                <span class="edit-type-badge" id="edit_tipo_badge">Cadastro</span>
-                <h6 id="edit_resumo_nome">Cadastro selecionado</h6>
-                <p id="edit_resumo_contexto">Atualize o cadastro mantendo os dados claros, completos e prontos para aprovação.</p>
+                <div class="edit-identity-stack">
+                  <div class="edit-identity-avatar" id="edit_identity_avatar" aria-hidden="true">
+                    <span>CD</span>
+                  </div>
+                  <div class="edit-identity-copy">
+                    <span class="edit-type-badge" id="edit_tipo_badge">Cadastro</span>
+                    <h6 id="edit_resumo_nome">Cadastro selecionado</h6>
+                    <p id="edit_resumo_contexto">Atualize o cadastro mantendo os dados claros, completos e prontos para aprovação.</p>
+                  </div>
+                </div>
               </div>
               <div class="edit-modal-meta">
                 <article class="edit-meta-card" id="row_meta_ejc">
@@ -2959,6 +2966,14 @@
                       <label class="form-label">Bairro *</label>
                       <input type="text" class="form-control" id="edit_bairro" name="bairro" required>
                     </div>
+                    <div class="col-lg-4">
+                      <label class="form-label">CEP</label>
+                      <input type="text" class="form-control" id="edit_cep" name="cep">
+                    </div>
+                    <div class="col-lg-8">
+                      <label class="form-label">Complemento ou referência</label>
+                      <input type="text" class="form-control" id="edit_complementoReferencia" name="complementoReferencia">
+                    </div>
                     <div class="col-lg-6">
                       <label class="form-label">Telefone *</label>
                       <input type="text" class="form-control" id="edit_telefone" name="telefone" required>
@@ -2988,11 +3003,7 @@
                       <p>Organize os registros que ajudam na recepção, no acompanhamento e no suporte da coordenação.</p>
                     </div>
                     <div class="row g-3">
-                      <div class="col-lg-4">
-                        <label class="form-label">CEP</label>
-                        <input type="text" class="form-control" id="edit_cep" name="cep">
-                      </div>
-                      <div class="col-lg-8">
+                      <div class="col-lg-12">
                         <label class="form-label">Estado Civil</label>
                         <input type="text" class="form-control" id="edit_estadoCivil" name="estadoCivil">
                       </div>
@@ -3065,7 +3076,7 @@
                       </div>
                       <div class="col-lg-8">
                         <label class="form-label">Se sim, a quê?</label>
-                        <input type="text" class="form-control" id="edit_alergiaDescricao_encontrista" name="alergiaDescricao_encontrista" placeholder="Ex: amendoim, dipirona, lactose">
+                        <input type="text" class="form-control" id="edit_alergiaDescricao_encontrista" name="alergiaDescricao_encontrista">
                       </div>
                     </div>
                   </section>
@@ -3141,14 +3152,6 @@
                         <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="3"></textarea>
                         <small class="edit-field-hint">Mantenha o histórico objetivo para facilitar consultas futuras.</small>
                       </div>
-                      <div class="col-lg-4">
-                        <label class="form-label">CEP</label>
-                        <input type="text" class="form-control" id="edit_encontro_cep">
-                      </div>
-                      <div class="col-lg-8">
-                        <label class="form-label">Complemento ou referência</label>
-                        <input type="text" class="form-control" id="edit_encontro_complementoReferencia">
-                      </div>
                       <div class="col-12">
                         <label class="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
                         <textarea class="form-control" id="edit_encontro_talentoHabilidadeArtistica" rows="3"></textarea>
@@ -3174,7 +3177,7 @@
                       </div>
                       <div class="col-lg-8">
                         <label class="form-label">Se sim, a quê?</label>
-                        <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2" placeholder="Ex: amendoim, dipirona, lactose"></textarea>
+                        <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2"></textarea>
                       </div>
                       <div class="col-lg-6">
                         <label class="form-label">Religiosamente, como você se considera hoje?</label>
@@ -3664,6 +3667,166 @@
     });
 
     let useNativeDialogs = false;
+    let lastTransferSelectionCount = null;
+    let lastApprovalSelectionCount = null;
+    const managerFeedbackStorageKey = 'admin_manager_pending_feedback';
+
+    function prefersReducedManagerMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function pulseManagerElement(element, className = 'manager-feedback-pulse') {
+      if (!element) return;
+
+      const duration = className === 'manager-feedback-glow' ? 1400 : 1100;
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
+
+      window.setTimeout(() => {
+        element.classList.remove(className);
+      }, prefersReducedManagerMotion() ? 260 : duration);
+    }
+
+    function setActionButtonBusy(button, busy, busyLabel = 'Processando...') {
+      if (!button) return;
+
+      if (busy) {
+        if (!button.dataset.originalHtml) {
+          button.dataset.originalHtml = button.innerHTML;
+          button.dataset.wasDisabled = button.disabled ? 'true' : 'false';
+        }
+
+        button.disabled = true;
+        button.classList.add('is-busy');
+        button.innerHTML = `<span class="btn-busy-spinner" aria-hidden="true"></span><span>${escapeHtml(busyLabel)}</span>`;
+        return;
+      }
+
+      if (button.dataset.originalHtml) {
+        button.innerHTML = button.dataset.originalHtml;
+      }
+
+      button.classList.remove('is-busy');
+      button.disabled = button.dataset.wasDisabled === 'true';
+      delete button.dataset.originalHtml;
+      delete button.dataset.wasDisabled;
+    }
+
+    function getActionTriggerButton() {
+      const activeElement = document.activeElement;
+      if (activeElement && activeElement.closest) {
+        return activeElement.closest('button');
+      }
+      return null;
+    }
+
+    function escapeSelectorValue(value) {
+      if (window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(String(value || ''));
+      }
+
+      return String(value || '').replace(/(["\\])/g, '\\$1');
+    }
+
+    function getCadastroRowsById(tipo, id) {
+      const rows = new Set();
+      const safeId = String(id || '');
+      if (!safeId) return [];
+
+      const actionSelectors = [
+        `button[onclick*="editarCadastro('${tipo}', '${safeId}')"]`,
+        `button[onclick*="deletarCadastro('${tipo}', '${safeId}')"]`,
+      ];
+
+      if (tipo === 'encontrista') {
+        actionSelectors.push(`button[onclick*="transferirParaEncontreiros('${safeId}'"]`);
+      }
+
+      document.querySelectorAll(actionSelectors.join(',')).forEach((button) => {
+        const row = button.closest('tr');
+        if (row) rows.add(row);
+      });
+
+      const selectorId = escapeSelectorValue(safeId);
+      document.querySelectorAll(`.approval-batch-check[value="${selectorId}"][data-approval-batch-type="${tipo}"]`).forEach((checkbox) => {
+        const row = checkbox.closest('tr');
+        if (row) rows.add(row);
+      });
+
+      if (tipo === 'encontrista') {
+        document.querySelectorAll(`.transfer-encontrista-check[value="${selectorId}"]`).forEach((checkbox) => {
+          const row = checkbox.closest('tr');
+          if (row) rows.add(row);
+        });
+      }
+
+      return Array.from(rows);
+    }
+
+    function setRowsPendingState(rows, active) {
+      rows.forEach((row) => {
+        row.classList.toggle('is-pending-action', !!active);
+      });
+    }
+
+    function queueManagerFeedback(feedback) {
+      try {
+        sessionStorage.setItem(managerFeedbackStorageKey, JSON.stringify({
+          ...feedback,
+          timestamp: Date.now(),
+        }));
+      } catch (error) {
+        console.warn('Nao foi possivel persistir microfeedback da central.', error);
+      }
+    }
+
+    function consumeManagerFeedback() {
+      try {
+        const raw = sessionStorage.getItem(managerFeedbackStorageKey);
+        if (!raw) return null;
+
+        sessionStorage.removeItem(managerFeedbackStorageKey);
+        const parsed = JSON.parse(raw);
+        if (!parsed || (Date.now() - Number(parsed.timestamp || 0)) > 15000) {
+          return null;
+        }
+
+        return parsed;
+      } catch (error) {
+        console.warn('Nao foi possivel ler microfeedback pendente da central.', error);
+        sessionStorage.removeItem(managerFeedbackStorageKey);
+        return null;
+      }
+    }
+
+    function getAbaAtivaPainelId() {
+      const activePane = document.querySelector('.tab-pane.show.active');
+      return activePane && activePane.id ? activePane.id : 'principal-tab';
+    }
+
+    function applyManagerFeedbackOnLoad() {
+      const feedback = consumeManagerFeedback();
+      if (!feedback) return;
+
+      const tabId = feedback.tabId || getAbaAtivaPainelId();
+      const pane = document.getElementById(tabId);
+      if (pane) {
+        pulseManagerElement(pane, 'manager-feedback-glow');
+      }
+
+      document.querySelectorAll(`[data-tab-target="${tabId}"]`).forEach((target) => {
+        pulseManagerElement(target);
+      });
+
+      if (Array.isArray(feedback.rows)) {
+        feedback.rows.forEach((entry) => {
+          getCadastroRowsById(entry.tipo, entry.id).forEach((row) => {
+            pulseManagerElement(row, 'is-success-flash');
+          });
+        });
+      }
+    }
 
     function ensureAppPopup() {
       console.log('[ensureAppPopup] verificando se modal existe...');
@@ -3686,16 +3849,23 @@
         <div class="modal-dialog modal-dialog-centered app-popup-dialog">
           <div class="modal-content border-0 shadow-lg app-popup-content app-popup-tone-primary">
             <div class="modal-header app-popup-header">
-              <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+              <div class="app-popup-headline">
+                <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
+                <div class="app-popup-title-stack">
+                  <span class="app-popup-kicker" id="app-popup-kicker">Acao rapida</span>
+                  <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+                </div>
+              </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
-              <input id="app-popup-input" type="text" class="form-control mt-3" style="display:none;" />
+              <input id="app-popup-input" type="text" class="form-control app-popup-input mt-3" style="display:none;" />
+              <div class="app-popup-note" id="app-popup-note"></div>
             </div>
             <div class="modal-footer app-popup-footer">
-              <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
-              <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
+              <button type="button" class="btn btn-outline-secondary app-popup-cancel" id="app-popup-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary app-popup-confirm" id="app-popup-confirm">OK</button>
             </div>
           </div>
         </div>
@@ -3738,18 +3908,52 @@
         try {
           const { element, instance } = ensureAppPopup();
           const titleEl = element.querySelector('#app-popup-title');
+          const kickerEl = element.querySelector('#app-popup-kicker');
           const messageEl = element.querySelector('#app-popup-message');
+          const noteEl = element.querySelector('#app-popup-note');
+          const orbEl = element.querySelector('#app-popup-orb');
           const inputEl = element.querySelector('#app-popup-input');
           const confirmBtn = element.querySelector('#app-popup-confirm');
           const cancelBtn = element.querySelector('#app-popup-cancel');
           const contentEl = element.querySelector('.app-popup-content');
 
-          console.log('[showAppPopup] elementos encontrados:', { titleEl, messageEl, inputEl, confirmBtn, cancelBtn, contentEl });
+          const toneLabels = {
+            primary: 'Acao rapida',
+            warning: 'Confirmacao',
+            danger: 'Atencao',
+            success: 'Concluido',
+          };
+          const toneNotes = {
+            primary: 'Revise os detalhes antes de concluir a acao na central.',
+            warning: 'Esta decisao afeta o fluxo atual de trabalho e merece uma ultima checagem.',
+            danger: 'Confira os dados com atencao para evitar uma reversao manual depois.',
+            success: 'A central foi atualizada e o feedback visual acompanha a operacao concluida.',
+          };
+          const toneIcons = {
+            primary: 'fa-sparkles',
+            warning: 'fa-shield-halved',
+            danger: 'fa-triangle-exclamation',
+            success: 'fa-circle-check',
+          };
+
+          console.log('[showAppPopup] elementos encontrados:', { titleEl, kickerEl, messageEl, noteEl, orbEl, inputEl, confirmBtn, cancelBtn, contentEl });
 
           titleEl.textContent = title || 'Aviso';
+          if (kickerEl) {
+            kickerEl.textContent = toneLabels[tone] || toneLabels.primary;
+          }
           messageEl.textContent = message || '';
+          if (noteEl) {
+            noteEl.textContent = inputValue !== null
+              ? 'Informe o valor solicitado para concluir a atualizacao.'
+              : (toneNotes[tone] || toneNotes.primary);
+            noteEl.style.display = noteEl.textContent ? '' : 'none';
+          }
+          if (orbEl) {
+            orbEl.innerHTML = `<i class="fas ${toneIcons[tone] || toneIcons.primary}"></i>`;
+          }
           confirmBtn.textContent = confirmText;
-          confirmBtn.className = `btn btn-${tone}`;
+          confirmBtn.className = `btn btn-${tone} app-popup-confirm`;
           if (contentEl) {
             contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
             contentEl.classList.add(`app-popup-tone-${tone}`);
@@ -3864,7 +4068,7 @@
         return;
       }
       try {
-        await showBeautifulDialog({ title, message, confirmText: 'Entendi', isDanger: tone === 'danger' });
+        await showAppPopup({ title, message, confirmText: 'Entendi', tone });
       } catch (e) {
         console.error('[appAlert] erro ao mostrar popup:', e);
         useNativeDialogs = true;
@@ -3877,11 +4081,13 @@
         return window.confirm(`${title}\n\n${message}`);
       }
       try {
-        return await showBeautifulDialog({
+        const tone = /delet|exclus|irrevers|remoc|remover|limpar/i.test(`${title} ${message}`) ? 'danger' : 'warning';
+        return await showAppPopup({
           title,
           message,
           confirmText: 'Confirmar',
           cancelText: 'Cancelar',
+          tone,
         });
       } catch (e) {
         console.error('[appConfirm] erro ao mostrar popup:', e);
@@ -4239,6 +4445,7 @@
     aplicarPermissoesNoPainel();
     bindTabTriggers();
     restaurarAbaAtiva();
+    applyManagerFeedbackOnLoad();
     promoverSecaoAdministradores();
     setupAdminKeyboardShortcuts();
     atualizarAprovacaoLoteUI();
@@ -4311,6 +4518,31 @@
       badge.className = `edit-type-badge ${tipo === 'encontrista' ? 'is-encontrista' : 'is-encontreiro'}`;
     }
 
+    function getCadastroInitials(nomeCompleto) {
+      return String(nomeCompleto || '')
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((parte) => parte.charAt(0).toUpperCase())
+        .join('') || 'CD';
+    }
+
+    function atualizarAvatarResumoEdicao(cadastro) {
+      const avatar = document.getElementById('edit_identity_avatar');
+      if (!avatar) return;
+
+      if (cadastro && cadastro.foto) {
+        const src = `/img/uploads/${encodeURIComponent(cadastro.foto)}?w=180&h=180&fit=cover&format=webp`;
+        avatar.className = 'edit-identity-avatar has-photo';
+        avatar.innerHTML = `<img src="${src}" alt="Foto de ${escapeHtml(cadastro.nomeCompleto || 'cadastro')}" loading="lazy" decoding="async">`;
+        return;
+      }
+
+      avatar.className = 'edit-identity-avatar';
+      avatar.innerHTML = `<span>${escapeHtml(getCadastroInitials(cadastro?.nomeCompleto))}</span>`;
+    }
+
     function editarCadastro(tipo, id) {
       const lista = tipo === 'encontrista' ? encontristas : encontreiros;
       const cadastro = lista.find(c => String(c._id) === String(id));
@@ -4338,6 +4570,7 @@
       document.getElementById('edit_instagram').value = cadastro.instagram || '';
       document.getElementById('edit_observacoes').value = cadastro.observacoes || '';
       document.getElementById('edit_cep').value = cadastro.cep || '';
+      document.getElementById('edit_complementoReferencia').value = cadastro.complementoReferencia || '';
       document.getElementById('edit_estadoCivil').value = cadastro.estadoCivil || '';
       document.getElementById('edit_nomeMae').value = cadastro.nomeMae || '';
       document.getElementById('edit_telefoneMae').value = cadastro.telefoneMae || '';
@@ -4404,8 +4637,8 @@
         atualizarCamposParceiroTios();
         document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
         document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
-        document.getElementById('edit_encontro_cep').value = cadastro.cep || '';
-        document.getElementById('edit_encontro_complementoReferencia').value = cadastro.complementoReferencia || '';
+        document.getElementById('edit_cep').value = cadastro.cep || '';
+        document.getElementById('edit_complementoReferencia').value = cadastro.complementoReferencia || '';
         document.getElementById('edit_encontro_talentoHabilidadeArtistica').value = cadastro.talentoHabilidadeArtistica || '';
         document.getElementById('edit_encontro_quadroSaude').value = cadastro.quadroSaude || '';
         document.getElementById('edit_encontro_medicamentoControlado').value = cadastro.medicamentoControlado || '';
@@ -4420,6 +4653,7 @@
       }
 
       modalEdicaoElement.classList.toggle('is-encontreiro-view', tipo === 'encontreiro');
+      atualizarAvatarResumoEdicao(cadastro);
 
       const fotoContainer = document.getElementById('fotoAtualContainer');
       document.getElementById('edit_foto').value = '';
@@ -4451,10 +4685,14 @@
       const formData = new FormData(document.getElementById('formEdicao'));
       const tipo = document.getElementById('edit_tipo').value;
       const id = document.getElementById('edit_id').value;
+      const saveButtons = Array.from(modalEdicaoElement.querySelectorAll('button[onclick="salvarEdicao()"]'));
+      const tabId = getAbaAtivaPainelId();
+
+      saveButtons.forEach((button) => setActionButtonBusy(button, true, 'Salvando...'));
 
       if (tipo === 'encontreiro') {
-        formData.set('cep', document.getElementById('edit_encontro_cep')?.value || '');
-        formData.set('complementoReferencia', document.getElementById('edit_encontro_complementoReferencia')?.value || '');
+        formData.set('cep', document.getElementById('edit_cep')?.value || '');
+        formData.set('complementoReferencia', document.getElementById('edit_complementoReferencia')?.value || '');
         formData.set('talentoHabilidadeArtistica', document.getElementById('edit_encontro_talentoHabilidadeArtistica')?.value || '');
         formData.set('quadroSaude', document.getElementById('edit_encontro_quadroSaude')?.value || '');
         formData.set('medicamentoControlado', document.getElementById('edit_encontro_medicamentoControlado')?.value || '');
@@ -4479,6 +4717,10 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({
+            tabId,
+            rows: [{ tipo, id }],
+          });
           await appAlert('Cadastro atualizado com sucesso.', 'success', 'Sucesso');
           modalEdicao.hide();
           recarregarMantendoAbaAtual();
@@ -4488,11 +4730,16 @@
       } catch (error) {
         console.error('Erro ao salvar alterações:', error);
         await appAlert('Erro ao salvar alteracoes: ' + error.message, 'danger', 'Erro');
+      } finally {
+        saveButtons.forEach((button) => setActionButtonBusy(button, false));
       }
     }
 
     async function removerFoto(tipo, id) {
+      const removeButton = getActionTriggerButton();
       if (!await appConfirm('Deseja remover esta foto?', 'Confirmar remocao')) return;
+
+      setActionButtonBusy(removeButton, true, 'Removendo...');
 
       try {
         const response = await fetch(`/admin/remover-foto/${tipo}/${id}`, { method: 'POST' });
@@ -4507,6 +4754,10 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({
+            tabId: getAbaAtivaPainelId(),
+            rows: [{ tipo, id }],
+          });
           await appAlert('Foto removida com sucesso.', 'success', 'Sucesso');
           modalEdicao.hide();
           recarregarMantendoAbaAtual();
@@ -4516,6 +4767,8 @@
       } catch (error) {
         console.error('Erro ao remover foto:', error);
         await appAlert('Erro ao remover foto: ' + error.message, 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(removeButton, false);
       }
     }
 
@@ -4524,7 +4777,12 @@
     document.getElementById('edit_tioComParceiro')?.addEventListener('change', atualizarCamposParceiroTios);
 
     async function deletarCadastro(tipo, id, nome) {
+      const triggerButton = getActionTriggerButton();
+      const rows = getCadastroRowsById(tipo, id);
       if (!await appConfirm(`Tem certeza que deseja deletar o cadastro de "${nome}"? Esta acao nao pode ser desfeita.`, 'Confirmar exclusao')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(rows, true);
 
       try {
         const response = await fetch(`/admin/deletar-cadastro/${encodeURIComponent(tipo)}/${encodeURIComponent(id)}`, {
@@ -4538,6 +4796,7 @@
           : { success: false, error: await response.text() };
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Cadastro deletado com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -4545,12 +4804,20 @@
         }
       } catch (error) {
         await appAlert('Erro ao deletar cadastro: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(rows, false);
       }
     }
 
     async function transferirParaEncontreiros(id, nome) {
+      const triggerButton = getActionTriggerButton();
+      const rows = getCadastroRowsById('encontrista', id);
       const confirmar = await appConfirm(`Transferir "${nome}" de Encontristas para Encontreiros?\n\nAo confirmar, o cadastro sai da aba Encontristas e passa para Encontreiros.`, 'Confirmar transferencia');
       if (!confirmar) return;
+
+      setActionButtonBusy(triggerButton, true, 'Transferindo...');
+      setRowsPendingState(rows, true);
 
       try {
         const response = await fetch(`/admin/transferir-encontrista/${encodeURIComponent(id)}`, {
@@ -4564,6 +4831,7 @@
           : { success: false, error: await response.text() };
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Transferencia realizada com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
           return;
@@ -4572,6 +4840,9 @@
         await appAlert(result.error || 'Nao foi possivel transferir o cadastro.', 'danger', 'Erro');
       } catch (error) {
         await appAlert('Erro ao transferir cadastro: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(rows, false);
       }
     }
 
@@ -4587,6 +4858,10 @@
       if (!botao) return;
       botao.disabled = selecionados.length === 0;
       botao.innerHTML = `<i class="fas fa-right-left me-1"></i>Transferir selecionados (${selecionados.length})`;
+      if (lastTransferSelectionCount !== null && selecionados.length !== lastTransferSelectionCount) {
+        pulseManagerElement(botao);
+      }
+      lastTransferSelectionCount = selecionados.length;
     }
 
     function toggleSelecionarTodosEncontristas(master, groupName) {
@@ -4653,6 +4928,13 @@
         masterGlobal.indeterminate = visiveisMarcados > 0 && !allVisibleChecked;
       }
 
+      if (lastApprovalSelectionCount !== null && totalSelecionados !== lastApprovalSelectionCount) {
+        pulseManagerElement(contador);
+        pulseManagerElement(btnAprovar);
+        pulseManagerElement(btnReprovar);
+      }
+      lastApprovalSelectionCount = totalSelecionados;
+
       atualizarMasterAprovacoesPorTipo('encontrista');
       atualizarMasterAprovacoesPorTipo('encontreiro');
     }
@@ -4683,6 +4965,8 @@
     async function executarAprovacaoLote(action) {
       if (!ensurePermission('cadastros.aprovar')) return;
 
+      const triggerButton = getActionTriggerButton();
+
       const selecionados = getAprovacoesSelecionadas();
       if (selecionados.length === 0) {
         await appAlert('Selecione ao menos um cadastro para processar.', 'warning', 'Nenhum selecionado');
@@ -4701,6 +4985,8 @@
         'Confirmar ação em lote'
       );
       if (!confirmar) return;
+
+      setActionButtonBusy(triggerButton, true, action === 'aprovar' ? 'Aprovando...' : 'Reprovando...');
 
       try {
         let totalAtualizado = 0;
@@ -4722,6 +5008,10 @@
           totalNaoEncontrado += Number(result.missingCount || 0);
         }
 
+        queueManagerFeedback({
+          tabId: 'aprovacoes-tab',
+          rows: selecionados.slice(0, 12),
+        });
         await appAlert(
           `Ação em lote concluída.\n\nAtualizados: ${totalAtualizado}\nNão encontrados: ${totalNaoEncontrado}`,
           'success',
@@ -4730,10 +5020,13 @@
         recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao processar seleção em lote: ' + (error.message || 'falha de conexão'), 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
     async function transferirSelecionadosEncontristas() {
+      const triggerButton = getActionTriggerButton();
       const ids = getEncontristasSelecionadosTransferencia();
       if (ids.length === 0) {
         await appAlert('Selecione ao menos um encontrista para transferir.', 'warning', 'Nenhum selecionado');
@@ -4745,6 +5038,8 @@
         'Confirmar transferencia em lote'
       );
       if (!confirmar) return;
+
+      setActionButtonBusy(triggerButton, true, 'Transferindo...');
 
       try {
         const response = await fetch('/admin/transferir-encontristas-lote', {
@@ -4763,6 +5058,7 @@
         }
 
         const resumo = result.resumo || {};
+        queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert(
           `Transferencia concluida.\n\nTransferidos: ${resumo.transferidos || 0}\nDuplicados ignorados: ${resumo.duplicados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
           'success',
@@ -4771,17 +5067,23 @@
         recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao transferir selecionados: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
     async function limparTodosEncontreiros() {
+      const triggerButton = getActionTriggerButton();
       if (!await appConfirm('ATENCAO!\n\nIsso vai DELETAR TODOS os cadastros de Encontreiros e suas fotos.\nEsta acao NAO pode ser desfeita!\n\nVoce tem certeza?', 'Acao irreversivel')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Limpando...');
 
       try {
         const response = await fetch('/admin/limpar-encontreiros', { method: 'POST' });
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert(`${result.deletados} encontreiros e suas fotos foram permanentemente deletados.`, 'success', 'Limpeza concluida');
           recarregarMantendoAbaAtual();
         } else {
@@ -4789,6 +5091,8 @@
         }
       } catch (error) {
         await appAlert('Erro ao limpar encontreiros.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
@@ -4847,6 +5151,7 @@
 
     async function cadastrarAdmin() {
       if (!ensurePermission('admins.gerenciar')) return;
+      const submitButton = document.querySelector('#formAdmin .admin-primary-action');
       const username = document.getElementById('admin_username').value.trim();
       const senha = document.getElementById('admin_senha').value;
       const nivelAcesso = document.getElementById('admin_nivel').value;
@@ -4857,6 +5162,8 @@
         return;
       }
 
+      setActionButtonBusy(submitButton, true, 'Cadastrando...');
+
       try {
         const response = await fetch('/admin/cadastrar-admin', {
           method: 'POST',
@@ -4866,6 +5173,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'administradores' });
           await appAlert('Administrador cadastrado com sucesso.', 'success', 'Sucesso');
           document.getElementById('formAdmin').reset();
           recarregarMantendoAbaAtual();
@@ -4874,11 +5182,14 @@
         }
       } catch (error) {
         await appAlert('Erro ao cadastrar administrador.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function cadastrarEquipe() {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const submitButton = document.querySelector('#formEquipe .admin-primary-action');
       const nome = document.getElementById('equipe_nome').value.trim();
       const ejcId = document.getElementById('equipe_ejcId').value;
 
@@ -4886,6 +5197,8 @@
         await appAlert('Informe o EJC e o nome da equipe.', 'warning', 'Dados incompletos');
         return;
       }
+
+      setActionButtonBusy(submitButton, true, 'Cadastrando...');
 
       try {
         const response = await fetch('/admin/cadastrar-equipe', {
@@ -4896,6 +5209,7 @@
 
         const result = await response.json();
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Equipe cadastrada com sucesso.', 'success', 'Sucesso');
           document.getElementById('formEquipe').reset();
           recarregarMantendoAbaAtual();
@@ -4904,11 +5218,14 @@
         }
       } catch (error) {
         await appAlert('Erro ao cadastrar equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function vincularEncontreiroEquipe() {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const submitButton = document.querySelector('#formVinculoEquipe .admin-primary-action');
       const encontreiroId = document.getElementById('vinculo_encontreiro').value;
       const equipeId = document.getElementById('vinculo_equipe').value;
       const papel = document.getElementById('vinculo_papel').value;
@@ -4917,6 +5234,8 @@
         await appAlert('Selecione pessoa, equipe e vinculo.', 'warning', 'Dados incompletos');
         return;
       }
+
+      setActionButtonBusy(submitButton, true, 'Vinculando...');
 
       try {
         const response = await fetch('/admin/vincular-encontreiro-equipe', {
@@ -4927,6 +5246,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Encontreiro vinculado na equipe com sucesso.', 'success', 'Sucesso');
           document.getElementById('formVinculoEquipe').reset();
           recarregarMantendoAbaAtual();
@@ -4935,12 +5255,19 @@
         }
       } catch (error) {
         await appAlert('Erro ao vincular equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function deletarEquipe(equipeId, equipeNome) {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Deseja deletar a equipe "${equipeNome}"? Os vinculos dessa equipe serao removidos dos encontreiros.`, 'Confirmar exclusao')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/deletar-equipe/${equipeId}`, {
@@ -4950,6 +5277,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Equipe deletada com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -4957,11 +5285,15 @@
         }
       } catch (error) {
         await appAlert('Erro ao deletar equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
     async function cadastrarSubequipe() {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const submitButton = document.querySelector('#formSubequipe .subequipe-feature-action');
       const nome = document.getElementById('subequipe_nome').value.trim();
       const anoVigencia = Number.parseInt(String(document.getElementById('subequipe_ano').value || ''), 10);
 
@@ -4974,6 +5306,8 @@
         return;
       }
 
+      setActionButtonBusy(submitButton, true, 'Salvando...');
+
       try {
         const response = await fetch('/admin/cadastrar-subequipe', {
           method: 'POST',
@@ -4983,6 +5317,7 @@
 
         const result = await response.json();
         if (result.success) {
+          queueManagerFeedback({ tabId: 'subequipes' });
           await appAlert('Sub-equipe cadastrada com sucesso.', 'success', 'Sucesso');
           document.getElementById('formSubequipe').reset();
           recarregarMantendoAbaAtual();
@@ -4991,11 +5326,14 @@
         }
       } catch (error) {
         await appAlert('Erro ao cadastrar sub-equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function vincularEncontreiroSubequipe() {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const submitButton = document.querySelector('#formVinculoSubequipe .subequipe-feature-action');
       const pessoaId = document.getElementById('vinculo_subequipe_pessoa').value;
       const subequipeId = document.getElementById('vinculo_subequipe').value;
       const papel = document.getElementById('vinculo_subequipe_papel').value;
@@ -5004,6 +5342,8 @@
         await appAlert('Selecione pessoa, sub-equipe e vínculo.', 'warning', 'Dados incompletos');
         return;
       }
+
+      setActionButtonBusy(submitButton, true, 'Vinculando...');
 
       try {
         const response = await fetch('/admin/vincular-encontreiro-subequipe', {
@@ -5014,6 +5354,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'subequipes' });
           await appAlert('Pessoa vinculada na sub-equipe com sucesso.', 'success', 'Sucesso');
           document.getElementById('formVinculoSubequipe').reset();
           recarregarMantendoAbaAtual();
@@ -5022,11 +5363,15 @@
         }
       } catch (error) {
         await appAlert('Erro ao vincular sub-equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function editarSubequipe(subequipeId, nomeAtual, anoAtual) {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       const nome = await appPrompt('Informe o novo nome da sub-equipe.', nomeAtual || '', 'Editar sub-equipe');
       if (nome == null) return;
 
@@ -5044,6 +5389,9 @@
         return;
       }
 
+      setActionButtonBusy(triggerButton, true, 'Salvando...');
+      setRowsPendingState(targetRow, true);
+
       try {
         const response = await fetch(`/admin/editar-subequipe/${subequipeId}`, {
           method: 'POST',
@@ -5053,6 +5401,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'subequipes' });
           await appAlert('Sub-equipe atualizada com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5060,12 +5409,20 @@
         }
       } catch (error) {
         await appAlert('Erro ao editar sub-equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
     async function deletarSubequipe(subequipeId, subequipeNome) {
       if (!ensurePermission('equipes.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Deseja deletar a sub-equipe "${subequipeNome}"? Os vínculos dessa sub-equipe serão removidos dos encontreiros e tios.`, 'Confirmar exclusão')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/deletar-subequipe/${subequipeId}`, {
@@ -5075,6 +5432,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'subequipes' });
           await appAlert('Sub-equipe deletada com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5082,6 +5440,9 @@
         }
       } catch (error) {
         await appAlert('Erro ao deletar sub-equipe.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
@@ -5479,6 +5840,7 @@
 
     async function cadastrarGasto() {
       if (!ensurePermission('gastos.gerenciar')) return;
+      const submitButton = document.getElementById('gasto_submit_btn');
 
       const tipoLancamento = document.getElementById('gasto_tipoLancamento')?.value || 'arrecadacao';
       const lancamentoConfig = resolveLancamentoFinanceiroConfig(tipoLancamento);
@@ -5509,6 +5871,8 @@
         await appAlert('Selecione a equipe relacionada ao lançamento.', 'warning', 'Dados incompletos');
         return;
       }
+
+      setActionButtonBusy(submitButton, true, isEntrada ? 'Registrando...' : 'Salvando...');
 
       const gastoPayload = {
         ejcId,
@@ -5563,6 +5927,7 @@
           return;
         }
 
+        queueManagerFeedback({ tabId: 'gastos' });
         await appAlert(lancamentoConfig.sucessoMensagem || 'Lançamento cadastrado com sucesso.', 'success', 'Sucesso');
         document.getElementById('formGasto')?.reset();
 
@@ -5580,12 +5945,19 @@
         recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function deletarGasto(gastoId, descricao) {
       if (!ensurePermission('gastos.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Deseja excluir o gasto "${descricao}"?`, 'Confirmar exclusão')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/deletar-gasto/${gastoId}`, {
@@ -5595,6 +5967,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'gastos' });
           await appAlert('Gasto removido com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5602,6 +5975,9 @@
         }
       } catch (error) {
         await appAlert('Erro ao remover gasto.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
@@ -5719,6 +6095,7 @@
 
     async function cadastrarFluxoCaixa() {
       if (!ensurePermission('gastos.gerenciar')) return;
+      const submitButton = document.querySelector('#formFluxoCaixa .gastos-submit-btn');
 
       const ejcId = document.getElementById('fluxo_ejcId')?.value || '';
       const tipoMovimento = document.getElementById('fluxo_tipoMovimento')?.value || 'entrada';
@@ -5741,6 +6118,8 @@
         return;
       }
 
+      setActionButtonBusy(submitButton, true, 'Registrando...');
+
       try {
         const response = await fetch('/admin/cadastrar-fluxo-caixa', {
           method: 'POST',
@@ -5761,6 +6140,7 @@
 
         const result = await response.json();
         if (result.success) {
+          queueManagerFeedback({ tabId: 'gastos' });
           await appAlert('Movimento de caixa cadastrado com sucesso.', 'success', 'Sucesso');
           document.getElementById('formFluxoCaixa')?.reset();
           const dataInput = document.getElementById('fluxo_dataMovimento');
@@ -5774,12 +6154,19 @@
         }
       } catch (error) {
         await appAlert('Erro ao cadastrar movimento de caixa.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function deletarFluxoCaixa(movimentoId, descricao) {
       if (!ensurePermission('gastos.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Deseja excluir o movimento "${descricao}"?`, 'Confirmar exclusão')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/deletar-fluxo-caixa/${movimentoId}`, {
@@ -5789,6 +6176,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'gastos' });
           await appAlert('Movimento removido com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5796,6 +6184,9 @@
         }
       } catch (error) {
         await appAlert('Erro ao remover movimento.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
@@ -5885,11 +6276,14 @@
 
     async function criarEjc() {
       if (!ensurePermission('encontros.gerenciar')) return;
+      const submitButton = document.querySelector('#formEjc .admin-primary-action');
       const nome = document.getElementById('ejc_nome').value.trim();
       if (!nome) {
         await appAlert('Informe o nome do EJC.', 'warning', 'Campo obrigatorio');
         return;
       }
+
+      setActionButtonBusy(submitButton, true, 'Criando...');
 
       try {
         const response = await fetch('/admin/criar-ejc', {
@@ -5900,6 +6294,7 @@
 
         const result = await response.json();
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('EJC criado com sucesso.', 'success', 'Sucesso');
           document.getElementById('formEjc').reset();
           recarregarMantendoAbaAtual();
@@ -5908,14 +6303,21 @@
         }
       } catch (error) {
         await appAlert('Erro ao criar EJC.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 
     async function deletarEjc(ejcId, ejcNome) {
       if (!ensurePermission('encontros.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Deseja realmente excluir o encontro "${ejcNome}"?\n\nEsta acao remove tambem circulos, equipes e vinculos desse EJC.`, 'Confirmar exclusao')) {
         return;
       }
+
+      setActionButtonBusy(triggerButton, true, 'Excluindo...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/deletar-ejc/${ejcId}`, {
@@ -5925,6 +6327,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert('Encontro excluido com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5932,14 +6335,22 @@
         }
       } catch (error) {
         await appAlert('Erro ao excluir encontro.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
     async function definirEjcAtivo(ejcId, ejcNome) {
       if (!ensurePermission('encontros.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm(`Definir "${ejcNome}" como encontro ativo?\n\nAs novas inscricoes serao vinculadas a este encontro.`, 'Confirmar encontro ativo')) {
         return;
       }
+
+      setActionButtonBusy(triggerButton, true, 'Ativando...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch(`/admin/definir-ejc-ativo/${ejcId}`, {
@@ -5949,6 +6360,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert(result.message || 'Encontro ativo atualizado com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -5956,6 +6368,9 @@
         }
       } catch (error) {
         await appAlert('Erro ao definir encontro ativo.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
@@ -6143,7 +6558,7 @@
       if (saveBtn && saveBtn.dataset.loading === '1') return;
       if (saveBtn) {
         saveBtn.dataset.loading = '1';
-        saveBtn.disabled = true;
+        setActionButtonBusy(saveBtn, true, 'Salvando...');
       }
 
       const adminId = String((editorRow.querySelector('#edit_admin_id') || {}).value || '').trim();
@@ -6186,6 +6601,7 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({ tabId: 'administradores' });
           await appAlert('Administrador atualizado com sucesso.', 'success', 'Sucesso');
           fecharInlineEditorAdmin();
           recarregarMantendoAbaAtual();
@@ -6197,7 +6613,7 @@
       } finally {
         if (saveBtn) {
           saveBtn.dataset.loading = '0';
-          saveBtn.disabled = false;
+          setActionButtonBusy(saveBtn, false);
         }
       }
     }
@@ -6219,7 +6635,7 @@
     async function gerarLinkConviteEncontreiro() {
       if (!ensurePermission('cadastros.visualizar')) return;
       const btn = document.getElementById('btn-gerar-link-convite');
-      if (btn) { btn.disabled = true; btn.dataset.loading = '1'; }
+      setActionButtonBusy(btn, true, 'Gerando...');
       try {
         const expDias = document.getElementById('convite-exp-dias')?.value?.trim() || '';
         const resp = await fetch('/admin/gerar-link-encontreiro', {
@@ -6229,17 +6645,19 @@
         });
         const data = await resp.json();
         if (!resp.ok || !data.success) throw new Error(data.error || 'Erro ao gerar link.');
+        queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert('Link gerado com sucesso! A página será recarregada.', 'success', 'Link gerado');
-        window.location.reload();
+        recarregarMantendoAbaAtual();
       } catch (err) {
         await appAlert(err.message || 'Erro ao gerar link.', 'danger', 'Erro');
       } finally {
-        if (btn) { btn.disabled = false; delete btn.dataset.loading; }
+        setActionButtonBusy(btn, false);
       }
     }
 
     async function revogarLinkConviteEncontreiro() {
       if (!ensurePermission('cadastros.visualizar')) return;
+      const triggerButton = getActionTriggerButton() || document.getElementById('btn-gerar-link-convite');
       const confirma = await showAppPopup({
         title: 'Revogar link de convite',
         message: 'Tem certeza? O link atual deixará de funcionar imediatamente e qualquer um que o tenha não conseguirá mais acessar o formulário por ele.',
@@ -6248,25 +6666,32 @@
         tone: 'danger',
       });
       if (!confirma) return;
+
+      setActionButtonBusy(triggerButton, true, 'Revogando...');
       try {
         const resp = await fetch('/admin/revogar-link-encontreiro', { method: 'POST' });
         const data = await resp.json();
         if (!resp.ok || !data.success) throw new Error(data.error || 'Erro ao revogar link.');
+        queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert('Link revogado com sucesso.', 'success', 'Revogado');
-        window.location.reload();
+        recarregarMantendoAbaAtual();
       } catch (err) {
         await appAlert(err.message || 'Erro ao revogar link.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
     // ─── Fim: link de convite ────────────────────────────────────────────────────
 
     async function deletarAdmin(adminId, username) {
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       try {
         console.log('[deletarAdmin] 1. iniciado com:', { adminId, username });
         if (!hasPermission('admins.gerenciar')) {
           console.log('[deletarAdmin] 2. permissao negada');
-          await showAlert('Você não possui permissão para deletar administradores.', 'Acesso Negado');
+          await appAlert('Você não possui permissão para deletar administradores.', 'warning', 'Acesso Negado');
           return;
         }
         
@@ -6278,10 +6703,13 @@
         }
         
         console.log('[deletarAdmin] 5. pedindo confirmação com username:', username);
-        if (!await showDangerConfirm(`Tem certeza que deseja deletar o administrador "${username}"?\n\nEsta ação não pode ser desfeita.`, 'Confirmar Exclusão')) {
+        if (!await appConfirm(`Tem certeza que deseja deletar o administrador "${username}"?\n\nEsta ação não pode ser desfeita.`, 'Confirmar Exclusão')) {
           console.log('[deletarAdmin] usuário cancelou a confirmação');
           return;
         }
+
+        setActionButtonBusy(triggerButton, true, 'Excluindo...');
+        setRowsPendingState(targetRow, true);
         
         console.log('[deletarAdmin] 6. confirmação recebida, enviando POST para /admin/deletar-admin/');
         const response = await fetch(`/admin/deletar-admin/${adminId}`, {
@@ -6293,15 +6721,19 @@
         console.log('[deletarAdmin] 8. resultado JSON:', result);
 
         if (result.success) {
-          await showAlert('Administrador deletado com sucesso!', 'Sucesso');
+          queueManagerFeedback({ tabId: 'administradores' });
+          await appAlert('Administrador deletado com sucesso!', 'success', 'Sucesso');
           console.log('[deletarAdmin] 9. recarregando...');
           recarregarMantendoAbaAtual();
         } else {
-          await showAlert('Erro ao deletar administrador: ' + (result.error || 'erro desconhecido'), 'Erro');
+          await appAlert('Erro ao deletar administrador: ' + (result.error || 'erro desconhecido'), 'danger', 'Erro');
         }
       } catch (error) {
         console.error('[deletarAdmin] ERRO CAPTURADO:', error);
-        await showAlert('Erro ao deletar administrador: ' + error.message, 'Erro');
+        await appAlert('Erro ao deletar administrador: ' + error.message, 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
@@ -6816,7 +7248,12 @@
 
     async function aprovarCadastro(tipo, id) {
       if (!ensurePermission('cadastros.aprovar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm('Aprovar este cadastro?', 'Confirmar aprovacao')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Aprovando...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch('/admin/aprovar', {
@@ -6827,6 +7264,10 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({
+            tabId: getAbaAtivaPainelId(),
+            rows: [{ tipo, id }],
+          });
           await appAlert('Cadastro aprovado com sucesso!', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -6834,12 +7275,20 @@
         }
       } catch (error) {
         await appAlert('Erro ao aprovar cadastro.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
     async function reprovarCadastro(tipo, id) {
       if (!ensurePermission('cadastros.aprovar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
       if (!await appConfirm('Reprovar este cadastro?', 'Confirmar reprovacao')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Reprovando...');
+      setRowsPendingState(targetRow, true);
 
       try {
         const response = await fetch('/admin/desaprovar', {
@@ -6850,6 +7299,10 @@
         const result = await response.json();
 
         if (result.success) {
+          queueManagerFeedback({
+            tabId: getAbaAtivaPainelId(),
+            rows: [{ tipo, id }],
+          });
           await appAlert('Cadastro reprovado!', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
         } else {
@@ -6857,13 +7310,19 @@
         }
       } catch (error) {
         await appAlert('Erro ao reprovar cadastro.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
       }
     }
 
     async function executarRetencaoLgpd() {
       if (!ensurePermission('lgpd.executar')) return;
+      const triggerButton = getActionTriggerButton();
       const days = document.getElementById('lgpd_retencao_dias').value;
       if (!await appConfirm('Executar agora a política de retenção LGPD?', 'Confirmar retenção')) return;
+
+      setActionButtonBusy(triggerButton, true, 'Executando...');
 
       try {
         const response = await fetch('/admin/executar-retencao-lgpd', {
@@ -6879,6 +7338,7 @@
         }
 
         const r = result.result || {};
+        queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert(
           `Retenção concluída.\n\nCadastros anonimizados: ${r.cadastrosAnonimizados || 0}\nEncontros anonimizados: ${r.encontrosAnonimizados || 0}\nTotal: ${r.totalAnonimizados || 0}`,
           'success',
@@ -6887,6 +7347,8 @@
         recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao executar retenção LGPD.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
       }
     }
 
@@ -6978,7 +7440,8 @@
               throw new Error(result.error || 'Falha ao atualizar escopo de evento.');
             }
 
-            window.location.reload();
+            queueManagerFeedback({ tabId: getAbaAtivaPainelId() || 'principal' });
+            recarregarMantendoAbaAtual();
           } catch (error) {
             buttons.forEach((btn) => {
               btn.disabled = false;
@@ -6991,6 +7454,9 @@
 
     async function salvarConfiguracoesBloqueio() {
       if (!ensurePermission('bloqueio.gerenciar')) return;
+      const submitButton = document.querySelector('.admin-block-card .admin-primary-action');
+      const resultDiv = document.getElementById('bloqueio-resultado');
+      setActionButtonBusy(submitButton, true, 'Salvando...');
       try {
         const payload = {
           bloquearEncontrista: document.getElementById('bloquear_encontrista').checked,
@@ -7012,11 +7478,11 @@
         });
 
         const data = await response.json();
-        const resultDiv = document.getElementById('bloqueio-resultado');
         
         console.log('[BLOQUEIO-UI] Resposta do servidor:', data);
         
         if (data.success) {
+          queueManagerFeedback({ tabId: 'administradores' });
           resultDiv.innerHTML = '<div class="alert alert-success" role="alert"><i class="fas fa-check-circle me-2"></i>Configurações salvas com sucesso!</div>';
           setTimeout(() => { resultDiv.innerHTML = ''; }, 3000);
         } else {
@@ -7025,6 +7491,8 @@
       } catch (error) {
         console.error('Erro ao salvar configurações:', error);
         document.getElementById('bloqueio-resultado').innerHTML = '<div class="alert alert-danger" role="alert"><i class="fas fa-exclamation-triangle me-2"></i>Erro na requisição</div>';
+      } finally {
+        setActionButtonBusy(submitButton, false);
       }
     }
 

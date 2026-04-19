@@ -13,7 +13,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260417-admin-buttons-premium-38">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260419-approval-modal-motion-premium-41">
 </head>
 <body class="admin-panel admin-dashboard-page is-loading">
   <div class="db-bg" aria-hidden="true"></div>
@@ -814,15 +814,22 @@
         <div class="modal-dialog modal-dialog-centered app-popup-dialog">
           <div class="modal-content app-popup-content app-popup-tone-primary">
             <div class="modal-header app-popup-header">
-              <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+              <div class="app-popup-headline">
+                <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
+                <div class="app-popup-title-stack">
+                  <span class="app-popup-kicker" id="app-popup-kicker">Ação rápida</span>
+                  <h5 class="modal-title" id="app-popup-title">Aviso</h5>
+                </div>
+              </div>
               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
             <div class="modal-body app-popup-body">
               <p id="app-popup-message" class="mb-0" style="white-space:pre-line;"></p>
+              <div class="app-popup-note" id="app-popup-note"></div>
             </div>
             <div class="modal-footer app-popup-footer">
-              <button type="button" class="btn btn-outline-secondary" id="app-popup-cancel">Cancelar</button>
-              <button type="button" class="btn btn-primary" id="app-popup-confirm">OK</button>
+              <button type="button" class="btn btn-outline-secondary app-popup-cancel" id="app-popup-cancel">Cancelar</button>
+              <button type="button" class="btn btn-primary app-popup-confirm" id="app-popup-confirm">OK</button>
             </div>
           </div>
         </div>`;
@@ -832,13 +839,46 @@
 
     function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary' }) {
       const { element, instance } = ensureAppPopup();
-      element.querySelector('#app-popup-title').textContent = title || 'Aviso';
-      element.querySelector('#app-popup-message').textContent = message || '';
+      const titleEl = element.querySelector('#app-popup-title');
+      const kickerEl = element.querySelector('#app-popup-kicker');
+      const messageEl = element.querySelector('#app-popup-message');
+      const noteEl = element.querySelector('#app-popup-note');
+      const orbEl = element.querySelector('#app-popup-orb');
       const confirmBtn = element.querySelector('#app-popup-confirm');
       const cancelBtn  = element.querySelector('#app-popup-cancel');
       const contentEl  = element.querySelector('.app-popup-content');
+
+      const toneLabels = {
+        primary: 'Acao rapida',
+        warning: 'Confirmacao',
+        danger: 'Atenção',
+        success: 'Concluido',
+      };
+      const toneNotes = {
+        primary: 'Revise a informacao e siga com a acao desejada.',
+        warning: 'Esta decisao impacta o fluxo de aprovacao imediatamente.',
+        danger: 'Confira os dados antes de seguir para evitar reversoes desnecessarias.',
+        success: 'A interface foi atualizada e o painel ja reflete a nova situacao.',
+      };
+      const toneIcons = {
+        primary: 'fa-sparkles',
+        warning: 'fa-shield-halved',
+        danger: 'fa-triangle-exclamation',
+        success: 'fa-circle-check',
+      };
+
+      titleEl.textContent = title || 'Aviso';
+      kickerEl.textContent = toneLabels[tone] || 'Acao rapida';
+      messageEl.textContent = message || '';
+      if (noteEl) {
+        noteEl.textContent = toneNotes[tone] || toneNotes.primary;
+        noteEl.style.display = noteEl.textContent ? '' : 'none';
+      }
+      if (orbEl) {
+        orbEl.innerHTML = `<i class="fas ${toneIcons[tone] || toneIcons.primary}"></i>`;
+      }
       confirmBtn.textContent = confirmText;
-      confirmBtn.className = `btn btn-${tone}`;
+      confirmBtn.className = `btn btn-${tone} app-popup-confirm`;
       if (contentEl) {
         contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
         contentEl.classList.add(`app-popup-tone-${tone}`);
@@ -940,6 +980,25 @@
       return data.toLocaleDateString('pt-BR');
     }
 
+    function prefersReducedDashboardMotion() {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function pulseUiElement(element, className = 'is-bumping', duration = 720) {
+      if (!element || prefersReducedDashboardMotion()) return;
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
+      window.setTimeout(() => element.classList.remove(className), duration);
+    }
+
+    function setCardPendingState(card, tone = null) {
+      if (!card) return;
+      card.classList.remove('is-pending', 'is-pending-approve', 'is-pending-reject');
+      if (!tone) return;
+      card.classList.add('is-pending', `is-pending-${tone}`);
+    }
+
     function refreshVisibleCounts() {
       document.querySelectorAll('.kanban-col').forEach((col) => {
         const visibleCards = col.querySelectorAll('.pcard:not(.is-filter-hidden)');
@@ -1032,9 +1091,10 @@
       column.appendChild(empty);
     }
 
-    function syncPanelMeta(scope) {
+    function syncPanelMeta(scope, options = {}) {
       const panel = getPanelByScope(scope);
       if (!panel) return;
+      const shouldAnimate = options.animate !== false;
 
       const pendentes = panel.querySelectorAll('.pcard[data-status="pendente"]').length;
       const aprovados = panel.querySelectorAll('.pcard[data-status="aprovado"]').length;
@@ -1044,6 +1104,9 @@
       if (chips[0]) chips[0].innerHTML = `<i class="fas fa-clock"></i>${pendentes} pendente(s)`;
       if (chips[1]) chips[1].innerHTML = `<i class="fas fa-check"></i>${aprovados} aprovado(s)`;
       if (chips[2]) chips[2].innerHTML = `<i class="fas fa-xmark"></i>${reprovados} reprovado(s)`;
+      if (shouldAnimate) {
+        chips.forEach((chip) => pulseUiElement(chip));
+      }
     }
 
     function rebuildCardActions(card, scope, status) {
@@ -1072,36 +1135,59 @@
 
       const scope = card.dataset.tipo || '';
       const previousStatus = card.dataset.status || 'pendente';
+      const previousColumn = getColumnByStatus(scope, previousStatus);
       const nextColumn = getColumnByStatus(scope, nextStatus);
       if (!nextColumn) return;
+      const previousCount = previousColumn?.querySelector('.kanban-count');
+      const nextCount = nextColumn.querySelector('.kanban-count');
+      const shouldAnimate = !prefersReducedDashboardMotion();
+      const transitionDelay = shouldAnimate ? 180 : 0;
 
       const copy = getStatusCopy(nextStatus);
-      card.dataset.status = nextStatus;
-      card.classList.remove('amber-card', 'green-card', 'red-card', 'is-selected', 'is-removing');
-      card.classList.add(copy.cardClass);
+      const finalizeMove = () => {
+        card.dataset.status = nextStatus;
+        card.classList.remove('amber-card', 'green-card', 'red-card', 'is-selected', 'is-removing', 'is-pending', 'is-pending-approve', 'is-pending-reject');
+        card.classList.add(copy.cardClass);
 
-      const details = card.querySelector('.pcard-details');
-      if (details) {
-        details.classList.toggle('pcard-details-compact', nextStatus !== 'pendente');
+        const details = card.querySelector('.pcard-details');
+        if (details) {
+          details.classList.toggle('pcard-details-compact', nextStatus !== 'pendente');
+        }
+
+        const checkbox = card.querySelector('.batch-checkbox');
+        if (checkbox) checkbox.checked = false;
+
+        rebuildCardActions(card, scope, nextStatus);
+        syncCardTimeline(card, nextStatus);
+
+        const referenceNode = nextColumn.querySelector('.empty-col') || nextColumn.querySelector('.empty-col.dynamic-empty');
+        if (referenceNode) {
+          referenceNode.remove();
+        }
+        nextColumn.appendChild(card);
+
+        if (shouldAnimate) {
+          requestAnimationFrame(() => {
+            pulseUiElement(card, 'is-arriving', 760);
+            pulseUiElement(nextColumn, 'is-receiving', 820);
+            pulseUiElement(previousColumn, 'is-receiving', 620);
+            pulseUiElement(previousCount);
+            pulseUiElement(nextCount);
+          });
+        }
+
+        syncColumnEmptyState(scope, previousStatus);
+        syncColumnEmptyState(scope, nextStatus);
+        atualizarInterfaceLote(scope);
+        applyAdvancedFilters();
+        syncPanelMeta(scope, { animate: shouldAnimate });
+      };
+
+      if (shouldAnimate) {
+        card.classList.add('is-removing');
       }
 
-      const checkbox = card.querySelector('.batch-checkbox');
-      if (checkbox) checkbox.checked = false;
-
-      rebuildCardActions(card, scope, nextStatus);
-      syncCardTimeline(card, nextStatus);
-
-      const referenceNode = nextColumn.querySelector('.empty-col') || nextColumn.querySelector('.empty-col.dynamic-empty');
-      if (referenceNode) {
-        referenceNode.remove();
-      }
-      nextColumn.appendChild(card);
-
-      syncColumnEmptyState(scope, previousStatus);
-      syncColumnEmptyState(scope, nextStatus);
-      atualizarInterfaceLote(scope);
-      applyAdvancedFilters();
-      syncPanelMeta(scope);
+      window.setTimeout(finalizeMove, transitionDelay);
     }
 
     function applyAdvancedFilters() {
@@ -1209,6 +1295,8 @@
     async function executarAcaoRapida(id, tipoLista, action, triggerButton) {
       const endpoint = action === 'aprovar' ? '/admin/aprovar' : '/admin/desaprovar';
       const button = triggerButton;
+      const card = button?.closest('.pcard');
+      setCardPendingState(card, action === 'aprovar' ? 'approve' : 'reject');
       if (button) button.disabled = true;
 
       try {
@@ -1220,11 +1308,11 @@
         const data = await res.json();
         if (!res.ok || !data.success) throw new Error(data.error || 'Falha na ação rápida');
 
-        const card = button?.closest('.pcard');
         if (card) {
           moveApprovalCard(card, action === 'aprovar' ? 'aprovado' : 'reprovado');
         }
       } catch (error) {
+        setCardPendingState(card);
         if (button) button.disabled = false;
         await appAlert('Erro: ' + error.message, 'danger', 'Ação rápida falhou');
       }
@@ -1496,28 +1584,44 @@
     /* ── Actions ─────────────────────────────────────────────── */
     async function aprovarCadastro(id, tipoLista) {
       if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovação')) return;
+      const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
+      setCardPendingState(card, 'approve');
       try {
         const res  = await fetch('/admin/aprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
         const data = await res.json();
         if (data.success) {
-          moveApprovalCard(document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`), 'aprovado');
+          moveApprovalCard(card, 'aprovado');
           await appAlert('Cadastro aprovado com sucesso.', 'success', 'Sucesso');
         }
-        else await appAlert('Erro: ' + (data.error || 'Falha ao aprovar'), 'danger', 'Erro');
-      } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
+        else {
+          setCardPendingState(card);
+          await appAlert('Erro: ' + (data.error || 'Falha ao aprovar'), 'danger', 'Erro');
+        }
+      } catch (e) {
+        setCardPendingState(card);
+        await appAlert('Erro: ' + e.message, 'danger', 'Erro');
+      }
     }
 
     async function desaprovarCadastro(id, tipoLista) {
       if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprovação')) return;
+      const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
+      setCardPendingState(card, 'reject');
       try {
         const res  = await fetch('/admin/desaprovar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, tipoLista }) });
         const data = await res.json();
         if (data.success) {
-          moveApprovalCard(document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`), 'reprovado');
+          moveApprovalCard(card, 'reprovado');
           await appAlert('Cadastro desaprovado com sucesso.', 'success', 'Sucesso');
         }
-        else await appAlert('Erro: ' + (data.error || 'Falha ao desaprovar'), 'danger', 'Erro');
-      } catch (e) { await appAlert('Erro: ' + e.message, 'danger', 'Erro'); }
+        else {
+          setCardPendingState(card);
+          await appAlert('Erro: ' + (data.error || 'Falha ao desaprovar'), 'danger', 'Erro');
+        }
+      } catch (e) {
+        setCardPendingState(card);
+        await appAlert('Erro: ' + e.message, 'danger', 'Erro');
+      }
     }
   </script>
   <script src="/js/page-transitions.js?v=20260417-premium-feedback-27"></script>
