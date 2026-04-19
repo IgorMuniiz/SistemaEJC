@@ -3152,6 +3152,26 @@
                         <textarea class="form-control" id="edit_equipeCoordenou" name="equipeCoordenou" rows="3"></textarea>
                         <small class="edit-field-hint">Mantenha o histórico objetivo para facilitar consultas futuras.</small>
                       </div>
+                      <div class="col-lg-4">
+                        <label class="form-label">CEP</label>
+                        <input type="text" class="form-control" id="edit_encontro_cep">
+                      </div>
+                      <div class="col-lg-8">
+                        <label class="form-label">Complemento ou referência</label>
+                        <input type="text" class="form-control" id="edit_encontro_complementoReferencia">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
+                        <textarea class="form-control" id="edit_encontro_talentoHabilidadeArtistica" rows="3"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Possui algum quadro de saúde físico ou mental? Qual?</label>
+                        <textarea class="form-control" id="edit_encontro_quadroSaude" rows="3"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Faz o uso de algum medicamento controlado? Qual?</label>
+                        <textarea class="form-control" id="edit_encontro_medicamentoControlado" rows="3"></textarea>
+                      </div>
                       <div class="col-12">
                         <label class="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
                         <textarea class="form-control" id="edit_encontro_talentoHabilidadeArtistica" rows="3"></textarea>
@@ -3178,6 +3198,18 @@
                       <div class="col-lg-8">
                         <label class="form-label">Se sim, a quê?</label>
                         <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2"></textarea>
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Religiosamente, como você se considera hoje?</label>
+                        <input type="text" class="form-control" id="edit_encontro_religiosidadeAtual">
+                      </div>
+                      <div class="col-lg-6">
+                        <label class="form-label">Qual Paróquia frequenta?</label>
+                        <input type="text" class="form-control" id="edit_encontro_paroquiaFrequenta">
+                      </div>
+                      <div class="col-12">
+                        <label class="form-label">Participa de algum movimento ou pastoral da igreja?</label>
+                        <input type="text" class="form-control" id="edit_encontro_participaMovimentoIgreja">
                       </div>
                       <div class="col-lg-6">
                         <label class="form-label">Religiosamente, como você se considera hoje?</label>
@@ -4693,6 +4725,17 @@
       if (tipo === 'encontreiro') {
         formData.set('cep', document.getElementById('edit_cep')?.value || '');
         formData.set('complementoReferencia', document.getElementById('edit_complementoReferencia')?.value || '');
+        formData.set('talentoHabilidadeArtistica', document.getElementById('edit_encontro_talentoHabilidadeArtistica')?.value || '');
+        formData.set('quadroSaude', document.getElementById('edit_encontro_quadroSaude')?.value || '');
+        formData.set('medicamentoControlado', document.getElementById('edit_encontro_medicamentoControlado')?.value || '');
+        formData.set('religiosidadeAtual', document.getElementById('edit_encontro_religiosidadeAtual')?.value || '');
+        formData.set('paroquiaFrequenta', document.getElementById('edit_encontro_paroquiaFrequenta')?.value || '');
+        formData.set('participaMovimentoIgreja', document.getElementById('edit_encontro_participaMovimentoIgreja')?.value || '');
+      }
+
+      if (tipo === 'encontreiro') {
+        formData.set('cep', document.getElementById('edit_encontro_cep')?.value || '');
+        formData.set('complementoReferencia', document.getElementById('edit_encontro_complementoReferencia')?.value || '');
         formData.set('talentoHabilidadeArtistica', document.getElementById('edit_encontro_talentoHabilidadeArtistica')?.value || '');
         formData.set('quadroSaude', document.getElementById('edit_encontro_quadroSaude')?.value || '');
         formData.set('medicamentoControlado', document.getElementById('edit_encontro_medicamentoControlado')?.value || '');
@@ -7213,6 +7256,28 @@
 
         if (sourceType === 'sistema' && payload.encontroOrigemId === payload.ejcSelecionado) {
           setImportResultState('error', 'Escolha encontros diferentes para origem e destino.');
+          return;
+        }
+      }
+
+      if (tipoImportacao === 'encontro_completo') {
+        const encontroOrigemId = document.getElementById('import_encontroOrigemId').value;
+        const ejcSelecionado = document.getElementById('import_ejcSelecionado').value;
+        if (sourceType === 'sistema' && !encontroOrigemId) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Selecione o encontro de origem para continuar.';
+          return;
+        }
+
+        if (!ejcSelecionado) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Selecione o encontro de destino para importar a estrutura completa.';
+          return;
+        }
+
+        if (sourceType === 'sistema' && encontroOrigemId === ejcSelecionado) {
+          resultBox.className = 'import-result error';
+          resultBox.textContent = 'Escolha encontros diferentes para origem e destino.';
           return;
         }
       }

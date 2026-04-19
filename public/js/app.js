@@ -838,7 +838,6 @@ function GenericForm() {
           idSuffix: 'observacoes-casamento',
           fieldType: 'date',
         })}
-
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`possuiFilhos-${pessoa}`} className="form-label">Possui filhos?</label>
@@ -998,6 +997,7 @@ function GenericForm() {
           <div className="mb-3">
             {renderPhotoUploadField({ pessoa, data, handleF, label: 'Anexar foto (JPG ou PNG) *' })}
           </div>
+          {!isNoivo && renderObservacoesField({ pessoa, data, handleCh })}
           {!isNoivo && renderObservacoesField({ pessoa, data, handleCh })}
         </div>
 

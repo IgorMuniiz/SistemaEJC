@@ -53,6 +53,28 @@ const vapidKeys = configureWebPush({
 });
 
 const app = express();
+
+if (!IS_PRODUCTION) {
+  try {
+    const livereload = require('livereload');
+    const connectLivereload = require('connect-livereload');
+    const liveReloadServer = livereload.createServer({
+      exts: ['ejs', 'html', 'htm', 'css', 'js', 'png', 'gif', 'jpg', 'svg'],
+    });
+    liveReloadServer.watch([
+      path.join(__dirname, 'views'),
+      path.join(__dirname, 'public'),
+      path.join(__dirname, 'src'),
+    ]);
+    app.use(connectLivereload());
+    liveReloadServer.server.once('connection', () => {
+      setTimeout(() => liveReloadServer.refresh('/'), 100);
+    });
+  } catch (e) {
+    console.warn('[DEV] livereload não disponível:', e.message);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
@@ -912,7 +934,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 
 // compress text assets to reduce transfer size in Lighthouse.
-app.use(compression({ threshold: 1024 }));
+if (IS_PRODUCTION) {
+  app.use(compression({ threshold: 1024 }));
+}
 
 app.use(helmet(buildHelmetConfig()));
 app.use(attachRequestContext());
