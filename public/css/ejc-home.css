@@ -1535,6 +1535,129 @@ html[data-theme='dark'] .cta-card:hover .cta-footer .icon {
   color: #f5faff !important;
 }
 
+body.home-public-page {
+  --bg-900: #05070f;
+  --bg-850: #090e1a;
+  --bg-800: #111827;
+  --surface-700: rgba(255, 255, 255, 0.05);
+  --surface-650: rgba(255, 255, 255, 0.085);
+  --surface-600: rgba(255, 255, 255, 0.11);
+  --line-500: rgba(255, 255, 255, 0.1);
+  --line-600: rgba(255, 255, 255, 0.18);
+  --text-50: #f0f4ff;
+  --text-200: #b8c8f0;
+  --text-300: #7a8aaa;
+  --shadow-soft: 0 24px 60px rgba(2, 5, 14, 0.6);
+  --shadow-card: 0 20px 50px rgba(4, 8, 18, 0.5);
+  --shadow-glow: 0 0 40px rgba(79, 142, 247, 0.2);
+  --ux-ring: rgba(138, 215, 204, 0.84);
+  --ux-ring-shadow: 0 0 0 1px rgba(138, 215, 204, 0.5), 0 0 0 6px rgba(63, 143, 183, 0.22);
+  color: var(--text-50);
+  color-scheme: dark;
+}
+
+html[data-theme='light'] body.home-public-page {
+  background:
+    radial-gradient(circle at 8% 15%, rgba(79, 142, 247, 0.22), transparent 32%),
+    radial-gradient(circle at 92% 12%, rgba(167, 139, 250, 0.2), transparent 32%),
+    radial-gradient(circle at 50% 96%, rgba(52, 211, 153, 0.14), transparent 32%),
+    linear-gradient(155deg, var(--bg-900) 0%, var(--bg-850) 55%, var(--bg-800) 100%) !important;
+  color: var(--text-50) !important;
+  color-scheme: dark !important;
+}
+
+html[data-theme='light'] body.home-public-page .bg-gradient {
+  background:
+    radial-gradient(circle at 12% 10%, rgba(79, 142, 247, 0.28), transparent 36%),
+    radial-gradient(circle at 88% 8%, rgba(167, 139, 250, 0.26), transparent 40%),
+    radial-gradient(circle at 50% 90%, rgba(52, 211, 153, 0.18), transparent 46%) !important;
+}
+
+html[data-theme='light'] body.home-public-page .bg-grid {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px) !important;
+}
+
+html[data-theme='light'] body.home-public-page :is(.hero-panel, .metric-card, .cta-card, .feature-item, .studio-reel-frame, .navbar) {
+  background: linear-gradient(180deg, rgba(8, 15, 31, 0.88), rgba(17, 24, 39, 0.78)) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  box-shadow: 0 20px 38px rgba(2, 6, 23, 0.26) !important;
+}
+
+html[data-theme='light'] body.home-public-page .navbar {
+  background: rgba(5, 7, 15, 0.72) !important;
+  border-bottom-color: var(--line-500) !important;
+  box-shadow: none !important;
+  backdrop-filter: blur(22px) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.3) !important;
+}
+
+html[data-theme='light'] body.home-public-page :is(.nav-brand, .hero-title-sub, .studio-reel-title, .cta-title, .metric-value, .panel-head span:first-child) {
+  color: #f0f4ff !important;
+}
+
+html[data-theme='light'] body.home-public-page :is(.hero-description, .panel-head, .metric-label, .metric-note, .cta-text, .cta-link-text, .feature-text, .nav-admin-link, .nav-admin-link span, .cta-tag, .main-footer, .stat-label) {
+  color: rgba(184, 200, 240, 0.84) !important;
+}
+
+html[data-theme='light'] body.home-public-page .btn-primary,
+html[data-theme='light'] body.home-public-page .nav-cta-btn {
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+  background: linear-gradient(120deg, #3f80f5, #6b5ef7 50%, #5bacff 100%) !important;
+  box-shadow:
+    0 14px 36px rgba(79, 142, 247, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+}
+
+html[data-theme='light'] body.home-public-page :is(.btn-secondary, .nav-admin-link) {
+  color: var(--text-200) !important;
+  border-color: var(--line-500) !important;
+  background: var(--surface-700) !important;
+}
+
+html[data-theme='light'] body.home-public-page :is(.btn-secondary:hover, .nav-admin-link:hover) {
+  color: #ffffff !important;
+  border-color: rgba(79, 142, 247, 0.5) !important;
+  background: rgba(79, 142, 247, 0.12) !important;
+}
+
+html[data-theme='light'] body.home-public-page .hero-badge {
+  color: #a8c5ff !important;
+  background: rgba(79, 142, 247, 0.1) !important;
+  border-color: rgba(79, 142, 247, 0.35) !important;
+}
+
+html[data-theme='light'] body.home-public-page .hero-word--primary {
+  color: #f8fbff !important;
+  text-shadow: 0 10px 26px rgba(79, 142, 247, 0.2) !important;
+}
+
+html[data-theme='light'] body.home-public-page .hero-word--accent {
+  color: #8fd3ff !important;
+  text-shadow: 0 10px 30px rgba(167, 139, 250, 0.28) !important;
+}
+
+html[data-theme='light'] body.home-public-page .gradient-text {
+  background: none !important;
+  background-image: none !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-theme='light'] body.home-public-page .panel-live-dot {
+  background: rgba(16, 185, 129, 0.14) !important;
+  color: #7ef0c1 !important;
+  border-color: rgba(16, 185, 129, 0.24) !important;
+}
+
+html[data-theme='light'] body.home-public-page .cta-card:hover .cta-title,
+html[data-theme='light'] body.home-public-page .cta-card:hover .cta-text,
+html[data-theme='light'] body.home-public-page .cta-card:hover .cta-link-text,
+html[data-theme='light'] body.home-public-page .cta-card:hover .cta-footer .icon {
+  color: #f5faff !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .scroll-reveal,
   .scroll-reveal .cta-card,
