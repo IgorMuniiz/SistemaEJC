@@ -20,7 +20,7 @@ const ExcelJS = require('exceljs');
 process.env.NODE_ENV = 'test';
 process.env.SKIP_MONGO_CONNECT = '1';
 
-const { app, getCrachaPalette } = require('../app');
+const { app, getCrachaPalette, invalidarCacheEncontroAtivo } = require('../app');
 const Admin = mongoose.model('Admin');
 const SubEquipe = mongoose.model('SubEquipe');
 const Cadastro = mongoose.model('Cadastro_EJC');
@@ -32,6 +32,7 @@ const VinculoEncontro = mongoose.model('VinculoEncontro');
 const GastoEncontro = mongoose.model('GastoEncontro');
 const FluxoCaixaEncontro = mongoose.model('FluxoCaixaEncontro');
 const AdminAuditLog = mongoose.model('AdminAuditLog');
+const PushSubscription = mongoose.model('PushSubscription');
 
 const ADMIN_ID = '507f1f77bcf86cd799439011';
 
@@ -431,6 +432,152 @@ test('POST /admin/editar-subequipe/:id autenticado retorna 400 para id inválido
   assert.equal(response.body.success, false);
 });
 
+
+test('POST /admin/aprovar vincula o aprovado ao encontro ativo sem alterar o EJC informado no cadastro', async (t) => {
+  mockAdminAuthFlow(t);
+
+  invalidarCacheEncontroAtivo();
+
+  const originalEjcFindOne = Ejc.findOne;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroFindOneAndUpdate = Encontro.findOneAndUpdate;
+
+  const cadastroId = '507f1f77bcf86cd799439130';
+  const encontroAtivo = {
+    _id: '507f1f77bcf86cd799439131',
+    nome: 'EJC Ativo 2026',
+    ativo: true,
+  };
+  const cadastroAtual = {
+    _id: cadastroId,
+    nomeCompleto: 'Encontreiro Aprovado',
+    ejc: 'EJC 2019',
+    ejcVinculadoId: null,
+    ejcVinculadoNome: '',
+  };
+
+  let payloadAtualizado = null;
+
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
+    sort: () => ({ lean: async () => encontroAtivo }),
+  });
+  Encontro.findOne = async () => cadastroAtual;
+  Encontro.findOneAndUpdate = async (_query, payload) => {
+    payloadAtualizado = payload;
+    return {
+      ...cadastroAtual,
+      ...payload,
+    };
+  };
+
+  t.after(() => {
+    Ejc.findOne = originalEjcFindOne;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.findOneAndUpdate = originalEncontroFindOneAndUpdate;
+    invalidarCacheEncontroAtivo();
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/aprovar').send({
+      id: cadastroId,
+      tipoLista: 'encontreiro',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(payloadAtualizado.aprovado, true);
+  assert.equal(payloadAtualizado.statusAprovacao, 'aprovado');
+  assert.equal(String(payloadAtualizado.ejcVinculadoId), encontroAtivo._id);
+  assert.equal(payloadAtualizado.ejcVinculadoNome, encontroAtivo.nome);
+  assert.equal(cadastroAtual.ejc, 'EJC 2019');
+});
+
+test('POST /encontro reaproveita cadastro existente, volta para pendente e vincula ao encontro ativo atual mantendo o EJC digitado', async (t) => {
+  invalidarCacheEncontroAtivo();
+
+  const originalAdminFindOne = Admin.findOne;
+  const originalEjcFindOne = Ejc.findOne;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroFindByIdAndUpdate = Encontro.findByIdAndUpdate;
+  const originalSubscriptionFind = PushSubscription.find;
+
+  const cadastroId = '507f1f77bcf86cd799439140';
+  const encontroAtivo = {
+    _id: '507f1f77bcf86cd799439141',
+    nome: 'EJC Atual 2026',
+    ativo: true,
+  };
+  const cadastroExistente = {
+    _id: cadastroId,
+    nomeCompleto: 'Maria Reentrada',
+    ejc: 'EJC Antigo 2024',
+    ejcVinculadoId: '507f1f77bcf86cd799439142',
+    ejcVinculadoNome: 'EJC Antigo 2024',
+    aprovado: true,
+    statusAprovacao: 'aprovado',
+    foto: 'foto-antiga.jpg',
+    tipo: 'jovens',
+  };
+
+  let payloadAtualizado = null;
+
+  Admin.findOne = () => ({ lean: async () => null });
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
+    sort: () => ({ lean: async () => encontroAtivo }),
+  });
+  Encontro.findOne = async () => cadastroExistente;
+  Encontro.findByIdAndUpdate = async (_id, payload) => {
+    payloadAtualizado = payload;
+    return {
+      ...cadastroExistente,
+      ...payload,
+      _id: cadastroId,
+    };
+  };
+  PushSubscription.find = () => ({ lean: async () => [] });
+
+  t.after(() => {
+    Admin.findOne = originalAdminFindOne;
+    Ejc.findOne = originalEjcFindOne;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.findByIdAndUpdate = originalEncontroFindByIdAndUpdate;
+    PushSubscription.find = originalSubscriptionFind;
+    invalidarCacheEncontroAtivo();
+  });
+
+  const response = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .send({
+      nomeCompleto: 'Maria Reentrada',
+      genero: 'feminino',
+      tipo: 'jovens',
+      ejc: 'EJC Digitado no Cadastro',
+      paroquiaFrequenta: 'Paroquia Central',
+      logradouro: 'Rua das Flores, 10',
+      bairro: 'Centro',
+      dataNascimento: '1995-02-10',
+      telefone: '88999999999',
+      ehAlergico: 'nao',
+      email: 'maria.reentrada@example.com',
+      lgpdConsentimento: 'true',
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.updated, true);
+  assert.equal(payloadAtualizado.aprovado, false);
+  assert.equal(payloadAtualizado.statusAprovacao, 'pendente');
+  assert.equal(payloadAtualizado.ejc, 'EJC Digitado no Cadastro');
+  assert.equal(String(payloadAtualizado.ejcVinculadoId), encontroAtivo._id);
+  assert.equal(payloadAtualizado.ejcVinculadoNome, encontroAtivo.nome);
+});
 test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
   mockAdminAuthFlow(t);
 
@@ -499,8 +646,10 @@ test('POST /admin/importar-cadastros autenticado rejeita sqlQuery customizado', 
 
 test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equipes ao virar tio', async (t) => {
   mockAdminAuthFlow(t);
+  invalidarCacheEncontroAtivo();
 
   const VinculoEncontro = mongoose.model('VinculoEncontro');
+  const originalEjcFindOne = Ejc.findOne;
   const originalFindById = Encontro.findById;
   const originalFindByIdAndUpdate = Encontro.findByIdAndUpdate;
   const originalDeleteMany = VinculoEncontro.deleteMany;
@@ -517,6 +666,14 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equi
 
   let payloadAtualizado = null;
 
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true)
+      ? { _id: '507f1f77bcf86cd799439090', nome: 'EJC Ativo Teste' }
+      : { _id: '507f1f77bcf86cd799439090', nome: 'EJC Ativo Teste' }),
+    sort: () => ({
+      lean: async () => ({ _id: '507f1f77bcf86cd799439090', nome: 'EJC Ativo Teste' }),
+    }),
+  });
   Encontro.findById = async () => cadastroAtual;
   Encontro.findByIdAndUpdate = async (_id, payload) => {
     payloadAtualizado = payload;
@@ -529,9 +686,11 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equi
   VinculoEncontro.deleteMany = async () => ({ acknowledged: true, deletedCount: 0 });
 
   t.after(() => {
+    Ejc.findOne = originalEjcFindOne;
     Encontro.findById = originalFindById;
     Encontro.findByIdAndUpdate = originalFindByIdAndUpdate;
     VinculoEncontro.deleteMany = originalDeleteMany;
+    invalidarCacheEncontroAtivo();
   });
 
   const agent = request.agent(app);
@@ -569,8 +728,10 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id preserva histórico de equi
 
 test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta quando a auditoria fica pendente', async (t) => {
   mockAdminAuthFlow(t);
+  invalidarCacheEncontroAtivo();
 
   const VinculoEncontro = mongoose.model('VinculoEncontro');
+  const originalEjcFindOne = Ejc.findOne;
   const originalFindById = Encontro.findById;
   const originalFindByIdAndUpdate = Encontro.findByIdAndUpdate;
   const originalDeleteMany = VinculoEncontro.deleteMany;
@@ -586,6 +747,14 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta qua
     tioParceiroId: null,
   };
 
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true)
+      ? { _id: '507f1f77bcf86cd799439100', nome: 'EJC Ativo Teste' }
+      : { _id: '507f1f77bcf86cd799439100', nome: 'EJC Ativo Teste' }),
+    sort: () => ({
+      lean: async () => ({ _id: '507f1f77bcf86cd799439100', nome: 'EJC Ativo Teste' }),
+    }),
+  });
   Encontro.findById = async () => cadastroAtual;
   Encontro.findByIdAndUpdate = async (_id, payload) => ({
     ...cadastroAtual,
@@ -596,10 +765,12 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta qua
   AdminAuditLog.create = () => new Promise(() => {});
 
   t.after(() => {
+    Ejc.findOne = originalEjcFindOne;
     Encontro.findById = originalFindById;
     Encontro.findByIdAndUpdate = originalFindByIdAndUpdate;
     VinculoEncontro.deleteMany = originalDeleteMany;
     AdminAuditLog.create = originalAuditCreate;
+    invalidarCacheEncontroAtivo();
   });
 
   const agent = request.agent(app);

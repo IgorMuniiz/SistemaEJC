@@ -1223,6 +1223,30 @@ const buildEventLinkPayload = (ejc) => {
   };
 };
 
+const buildApprovalStateUpdate = async (statusAprovacao) => {
+  const normalizedStatus = normalizeApprovalStatusInput(statusAprovacao);
+  if (!normalizedStatus) return null;
+
+  const update = {
+    aprovado: normalizedStatus === 'aprovado',
+    statusAprovacao: normalizedStatus,
+  };
+
+  if (normalizedStatus !== 'aprovado') {
+    return update;
+  }
+
+  const encontroAtivo = await getEncontroAtivo();
+  if (!encontroAtivo) {
+    return update;
+  }
+
+  return {
+    ...update,
+    ...buildEventLinkPayload(encontroAtivo),
+  };
+};
+
 const buildEventScopeFilter = (encontroAtivo) => {
   if (!encontroAtivo?._id || !encontroAtivo?.nome) return {};
 
@@ -5258,7 +5282,7 @@ function normalizeApprovalTargetType(rawValue) {
 function getApprovalUpdatePayload(action) {
   if (action === 'aprovar') {
     return {
-      update: { aprovado: true, statusAprovacao: 'aprovado' },
+      statusAprovacao: 'aprovado',
       logAction: 'aprovar_cadastro',
       successMessage: 'Aprovado com sucesso!',
       pastTenseLabel: 'Aprovado',
@@ -5267,7 +5291,7 @@ function getApprovalUpdatePayload(action) {
 
   if (action === 'desaprovar') {
     return {
-      update: { aprovado: false, statusAprovacao: 'reprovado' },
+      statusAprovacao: 'reprovado',
       logAction: 'reprovar_cadastro',
       successMessage: 'Desaprovado com sucesso!',
       pastTenseLabel: 'Desaprovado',
@@ -5314,6 +5338,7 @@ async function applyApprovalUpdateToMany({ ids, tipoLista, action, baseFilter = 
   const documentos = await Model.find({ ...baseFilter, _id: { $in: uniqueIds } }).select('_id nomeCompleto').lean();
   const encontrados = documentos.map((doc) => String(doc._id));
   const missingIds = uniqueIds.filter((id) => !encontrados.includes(id));
+  const updatePayload = await buildApprovalStateUpdate(config.statusAprovacao);
 
   if (documentos.length === 0) {
     return {
@@ -5326,7 +5351,7 @@ async function applyApprovalUpdateToMany({ ids, tipoLista, action, baseFilter = 
 
   await Model.updateMany(
     { ...baseFilter, _id: { $in: encontrados } },
-    { $set: config.update }
+    { $set: updatePayload }
   );
 
   return {
@@ -5448,9 +5473,10 @@ app.post('/admin/aprovar', checkAdminAuth, requireAdminPermission('cadastros.apr
       return res.status(404).json({ success: false, error: 'Cadastro não encontrado' });
     }
 
+    const approvalUpdate = await buildApprovalStateUpdate('aprovado');
     const result = await Model.findOneAndUpdate(
       { ...eventContext.filtro, _id: id },
-      { aprovado: true, statusAprovacao: 'aprovado' },
+      approvalUpdate,
       { new: true }
     );
 
@@ -5508,9 +5534,10 @@ app.post('/admin/desaprovar', checkAdminAuth, requireAdminPermission('cadastros.
     }
 
     const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
+    const approvalUpdate = await buildApprovalStateUpdate('reprovado');
     const result = await Model.findOneAndUpdate(
       { ...eventContext.filtro, _id: id },
-      { aprovado: false, statusAprovacao: 'reprovado' },
+      approvalUpdate,
       { new: true }
     );
 
@@ -5559,9 +5586,10 @@ app.post('/admin/alterar-status', checkAdminAuth, requireAdminPermission('cadast
     }
 
     const Model = tipoLista === 'encontrista' ? Cadastro : Encontro;
+    const approvalUpdate = await buildApprovalStateUpdate(statusAprovacao);
     const result = await Model.findOneAndUpdate(
       { ...eventContext.filtro, _id: id },
-      { aprovado: statusAprovacao === 'aprovado', statusAprovacao },
+      approvalUpdate,
       { new: true }
     );
 
@@ -5983,9 +6011,9 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       email: req.body.email,
       instagram: req.body.instagram,
       dataNascimento: req.body.dataNascimento,
-      aprovado: statusAprovacao === 'aprovado',
-      statusAprovacao,
     };
+
+    Object.assign(updateData, await buildApprovalStateUpdate(statusAprovacao));
 
     if (tipo === 'encontrista') {
       updateData.cep = req.body.cep || '';
@@ -9483,4 +9511,5 @@ module.exports = {
   app,
   startServer,
   getCrachaPalette,
+  invalidarCacheEncontroAtivo,
 };
