@@ -5953,6 +5953,11 @@
           dataMovimento: dataGasto,
         });
 
+        applyLocalFinanceiroEntry({
+          gasto: gastoCriadoLocal,
+          fluxo: fluxoCriadoLocal,
+        });
+
         queueManagerFeedback({ tabId: 'gastos' });
         document.getElementById('formGasto')?.reset();
 
@@ -5972,7 +5977,6 @@
           'success',
           isEntrada ? 'Entrada registrada' : 'Lançamento salvo'
         );
-        recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
       } finally {
@@ -6137,6 +6141,7 @@
       const responsavel = document.getElementById('fluxo_responsavel')?.value.trim() || '';
       const formaPagamento = document.getElementById('fluxo_formaPagamento')?.value.trim() || '';
       const observacoes = document.getElementById('fluxo_observacoes')?.value.trim() || '';
+      const ejcNome = document.getElementById('fluxo_ejcId')?.selectedOptions?.[0]?.textContent?.trim() || '';
 
       if (!ejcId) {
         await appAlert('Selecione o EJC do movimento de caixa.', 'warning', 'Dados incompletos');
@@ -6170,6 +6175,28 @@
 
         const result = await response.json();
         if (result.success) {
+          const movimentoCriadoLocal = buildLocalFinanceiroItem(result.movimento || {
+            ejcId,
+            ejc: ejcNome,
+            ejcVinculadoNome: ejcNome,
+            tipoMovimento,
+            categoria,
+            descricao,
+            valor,
+            dataMovimento,
+            origemDestino,
+            responsavel,
+            formaPagamento,
+            observacoes,
+          }, {
+            id: result.movimentoId,
+            ejcNome,
+            tipoMovimento,
+            origemDestino,
+            dataMovimento,
+          });
+
+          applyLocalFinanceiroEntry({ fluxo: movimentoCriadoLocal });
           queueManagerFeedback({ tabId: 'gastos' });
           await appAlert('Movimento de caixa cadastrado com sucesso.', 'success', 'Sucesso');
           document.getElementById('formFluxoCaixa')?.reset();
@@ -6178,7 +6205,6 @@
             dataInput.value = new Date().toISOString().slice(0, 10);
           }
           initFluxoCaixaPremiumInputs();
-          recarregarMantendoAbaAtual();
         } else {
           await appAlert(result.error || 'Erro ao cadastrar movimento de caixa.', 'danger', 'Erro');
         }
