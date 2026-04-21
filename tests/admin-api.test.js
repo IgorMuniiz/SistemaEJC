@@ -323,13 +323,17 @@ test('POST /admin/cadastrar-gasto autenticado retorna sucesso', async (t) => {
   const originalEjcFindById = Ejc.findById;
   const originalGastoCreate = GastoEncontro.create;
   const originalAdminAuditCreate = AdminAuditLog.create;
+  let createPayload = null;
 
   Ejc.findById = () => ({
     select: () => ({
       lean: async () => ({ _id: '507f1f77bcf86cd799439032', nome: 'EJC Teste' }),
     }),
   });
-  GastoEncontro.create = async (payload) => ({ _id: '507f1f77bcf86cd799439033', ...payload });
+  GastoEncontro.create = async (payload) => {
+    createPayload = payload;
+    return { _id: '507f1f77bcf86cd799439033', ...payload };
+  };
   AdminAuditLog.create = async () => ({ _id: '507f1f77bcf86cd799439034' });
 
   t.after(() => {
@@ -347,7 +351,7 @@ test('POST /admin/cadastrar-gasto autenticado retorna sucesso', async (t) => {
       escopoTipo: 'encontro',
       categoria: 'Alimentação',
       descricao: 'Compra de mercado',
-      valor: '125,50',
+      valor: '1.234,56',
       dataGasto: '2026-04-04',
       responsavel: 'Tesouraria',
     })
@@ -355,6 +359,8 @@ test('POST /admin/cadastrar-gasto autenticado retorna sucesso', async (t) => {
 
   assert.equal(response.status, 200);
   assert.equal(response.body.success, true);
+  assert.equal(createPayload.valor, 1234.56);
+  assert.equal(createPayload.descricao, 'Compra de mercado');
 });
 
 test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) => {
@@ -363,13 +369,17 @@ test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) 
   const originalEjcFindById = Ejc.findById;
   const originalFluxoCreate = FluxoCaixaEncontro.create;
   const originalAdminAuditCreate = AdminAuditLog.create;
+  let createPayload = null;
 
   Ejc.findById = () => ({
     select: () => ({
       lean: async () => ({ _id: '507f1f77bcf86cd799439052', nome: 'EJC Teste' }),
     }),
   });
-  FluxoCaixaEncontro.create = async (payload) => ({ _id: '507f1f77bcf86cd799439053', ...payload });
+  FluxoCaixaEncontro.create = async (payload) => {
+    createPayload = payload;
+    return { _id: '507f1f77bcf86cd799439053', ...payload };
+  };
   AdminAuditLog.create = async () => ({ _id: '507f1f77bcf86cd799439054' });
 
   t.after(() => {
@@ -387,7 +397,7 @@ test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) 
       tipoMovimento: 'entrada',
       categoria: 'Doação',
       descricao: 'Doação de família',
-      valor: '250,00',
+      valor: '987,65',
       dataMovimento: '2026-04-04',
       responsavel: 'Tesouraria',
     })
@@ -395,6 +405,8 @@ test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) 
 
   assert.equal(response.status, 200);
   assert.equal(response.body.success, true);
+  assert.equal(createPayload.valor, 987.65);
+  assert.equal(createPayload.tipoMovimento, 'entrada');
 });
 
 test('POST /admin/cadastrar-subequipe autenticado retorna 409 quando duplicado', async (t) => {

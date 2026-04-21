@@ -12673,6 +12673,67 @@ html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revam
   background: rgba(219, 234, 254, 0.72) !important;
 }
 
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos :is(
+  .finance-category-badge,
+  .finance-movement-badge
+) {
+  border-width: 1px !important;
+  padding: 3px 9px !important;
+  font-size: 0.68rem !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72), 0 4px 12px rgba(15, 23, 42, 0.05) !important;
+  text-shadow: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table tbody td .text-muted,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table tbody td .text-muted.small,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table tbody td small,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-table tbody td div.small {
+  color: rgba(71, 85, 105, 0.96) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-movement-badge.movement-entry {
+  background: linear-gradient(180deg, rgba(209, 250, 229, 0.96), rgba(167, 243, 208, 0.88)) !important;
+  border-color: rgba(16, 185, 129, 0.42) !important;
+  color: #047857 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-movement-badge.movement-exit {
+  background: linear-gradient(180deg, rgba(254, 226, 226, 0.98), rgba(254, 202, 202, 0.9)) !important;
+  border-color: rgba(239, 68, 68, 0.42) !important;
+  color: #b91c1c !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-category-badge.badge-entry {
+  background: linear-gradient(180deg, rgba(219, 234, 254, 0.98), rgba(191, 219, 254, 0.9)) !important;
+  border-color: rgba(59, 130, 246, 0.42) !important;
+  color: #1d4ed8 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-category-badge.badge-sale {
+  background: linear-gradient(180deg, rgba(254, 243, 199, 0.98), rgba(253, 230, 138, 0.9)) !important;
+  border-color: rgba(245, 158, 11, 0.42) !important;
+  color: #b45309 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-category-badge.badge-donation {
+  background: linear-gradient(180deg, rgba(243, 232, 255, 0.98), rgba(221, 214, 254, 0.9)) !important;
+  border-color: rgba(168, 85, 247, 0.4) !important;
+  color: #7c3aed !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-category-badge.badge-expense {
+  background: linear-gradient(180deg, rgba(255, 228, 230, 0.98), rgba(254, 205, 211, 0.9)) !important;
+  border-color: rgba(244, 63, 94, 0.4) !important;
+  color: #be123c !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .finance-category-badge:not(.badge-entry):not(.badge-sale):not(.badge-donation):not(.badge-expense) {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.98), rgba(226, 232, 240, 0.92)) !important;
+  border-color: rgba(148, 163, 184, 0.4) !important;
+  color: #334155 !important;
+}
+
 body.admin-panel.admin-manager-page.admin-manager-revamp #gastos .gastos-collapse-icon {
   width: 34px;
   height: 34px;
