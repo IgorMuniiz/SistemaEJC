@@ -5327,14 +5327,24 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page .modal-body .form-label { color: var(--t2); }
 
     body.admin-panel.admin-manager-page #app-popup-modal .modal-dialog.app-popup-dialog {
-      max-width: 520px;
+      max-width: 560px;
+      min-height: calc(100dvh - clamp(20px, 6vh, 56px));
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    body.admin-panel.admin-manager-page #app-popup-modal {
+      padding: clamp(12px, 3vh, 28px);
     }
     body.admin-panel.admin-manager-page #app-popup-modal .app-popup-content {
       position: relative;
-      background: linear-gradient(180deg, rgba(19, 24, 40, 0.98), rgba(12, 17, 31, 0.98)) !important;
-      border: 1px solid rgba(148, 163, 184, 0.32) !important;
-      box-shadow: 0 28px 70px rgba(2, 8, 24, 0.68), 0 0 0 1px rgba(255, 255, 255, 0.04) inset !important;
-      backdrop-filter: blur(14px);
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 34%),
+        linear-gradient(180deg, rgba(19, 24, 40, 0.985), rgba(10, 15, 28, 0.985)) !important;
+      border: 1px solid rgba(148, 163, 184, 0.26) !important;
+      box-shadow: 0 30px 80px rgba(2, 8, 24, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.03) inset !important;
+      backdrop-filter: blur(10px);
       overflow: hidden;
     }
     body.admin-panel.admin-manager-page #app-popup-modal .app-popup-content::before {
@@ -5486,7 +5496,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       color: #bbf7d0;
     }
     body.admin-panel.admin-manager-page .modal-backdrop.show {
-      opacity: 0.72;
+      opacity: 0.56;
       background: #020617;
     }
 

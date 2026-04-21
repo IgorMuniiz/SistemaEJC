@@ -3698,7 +3698,6 @@
       }
     });
 
-    let useNativeDialogs = false;
     let lastTransferSelectionCount = null;
     let lastApprovalSelectionCount = null;
     const managerFeedbackStorageKey = 'admin_manager_pending_feedback';
@@ -3860,293 +3859,104 @@
       }
     }
 
-    function ensureAppPopup() {
-      console.log('[ensureAppPopup] verificando se modal existe...');
-      let modalElement = document.getElementById('app-popup-modal');
-      if (modalElement) {
-        console.log('[ensureAppPopup] modal encontrado, retornando instância');
-        return {
-          element: modalElement,
-          instance: bootstrap.Modal.getOrCreateInstance(modalElement),
-        };
+    function resetLegacyAppPopupState() {
+      const legacyPopup = document.getElementById('app-popup-modal');
+      if (legacyPopup) {
+        legacyPopup.classList.remove('show');
+        legacyPopup.style.display = 'none';
+        legacyPopup.setAttribute('aria-hidden', 'true');
       }
 
-      console.log('[ensureAppPopup] criando novo modal...');
-      modalElement = document.createElement('div');
-      modalElement.className = 'modal fade';
-      modalElement.id = 'app-popup-modal';
-      modalElement.tabIndex = -1;
-      modalElement.setAttribute('aria-hidden', 'true');
-      modalElement.innerHTML = `
-        <div class="modal-dialog modal-dialog-centered app-popup-dialog">
-          <div class="modal-content border-0 shadow-lg app-popup-content app-popup-tone-primary">
-            <div class="modal-header app-popup-header">
-              <div class="app-popup-headline">
-                <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
-                <div class="app-popup-title-stack">
-                  <span class="app-popup-kicker" id="app-popup-kicker">Acao rapida</span>
-                  <h5 class="modal-title" id="app-popup-title">Aviso</h5>
-                </div>
-              </div>
-              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body app-popup-body">
-              <p id="app-popup-message" class="mb-0" style="white-space: pre-line;"></p>
-              <input id="app-popup-input" type="text" class="form-control app-popup-input mt-3" style="display:none;" />
-              <div class="app-popup-note" id="app-popup-note"></div>
-            </div>
-            <div class="modal-footer app-popup-footer">
-              <button type="button" class="btn btn-outline-secondary app-popup-cancel" id="app-popup-cancel">Cancelar</button>
-              <button type="button" class="btn btn-primary app-popup-confirm" id="app-popup-confirm">OK</button>
-            </div>
-          </div>
-        </div>
-      `;
-      document.body.appendChild(modalElement);
-      console.log('[ensureAppPopup] modal criado e adicionado ao DOM');
-
-      if (typeof bootstrap === 'undefined') {
-        console.error('[ensureAppPopup] ERRO: bootstrap não está carregado! Usando diálogos nativos.');
-        useNativeDialogs = true;
-        throw new Error('Bootstrap não está carregado');
-      }
-
-      try {
-        const instance = bootstrap.Modal.getOrCreateInstance(modalElement);
-        console.log('[ensureAppPopup] instância bootstrap criada:', instance);
-        
-        return {
-          element: modalElement,
-          instance,
-        };
-      } catch (e) {
-        console.error('[ensureAppPopup] erro ao criar instância Bootstrap:', e);
-        useNativeDialogs = true;
-        throw e;
-      }
-    }
-
-    function showAppPopup({ title, message, confirmText = 'OK', cancelText = null, tone = 'primary', inputValue = null, inputPlaceholder = '' }) {
-      console.log('[showAppPopup] iniciado com:', { title, message, confirmText, cancelText, tone, inputValue });
-      
-      // Criar um timeout para evitar travamento infinito
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('showAppPopup timeout - modal não respondeu em 5 segundos'));
-        }, 5000);
+      document.querySelectorAll('.modal-backdrop').forEach((backdrop) => {
+        backdrop.remove();
       });
 
-      const popupPromise = (async () => {
-        try {
-          const { element, instance } = ensureAppPopup();
-          const titleEl = element.querySelector('#app-popup-title');
-          const kickerEl = element.querySelector('#app-popup-kicker');
-          const messageEl = element.querySelector('#app-popup-message');
-          const noteEl = element.querySelector('#app-popup-note');
-          const orbEl = element.querySelector('#app-popup-orb');
-          const inputEl = element.querySelector('#app-popup-input');
-          const confirmBtn = element.querySelector('#app-popup-confirm');
-          const cancelBtn = element.querySelector('#app-popup-cancel');
-          const contentEl = element.querySelector('.app-popup-content');
-
-          const toneLabels = {
-            primary: 'Acao rapida',
-            warning: 'Confirmacao',
-            danger: 'Atencao',
-            success: 'Concluido',
-          };
-          const toneNotes = {
-            primary: 'Revise os detalhes antes de concluir a acao na central.',
-            warning: 'Esta decisao afeta o fluxo atual de trabalho e merece uma ultima checagem.',
-            danger: 'Confira os dados com atencao para evitar uma reversao manual depois.',
-            success: 'A central foi atualizada e o feedback visual acompanha a operacao concluida.',
-          };
-          const toneIcons = {
-            primary: 'fa-sparkles',
-            warning: 'fa-shield-halved',
-            danger: 'fa-triangle-exclamation',
-            success: 'fa-circle-check',
-          };
-
-          console.log('[showAppPopup] elementos encontrados:', { titleEl, kickerEl, messageEl, noteEl, orbEl, inputEl, confirmBtn, cancelBtn, contentEl });
-
-          titleEl.textContent = title || 'Aviso';
-          if (kickerEl) {
-            kickerEl.textContent = toneLabels[tone] || toneLabels.primary;
-          }
-          messageEl.textContent = message || '';
-          if (noteEl) {
-            noteEl.textContent = inputValue !== null
-              ? 'Informe o valor solicitado para concluir a atualizacao.'
-              : (toneNotes[tone] || toneNotes.primary);
-            noteEl.style.display = noteEl.textContent ? '' : 'none';
-          }
-          if (orbEl) {
-            orbEl.innerHTML = `<i class="fas ${toneIcons[tone] || toneIcons.primary}"></i>`;
-          }
-          confirmBtn.textContent = confirmText;
-          confirmBtn.className = `btn btn-${tone} app-popup-confirm`;
-          if (contentEl) {
-            contentEl.classList.remove('app-popup-tone-primary', 'app-popup-tone-warning', 'app-popup-tone-danger', 'app-popup-tone-success');
-            contentEl.classList.add(`app-popup-tone-${tone}`);
-          }
-
-          if (cancelText) {
-            cancelBtn.style.display = '';
-            cancelBtn.textContent = cancelText;
-          } else {
-            cancelBtn.style.display = 'none';
-          }
-
-          const isPrompt = inputValue !== null;
-          inputEl.style.display = isPrompt ? '' : 'none';
-          inputEl.value = isPrompt ? String(inputValue) : '';
-          inputEl.placeholder = inputPlaceholder || '';
-
-          console.log('[showAppPopup] modal configurado, criando Promise...');
-
-          return new Promise((resolve) => {
-            let resolved = false;
-
-            const cleanup = () => {
-              confirmBtn.removeEventListener('click', onConfirm);
-              cancelBtn.removeEventListener('click', onCancel);
-              element.removeEventListener('hidden.bs.modal', onHidden);
-              inputEl.removeEventListener('keydown', onInputKeyDown);
-              console.log('[showAppPopup] cleanup executado');
-            };
-
-            const settle = (value) => {
-              if (resolved) {
-                console.log('[showAppPopup] settle já foi chamado, ignorando valor:', value);
-                return;
-              }
-              resolved = true;
-              console.log('[showAppPopup] settle com valor:', value);
-              cleanup();
-              
-              // Tenta fechar o modal de forma segura
-              try {
-                instance.hide();
-              } catch (e) {
-                console.error('[showAppPopup] erro ao hide modal:', e);
-              }
-              
-              resolve(value);
-            };
-
-            const onConfirm = () => {
-              console.log('[showAppPopup] onConfirm disparado');
-              settle(isPrompt ? inputEl.value : true);
-            };
-
-            const onCancel = () => {
-              console.log('[showAppPopup] onCancel disparado');
-              settle(isPrompt ? null : false);
-            };
-
-            const onHidden = () => {
-              console.log('[showAppPopup] onHidden disparado');
-              settle(isPrompt ? null : false);
-            };
-
-            const onInputKeyDown = (event) => {
-              if (event.key === 'Enter') {
-                console.log('[showAppPopup] Enter pressionado no input');
-                event.preventDefault();
-                onConfirm();
-              }
-            };
-
-            confirmBtn.addEventListener('click', onConfirm);
-            cancelBtn.addEventListener('click', onCancel);
-            element.addEventListener('hidden.bs.modal', onHidden, { once: true });
-            inputEl.addEventListener('keydown', onInputKeyDown);
-
-            console.log('[showAppPopup] listeners adicionados, mostrando modal...');
-            try {
-              console.log('[showAppPopup] chamando instance.show()...');
-              instance.show();
-              console.log('[showAppPopup] modal.show() chamado com sucesso');
-            } catch (e) {
-              console.error('[showAppPopup] erro ao show modal:', e);
-              settle(isPrompt ? null : false);
-            }
-
-            if (isPrompt) {
-              setTimeout(() => {
-                console.log('[showAppPopup] focando input...');
-                inputEl.focus();
-              }, 50);
-            }
-          });
-        } catch (error) {
-          console.error('[showAppPopup] ERRO NA FUNÇÃO:', error);
-          throw error;
-        }
-      })();
-
-      // Executar com timeout
-      return Promise.race([popupPromise, timeoutPromise]).catch(err => {
-        console.error('[showAppPopup] Promise rejeitada:', err);
-        useNativeDialogs = true;
-        throw err;
-      });
+      document.body.classList.remove('modal-open');
+      document.body.style.removeProperty('padding-right');
     }
 
     async function appAlert(message, tone = 'primary', title = 'Aviso') {
-      if (useNativeDialogs) {
-        window.alert(`${title}\n\n${message}`);
-        return;
-      }
+      resetLegacyAppPopupState();
+
       try {
-        await showAppPopup({ title, message, confirmText: 'Entendi', tone });
+        await showBeautifulDialog({
+          title,
+          message,
+          isPrompt: false,
+          confirmText: tone === 'success' ? 'Perfeito' : 'Entendi',
+          tone,
+        });
       } catch (e) {
-        console.error('[appAlert] erro ao mostrar popup:', e);
-        useNativeDialogs = true;
+        console.error('[appAlert] erro ao mostrar popup premium:', e);
         window.alert(`${title}\n\n${message}`);
       }
     }
 
     async function appConfirm(message, title = 'Confirmacao') {
-      if (useNativeDialogs) {
-        return window.confirm(`${title}\n\n${message}`);
-      }
+      resetLegacyAppPopupState();
+
       try {
-        const tone = /delet|exclus|irrevers|remoc|remover|limpar/i.test(`${title} ${message}`) ? 'danger' : 'warning';
-        return await showAppPopup({
+        const isDanger = /delet|exclus|irrevers|remoc|remover|limpar/i.test(`${title} ${message}`);
+        return await showBeautifulDialog({
           title,
           message,
-          confirmText: 'Confirmar',
+          isPrompt: false,
           cancelText: 'Cancelar',
-          tone,
+          confirmText: isDanger ? 'Confirmar' : 'Continuar',
+          isDanger,
+          tone: isDanger ? 'danger' : 'warning',
         });
       } catch (e) {
-        console.error('[appConfirm] erro ao mostrar popup:', e);
-        useNativeDialogs = true;
+        console.error('[appConfirm] erro ao mostrar popup premium:', e);
         return window.confirm(`${title}\n\n${message}`);
       }
     }
 
     async function appPrompt(message, defaultValue = '', title = 'Informe um valor') {
       console.log('[appPrompt] chamado com:', { message, defaultValue, title });
-      if (useNativeDialogs) {
-        console.log('[appPrompt] usando native prompt');
-        return window.prompt(`${title}\n\n${message}`, defaultValue);
-      }
+      resetLegacyAppPopupState();
+
       try {
-        return await showAppPopup({
+        return await showBeautifulDialog({
           title,
           message,
+          isPrompt: true,
+          defaultValue,
           confirmText: 'Salvar',
           cancelText: 'Cancelar',
           tone: 'primary',
-          inputValue: defaultValue,
         });
       } catch (e) {
-        console.error('[appPrompt] erro ao mostrar popup:', e);
-        useNativeDialogs = true;
+        console.error('[appPrompt] erro ao mostrar popup premium:', e);
         return window.prompt(`${title}\n\n${message}`, defaultValue);
+      }
+    }
+
+    function buildLocalFinanceiroItem(payload, extra = {}) {
+      return {
+        _id: extra.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        ejc: extra.ejcNome || payload.ejcNome || payload.ejc || '',
+        ejcVinculadoId: payload.ejcId || '',
+        ejcVinculadoNome: extra.ejcNome || payload.ejcNome || payload.ejc || '',
+        categoria: payload.categoria || 'Outros',
+        descricao: payload.descricao || '',
+        valor: Number(payload.valor) || 0,
+        responsavel: payload.responsavel || '',
+        formaPagamento: payload.formaPagamento || '',
+        observacoes: payload.observacoes || '',
+        ...extra,
+      };
+    }
+
+    function applyLocalFinanceiroEntry({ gasto = null, fluxo = null }) {
+      if (gasto) {
+        gastosFinanceiros.unshift(gasto);
+        renderGastosDashboard();
+      }
+
+      if (fluxo) {
+        fluxoCaixaFinanceiro.unshift(fluxo);
+        renderFluxoCaixaDashboard();
       }
     }
 
@@ -5892,6 +5702,7 @@
       const escopoTipo = document.getElementById('gasto_escopoTipo')?.value || 'encontro';
       const equipeId = document.getElementById('gasto_equipeId')?.value || '';
       const equipeNome = document.getElementById('gasto_equipeId')?.selectedOptions?.[0]?.textContent?.trim() || '';
+      const ejcNome = document.getElementById('gasto_ejcId')?.selectedOptions?.[0]?.textContent?.trim() || '';
       const categoria = document.getElementById('gasto_categoria')?.value || (lancamentoConfig.categoriaDefault || 'Outros');
       const descricao = document.getElementById('gasto_descricao')?.value.trim() || '';
       const valor = document.getElementById('gasto_valor')?.value.trim() || '';
@@ -5944,6 +5755,7 @@
       };
 
       try {
+        let gastoCriadoLocal = null;
         if (!isEntrada) {
           const gastoResponse = await fetch('/admin/cadastrar-gasto', {
             method: 'POST',
@@ -5956,6 +5768,15 @@
             await appAlert(gastoResult.error || 'Erro ao cadastrar gasto.', 'danger', 'Erro');
             return;
           }
+
+          gastoCriadoLocal = buildLocalFinanceiroItem(gastoPayload, {
+            id: gastoResult.gastoId,
+            ejcNome,
+            escopoTipo,
+            equipeId: escopoTipo === 'equipe' ? equipeId : '',
+            equipeNome: escopoTipo === 'equipe' ? equipeNome : '',
+            dataGasto,
+          });
         }
 
         const fluxoResponse = await fetch('/admin/cadastrar-fluxo-caixa', {
@@ -5970,8 +5791,16 @@
           return;
         }
 
+        const fluxoCriadoLocal = buildLocalFinanceiroItem(fluxoPayload, {
+          id: fluxoResult.movimentoId,
+          ejcNome,
+          tipoMovimento: isEntrada ? 'entrada' : 'saida',
+          origemDestino: fluxoPayload.origemDestino,
+          dataMovimento: dataGasto,
+        });
+
+        applyLocalFinanceiroEntry({ gasto: gastoCriadoLocal, fluxo: fluxoCriadoLocal });
         queueManagerFeedback({ tabId: 'gastos' });
-        await appAlert(lancamentoConfig.sucessoMensagem || 'Lançamento cadastrado com sucesso.', 'success', 'Sucesso');
         document.getElementById('formGasto')?.reset();
 
         const tipoLancamentoInput = document.getElementById('gasto_tipoLancamento');
@@ -5985,7 +5814,11 @@
         }
 
         atualizarCamposGasto();
-        recarregarMantendoAbaAtual();
+        await appAlert(
+          lancamentoConfig.sucessoMensagem || 'Lançamento cadastrado com sucesso.',
+          'success',
+          isEntrada ? 'Entrada registrada' : 'Lançamento salvo'
+        );
       } catch (error) {
         await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
       } finally {
@@ -6701,13 +6534,10 @@
     async function revogarLinkConviteEncontreiro() {
       if (!ensurePermission('cadastros.visualizar')) return;
       const triggerButton = getActionTriggerButton() || document.getElementById('btn-gerar-link-convite');
-      const confirma = await showAppPopup({
-        title: 'Revogar link de convite',
-        message: 'Tem certeza? O link atual deixará de funcionar imediatamente e qualquer um que o tenha não conseguirá mais acessar o formulário por ele.',
-        confirmText: 'Revogar',
-        cancelText: 'Cancelar',
-        tone: 'danger',
-      });
+      const confirma = await showDangerConfirm(
+        'Tem certeza? O link atual deixará de funcionar imediatamente e qualquer um que o tenha não conseguirá mais acessar o formulário por ele.',
+        'Revogar link de convite'
+      );
       if (!confirma) return;
 
       setActionButtonBusy(triggerButton, true, 'Revogando...');
@@ -7633,10 +7463,12 @@
             display: none;
             align-items: center;
             justify-content: center;
-            padding: 12px;
+            padding: clamp(12px, 3vh, 28px);
             box-sizing: border-box;
-            background: rgba(7, 12, 24, 0.72);
-            backdrop-filter: blur(6px);
+            background:
+              radial-gradient(circle at top, rgba(37, 99, 235, 0.14), transparent 30%),
+              rgba(7, 12, 24, 0.58);
+            backdrop-filter: blur(4px) saturate(1.04);
           }
 
           #beautiful-dialog-overlay.visible {
@@ -7644,119 +7476,242 @@
           }
 
           #beautiful-dialog-card {
-            width: min(560px, calc(100vw - 24px));
+            width: min(580px, calc(100vw - 24px));
             max-height: calc(100vh - 24px);
             margin: auto;
-            background: #0f1627;
-            border: 1px solid rgba(137, 160, 255, 0.25);
-            border-radius: 16px;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.48);
+            background:
+              radial-gradient(circle at top left, rgba(59, 130, 246, 0.18), transparent 32%),
+              linear-gradient(180deg, rgba(15, 23, 42, 0.985), rgba(8, 14, 28, 0.985));
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 26px;
+            box-shadow: 0 34px 90px rgba(2, 6, 23, 0.58), 0 0 0 1px rgba(255, 255, 255, 0.03) inset;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             animation: dialog-pop-in 0.22s ease-out;
+            position: relative;
+          }
+
+          #beautiful-dialog-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent 34%);
+            opacity: 0.72;
           }
 
           #beautiful-dialog-header {
-            background: linear-gradient(135deg, #2b4ad9 0%, #6a4bc0 100%);
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(90deg, rgba(30, 64, 175, 0.32), rgba(15, 23, 42, 0.9));
             color: #f8fbff;
-            padding: 18px 20px;
+            padding: 18px 20px 16px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
             gap: 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+          }
+
+          #beautiful-dialog-headline {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+          }
+
+          #beautiful-dialog-orb {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            font-size: 1.08rem;
+            color: rgba(224, 242, 254, 0.96);
+            background: linear-gradient(145deg, rgba(56, 189, 248, 0.24), rgba(59, 130, 246, 0.12));
+            border: 1px solid rgba(125, 211, 252, 0.24);
+            box-shadow: 0 18px 30px rgba(14, 165, 233, 0.16);
+          }
+
+          #beautiful-dialog-title-stack {
+            display: grid;
+            gap: 6px;
+            min-width: 0;
+          }
+
+          #beautiful-dialog-kicker {
+            display: inline-flex;
+            align-items: center;
+            width: fit-content;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(125, 211, 252, 0.22);
+            background: rgba(15, 23, 42, 0.42);
+            color: rgba(191, 219, 254, 0.94);
+            font-size: 0.68rem;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
           }
 
           #beautiful-dialog-title {
             margin: 0;
-            font-size: 1.35rem;
-            font-weight: 700;
+            font-size: 1.08rem;
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: 0.01em;
           }
 
           #beautiful-dialog-close {
-            background: transparent;
+            background: rgba(15, 23, 42, 0.44);
             color: #e8eeff;
-            border: none;
-            font-size: 30px;
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            border-radius: 14px;
+            font-size: 22px;
             line-height: 1;
             cursor: pointer;
-            opacity: 0.9;
+            opacity: 0.86;
             padding: 0;
-            width: 34px;
-            height: 34px;
+            width: 38px;
+            height: 38px;
+            transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
           }
 
           #beautiful-dialog-close:hover {
             opacity: 1;
+            transform: translateY(-1px);
+            background: rgba(30, 41, 59, 0.78);
           }
 
           #beautiful-dialog-body {
-            padding: 22px 20px 14px;
+            position: relative;
+            z-index: 1;
+            padding: 20px 20px 10px;
             color: #e6eeff;
-            font-size: 1.08rem;
+            font-size: 0.98rem;
             line-height: 1.6;
-            background: #0f1627;
+            background: transparent;
             overflow-y: auto;
           }
 
+          #beautiful-dialog-note {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 18px;
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            background: rgba(15, 23, 42, 0.48);
+            color: rgba(191, 219, 254, 0.88);
+            font-size: 0.84rem;
+            line-height: 1.55;
+          }
+
           #beautiful-dialog-input-wrap {
+            position: relative;
+            z-index: 1;
             padding: 0 20px 14px;
-            background: #0f1627;
+            background: transparent;
             display: none;
           }
 
           #beautiful-dialog-input {
             width: 100%;
-            border: 1px solid rgba(126, 156, 255, 0.38);
-            background: #0b1322;
+            min-height: 52px;
+            border: 1px solid rgba(148, 163, 184, 0.26);
+            background: rgba(15, 23, 42, 0.78);
             color: #f4f7ff;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 12px 14px;
-            font-size: 1.05rem;
+            font-size: 1rem;
             outline: none;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
           }
 
           #beautiful-dialog-input:focus {
-            border-color: #8ea7ff;
-            box-shadow: 0 0 0 4px rgba(97, 125, 255, 0.22);
+            border-color: rgba(96, 165, 250, 0.48);
+            box-shadow: 0 0 0 0.24rem rgba(37, 99, 235, 0.18);
           }
 
           #beautiful-dialog-footer {
-            padding: 16px 20px 20px;
-            background: #0f1627;
+            position: relative;
+            z-index: 1;
+            padding: 12px 20px 18px;
+            background: rgba(15, 23, 42, 0.4);
             display: flex;
             gap: 10px;
             justify-content: flex-end;
             flex-wrap: wrap;
-            border-top: 1px solid rgba(137, 160, 255, 0.2);
+            border-top: 1px solid rgba(148, 163, 184, 0.16);
           }
 
           .beautiful-dialog-btn {
-            border: none;
-            border-radius: 10px;
-            font-weight: 700;
-            font-size: 1rem;
+            min-height: 46px;
+            border-radius: 14px;
+            font-weight: 800;
+            font-size: 0.96rem;
             padding: 10px 20px;
             cursor: pointer;
-            min-width: 110px;
+            min-width: 128px;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+          }
+
+          .beautiful-dialog-btn:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
           }
 
           #beautiful-dialog-cancel {
-            background: #121a2c;
+            background: rgba(30, 41, 59, 0.58);
             color: #dce7ff;
-            border: 1px solid rgba(143, 166, 255, 0.35);
+            border: 1px solid rgba(148, 163, 184, 0.34);
             display: none;
           }
 
           #beautiful-dialog-confirm {
-            background: linear-gradient(135deg, #5176ff 0%, #8057d8 100%);
+            border: none;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: #ffffff;
-            box-shadow: 0 10px 22px rgba(76, 110, 255, 0.36);
+            box-shadow: 0 14px 28px rgba(37, 99, 235, 0.34);
           }
 
           #beautiful-dialog-confirm.danger {
-            background: linear-gradient(135deg, #e45a6a 0%, #b73b53 100%);
-            box-shadow: 0 10px 22px rgba(228, 90, 106, 0.34);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 14px 28px rgba(239, 68, 68, 0.28);
+          }
+
+          #beautiful-dialog-card.tone-warning #beautiful-dialog-header {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.28), rgba(15, 23, 42, 0.9));
+          }
+
+          #beautiful-dialog-card.tone-warning #beautiful-dialog-orb {
+            background: linear-gradient(145deg, rgba(251, 191, 36, 0.24), rgba(245, 158, 11, 0.12));
+            border-color: rgba(252, 211, 77, 0.24);
+            color: rgba(254, 249, 195, 0.98);
+            box-shadow: 0 18px 30px rgba(245, 158, 11, 0.16);
+          }
+
+          #beautiful-dialog-card.tone-success #beautiful-dialog-header {
+            background: linear-gradient(90deg, rgba(34, 197, 94, 0.24), rgba(15, 23, 42, 0.9));
+          }
+
+          #beautiful-dialog-card.tone-success #beautiful-dialog-orb {
+            background: linear-gradient(145deg, rgba(74, 222, 128, 0.24), rgba(34, 197, 94, 0.12));
+            border-color: rgba(134, 239, 172, 0.24);
+            color: rgba(220, 252, 231, 0.98);
+            box-shadow: 0 18px 30px rgba(34, 197, 94, 0.16);
+          }
+
+          #beautiful-dialog-card.tone-danger #beautiful-dialog-header {
+            background: linear-gradient(90deg, rgba(239, 68, 68, 0.24), rgba(15, 23, 42, 0.9));
+          }
+
+          #beautiful-dialog-card.tone-danger #beautiful-dialog-orb {
+            background: linear-gradient(145deg, rgba(248, 113, 113, 0.24), rgba(239, 68, 68, 0.12));
+            border-color: rgba(252, 165, 165, 0.24);
+            color: rgba(254, 226, 226, 0.98);
+            box-shadow: 0 18px 30px rgba(239, 68, 68, 0.16);
           }
 
           @media (max-width: 640px) {
@@ -7765,12 +7720,24 @@
               max-height: calc(100vh - 16px);
             }
 
+            #beautiful-dialog-headline {
+              align-items: flex-start;
+              gap: 10px;
+            }
+
+            #beautiful-dialog-orb {
+              width: 44px;
+              height: 44px;
+              border-radius: 15px;
+              font-size: 0.98rem;
+            }
+
             #beautiful-dialog-title {
-              font-size: 1.15rem;
+              font-size: 1rem;
             }
 
             #beautiful-dialog-body {
-              font-size: 1rem;
+              font-size: 0.94rem;
             }
 
             .beautiful-dialog-btn {
@@ -7783,10 +7750,19 @@
         <div id="beautiful-dialog-overlay" aria-hidden="true">
           <div id="beautiful-dialog-card" role="dialog" aria-modal="true" aria-labelledby="beautiful-dialog-title">
             <div id="beautiful-dialog-header">
-              <h3 id="beautiful-dialog-title">Aviso</h3>
+              <div id="beautiful-dialog-headline">
+                <div id="beautiful-dialog-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
+                <div id="beautiful-dialog-title-stack">
+                  <span id="beautiful-dialog-kicker">Ação rápida</span>
+                  <h3 id="beautiful-dialog-title">Aviso</h3>
+                </div>
+              </div>
               <button type="button" id="beautiful-dialog-close" aria-label="Fechar">×</button>
             </div>
-            <div id="beautiful-dialog-body"></div>
+            <div id="beautiful-dialog-body">
+              <div id="beautiful-dialog-message"></div>
+              <div id="beautiful-dialog-note"></div>
+            </div>
             <div id="beautiful-dialog-input-wrap">
               <input type="text" id="beautiful-dialog-input" autocomplete="off" />
             </div>
@@ -7808,23 +7784,54 @@
       return overlay;
     }
 
-    function showBeautifulDialog({ title, message, isPrompt = false, defaultValue = '', isDanger = false, confirmText = 'OK', cancelText = null }) {
+    function showBeautifulDialog({ title, message, isPrompt = false, defaultValue = '', isDanger = false, confirmText = 'OK', cancelText = null, tone = 'primary' }) {
       const overlay = createBeautifulDialog();
+      const cardEl = document.getElementById('beautiful-dialog-card');
+      const kickerEl = document.getElementById('beautiful-dialog-kicker');
+      const orbEl = document.getElementById('beautiful-dialog-orb');
       const titleEl = document.getElementById('beautiful-dialog-title');
-      const bodyEl = document.getElementById('beautiful-dialog-body');
+      const messageEl = document.getElementById('beautiful-dialog-message');
+      const noteEl = document.getElementById('beautiful-dialog-note');
       const inputWrap = document.getElementById('beautiful-dialog-input-wrap');
       const inputEl = document.getElementById('beautiful-dialog-input');
       const confirmBtn = document.getElementById('beautiful-dialog-confirm');
       const cancelBtn = document.getElementById('beautiful-dialog-cancel');
       const closeBtn = document.getElementById('beautiful-dialog-close');
 
-      if (!overlay || !titleEl || !bodyEl || !inputWrap || !inputEl || !confirmBtn || !cancelBtn || !closeBtn) {
+      if (!overlay || !cardEl || !kickerEl || !orbEl || !titleEl || !messageEl || !noteEl || !inputWrap || !inputEl || !confirmBtn || !cancelBtn || !closeBtn) {
         return Promise.reject(new Error('Dialog elements unavailable'));
       }
 
+      const effectiveTone = isDanger ? 'danger' : tone;
+      const toneLabels = {
+        primary: 'Acao rapida',
+        warning: 'Confirmacao',
+        success: 'Concluido',
+        danger: 'Atencao',
+      };
+      const toneNotes = {
+        primary: 'A central segue disponível logo após esta confirmação, sem recarregar o painel inteiro.',
+        warning: 'Revise os dados antes de continuar para evitar retrabalho manual depois.',
+        success: 'A ação foi concluída e o painel já foi atualizado com o novo estado.',
+        danger: 'Confirme com atenção, porque esta operação pode exigir reversão manual depois.',
+      };
+      const toneIcons = {
+        primary: 'fa-sparkles',
+        warning: 'fa-shield-halved',
+        success: 'fa-circle-check',
+        danger: 'fa-triangle-exclamation',
+      };
+
       titleEl.textContent = title || 'Aviso';
-      bodyEl.textContent = message || '';
+      kickerEl.textContent = toneLabels[effectiveTone] || toneLabels.primary;
+      messageEl.textContent = message || '';
+      noteEl.textContent = isPrompt
+        ? 'Preencha o campo abaixo para concluir a operação com segurança.'
+        : (toneNotes[effectiveTone] || toneNotes.primary);
+      orbEl.innerHTML = `<i class="fas ${toneIcons[effectiveTone] || toneIcons.primary}"></i>`;
       inputEl.value = String(defaultValue || '');
+      cardEl.classList.remove('tone-primary', 'tone-warning', 'tone-success', 'tone-danger');
+      cardEl.classList.add(`tone-${effectiveTone}`);
 
       inputWrap.style.display = isPrompt ? 'block' : 'none';
       cancelBtn.style.display = cancelText ? 'inline-block' : 'none';
@@ -7897,18 +7904,19 @@
 
     // Substituir funções de diálogo
     async function showAlert(message, title = 'Aviso') {
-      return showBeautifulDialog({ title, message, isPrompt: false });
+      return appAlert(message, 'primary', title);
     }
 
     async function showConfirm(message, title = 'Confirmação') {
-      return showBeautifulDialog({ title, message, isPrompt: false, cancelText: 'Cancelar' });
+      return appConfirm(message, title);
     }
 
     async function showPrompt(message, defaultValue = '', title = 'Digite um valor') {
-      return showBeautifulDialog({ title, message, isPrompt: true, defaultValue, confirmText: 'Salvar', cancelText: 'Cancelar' });
+      return appPrompt(message, defaultValue, title);
     }
 
     async function showDangerConfirm(message, title = 'Confirmar exclusão') {
+      resetLegacyAppPopupState();
       return showBeautifulDialog({ title, message, isPrompt: false, cancelText: 'Cancelar', isDanger: true, confirmText: 'Deletar' });
     }
   </script>
