@@ -5936,7 +5936,6 @@
           dataMovimento: dataGasto,
         });
 
-        applyLocalFinanceiroEntry({ gasto: gastoCriadoLocal, fluxo: fluxoCriadoLocal });
         queueManagerFeedback({ tabId: 'gastos' });
         document.getElementById('formGasto')?.reset();
 
@@ -5956,6 +5955,7 @@
           'success',
           isEntrada ? 'Entrada registrada' : 'Lançamento salvo'
         );
+        recarregarMantendoAbaAtual();
       } catch (error) {
         await appAlert('Erro ao cadastrar lançamento financeiro.', 'danger', 'Erro');
       } finally {
