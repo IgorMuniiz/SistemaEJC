@@ -3673,14 +3673,28 @@
     function ajustarEditorEncontreiroSemRolagem() {
       if (!modalEdicaoElement) return;
 
+      const modalContent = modalEdicaoElement.querySelector('.edit-cadastro-modal');
       const modalBody = modalEdicaoElement.querySelector('.edit-modal-body');
+      const modalHeader = modalEdicaoElement.querySelector('.edit-modal-header');
+      const modalFooter = modalEdicaoElement.querySelector('.edit-modal-footer');
       const form = document.getElementById('formEdicao');
-      if (!modalBody || !form) return;
+      if (!modalContent || !modalBody || !form) return;
 
       form.style.transform = '';
       form.style.transformOrigin = '';
-      modalBody.style.overflowY = 'scroll';
+      modalBody.style.maxHeight = 'none';
+      modalBody.style.height = 'auto';
+      modalBody.style.overflowY = 'auto';
       modalBody.style.overflowX = 'hidden';
+
+      const contentHeight = modalContent.clientHeight;
+      const headerHeight = modalHeader ? modalHeader.offsetHeight : 0;
+      const footerHeight = modalFooter ? modalFooter.offsetHeight : 0;
+      const availableHeight = contentHeight - headerHeight - footerHeight;
+
+      if (availableHeight > 180) {
+        modalBody.style.maxHeight = `${availableHeight}px`;
+      }
     }
 
     function travarScrollFundo() {

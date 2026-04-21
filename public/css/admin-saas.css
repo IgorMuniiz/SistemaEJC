@@ -7791,9 +7791,8 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell.is-encontreiro-view .edit-modal-body {
       flex: 1 1 auto;
       min-height: 0;
-      max-height: calc(100vh - 144px);
-      max-height: calc(100dvh - 144px);
-      overflow-y: scroll;
+      max-height: none;
+      overflow-y: auto;
       overflow-x: hidden;
       overscroll-behavior-y: contain;
       scrollbar-gutter: stable both-edges;
