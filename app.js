@@ -1422,26 +1422,100 @@ const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = 
   const mail = String(email || '').trim();
   const phoneDigits = normalizePhoneDigits(telefone);
   const ejcScope = normalizeTextInput(options.ejc);
+  const querySession = options.session || null;
 
-  const filters = [];
-  if (mail && !mail.includes('@pendente.local')) {
-    filters.push({ email: new RegExp(`^${escapeRegExp(mail)}$`, 'i') });
-  }
-  if (phoneDigits) {
-    filters.push({ telefone: new RegExp(escapeRegExp(phoneDigits.split('').join('\\D*')), 'i') });
-  }
-  if (nome) {
-    filters.push({ nomeCompleto: new RegExp(`^${escapeRegExp(nome)}$`, 'i') });
+  const findOneWithOptions = async (query) => {
+    const lookup = Model.findOne(query);
+    if (querySession && lookup && typeof lookup.session === 'function') {
+      return lookup.session(querySession);
+    }
+    return lookup;
+  };
+
+  const applyScope = (query) => {
+    if (!ejcScope) return query;
+    return {
+      ...query,
+      ejc: new RegExp(`^${escapeRegExp(ejcScope)}$`, 'i'),
+    };
+  };
+
+  const emailFilter = mail && !mail.includes('@pendente.local')
+    ? { email: new RegExp(`^${escapeRegExp(mail)}$`, 'i') }
+    : null;
+  const nomeFilter = nome
+    ? { nomeCompleto: new RegExp(`^${escapeRegExp(nome)}$`, 'i') }
+    : null;
+  const phoneFilter = phoneDigits
+    ? { telefone: new RegExp(escapeRegExp(phoneDigits.split('').join('\\D*')), 'i') }
+    : null;
+
+  if (emailFilter && nomeFilter) {
+    const samePerson = await findOneWithOptions(applyScope({ $and: [nomeFilter, emailFilter] }));
+    if (samePerson) return samePerson;
   }
 
-  if (filters.length === 0) return null;
-
-  const query = { $or: filters };
-  if (ejcScope) {
-    query.ejc = new RegExp(`^${escapeRegExp(ejcScope)}$`, 'i');
+  if (emailFilter) {
+    const sameEmail = await findOneWithOptions(applyScope(emailFilter));
+    if (sameEmail) return sameEmail;
+    return null;
   }
 
-  return Model.findOne(query);
+  if (phoneFilter) {
+    const samePhone = await findOneWithOptions(applyScope(phoneFilter));
+    if (samePhone) return samePhone;
+  }
+
+  if (nomeFilter) {
+    return findOneWithOptions(applyScope(nomeFilter));
+  }
+
+  return null;
+};
+
+const buildEncontroPayloadFromEncontrista = (encontrista, ejcDestino) => {
+  const ejcDestinoNome = normalizeTextInput(ejcDestino?.nome);
+  const ejcOrigemNome = normalizeTextInput(encontrista?.qualEjcPertence || encontrista?.ejc);
+  const approvalStatus = resolveApprovalStatus(encontrista);
+
+  return {
+    nomeCompleto: encontrista.nomeCompleto,
+    comoQuerSerChamado: '',
+    genero: 'outros',
+    ejc: ejcDestinoNome || encontrista.ejc,
+    ejcVinculadoId: ejcDestino?._id || null,
+    ejcVinculadoNome: ejcDestinoNome,
+    qualEjcPertence: ejcOrigemNome,
+    tipo: 'jovens',
+    tiosCategoria: '',
+    origemTios: false,
+    tiosGrupoId: '',
+    equipeServiu: [],
+    equipeCoordenou: [],
+    cep: encontrista.cep || '',
+    complementoReferencia: encontrista.complementoReferencia || '',
+    talentoHabilidadeArtistica: encontrista.talentoHabilidadeArtistica || '',
+    paroquiaFrequenta: encontrista.paroquiaFrequenta || '',
+    participaMovimentoIgreja: encontrista.participaMovimentoIgreja || '',
+    religiosidadeAtual: encontrista.religiosidadeAtual || '',
+    quadroSaude: encontrista.quadroSaude || '',
+    medicamentoControlado: encontrista.medicamentoControlado || '',
+    logradouro: encontrista.logradouro,
+    bairro: encontrista.bairro,
+    dataNascimento: encontrista.dataNascimento,
+    telefone: encontrista.telefone,
+    intolerante: encontrista.intolerante || '',
+    ehAlergico: encontrista.ehAlergico || 'nao',
+    alergiaDescricao: encontrista.alergiaDescricao || '',
+    email: encontrista.email,
+    temRelacionamento: '',
+    instagram: encontrista.instagram || '',
+    foto: encontrista.foto,
+    observacoes: `Transferido da lista de encontristas pelo painel admin para o encontro ${ejcDestinoNome}.`,
+    aprovado: approvalStatus === 'aprovado',
+    statusAprovacao: approvalStatus,
+    dataCadastro: encontrista.dataCadastro || new Date(),
+  };
 };
 
 const getClientIp = (req) => {
@@ -4581,6 +4655,22 @@ app.get('/encontro', async (req, res) => {
   }
 });
 
+app.get('/sucesso', (req, res) => {
+  const origem = String(req.query.origem || '').trim().toLowerCase();
+  const isEncontro = origem === 'encontro';
+
+  return res.render('success', {
+    successTitle: isEncontro ? 'Inscricao de encontro confirmada' : 'Inscricao confirmada',
+    successText: isEncontro
+      ? 'Recebemos seus dados com sucesso. Agora voce pode fazer uma nova inscricao para encontro ou voltar para a pagina principal.'
+      : 'Recebemos seus dados com sucesso. Agora voce pode fazer uma nova inscricao de encontrista ou voltar para a pagina principal.',
+    successPrimaryHref: isEncontro ? '/encontro' : '/inscricao',
+    successPrimaryLabel: isEncontro ? 'Fazer nova inscricao de encontro' : 'Fazer novo cadastro',
+    successSecondaryHref: '/',
+    successSecondaryLabel: 'Voltar ao menu principal',
+  });
+});
+
 app.get('/api/encontro-ativo', async (req, res) => {
   try {
     const encontroAtivo = await getEncontroAtivo();
@@ -6276,55 +6366,21 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
       return res.status(404).json({ success: false, error: 'Encontrista nao encontrado.' });
     }
 
-    const ejcOrigemNome = normalizeTextInput(encontrista.qualEjcPertence || encontrista.ejc);
     const ejcDestinoNome = normalizeTextInput(ejcDestino.nome);
 
     const existente = await findExistingByNameOrEmail(Encontro, encontrista.nomeCompleto, encontrista.email);
+    const payloadEncontro = buildEncontroPayloadFromEncontrista(encontrista, ejcDestino);
+
     if (existente) {
-      return res.status(409).json({
-        success: false,
-        error: 'Ja existe um encontreiro com mesmo nome ou email. Ajuste os dados antes de transferir.',
+      await Encontro.findByIdAndUpdate(existente._id, payloadEncontro, { new: true });
+      await Cadastro.findByIdAndDelete(id);
+
+      return res.json({
+        success: true,
+        updated: true,
+        message: `Cadastro existente atualizado e vinculado ao encontro ${ejcDestino.nome}.`,
       });
     }
-
-    const payloadEncontro = {
-      nomeCompleto: encontrista.nomeCompleto,
-      comoQuerSerChamado: '',
-      genero: 'outros',
-      ejc: ejcDestinoNome || encontrista.ejc,
-      ejcVinculadoId: ejcDestino._id,
-      ejcVinculadoNome: ejcDestinoNome,
-      qualEjcPertence: ejcOrigemNome,
-      tipo: 'jovens',
-      tiosCategoria: '',
-      origemTios: false,
-      tiosGrupoId: '',
-      equipeServiu: [],
-      equipeCoordenou: [],
-      cep: encontrista.cep || '',
-      complementoReferencia: encontrista.complementoReferencia || '',
-      talentoHabilidadeArtistica: encontrista.talentoHabilidadeArtistica || '',
-      paroquiaFrequenta: encontrista.paroquiaFrequenta || '',
-      participaMovimentoIgreja: encontrista.participaMovimentoIgreja || '',
-      religiosidadeAtual: encontrista.religiosidadeAtual || '',
-      quadroSaude: encontrista.quadroSaude || '',
-      medicamentoControlado: encontrista.medicamentoControlado || '',
-      logradouro: encontrista.logradouro,
-      bairro: encontrista.bairro,
-      dataNascimento: encontrista.dataNascimento,
-      telefone: encontrista.telefone,
-      intolerante: encontrista.intolerante || '',
-      ehAlergico: encontrista.ehAlergico || 'nao',
-      alergiaDescricao: encontrista.alergiaDescricao || '',
-      email: encontrista.email,
-      temRelacionamento: '',
-      instagram: encontrista.instagram || '',
-      foto: encontrista.foto,
-        observacoes: `Transferido da lista de encontristas pelo painel admin para o encontro ${ejcDestinoNome}.`,
-      aprovado: resolveApprovalStatus(encontrista) === 'aprovado',
-      statusAprovacao: resolveApprovalStatus(encontrista),
-      dataCadastro: encontrista.dataCadastro || new Date(),
-    };
 
     await Encontro.create(payloadEncontro);
     await Cadastro.findByIdAndDelete(id);
@@ -6373,64 +6429,31 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
 
     const documentosParaInserir = [];
     const idsParaRemover = [];
-    let duplicados = 0;
+    let atualizados = 0;
 
     for (const id of idsValidos) {
       const encontrista = mapaEncontristas.get(String(id));
       if (!encontrista) continue;
 
-      // Evita criar cadastros duplicados em encontreiros.
       const existente = await findExistingByNameOrEmail(Encontro, encontrista.nomeCompleto, encontrista.email);
+      const payloadEncontro = buildEncontroPayloadFromEncontrista(encontrista, ejcDestino);
+
       if (existente) {
-        duplicados += 1;
+        await Encontro.findByIdAndUpdate(existente._id, payloadEncontro, { new: true });
+        idsParaRemover.push(encontrista._id);
+        atualizados += 1;
         continue;
       }
 
-        const ejcOrigemNome = normalizeTextInput(encontrista.qualEjcPertence || encontrista.ejc);
-
-      documentosParaInserir.push({
-        nomeCompleto: encontrista.nomeCompleto,
-        comoQuerSerChamado: '',
-        genero: 'outros',
-          ejc: ejcDestinoNome || encontrista.ejc,
-          ejcVinculadoId: ejcDestino._id,
-          ejcVinculadoNome: ejcDestinoNome,
-          qualEjcPertence: ejcOrigemNome,
-        tipo: 'jovens',
-        tiosCategoria: '',
-        origemTios: false,
-        tiosGrupoId: '',
-        equipeServiu: [],
-        equipeCoordenou: [],
-        cep: encontrista.cep || '',
-        complementoReferencia: encontrista.complementoReferencia || '',
-        talentoHabilidadeArtistica: encontrista.talentoHabilidadeArtistica || '',
-        paroquiaFrequenta: encontrista.paroquiaFrequenta || '',
-        participaMovimentoIgreja: encontrista.participaMovimentoIgreja || '',
-        religiosidadeAtual: encontrista.religiosidadeAtual || '',
-        quadroSaude: encontrista.quadroSaude || '',
-        medicamentoControlado: encontrista.medicamentoControlado || '',
-        logradouro: encontrista.logradouro,
-        bairro: encontrista.bairro,
-        dataNascimento: encontrista.dataNascimento,
-        telefone: encontrista.telefone,
-        intolerante: encontrista.intolerante || '',
-        ehAlergico: encontrista.ehAlergico || 'nao',
-        alergiaDescricao: encontrista.alergiaDescricao || '',
-        email: encontrista.email,
-        temRelacionamento: '',
-        instagram: encontrista.instagram || '',
-        foto: encontrista.foto,
-          observacoes: `Transferido da lista de encontristas pelo painel admin em lote para o encontro ${ejcDestinoNome}.`,
-        aprovado: resolveApprovalStatus(encontrista) === 'aprovado',
-        statusAprovacao: resolveApprovalStatus(encontrista),
-        dataCadastro: encontrista.dataCadastro || new Date(),
-      });
+      documentosParaInserir.push(payloadEncontro);
       idsParaRemover.push(encontrista._id);
     }
 
     if (documentosParaInserir.length > 0) {
       await Encontro.insertMany(documentosParaInserir);
+    }
+
+    if (idsParaRemover.length > 0) {
       await Cadastro.deleteMany({ _id: { $in: idsParaRemover } });
     }
 
@@ -6441,7 +6464,7 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
       message: `Transferencia concluida para o encontro ${ejcDestinoNome}.`,
       resumo: {
         transferidos: documentosParaInserir.length,
-        duplicados,
+        atualizados,
         naoEncontrados,
       },
     });
@@ -9341,6 +9364,7 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
           Circulo,
           Encontro,
           VinculoEncontro,
+          findExistingByNameOrEmail,
           normalizeTextInput,
           buildEquipeImportIdentity,
           normalizeGeneroEncontro,

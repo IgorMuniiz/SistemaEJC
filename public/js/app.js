@@ -148,6 +148,11 @@ function GenericForm() {
   const [ejcAtivo, setEjcAtivo] = useState(initialEjcAtivo);
   const formRef = useRef(null);
 
+  const redirectToSuccessPage = () => {
+    const destino = isEncontro ? '/sucesso?origem=encontro' : '/sucesso?origem=inscricao';
+    window.location.assign(destino);
+  };
+
   const encontristaSteps = [
     {
       key: 'identidade',
@@ -431,8 +436,7 @@ function GenericForm() {
         if (results.every((item) => item.success)) {
           console.log('[INFO] Ambos tios enviados com sucesso');
           clearTimeout(timeoutId);
-          setSuccess(true);
-          console.log('Success setado para true');
+          redirectToSuccessPage();
         } else {
           const allErrors = results.flatMap((item) => item.errors || []);
           setErrors(allErrors.length > 0 ? allErrors : [{ msg: 'Erro inesperado' }]);
@@ -462,8 +466,7 @@ function GenericForm() {
         if (json.success) {
           console.log('[INFO] Individual enviado com sucesso');
           clearTimeout(timeoutId);
-          setSuccess(true);
-          console.log('Success setado para true');
+          redirectToSuccessPage();
         } else {
           setErrors(json.errors || [{ msg: 'Erro inesperado' }]);
         }

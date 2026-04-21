@@ -478,6 +478,86 @@ test('POST /admin/transferir-encontrista/:id autenticado transfere para o encont
   assert.equal(deletedId, '507f1f77bcf86cd799439061');
 });
 
+test('POST /admin/transferir-encontrista/:id atualiza encontreiro existente quando nome e email sao os mesmos', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalCadastroFindById = Cadastro.findById;
+  const originalCadastroFindByIdAndDelete = Cadastro.findByIdAndDelete;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroFindByIdAndUpdate = Encontro.findByIdAndUpdate;
+  const originalEncontroCreate = Encontro.create;
+  const originalEjcFindById = Ejc.findById;
+
+  let deletedId = null;
+  let updatedId = null;
+  let updatePayload = null;
+  let createCalled = false;
+
+  Cadastro.findById = async () => ({
+    _id: '507f1f77bcf86cd799439161',
+    nomeCompleto: 'Encontrista Transferido',
+    ejc: 'EJC 2019',
+    email: 'transferido@test.local',
+    telefone: '(11) 99999-0000',
+    logradouro: 'Rua A',
+    bairro: 'Centro',
+    dataNascimento: '2000-01-01',
+    instagram: '@teste',
+    foto: 'foto.webp',
+    dataCadastro: new Date('2026-04-01T00:00:00.000Z'),
+    aprovado: false,
+    statusAprovacao: 'pendente',
+  });
+  Cadastro.findByIdAndDelete = async (id) => {
+    deletedId = String(id);
+    return { acknowledged: true };
+  };
+  Encontro.findOne = async () => ({
+    _id: '507f1f77bcf86cd799439162',
+    nomeCompleto: 'Encontrista Transferido',
+    email: 'transferido@test.local',
+  });
+  Encontro.findByIdAndUpdate = async (id, payload) => {
+    updatedId = String(id);
+    updatePayload = payload;
+    return { _id: id, ...payload };
+  };
+  Encontro.create = async () => {
+    createCalled = true;
+    return null;
+  };
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: '507f1f77bcf86cd799439163', nome: 'EJC Destino 2026' }),
+  });
+
+  t.after(() => {
+    Cadastro.findById = originalCadastroFindById;
+    Cadastro.findByIdAndDelete = originalCadastroFindByIdAndDelete;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.findByIdAndUpdate = originalEncontroFindByIdAndUpdate;
+    Encontro.create = originalEncontroCreate;
+    Ejc.findById = originalEjcFindById;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/transferir-encontrista/507f1f77bcf86cd799439161').send({
+      ejcId: '507f1f77bcf86cd799439163',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.updated, true);
+  assert.equal(updatedId, '507f1f77bcf86cd799439162');
+  assert.equal(updatePayload.ejc, 'EJC Destino 2026');
+  assert.equal(updatePayload.email, 'transferido@test.local');
+  assert.equal(deletedId, '507f1f77bcf86cd799439161');
+  assert.equal(createCalled, false);
+});
+
 test('POST /admin/transferir-encontristas-lote autenticado exige encontro de destino', async (t) => {
   mockAdminAuthFlow(t);
 
@@ -675,6 +755,86 @@ test('POST /encontro reaproveita cadastro existente, volta para pendente e vincu
   assert.equal(payloadAtualizado.ejc, 'EJC Digitado no Cadastro');
   assert.equal(String(payloadAtualizado.ejcVinculadoId), encontroAtivo._id);
   assert.equal(payloadAtualizado.ejcVinculadoNome, encontroAtivo.nome);
+});
+
+test('POST /encontro cria novo cadastro quando o nome e igual mas o email e diferente', async (t) => {
+  invalidarCacheEncontroAtivo();
+
+  const originalAdminFindOne = Admin.findOne;
+  const originalEjcFindOne = Ejc.findOne;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroPrototypeSave = Encontro.prototype.save;
+  const originalSubscriptionFind = PushSubscription.find;
+
+  const encontroAtivo = {
+    _id: '507f1f77bcf86cd799439171',
+    nome: 'EJC Atual 2026',
+    ativo: true,
+  };
+  const encontroExistenteMesmoNome = {
+    _id: '507f1f77bcf86cd799439172',
+    nomeCompleto: 'Maria Duplicada',
+    email: 'maria.antiga@example.com',
+  };
+
+  let savedPayload = null;
+
+  Admin.findOne = () => ({ lean: async () => null });
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
+    sort: () => ({ lean: async () => encontroAtivo }),
+  });
+  Encontro.findOne = async (query) => {
+    if (query && query.$and) return null;
+    if (query && query.email) return null;
+    return encontroExistenteMesmoNome;
+  };
+  Encontro.prototype.save = async function mockSave() {
+    savedPayload = {
+      nomeCompleto: this.nomeCompleto,
+      email: this.email,
+      ejc: this.ejc,
+      ejcVinculadoNome: this.ejcVinculadoNome,
+      statusAprovacao: this.statusAprovacao,
+    };
+    return this;
+  };
+  PushSubscription.find = () => ({ lean: async () => [] });
+
+  t.after(() => {
+    Admin.findOne = originalAdminFindOne;
+    Ejc.findOne = originalEjcFindOne;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.prototype.save = originalEncontroPrototypeSave;
+    PushSubscription.find = originalSubscriptionFind;
+    invalidarCacheEncontroAtivo();
+  });
+
+  const response = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .field('nomeCompleto', 'Maria Duplicada')
+    .field('genero', 'feminino')
+    .field('tipo', 'jovens')
+    .field('ejc', 'EJC Digitado no Cadastro')
+    .field('paroquiaFrequenta', 'Paroquia Central')
+    .field('logradouro', 'Rua das Flores, 10')
+    .field('bairro', 'Centro')
+    .field('dataNascimento', '1995-02-10')
+    .field('telefone', '88999999999')
+    .field('ehAlergico', 'nao')
+    .field('email', 'maria.nova@example.com')
+    .field('lgpdConsentimento', 'true')
+    .attach('foto', Buffer.from('foto-simulada'), 'foto.jpg');
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(response.body.created, true);
+  assert.equal(savedPayload.nomeCompleto, 'Maria Duplicada');
+  assert.equal(savedPayload.email, 'maria.nova@example.com');
+  assert.equal(savedPayload.ejc, 'EJC Digitado no Cadastro');
+  assert.equal(savedPayload.ejcVinculadoNome, encontroAtivo.nome);
+  assert.equal(savedPayload.statusAprovacao, 'pendente');
 });
 test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
   mockAdminAuthFlow(t);

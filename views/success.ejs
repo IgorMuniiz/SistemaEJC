@@ -19,6 +19,12 @@
   <link rel="stylesheet" href="/css/style.css?v=20260417-buttons-premium-15" />
 </head>
 <body class="portal-success-page">
+  <% const title = typeof successTitle === 'string' && successTitle ? successTitle : 'Inscrição confirmada'; %>
+  <% const description = typeof successText === 'string' && successText ? successText : 'Recebemos seus dados com sucesso. Obrigado por fazer parte do EJC COP. Se desejar, você pode iniciar uma nova inscrição ou voltar para a página principal.'; %>
+  <% const primaryHref = typeof successPrimaryHref === 'string' && successPrimaryHref ? successPrimaryHref : '/inscricao'; %>
+  <% const primaryLabel = typeof successPrimaryLabel === 'string' && successPrimaryLabel ? successPrimaryLabel : 'Fazer novo cadastro'; %>
+  <% const secondaryHref = typeof successSecondaryHref === 'string' && successSecondaryHref ? successSecondaryHref : '/'; %>
+  <% const secondaryLabel = typeof successSecondaryLabel === 'string' && successSecondaryLabel ? successSecondaryLabel : 'Voltar ao menu principal'; %>
   <div class="portal-ambient" aria-hidden="true">
     <div class="portal-grid"></div>
     <div class="portal-orb portal-orb-a"></div>
@@ -30,20 +36,17 @@
     <div class="portal-success-icon">
       <i class="fas fa-check"></i>
     </div>
-    <h1 class="portal-success-title">Inscrição confirmada</h1>
-    <p class="portal-success-text">
-      Recebemos seus dados com sucesso. Obrigado por fazer parte do EJC COP. Se desejar,
-      você pode iniciar uma nova inscrição ou voltar para a página principal.
-    </p>
+    <h1 class="portal-success-title"><%= title %></h1>
+    <p class="portal-success-text"><%= description %></p>
 
     <div class="portal-success-actions">
-      <a href="/inscricao" class="btn btn-primary">
+      <a href="<%= primaryHref %>" class="btn btn-primary">
         <i class="fas fa-user-plus"></i>
-        Fazer novo cadastro
+        <%= primaryLabel %>
       </a>
-      <a href="/" class="btn btn-glass">
+      <a href="<%= secondaryHref %>" class="btn btn-glass">
         <i class="fas fa-home"></i>
-        Voltar ao menu principal
+        <%= secondaryLabel %>
       </a>
     </div>
   </main>

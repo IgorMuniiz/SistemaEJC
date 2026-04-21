@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260419-manager-all-feedback-42">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260421-manager-modal-fix-49">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -2861,7 +2861,7 @@
 
   <!-- MODAL DE EDICAO -->
   <div class="modal fade edit-cadastro-shell" id="modalEdicao" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-dialog modal-xl">
       <div class="modal-content edit-cadastro-modal">
         <div class="modal-header edit-modal-header">
           <div class="edit-modal-header-copy">
@@ -2916,11 +2916,11 @@
                     <p>Campos essenciais para localizar e reconhecer rapidamente o inscrito.</p>
                   </div>
                   <div class="row g-3">
-                    <div class="col-lg-8">
+                    <div class="col-12">
                       <label class="form-label">Nome Completo *</label>
                       <input type="text" class="form-control" id="edit_nomeCompleto" name="nomeCompleto" required>
                     </div>
-                    <div class="col-lg-4" id="row_base_ejc">
+                    <div class="col-12" id="row_base_ejc">
                       <label class="form-label">EJC *</label>
                       <input type="text" class="form-control" id="edit_ejc" name="ejc" required>
                     </div>
@@ -3189,18 +3189,6 @@
                         <textarea class="form-control" id="edit_encontro_medicamentoControlado" rows="3"></textarea>
                       </div>
                       <div class="col-12">
-                        <label class="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
-                        <textarea class="form-control" id="edit_encontro_talentoHabilidadeArtistica" rows="3"></textarea>
-                      </div>
-                      <div class="col-lg-6">
-                        <label class="form-label">Possui algum quadro de saúde físico ou mental? Qual?</label>
-                        <textarea class="form-control" id="edit_encontro_quadroSaude" rows="3"></textarea>
-                      </div>
-                      <div class="col-lg-6">
-                        <label class="form-label">Faz o uso de algum medicamento controlado? Qual?</label>
-                        <textarea class="form-control" id="edit_encontro_medicamentoControlado" rows="3"></textarea>
-                      </div>
-                      <div class="col-12">
                         <label class="form-label">Intolerâncias / alergias</label>
                         <textarea class="form-control" id="edit_intolerante" name="intolerante" rows="3"></textarea>
                       </div>
@@ -3214,18 +3202,6 @@
                       <div class="col-lg-8">
                         <label class="form-label">Se sim, a quê?</label>
                         <textarea class="form-control" id="edit_alergiaDescricao" name="alergiaDescricao" rows="2"></textarea>
-                      </div>
-                      <div class="col-lg-6">
-                        <label class="form-label">Religiosamente, como você se considera hoje?</label>
-                        <input type="text" class="form-control" id="edit_encontro_religiosidadeAtual">
-                      </div>
-                      <div class="col-lg-6">
-                        <label class="form-label">Qual Paróquia frequenta?</label>
-                        <input type="text" class="form-control" id="edit_encontro_paroquiaFrequenta">
-                      </div>
-                      <div class="col-12">
-                        <label class="form-label">Participa de algum movimento ou pastoral da igreja?</label>
-                        <input type="text" class="form-control" id="edit_encontro_participaMovimentoIgreja">
                       </div>
                       <div class="col-lg-6">
                         <label class="form-label">Religiosamente, como você se considera hoje?</label>
@@ -3525,6 +3501,18 @@
 
     const modalEdicaoElement = document.getElementById('modalEdicao');
     initAdminsCardsLayout();
+    function sincronizarViewportModalEdicao() {
+      if (!modalEdicaoElement) return;
+
+      const viewportHeight = window.visualViewport && Number.isFinite(window.visualViewport.height)
+        ? window.visualViewport.height
+        : window.innerHeight;
+
+      if (Number.isFinite(viewportHeight) && viewportHeight > 0) {
+        modalEdicaoElement.style.setProperty('--edit-modal-vh', `${Math.round(viewportHeight)}px`);
+      }
+    }
+
     function createFixedEditorModalController(element) {
       if (!element) {
         return {
@@ -3534,32 +3522,8 @@
       }
 
       let hideTimer = null;
-
       const emit = (eventName) => {
         element.dispatchEvent(new Event(eventName));
-      };
-
-      const lockScroll = () => {
-        const scrollY = window.scrollY;
-        document.documentElement.style.overflow = 'hidden';
-        document.body.style.overflow = 'hidden';
-        document.body.style.position = 'fixed';
-        document.body.style.top = `-${scrollY}px`;
-        document.body.style.left = '0';
-        document.body.style.right = '0';
-        document.body.dataset.scrollY = scrollY;
-      };
-
-      const unlockScroll = () => {
-        const scrollY = parseInt(document.body.dataset.scrollY || '0', 10);
-        document.documentElement.style.overflow = '';
-        document.body.style.overflow = '';
-        document.body.style.position = '';
-        document.body.style.top = '';
-        document.body.style.left = '';
-        document.body.style.right = '';
-        delete document.body.dataset.scrollY;
-        window.scrollTo(0, scrollY);
       };
 
       const show = () => {
@@ -3568,8 +3532,8 @@
           hideTimer = null;
         }
         emit('show.bs.modal');
-        lockScroll();
         element.style.display = 'flex';
+        element.scrollTop = 0;
         requestAnimationFrame(() => {
           element.classList.add('show');
           emit('shown.bs.modal');
@@ -3580,7 +3544,6 @@
         if (!element.classList.contains('show') && element.style.display === 'none') return;
         emit('hide.bs.modal');
         element.classList.remove('show');
-        unlockScroll();
         hideTimer = window.setTimeout(() => {
           element.style.display = 'none';
           emit('hidden.bs.modal');
@@ -3599,7 +3562,6 @@
     }
 
     let modalEdicao = createFixedEditorModalController(modalEdicaoElement);
-    let scrollPaginaAntesModal = 0;
     let adminInlineEditorRemoveTimer = null;
     let adminInlineEditorBusy = false;
     let adminInlineEditLastClickAt = 0;
@@ -3673,52 +3635,28 @@
     function ajustarEditorEncontreiroSemRolagem() {
       if (!modalEdicaoElement) return;
 
+      sincronizarViewportModalEdicao();
+
+      const modalDialog = modalEdicaoElement.querySelector('.modal-dialog');
       const modalContent = modalEdicaoElement.querySelector('.edit-cadastro-modal');
       const modalBody = modalEdicaoElement.querySelector('.edit-modal-body');
-      const modalHeader = modalEdicaoElement.querySelector('.edit-modal-header');
-      const modalFooter = modalEdicaoElement.querySelector('.edit-modal-footer');
       const form = document.getElementById('formEdicao');
-      if (!modalContent || !modalBody || !form) return;
+      if (!modalDialog || !modalContent || !modalBody || !form) return;
 
       form.style.transform = '';
       form.style.transformOrigin = '';
-      modalBody.style.maxHeight = 'none';
-      modalBody.style.height = 'auto';
+
+      modalDialog.style.height = '';
+      modalDialog.style.maxHeight = '';
+      modalContent.style.maxHeight = '';
+      modalBody.style.maxHeight = '';
+      modalBody.style.height = '';
       modalBody.style.overflowY = 'auto';
       modalBody.style.overflowX = 'hidden';
-
-      const contentHeight = modalContent.clientHeight;
-      const headerHeight = modalHeader ? modalHeader.offsetHeight : 0;
-      const footerHeight = modalFooter ? modalFooter.offsetHeight : 0;
-      const availableHeight = contentHeight - headerHeight - footerHeight;
-
-      if (availableHeight > 180) {
-        modalBody.style.maxHeight = `${availableHeight}px`;
-      }
-    }
-
-    function travarScrollFundo() {
-      scrollPaginaAntesModal = window.scrollY || window.pageYOffset || 0;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollPaginaAntesModal}px`;
-      document.body.style.left = '0';
-      document.body.style.right = '0';
-      document.body.style.width = '100%';
-    }
-
-    function liberarScrollFundo() {
-      const topo = document.body.style.top || '0px';
-      const scrollRestaurar = Math.abs(parseInt(topo, 10)) || scrollPaginaAntesModal || 0;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-      document.body.style.right = '';
-      document.body.style.width = '';
-      window.scrollTo(0, scrollRestaurar);
     }
 
     modalEdicaoElement.addEventListener('show.bs.modal', () => {
-      travarScrollFundo();
+      sincronizarViewportModalEdicao();
     });
 
     modalEdicaoElement.addEventListener('shown.bs.modal', () => {
@@ -3735,13 +3673,20 @@
     modalEdicaoElement.addEventListener('hidden.bs.modal', () => {
       modalEdicaoElement.classList.remove('is-encontreiro-view');
       ajustarEditorEncontreiroSemRolagem();
-      liberarScrollFundo();
     });
 
     window.addEventListener('resize', () => {
       if (modalEdicaoElement.classList.contains('show')) {
         ajustarEditorEncontreiroSemRolagem();
       }
+    });
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', ajustarEditorEncontreiroSemRolagem);
+    }
+
+    document.getElementById('edit_aprovado')?.addEventListener('change', (event) => {
+      atualizarStatusVisualEdicao(event.target.value || 'pendente');
     });
 
     let lastTransferSelectionCount = null;
@@ -4466,6 +4411,30 @@
       return rotulos[status] || 'Pendente';
     }
 
+    function atualizarStatusVisualEdicao(status) {
+      const statusNormalizado = [
+        'pendente',
+        'pendente_contato',
+        'documentacao_pendente',
+        'aprovado',
+        'reprovado',
+        'desistiu',
+        'remanejado',
+      ].includes(status) ? status : 'pendente';
+
+      const statusSelect = document.getElementById('edit_aprovado');
+      const statusResumo = document.getElementById('edit_resumo_status');
+
+      if (statusSelect) {
+        statusSelect.dataset.status = statusNormalizado;
+      }
+
+      if (statusResumo) {
+        statusResumo.dataset.status = statusNormalizado;
+        statusResumo.textContent = formatarStatusCadastro(statusNormalizado);
+      }
+    }
+
     function atualizarResumoEdicao(cadastro, tipo, statusAtual) {
       const titulo = tipo === 'encontrista' ? 'Editar Encontrista' : 'Editar Encontreiro';
       const subtitulo = tipo === 'encontrista'
@@ -4482,8 +4451,8 @@
       document.getElementById('edit_resumo_nome').textContent = cadastro.nomeCompleto || 'Cadastro sem nome';
       document.getElementById('edit_resumo_contexto').textContent = contextoBase;
       document.getElementById('edit_resumo_ejc').textContent = cadastro.ejc || 'Não informado';
-      document.getElementById('edit_resumo_status').textContent = formatarStatusCadastro(statusAtual);
       document.getElementById('edit_resumo_contato').textContent = contatoRapido;
+      atualizarStatusVisualEdicao(statusAtual);
 
       badge.textContent = tipo === 'encontrista' ? 'Encontrista' : 'Encontreiro';
       badge.className = `edit-type-badge ${tipo === 'encontrista' ? 'is-encontrista' : 'is-encontreiro'}`;
@@ -4512,6 +4481,12 @@
 
       avatar.className = 'edit-identity-avatar';
       avatar.innerHTML = `<span>${escapeHtml(getCadastroInitials(cadastro?.nomeCompleto))}</span>`;
+    }
+
+    function setEditorFieldValue(fieldId, value) {
+      const field = document.getElementById(fieldId);
+      if (!field) return;
+      field.value = value == null ? '' : value;
     }
 
     function editarCadastro(tipo, id) {
@@ -4600,25 +4575,27 @@
       }
       if (tipo === 'encontreiro') {
         camposEncontreiro.style.display = 'block';
-        document.getElementById('edit_tipo_pessoa').value = cadastro.tipo || 'jovens';
-        document.getElementById('edit_tiosCategoria').value = cadastro.tiosCategoria === 'casal' ? 'casal' : 'solo';
-        document.getElementById('edit_origemTios').value = cadastro.origemTios ? 'true' : 'false';
-        document.getElementById('edit_tioComParceiro').value = cadastro.tioParceiroId ? 'true' : 'false';
+        setEditorFieldValue('edit_tipo_pessoa', cadastro.tipo || 'jovens');
+        setEditorFieldValue('edit_tiosCategoria', cadastro.tiosCategoria === 'casal' ? 'casal' : 'solo');
+        setEditorFieldValue('edit_origemTios', cadastro.origemTios ? 'true' : 'false');
+        setEditorFieldValue('edit_tioComParceiro', cadastro.tioParceiroId ? 'true' : 'false');
         popularParceirosTiosSelect(id, cadastro.tioParceiroId || '');
         atualizarCamposParceiroTios();
-        document.getElementById('edit_equipeServiu').value = Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '';
-        document.getElementById('edit_equipeCoordenou').value = Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '';
-        document.getElementById('edit_cep').value = cadastro.cep || '';
-        document.getElementById('edit_complementoReferencia').value = cadastro.complementoReferencia || '';
-        document.getElementById('edit_encontro_talentoHabilidadeArtistica').value = cadastro.talentoHabilidadeArtistica || '';
-        document.getElementById('edit_encontro_quadroSaude').value = cadastro.quadroSaude || '';
-        document.getElementById('edit_encontro_medicamentoControlado').value = cadastro.medicamentoControlado || '';
-        document.getElementById('edit_encontro_religiosidadeAtual').value = cadastro.religiosidadeAtual || '';
-        document.getElementById('edit_encontro_paroquiaFrequenta').value = cadastro.paroquiaFrequenta || '';
-        document.getElementById('edit_encontro_participaMovimentoIgreja').value = cadastro.participaMovimentoIgreja || '';
-        document.getElementById('edit_intolerante').value = cadastro.intolerante || '';
-        document.getElementById('edit_ehAlergico').value = String(cadastro.ehAlergico || '').toLowerCase() === 'sim' ? 'sim' : 'nao';
-        document.getElementById('edit_alergiaDescricao').value = cadastro.alergiaDescricao || '';
+        setEditorFieldValue('edit_equipeServiu', Array.isArray(cadastro.equipeServiu) ? cadastro.equipeServiu.join(', ') : '');
+        setEditorFieldValue('edit_equipeCoordenou', Array.isArray(cadastro.equipeCoordenou) ? cadastro.equipeCoordenou.join(', ') : '');
+        setEditorFieldValue('edit_cep', cadastro.cep || '');
+        setEditorFieldValue('edit_complementoReferencia', cadastro.complementoReferencia || '');
+        setEditorFieldValue('edit_encontro_cep', cadastro.cep || '');
+        setEditorFieldValue('edit_encontro_complementoReferencia', cadastro.complementoReferencia || '');
+        setEditorFieldValue('edit_encontro_talentoHabilidadeArtistica', cadastro.talentoHabilidadeArtistica || '');
+        setEditorFieldValue('edit_encontro_quadroSaude', cadastro.quadroSaude || '');
+        setEditorFieldValue('edit_encontro_medicamentoControlado', cadastro.medicamentoControlado || '');
+        setEditorFieldValue('edit_encontro_religiosidadeAtual', cadastro.religiosidadeAtual || '');
+        setEditorFieldValue('edit_encontro_paroquiaFrequenta', cadastro.paroquiaFrequenta || '');
+        setEditorFieldValue('edit_encontro_participaMovimentoIgreja', cadastro.participaMovimentoIgreja || '');
+        setEditorFieldValue('edit_intolerante', cadastro.intolerante || '');
+        setEditorFieldValue('edit_ehAlergico', String(cadastro.ehAlergico || '').toLowerCase() === 'sim' ? 'sim' : 'nao');
+        setEditorFieldValue('edit_alergiaDescricao', cadastro.alergiaDescricao || '');
       } else {
         camposEncontreiro.style.display = 'none';
       }
@@ -5052,7 +5029,7 @@
         const resumo = result.resumo || {};
         queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert(
-          `Transferencia concluida para o encontro ${encontroDestino.nome}.\n\nTransferidos: ${resumo.transferidos || 0}\nDuplicados ignorados: ${resumo.duplicados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
+          `Transferencia concluida para o encontro ${encontroDestino.nome}.\n\nTransferidos: ${resumo.transferidos || 0}\nAtualizados existentes: ${resumo.atualizados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
           'success',
           'Sucesso'
         );

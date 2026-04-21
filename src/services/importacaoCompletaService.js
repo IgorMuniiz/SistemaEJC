@@ -20,6 +20,7 @@ const processarImportacaoCompletaTransacional = async ({
     Circulo,
     Encontro,
     VinculoEncontro,
+    findExistingByNameOrEmail,
     normalizeTextInput,
     buildEquipeImportIdentity,
     normalizeGeneroEncontro,
@@ -215,8 +216,13 @@ const processarImportacaoCompletaTransacional = async ({
           }
           seenImportKeys.add(importKey);
 
-          const emailNormalizado = normalizeTextInput(row.email).toLowerCase();
-          const encontreiro = await Encontro.findOne({ email: emailNormalizado, ejc: ejcExistente.nome }).session(session);
+          const encontreiro = await findExistingByNameOrEmail(
+            Encontro,
+            row.nomeCompleto,
+            row.email,
+            row.telefone,
+            { ejc: ejcExistente.nome, session }
+          );
 
           if (encontreiro) {
             if (sourceType === 'sistema' && rawRow && rawRow._id) {
