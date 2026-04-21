@@ -3312,8 +3312,23 @@
     </div>
   </div>
 
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.getRegistrations()
+          .then((registrations) => Promise.all(registrations.map((registration) => registration.unregister().catch(() => false))))
+          .catch(() => {});
+
+        if ('caches' in window) {
+          caches.keys()
+            .then((keys) => Promise.all(keys.filter((key) => /^ejc-cache-/i.test(String(key || ''))).map((key) => caches.delete(key))))
+            .catch(() => {});
+        }
+      });
+    }
+  </script>
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js?v=20260406-adminfix-3"></script>
-  <script src="/js/page-transitions.js?v=20260417-premium-feedback-27"></script>
+  <script src="/js/page-transitions.js?v=20260421-admin-cache-reset-28"></script>
   <script id="encontristas-data" type="application/json"><%- JSON.stringify(encontristas) %></script>
   <script id="encontreiros-data" type="application/json"><%- JSON.stringify(encontreiros) %></script>
   <script id="ejcs-data" type="application/json"><%- JSON.stringify(ejcs || []) %></script>
