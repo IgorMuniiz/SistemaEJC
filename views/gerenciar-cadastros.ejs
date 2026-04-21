@@ -5842,6 +5842,7 @@
       const categoria = document.getElementById('gasto_categoria')?.value || (lancamentoConfig.categoriaDefault || 'Outros');
       const descricao = document.getElementById('gasto_descricao')?.value.trim() || '';
       const valor = document.getElementById('gasto_valor')?.value.trim() || '';
+      const valorNormalizado = normalizeFinanceValue(valor);
       const dataGasto = document.getElementById('gasto_data')?.value || '';
       const responsavel = document.getElementById('gasto_responsavel')?.value.trim() || '';
       const formaPagamento = document.getElementById('gasto_forma_pagamento')?.value.trim() || '';
@@ -5870,7 +5871,7 @@
         equipeId,
         categoria,
         descricao,
-        valor,
+        valor: valorNormalizado,
         dataGasto,
         responsavel,
         formaPagamento,
@@ -5882,7 +5883,7 @@
         tipoMovimento: isEntrada ? 'entrada' : 'saida',
         categoria,
         descricao,
-        valor,
+        valor: valorNormalizado,
         dataMovimento: dataGasto,
         origemDestino: escopoTipo === 'equipe' ? (equipeNome || 'Equipe') : 'Encontro',
         responsavel,
@@ -5905,7 +5906,7 @@
             return;
           }
 
-          gastoCriadoLocal = buildLocalFinanceiroItem(gastoPayload, {
+          gastoCriadoLocal = buildLocalFinanceiroItem(gastoResult.gasto || gastoPayload, {
             id: gastoResult.gastoId,
             ejcNome,
             escopoTipo,
@@ -5927,7 +5928,7 @@
           return;
         }
 
-        const fluxoCriadoLocal = buildLocalFinanceiroItem(fluxoPayload, {
+        const fluxoCriadoLocal = buildLocalFinanceiroItem(fluxoResult.movimento || fluxoPayload, {
           id: fluxoResult.movimentoId,
           ejcNome,
           tipoMovimento: isEntrada ? 'entrada' : 'saida',

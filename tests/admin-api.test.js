@@ -361,6 +361,7 @@ test('POST /admin/cadastrar-gasto autenticado retorna sucesso', async (t) => {
   assert.equal(response.body.success, true);
   assert.equal(createPayload.valor, 1234.56);
   assert.equal(createPayload.descricao, 'Compra de mercado');
+  assert.equal(response.body.gasto.valor, 1234.56);
 });
 
 test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) => {
@@ -407,6 +408,7 @@ test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) 
   assert.equal(response.body.success, true);
   assert.equal(createPayload.valor, 987.65);
   assert.equal(createPayload.tipoMovimento, 'entrada');
+  assert.equal(response.body.movimento.valor, 987.65);
 });
 
 test('POST /admin/transferir-encontrista/:id autenticado transfere para o encontro escolhido', async (t) => {

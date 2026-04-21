@@ -7092,7 +7092,12 @@ app.post('/admin/cadastrar-gasto', checkAdminAuth, requireAdminPermission('gasto
       },
     });
 
-    return res.json({ success: true, message: 'Gasto cadastrado com sucesso.', gastoId: gasto._id });
+    return res.json({
+      success: true,
+      message: 'Gasto cadastrado com sucesso.',
+      gastoId: gasto._id,
+      gasto: gasto.toObject ? gasto.toObject() : gasto,
+    });
   } catch (err) {
     await logAdminAction(req, {
       action: 'cadastrar_gasto',
@@ -7217,7 +7222,12 @@ app.post('/admin/cadastrar-fluxo-caixa', checkAdminAuth, requireAdminPermission(
       },
     });
 
-    return res.json({ success: true, message: 'Movimento de caixa cadastrado com sucesso.', movimentoId: movimento._id });
+    return res.json({
+      success: true,
+      message: 'Movimento de caixa cadastrado com sucesso.',
+      movimentoId: movimento._id,
+      movimento: movimento.toObject ? movimento.toObject() : movimento,
+    });
   } catch (err) {
     await logAdminAction(req, {
       action: 'cadastrar_fluxo_caixa',
