@@ -3933,6 +3933,10 @@
     }
 
     function buildLocalFinanceiroItem(payload, extra = {}) {
+      const valorNormalizado = Number.isFinite(Number(payload.valor))
+        ? Number(payload.valor)
+        : parseCurrencyValueBRL(payload.valor);
+
       return {
         _id: extra.id || `temp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         ejc: extra.ejcNome || payload.ejcNome || payload.ejc || '',
@@ -3940,7 +3944,7 @@
         ejcVinculadoNome: extra.ejcNome || payload.ejcNome || payload.ejc || '',
         categoria: payload.categoria || 'Outros',
         descricao: payload.descricao || '',
-        valor: Number(payload.valor) || 0,
+        valor: Number.isFinite(valorNormalizado) ? valorNormalizado : 0,
         responsavel: payload.responsavel || '',
         formaPagamento: payload.formaPagamento || '',
         observacoes: payload.observacoes || '',
@@ -5340,6 +5344,21 @@
 
     function formatCurrencyValueBRL(value) {
       return Number(value || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function parseCurrencyValueBRL(value) {
+      const raw = String(value == null ? '' : value).trim();
+      if (!raw) return Number.NaN;
+
+      const normalized = raw
+        .replace(/r\$/gi, '')
+        .replace(/\s+/g, '')
+        .replace(/\.(?=\d{3}(\D|$))/g, '')
+        .replace(',', '.')
+        .replace(/[^\d.-]/g, '');
+
+      const parsed = Number.parseFloat(normalized);
+      return Number.isFinite(parsed) ? parsed : Number.NaN;
     }
 
     function resolveLancamentoFinanceiroConfig(tipoLancamento) {

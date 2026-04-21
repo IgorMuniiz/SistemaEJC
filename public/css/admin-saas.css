@@ -13289,6 +13289,9 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-
   html:not([data-theme='dark']) body.admin-panel .form-select:not([multiple]),
   html:not([data-theme='dark']) body.admin-panel select:not([multiple]) {
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23334155' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right .9rem center !important;
+    background-size: 14px 10px !important;
   }
 
   html:not([data-theme='dark']) body.admin-panel .form-select option,
