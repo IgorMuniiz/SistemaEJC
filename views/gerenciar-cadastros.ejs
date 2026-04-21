@@ -4282,7 +4282,9 @@
 
     function recarregarMantendoAbaAtual() {
       salvarAbaAtiva();
-      window.location.href = window.location.href;
+      const url = new URL(window.location.href);
+      url.searchParams.set('_r', Date.now().toString());
+      window.location.replace(url.toString());
     }
 
     function normalizeSearchText(value) {
