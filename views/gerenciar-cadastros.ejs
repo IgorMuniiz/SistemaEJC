@@ -1766,25 +1766,25 @@
                   <h6>Panorama executivo do caixa</h6>
                   <p>Monitore a saúde financeira do encontro com foco em saldo, entradas, saídas e equilíbrio entre encontro e equipes.</p>
                 </div>
-                <span class="financeiro-command-status <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'is-positive' : 'is-negative' %>">
-                  <i class="fas <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'fa-circle-check' : 'fa-triangle-exclamation' %>"></i>
-                  <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Caixa saudável' : 'Atenção ao saldo' %>
+                <span id="financeiro_command_status" class="financeiro-command-status <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'is-positive' : 'is-negative' %>">
+                  <i id="financeiro_command_status_icon" class="fas <%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'fa-circle-check' : 'fa-triangle-exclamation' %>"></i>
+                  <span id="financeiro_command_status_text"><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Caixa saudável' : 'Atenção ao saldo' %></span>
                 </span>
               </div>
               <div class="financeiro-command-metrics">
                 <article class="financeiro-command-card accent-balance">
                   <span>Saldo atual</span>
-                  <strong><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <strong id="financeiro_command_saldo_atual"><%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
                   <small>Disponível para operação</small>
                 </article>
                 <article class="financeiro-command-card accent-entry">
                   <span>Entradas do mês</span>
-                  <strong><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <strong id="financeiro_command_entradas_mes"><%= Number(fluxoMensalResumoData.entradasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
                   <small>Receitas e repasses confirmados</small>
                 </article>
                 <article class="financeiro-command-card accent-exit">
                   <span>Saídas do mês</span>
-                  <strong><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
+                  <strong id="financeiro_command_saidas_mes"><%= Number(fluxoMensalResumoData.saidasMes || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></strong>
                   <small>Pagamentos e despesas lançadas</small>
                 </article>
                 <article class="financeiro-command-card accent-split">
@@ -2157,7 +2157,7 @@
               </div>
               <div class="tab-head-chips tab-head-chips-premium">
                 <span class="tab-chip">Movimentos: <%= fluxoResumoData.quantidade || 0 %></span>
-                <span class="tab-chip tab-chip-soft">Saldo: <%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
+                <span id="financeiro_saldo_chip" class="tab-chip tab-chip-soft">Saldo: <%= Number(fluxoResumoData.saldo || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) %></span>
                 <span class="tab-chip tab-chip-premium"><i class="fas fa-bolt me-1"></i>Conciliação</span>
               </div>
             </div>
@@ -2257,7 +2257,7 @@
                   <div class="financeiro-summary-spotlight is-cash">
                     <div>
                       <span class="financeiro-summary-spotlight-label">Status do período</span>
-                      <strong><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Saldo sustentável para a operação atual.' : 'Saídas acima do ideal: revisar prioridades.' %></strong>
+                      <strong id="financeiro_spotlight_status"><%= Number(fluxoResumoData.saldo || 0) >= 0 ? 'Saldo sustentável para a operação atual.' : 'Saídas acima do ideal: revisar prioridades.' %></strong>
                     </div>
                     <small>O painel abaixo mostra entradas, saídas, saldo líquido e volume de movimentos para a conciliação.</small>
                   </div>
@@ -6106,6 +6106,15 @@
       const saidasMesCard = document.getElementById('fluxo_saidas_mes_card');
       const saldoFinalMesCard = document.getElementById('fluxo_saldo_final_mes_card');
       const mesReferencia = document.getElementById('fluxo_mes_referencia_texto');
+      const commandStatus = document.getElementById('financeiro_command_status');
+      const commandStatusIcon = document.getElementById('financeiro_command_status_icon');
+      const commandStatusText = document.getElementById('financeiro_command_status_text');
+      const commandSaldoAtual = document.getElementById('financeiro_command_saldo_atual');
+      const commandEntradasMes = document.getElementById('financeiro_command_entradas_mes');
+      const commandSaidasMes = document.getElementById('financeiro_command_saidas_mes');
+      const saldoChip = document.getElementById('financeiro_saldo_chip');
+      const spotlightStatus = document.getElementById('financeiro_spotlight_status');
+      const saldoPositivo = saldo >= 0;
 
       if (entradasCard) entradasCard.textContent = formatCurrencyValueBRL(entradas);
       if (saidasCard) saidasCard.textContent = formatCurrencyValueBRL(saidas);
@@ -6116,6 +6125,25 @@
       if (saidasMesCard) saidasMesCard.textContent = formatCurrencyValueBRL(saidasMes);
       if (saldoFinalMesCard) saldoFinalMesCard.textContent = formatCurrencyValueBRL(saldoFinalMes);
       if (mesReferencia) mesReferencia.textContent = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+      if (commandSaldoAtual) commandSaldoAtual.textContent = formatCurrencyValueBRL(saldo);
+      if (commandEntradasMes) commandEntradasMes.textContent = formatCurrencyValueBRL(entradasMes);
+      if (commandSaidasMes) commandSaidasMes.textContent = formatCurrencyValueBRL(saidasMes);
+      if (saldoChip) saldoChip.textContent = `Saldo: ${formatCurrencyValueBRL(saldo)}`;
+      if (spotlightStatus) {
+        spotlightStatus.textContent = saldoPositivo
+          ? 'Saldo sustentável para a operação atual.'
+          : 'Saídas acima do ideal: revisar prioridades.';
+      }
+      if (commandStatus) {
+        commandStatus.classList.toggle('is-positive', saldoPositivo);
+        commandStatus.classList.toggle('is-negative', !saldoPositivo);
+      }
+      if (commandStatusIcon) {
+        commandStatusIcon.className = `fas ${saldoPositivo ? 'fa-circle-check' : 'fa-triangle-exclamation'}`;
+      }
+      if (commandStatusText) {
+        commandStatusText.textContent = saldoPositivo ? 'Caixa saudável' : 'Atenção ao saldo';
+      }
     }
 
     async function cadastrarFluxoCaixa() {
