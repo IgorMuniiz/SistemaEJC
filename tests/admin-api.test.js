@@ -409,6 +409,90 @@ test('POST /admin/cadastrar-fluxo-caixa autenticado retorna sucesso', async (t) 
   assert.equal(createPayload.tipoMovimento, 'entrada');
 });
 
+test('POST /admin/transferir-encontrista/:id autenticado transfere para o encontro escolhido', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalCadastroFindById = Cadastro.findById;
+  const originalCadastroFindByIdAndDelete = Cadastro.findByIdAndDelete;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroCreate = Encontro.create;
+  const originalEjcFindById = Ejc.findById;
+
+  let createPayload = null;
+  let deletedId = null;
+
+  Cadastro.findById = async () => ({
+    _id: '507f1f77bcf86cd799439061',
+    nomeCompleto: 'Encontrista Transferido',
+    ejc: 'EJC 2019',
+    email: 'transferido@test.local',
+    telefone: '(11) 99999-0000',
+    logradouro: 'Rua A',
+    bairro: 'Centro',
+    dataNascimento: '2000-01-01',
+    instagram: '@teste',
+    foto: 'foto.webp',
+    dataCadastro: new Date('2026-04-01T00:00:00.000Z'),
+    aprovado: false,
+    statusAprovacao: 'pendente',
+  });
+  Cadastro.findByIdAndDelete = async (id) => {
+    deletedId = String(id);
+    return { acknowledged: true };
+  };
+  Encontro.findOne = async () => null;
+  Encontro.create = async (payload) => {
+    createPayload = payload;
+    return { _id: '507f1f77bcf86cd799439062', ...payload };
+  };
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: '507f1f77bcf86cd799439063', nome: 'EJC Destino 2026' }),
+  });
+
+  t.after(() => {
+    Cadastro.findById = originalCadastroFindById;
+    Cadastro.findByIdAndDelete = originalCadastroFindByIdAndDelete;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.create = originalEncontroCreate;
+    Ejc.findById = originalEjcFindById;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/transferir-encontrista/507f1f77bcf86cd799439061').send({
+      ejcId: '507f1f77bcf86cd799439063',
+    })
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(createPayload.ejc, 'EJC Destino 2026');
+  assert.equal(createPayload.qualEjcPertence, 'EJC 2019');
+  assert.equal(String(createPayload.ejcVinculadoId), '507f1f77bcf86cd799439063');
+  assert.equal(createPayload.ejcVinculadoNome, 'EJC Destino 2026');
+  assert.match(createPayload.observacoes, /EJC Destino 2026/);
+  assert.equal(deletedId, '507f1f77bcf86cd799439061');
+});
+
+test('POST /admin/transferir-encontristas-lote autenticado exige encontro de destino', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/transferir-encontristas-lote').send({
+      ids: ['507f1f77bcf86cd799439071'],
+    })
+  );
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+  assert.match(response.body.error, /encontro valido/i);
+});
+
 test('POST /admin/cadastrar-subequipe autenticado retorna 409 quando duplicado', async (t) => {
   mockAdminAuthFlow(t);
 

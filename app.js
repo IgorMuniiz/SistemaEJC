@@ -6257,15 +6257,27 @@ app.post('/admin/deletar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPermis
 app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
     const { id } = req.params;
+    const ejcId = normalizeTextInput(req.body?.ejcId);
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ success: false, error: 'ID de cadastro invalido.' });
+    }
+    if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Selecione um encontro valido para a transferencia.' });
+    }
+
+    const ejcDestino = await Ejc.findById(ejcId).lean();
+    if (!ejcDestino) {
+      return res.status(404).json({ success: false, error: 'Encontro de destino nao encontrado.' });
     }
 
     const encontrista = await Cadastro.findById(id);
     if (!encontrista) {
       return res.status(404).json({ success: false, error: 'Encontrista nao encontrado.' });
     }
+
+    const ejcOrigemNome = normalizeTextInput(encontrista.qualEjcPertence || encontrista.ejc);
+    const ejcDestinoNome = normalizeTextInput(ejcDestino.nome);
 
     const existente = await findExistingByNameOrEmail(Encontro, encontrista.nomeCompleto, encontrista.email);
     if (existente) {
@@ -6279,10 +6291,10 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
       nomeCompleto: encontrista.nomeCompleto,
       comoQuerSerChamado: '',
       genero: 'outros',
-      ejc: encontrista.ejc,
-      ejcVinculadoId: encontrista.ejcVinculadoId || null,
-      ejcVinculadoNome: encontrista.ejcVinculadoNome || '',
-      qualEjcPertence: '',
+      ejc: ejcDestinoNome || encontrista.ejc,
+      ejcVinculadoId: ejcDestino._id,
+      ejcVinculadoNome: ejcDestinoNome,
+      qualEjcPertence: ejcOrigemNome,
       tipo: 'jovens',
       tiosCategoria: '',
       origemTios: false,
@@ -6308,7 +6320,7 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
       temRelacionamento: '',
       instagram: encontrista.instagram || '',
       foto: encontrista.foto,
-      observacoes: 'Transferido da lista de encontristas pelo painel admin.',
+        observacoes: `Transferido da lista de encontristas pelo painel admin para o encontro ${ejcDestinoNome}.`,
       aprovado: resolveApprovalStatus(encontrista) === 'aprovado',
       statusAprovacao: resolveApprovalStatus(encontrista),
       dataCadastro: encontrista.dataCadastro || new Date(),
@@ -6319,7 +6331,7 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
 
     return res.json({
       success: true,
-      message: 'Encontrista transferido para encontreiros com sucesso.',
+      message: `Encontrista transferido para encontreiros com sucesso no encontro ${ejcDestinoNome}.`,
     });
   } catch (err) {
     console.error('Erro ao transferir encontrista para encontreiro:', err);
@@ -6333,12 +6345,23 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
 // POST /admin/transferir-encontristas-lote - Move varios encontristas para encontreiros
 app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
+    const ejcId = normalizeTextInput(req.body?.ejcId);
     const idsRecebidos = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
     const idsUnicos = [...new Set(idsRecebidos.map((id) => String(id || '').trim()).filter(Boolean))];
 
     if (idsUnicos.length === 0) {
       return res.status(400).json({ success: false, error: 'Nenhum encontrista informado para transferencia.' });
     }
+    if (!mongoose.Types.ObjectId.isValid(ejcId)) {
+      return res.status(400).json({ success: false, error: 'Selecione um encontro valido para a transferencia.' });
+    }
+
+    const ejcDestino = await Ejc.findById(ejcId).lean();
+    if (!ejcDestino) {
+      return res.status(404).json({ success: false, error: 'Encontro de destino nao encontrado.' });
+    }
+
+    const ejcDestinoNome = normalizeTextInput(ejcDestino.nome);
 
     const idsValidos = idsUnicos.filter((id) => mongoose.Types.ObjectId.isValid(id));
     if (idsValidos.length === 0) {
@@ -6363,14 +6386,16 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
         continue;
       }
 
+        const ejcOrigemNome = normalizeTextInput(encontrista.qualEjcPertence || encontrista.ejc);
+
       documentosParaInserir.push({
         nomeCompleto: encontrista.nomeCompleto,
         comoQuerSerChamado: '',
         genero: 'outros',
-        ejc: encontrista.ejc,
-        ejcVinculadoId: encontrista.ejcVinculadoId || null,
-        ejcVinculadoNome: encontrista.ejcVinculadoNome || '',
-        qualEjcPertence: '',
+          ejc: ejcDestinoNome || encontrista.ejc,
+          ejcVinculadoId: ejcDestino._id,
+          ejcVinculadoNome: ejcDestinoNome,
+          qualEjcPertence: ejcOrigemNome,
         tipo: 'jovens',
         tiosCategoria: '',
         origemTios: false,
@@ -6396,7 +6421,7 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
         temRelacionamento: '',
         instagram: encontrista.instagram || '',
         foto: encontrista.foto,
-        observacoes: 'Transferido da lista de encontristas pelo painel admin (lote).',
+          observacoes: `Transferido da lista de encontristas pelo painel admin em lote para o encontro ${ejcDestinoNome}.`,
         aprovado: resolveApprovalStatus(encontrista) === 'aprovado',
         statusAprovacao: resolveApprovalStatus(encontrista),
         dataCadastro: encontrista.dataCadastro || new Date(),
@@ -6413,6 +6438,7 @@ app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPerm
 
     return res.json({
       success: true,
+      message: `Transferencia concluida para o encontro ${ejcDestinoNome}.`,
       resumo: {
         transferidos: documentosParaInserir.length,
         duplicados,

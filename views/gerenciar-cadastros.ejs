@@ -701,9 +701,9 @@
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
                           <% } else if (statusCadastroGrupo(cadastro) === 'reprovado') { %>
-                            <span class="status-badge status-warn">Reprovado</span>
+                            <span class="status-badge status-danger">Reprovado</span>
                           <% } else { %>
-                            <span class="status-badge status-warn">Pendente</span>
+                            <span class="status-badge status-pending">Pendente</span>
                           <% } %>
                         </td>
                         <td>
@@ -770,7 +770,7 @@
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
                         <td><%- renderSubequipesChips(cadastro) %></td>
-                        <td><span class="status-badge status-warn">Reprovado</span></td>
+                        <td><span class="status-badge status-danger">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -835,7 +835,7 @@
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
                         <td><%- renderSubequipesChips(cadastro) %></td>
-                        <td><span class="status-badge status-warn">Pendente</span></td>
+                        <td><span class="status-badge status-pending">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1013,9 +1013,9 @@
                           <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
                             <span class="status-badge status-ok">Aprovado</span>
                           <% } else if (statusCadastroGrupo(cadastro) === 'reprovado') { %>
-                            <span class="status-badge status-warn">Reprovado</span>
+                            <span class="status-badge status-danger">Reprovado</span>
                           <% } else { %>
-                            <span class="status-badge status-warn">Pendente</span>
+                            <span class="status-badge status-pending">Pendente</span>
                           <% } %>
                         </td>
                         <td>
@@ -1085,7 +1085,7 @@
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
                         <td><%- renderSubequipesChips(cadastro) %></td>
-                        <td><span class="status-badge status-warn">Reprovado</span></td>
+                        <td><span class="status-badge status-danger">Reprovado</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1153,7 +1153,7 @@
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
                         <td><%- renderSubequipesChips(cadastro) %></td>
-                        <td><span class="status-badge status-warn">Pendente</span></td>
+                        <td><span class="status-badge status-pending">Pendente</span></td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1229,12 +1229,13 @@
                     <th>Email</th>
                     <th>Alergia</th>
                     <th>Sub-equipes</th>
+                    <th>Status</th>
                     <th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   <% if (tios.length === 0) { %>
-                    <tr><td colspan="9" class="empty-state">Nenhum tios cadastrado.</td></tr>
+                    <tr><td colspan="10" class="empty-state">Nenhum tios cadastrado.</td></tr>
                   <% } else { %>
                     <% tios.forEach(function(cadastro) { %>
                       <tr data-searchable="true">
@@ -1252,6 +1253,15 @@
                         <td><%= cadastro.email %></td>
                         <td><%= resumoAlergia(cadastro) %></td>
                         <td><%- renderSubequipesChips(cadastro) %></td>
+                        <td>
+                          <% if (statusCadastroGrupo(cadastro) === 'aprovado') { %>
+                            <span class="status-badge status-ok">Aprovado</span>
+                          <% } else if (statusCadastroGrupo(cadastro) === 'reprovado') { %>
+                            <span class="status-badge status-danger">Reprovado</span>
+                          <% } else { %>
+                            <span class="status-badge status-pending">Pendente</span>
+                          <% } %>
+                        </td>
                         <td>
                           <button class="btn btn-edit" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-edit me-1"></i>Editar
@@ -1397,6 +1407,9 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td class="approval-actions-cell">
+                          <button class="btn btn-edit btn-sm" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
+                            <i class="fas fa-id-card me-1"></i>Perfil
+                          </button>
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
                           </button>
@@ -1462,6 +1475,9 @@
                         <td><%= cadastro.telefone %></td>
                         <td><%= cadastro.email %></td>
                         <td class="approval-actions-cell">
+                          <button class="btn btn-edit btn-sm" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
+                            <i class="fas fa-id-card me-1"></i>Perfil
+                          </button>
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
                           </button>
@@ -3312,6 +3328,7 @@
     const encontristas = JSON.parse(document.getElementById('encontristas-data').textContent || '[]');
     const encontreiros = JSON.parse(document.getElementById('encontreiros-data').textContent || '[]');
     const ejcs = JSON.parse(document.getElementById('ejcs-data').textContent || '[]');
+      const encontroAtivoNomeAtual = <%- JSON.stringify(encontroAtivoNome || '') %>;
     const equipes = JSON.parse(document.getElementById('equipes-data').textContent || '[]');
     const subequipes = JSON.parse(document.getElementById('subequipes-data').textContent || '[]');
     const encontreirosParaEquipe = JSON.parse(document.getElementById('encontreiros-equipe-data').textContent || '[]');
@@ -3930,6 +3947,85 @@
         console.error('[appPrompt] erro ao mostrar popup premium:', e);
         return window.prompt(`${title}\n\n${message}`, defaultValue);
       }
+    }
+
+    async function appSelect(message, options = [], defaultValue = '', title = 'Selecione uma opção', fieldLabel = 'Opção disponível') {
+      resetLegacyAppPopupState();
+
+      try {
+        return await showBeautifulDialog({
+          title,
+          message,
+          inputMode: 'select',
+          selectOptions: options,
+          defaultValue,
+          fieldLabel,
+          confirmText: 'Continuar',
+          cancelText: 'Cancelar',
+          tone: 'primary',
+        });
+      } catch (e) {
+        console.error('[appSelect] erro ao mostrar popup premium:', e);
+        const fallbackValue = window.prompt(`${title}\n\n${message}\n\nDigite o ID do encontro:`, defaultValue);
+        return fallbackValue == null ? null : String(fallbackValue || '').trim();
+      }
+    }
+
+    function getTransferenciaEncontroOptions() {
+      return (Array.isArray(ejcs) ? ejcs : [])
+        .filter((ejc) => ejc && ejc._id && ejc.nome)
+        .map((ejc) => {
+          const nome = String(ejc.nome || '').trim();
+          const isAtivo = !!ejc.ativo || (encontroAtivoNomeAtual && nome === encontroAtivoNomeAtual);
+          return {
+            value: String(ejc._id),
+            label: isAtivo ? `${nome} • Ativo` : nome,
+            nome,
+            ativo: isAtivo,
+          };
+        })
+        .sort((a, b) => {
+          if (a.ativo !== b.ativo) return a.ativo ? -1 : 1;
+          return a.nome.localeCompare(b.nome, 'pt-BR');
+        });
+    }
+
+    function getTransferenciaEncontroPadrao() {
+      const options = getTransferenciaEncontroOptions();
+      return options[0] ? options[0].value : '';
+    }
+
+    function findEjcById(ejcId) {
+      return (Array.isArray(ejcs) ? ejcs : []).find((item) => String(item?._id || '') === String(ejcId || '')) || null;
+    }
+
+    async function solicitarEncontroTransferencia(totalSelecionados = 1) {
+      const options = getTransferenciaEncontroOptions();
+      if (!options.length) {
+        await appAlert('Cadastre ao menos um encontro antes de transferir encontristas para encontreiros.', 'warning', 'Nenhum encontro disponível');
+        return null;
+      }
+
+      const plural = totalSelecionados > 1;
+      const encontroId = await appSelect(
+        plural
+          ? `Escolha o encontro que receberá os ${totalSelecionados} encontristas selecionados.`
+          : 'Escolha o encontro que receberá este encontrista.',
+        options,
+        getTransferenciaEncontroPadrao(),
+        plural ? 'Selecionar encontro de destino' : 'Selecionar encontro do transferido',
+        'Encontro de destino'
+      );
+
+      if (encontroId == null) return null;
+
+      const encontro = findEjcById(encontroId);
+      if (!encontro) {
+        await appAlert('O encontro selecionado não foi encontrado. Tente novamente.', 'warning', 'Seleção inválida');
+        return null;
+      }
+
+      return encontro;
     }
 
     function buildLocalFinanceiroItem(payload, extra = {}) {
@@ -4668,7 +4764,10 @@
     async function transferirParaEncontreiros(id, nome) {
       const triggerButton = getActionTriggerButton();
       const rows = getCadastroRowsById('encontrista', id);
-      const confirmar = await appConfirm(`Transferir "${nome}" de Encontristas para Encontreiros?\n\nAo confirmar, o cadastro sai da aba Encontristas e passa para Encontreiros.`, 'Confirmar transferencia');
+        const encontroDestino = await solicitarEncontroTransferencia(1);
+        if (!encontroDestino) return;
+
+        const confirmar = await appConfirm(`Transferir "${nome}" de Encontristas para Encontreiros no encontro "${encontroDestino.nome}"?\n\nAo confirmar, o cadastro sai da aba Encontristas e passa para Encontreiros já vinculado a esse encontro.`, 'Confirmar transferencia');
       if (!confirmar) return;
 
       setActionButtonBusy(triggerButton, true, 'Transferindo...');
@@ -4677,7 +4776,11 @@
       try {
         const response = await fetch(`/admin/transferir-encontrista/${encodeURIComponent(id)}`, {
           method: 'POST',
-          headers: { Accept: 'application/json' }
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json'
+            },
+            body: JSON.stringify({ ejcId: encontroDestino._id }),
         });
 
         const contentType = response.headers.get('content-type') || '';
@@ -4687,7 +4790,7 @@
 
         if (result.success) {
           queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
-          await appAlert('Transferencia realizada com sucesso.', 'success', 'Sucesso');
+          await appAlert(`Transferencia realizada com sucesso para o encontro ${encontroDestino.nome}.`, 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
           return;
         }
@@ -4888,8 +4991,11 @@
         return;
       }
 
+      const encontroDestino = await solicitarEncontroTransferencia(ids.length);
+      if (!encontroDestino) return;
+
       const confirmar = await appConfirm(
-        `Transferir ${ids.length} encontrista(s) para Encontreiros?\n\nEles serao removidos da lista de Encontristas.`,
+        `Transferir ${ids.length} encontrista(s) para Encontreiros no encontro "${encontroDestino.nome}"?\n\nEles serao removidos da lista de Encontristas e vinculados a esse encontro.`,
         'Confirmar transferencia em lote'
       );
       if (!confirmar) return;
@@ -4903,7 +5009,7 @@
             'Content-Type': 'application/json',
             Accept: 'application/json',
           },
-          body: JSON.stringify({ ids }),
+          body: JSON.stringify({ ids, ejcId: encontroDestino._id }),
         });
 
         const result = await response.json();
@@ -4915,7 +5021,7 @@
         const resumo = result.resumo || {};
         queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
         await appAlert(
-          `Transferencia concluida.\n\nTransferidos: ${resumo.transferidos || 0}\nDuplicados ignorados: ${resumo.duplicados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
+          `Transferencia concluida para o encontro ${encontroDestino.nome}.\n\nTransferidos: ${resumo.transferidos || 0}\nDuplicados ignorados: ${resumo.duplicados || 0}\nNao encontrados: ${resumo.naoEncontrados || 0}`,
           'success',
           'Sucesso'
         );
@@ -7646,7 +7752,18 @@
             display: none;
           }
 
-          #beautiful-dialog-input {
+          #beautiful-dialog-field-label {
+            display: block;
+            margin: 0 0 8px;
+            color: rgba(191, 219, 254, 0.9);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+          }
+
+          #beautiful-dialog-input,
+          #beautiful-dialog-select {
             width: 100%;
             min-height: 52px;
             border: 1px solid rgba(148, 163, 184, 0.26);
@@ -7659,7 +7776,18 @@
             box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
           }
 
-          #beautiful-dialog-input:focus {
+          #beautiful-dialog-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: linear-gradient(45deg, transparent 50%, rgba(191, 219, 254, 0.92) 50%), linear-gradient(135deg, rgba(191, 219, 254, 0.92) 50%, transparent 50%);
+            background-position: calc(100% - 20px) calc(50% - 3px), calc(100% - 14px) calc(50% - 3px);
+            background-size: 6px 6px, 6px 6px;
+            background-repeat: no-repeat;
+            padding-right: 44px;
+          }
+
+          #beautiful-dialog-input:focus,
+          #beautiful-dialog-select:focus {
             border-color: rgba(96, 165, 250, 0.48);
             box-shadow: 0 0 0 0.24rem rgba(37, 99, 235, 0.18);
           }
@@ -7794,7 +7922,9 @@
               <div id="beautiful-dialog-note"></div>
             </div>
             <div id="beautiful-dialog-input-wrap">
+              <label id="beautiful-dialog-field-label" for="beautiful-dialog-input">Valor</label>
               <input type="text" id="beautiful-dialog-input" autocomplete="off" />
+              <select id="beautiful-dialog-select"></select>
             </div>
             <div id="beautiful-dialog-footer">
               <button type="button" id="beautiful-dialog-cancel" class="beautiful-dialog-btn">Cancelar</button>
@@ -7814,7 +7944,7 @@
       return overlay;
     }
 
-    function showBeautifulDialog({ title, message, isPrompt = false, defaultValue = '', isDanger = false, confirmText = 'OK', cancelText = null, tone = 'primary' }) {
+    function showBeautifulDialog({ title, message, isPrompt = false, inputMode = null, defaultValue = '', isDanger = false, confirmText = 'OK', cancelText = null, tone = 'primary', fieldLabel = '', selectOptions = [] }) {
       const overlay = createBeautifulDialog();
       const cardEl = document.getElementById('beautiful-dialog-card');
       const kickerEl = document.getElementById('beautiful-dialog-kicker');
@@ -7823,14 +7953,18 @@
       const messageEl = document.getElementById('beautiful-dialog-message');
       const noteEl = document.getElementById('beautiful-dialog-note');
       const inputWrap = document.getElementById('beautiful-dialog-input-wrap');
+      const fieldLabelEl = document.getElementById('beautiful-dialog-field-label');
       const inputEl = document.getElementById('beautiful-dialog-input');
+      const selectEl = document.getElementById('beautiful-dialog-select');
       const confirmBtn = document.getElementById('beautiful-dialog-confirm');
       const cancelBtn = document.getElementById('beautiful-dialog-cancel');
       const closeBtn = document.getElementById('beautiful-dialog-close');
 
-      if (!overlay || !cardEl || !kickerEl || !orbEl || !titleEl || !messageEl || !noteEl || !inputWrap || !inputEl || !confirmBtn || !cancelBtn || !closeBtn) {
+      if (!overlay || !cardEl || !kickerEl || !orbEl || !titleEl || !messageEl || !noteEl || !inputWrap || !fieldLabelEl || !inputEl || !selectEl || !confirmBtn || !cancelBtn || !closeBtn) {
         return Promise.reject(new Error('Dialog elements unavailable'));
       }
+
+      const effectiveInputMode = inputMode || (isPrompt ? 'text' : 'none');
 
       const effectiveTone = isDanger ? 'danger' : tone;
       const toneLabels = {
@@ -7855,15 +7989,40 @@
       titleEl.textContent = title || 'Aviso';
       kickerEl.textContent = toneLabels[effectiveTone] || toneLabels.primary;
       messageEl.textContent = message || '';
-      noteEl.textContent = isPrompt
+      noteEl.textContent = effectiveInputMode === 'text'
         ? 'Preencha o campo abaixo para concluir a operação com segurança.'
-        : (toneNotes[effectiveTone] || toneNotes.primary);
+        : effectiveInputMode === 'select'
+          ? 'Escolha uma opção válida antes de continuar.'
+          : (toneNotes[effectiveTone] || toneNotes.primary);
       orbEl.innerHTML = `<i class="fas ${toneIcons[effectiveTone] || toneIcons.primary}"></i>`;
       inputEl.value = String(defaultValue || '');
+      selectEl.innerHTML = '';
       cardEl.classList.remove('tone-primary', 'tone-warning', 'tone-success', 'tone-danger');
       cardEl.classList.add(`tone-${effectiveTone}`);
 
-      inputWrap.style.display = isPrompt ? 'block' : 'none';
+      if (effectiveInputMode === 'select') {
+        const options = Array.isArray(selectOptions) ? selectOptions : [];
+        options.forEach((option) => {
+          const optionEl = document.createElement('option');
+          optionEl.value = String(option && option.value != null ? option.value : '');
+          optionEl.textContent = String(option && option.label != null ? option.label : optionEl.value);
+          selectEl.appendChild(optionEl);
+        });
+
+        const desiredValue = String(defaultValue || (options[0] ? options[0].value : ''));
+        selectEl.value = desiredValue;
+        if (selectEl.value !== desiredValue && options[0]) {
+          selectEl.value = String(options[0].value);
+        }
+      } else {
+        selectEl.value = '';
+      }
+
+      fieldLabelEl.textContent = fieldLabel || (effectiveInputMode === 'select' ? 'Seleção' : 'Valor');
+      inputWrap.style.display = effectiveInputMode === 'none' ? 'none' : 'block';
+      fieldLabelEl.style.display = effectiveInputMode === 'none' ? 'none' : 'block';
+      inputEl.style.display = effectiveInputMode === 'text' ? 'block' : 'none';
+      selectEl.style.display = effectiveInputMode === 'select' ? 'block' : 'none';
       cancelBtn.style.display = cancelText ? 'inline-block' : 'none';
       if (cancelText) cancelBtn.textContent = cancelText;
       confirmBtn.textContent = confirmText || 'OK';
@@ -7879,10 +8038,14 @@
       const prevBodyOverflow = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
 
-      if (isPrompt) {
+      if (effectiveInputMode === 'text') {
         setTimeout(() => {
           inputEl.focus();
           inputEl.select();
+        }, 10);
+      } else if (effectiveInputMode === 'select') {
+        setTimeout(() => {
+          selectEl.focus();
         }, 10);
       }
 
@@ -7908,8 +8071,8 @@
           resolve(value);
         };
 
-        const onConfirm = () => finish(isPrompt ? inputEl.value : true);
-        const onCancel = () => finish(isPrompt ? null : false);
+        const onConfirm = () => finish(effectiveInputMode === 'text' ? inputEl.value : effectiveInputMode === 'select' ? selectEl.value : true);
+        const onCancel = () => finish(effectiveInputMode === 'none' ? false : null);
         const onOverlayClick = (event) => {
           if (event.target === overlay) onCancel();
         };
@@ -7918,7 +8081,7 @@
             onCancel();
             return;
           }
-          if (isPrompt && event.key === 'Enter') {
+          if (effectiveInputMode !== 'none' && event.key === 'Enter') {
             event.preventDefault();
             onConfirm();
           }
