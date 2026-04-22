@@ -835,7 +835,7 @@
         if (!pessoa) return;
 
         pessoa.ejcVinculadoId = ejcId;
-        const ejcNomeAtivo = '<%= escapeHtml(String(ejc.nome || "")) %>';
+        const ejcNomeAtivo = <%- JSON.stringify(String(ejc.nome || '')) %>;
         pessoa.ejcVinculadoNome = ejcNomeAtivo;
 
         if (entidadeTipo === 'equipe' && pessoaTipo === 'encontreiro') {

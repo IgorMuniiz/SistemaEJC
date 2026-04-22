@@ -3316,6 +3316,7 @@
   <script id="administradores-data" type="application/json"><%- JSON.stringify(administradores || []) %></script>
   <script id="admin-role-defaults-data" type="application/json"><%- JSON.stringify(adminRoleDefaults || {}) %></script>
   <script>
+    const adminCsrfToken = '<%= adminCsrfToken %>';
     const encontristas = JSON.parse(document.getElementById('encontristas-data').textContent || '[]');
     const encontreiros = JSON.parse(document.getElementById('encontreiros-data').textContent || '[]');
     const ejcs = JSON.parse(document.getElementById('ejcs-data').textContent || '[]');
@@ -7525,7 +7526,10 @@
           try {
             const response = await fetch('/admin/evento-scope', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': adminCsrfToken,
+              },
               body: JSON.stringify({ scope: nextScope }),
             });
 

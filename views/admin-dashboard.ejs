@@ -801,6 +801,8 @@
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script>
+    const adminCsrfToken = '<%= adminCsrfToken %>';
+
     /* ── Modal helper ────────────────────────────────────────── */
     function ensureAppPopup() {
       let el = document.getElementById('app-popup-modal');
@@ -954,7 +956,10 @@
           try {
             const res = await fetch('/admin/evento-scope', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': adminCsrfToken,
+              },
               body: JSON.stringify({ scope: nextScope }),
             });
             const data = await res.json();
