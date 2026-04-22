@@ -14395,6 +14395,117 @@ body.admin-panel.admin-manager-page.admin-manager-revamp #subequipes .subequipe-
     border-color: rgba(255, 255, 255, 0.8);
   }
 
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell {
+    background:
+      radial-gradient(120% 80% at 8% 0%, rgba(59, 130, 246, 0.2), transparent 52%),
+      radial-gradient(95% 70% at 96% 10%, rgba(245, 158, 11, 0.14), transparent 44%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(241, 245, 249, 0.64));
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-modal {
+    border-radius: 30px !important;
+    border-color: rgba(186, 230, 253, 0.9) !important;
+    box-shadow:
+      0 42px 96px rgba(15, 23, 42, 0.16),
+      0 16px 34px rgba(59, 130, 246, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.96);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.94)),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.1), transparent 56%) !important;
+    border-bottom-color: rgba(186, 230, 253, 0.92) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-kicker {
+    letter-spacing: 0.16em;
+    color: #1d4ed8 !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-header .modal-title {
+    letter-spacing: -0.025em;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-hero {
+    border-color: rgba(186, 230, 253, 0.94);
+    background:
+      radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.11), transparent 38%),
+      linear-gradient(155deg, rgba(255, 255, 255, 0.98), rgba(239, 246, 255, 0.94));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.98), 0 18px 36px rgba(148, 163, 184, 0.14);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-meta-card,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-card,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-photo-card,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-final-question-box {
+    border-color: rgba(191, 219, 254, 0.88);
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 250, 252, 0.97)),
+      linear-gradient(135deg, rgba(59, 130, 246, 0.06), transparent 56%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.98), 0 16px 30px rgba(148, 163, 184, 0.13);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-head h6 {
+    letter-spacing: -0.015em;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-section-kicker {
+    letter-spacing: 0.14em;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-type-badge {
+    border-width: 1px;
+    box-shadow: 0 10px 18px rgba(148, 163, 184, 0.14);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select {
+    border-radius: 15px !important;
+    border-color: rgba(148, 163, 184, 0.26) !important;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(248, 250, 252, 0.98)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 10px 22px rgba(148, 163, 184, 0.1);
+    transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control:hover,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select:hover {
+    border-color: rgba(59, 130, 246, 0.42) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 1), 0 14px 26px rgba(148, 163, 184, 0.14);
+    transform: translateY(-1px);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-control:focus,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-cadastro-shell .form-select:focus {
+    border-color: rgba(37, 99, 235, 0.74) !important;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16) !important, 0 18px 30px rgba(59, 130, 246, 0.16) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(248, 250, 252, 0.98)) !important;
+    border-top-color: rgba(186, 230, 253, 0.92) !important;
+    box-shadow: 0 -16px 30px rgba(203, 213, 225, 0.34);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-inline-actions .btn.btn-secondary,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer .btn.btn-secondary {
+    border-color: rgba(100, 116, 139, 0.42);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(241, 245, 249, 0.96)) !important;
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-inline-actions .btn.btn-primary,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer .btn.btn-primary {
+    background: linear-gradient(135deg, #1d4ed8, #0284c7, #0ea5e9);
+    box-shadow: 0 16px 32px rgba(37, 99, 235, 0.24);
+  }
+
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-inline-actions .btn.btn-primary:hover,
+  html:not([data-theme='dark']) body.admin-panel.admin-manager-page.admin-manager-revamp .edit-modal-footer .btn.btn-primary:hover {
+    filter: saturate(1.08) brightness(1.02);
+    transform: translateY(-1px);
+  }
+
   html:not([data-theme='dark']) body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-entity-editor-modal .app-entity-editor-card {
     position: relative;
     background:
@@ -15513,6 +15624,111 @@ html[data-theme='light'] body.admin-panel.admin-manager-page .admin-import-card 
 html[data-theme='light'] body.admin-panel.admin-manager-page .admin-import-card .form-select option {
   background: #ffffff !important;
   color: #0f172a !important;
+}
+
+/* FORCE LIGHT APPROVAL PANEL - FINAL OVERRIDE */
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel {
+  border: 1px solid rgba(30, 64, 175, 0.26) !important;
+  border-radius: 24px !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(239, 246, 255, 0.95)) !important;
+  box-shadow: 0 20px 46px rgba(30, 58, 138, 0.16) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .section-panel-head {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  border-radius: 20px !important;
+  border: 1px solid rgba(30, 58, 138, 0.35) !important;
+  box-shadow: 0 14px 30px rgba(30, 64, 175, 0.28) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .section-panel-title,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .approval-head-sub,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .approval-head-summary {
+  color: #eff6ff !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .meta-chip {
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+  border-width: 1px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .meta-chip.amber {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border-color: #f59e0b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .meta-chip.green {
+  background: #dcfce7 !important;
+  color: #166534 !important;
+  border-color: #22c55e !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .meta-chip.red {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #ef4444 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .status-tab {
+  background: #dbeafe !important;
+  color: #1e3a8a !important;
+  border: 1px solid #93c5fd !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .status-tab.active {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+  color: #f8fafc !important;
+  border-color: #1e40af !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.34) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .kanban-col {
+  border-width: 1px !important;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .col-pendente {
+  border-color: rgba(245, 158, 11, 0.38) !important;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.95), rgba(255, 247, 237, 0.92)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .col-aprovado {
+  border-color: rgba(34, 197, 94, 0.4) !important;
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.95), rgba(236, 253, 245, 0.92)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .col-reprovado {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+  background: linear-gradient(180deg, rgba(254, 242, 242, 0.95), rgba(254, 226, 226, 0.92)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn.approve {
+  background: linear-gradient(135deg, #16a34a, #15803d) !important;
+  color: #f0fdf4 !important;
+  border-color: #166534 !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn.reject {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: #fff1f2 !important;
+  border-color: #991b1b !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap thead th {
+  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
+  color: #eff6ff !important;
+  border-bottom-color: #1e3a8a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn {
+  font-weight: 800 !important;
+  border-width: 1px !important;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.16) !important;
 }
 
 html[data-theme='light'] body.admin-panel.admin-manager-page :is(
@@ -16932,6 +17148,56 @@ html[data-theme='light'] body.admin-panel.admin-dashboard-page .export-btn {
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06) !important;
 }
 
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn {
+  min-height: 36px;
+  border-width: 1px !important;
+  border-radius: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.01em;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-edit {
+  background: linear-gradient(180deg, #eff6ff 0%, #bfdbfe 100%) !important;
+  border-color: rgba(37, 99, 235, 0.42) !important;
+  color: #1e3a8a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-approve {
+  background: linear-gradient(145deg, #16a34a 0%, #22c55e 55%, #4ade80 100%) !important;
+  border-color: rgba(21, 128, 61, 0.58) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 rgba(20, 83, 45, 0.36);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-reject {
+  background: linear-gradient(145deg, #b91c1c 0%, #ef4444 55%, #f87171 100%) !important;
+  border-color: rgba(153, 27, 27, 0.56) !important;
+  color: #ffffff !important;
+  text-shadow: 0 1px 0 rgba(127, 29, 29, 0.36);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn:hover,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn:focus {
+  transform: translateY(-1px);
+  filter: saturate(1.06) brightness(1.02);
+  box-shadow: 0 14px 24px rgba(15, 23, 42, 0.16), 0 0 0 3px rgba(59, 130, 246, 0.14);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-approve:hover,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-approve:focus {
+  box-shadow: 0 14px 24px rgba(21, 128, 61, 0.26), 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-reject:hover,
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn.btn-reject:focus {
+  box-shadow: 0 14px 24px rgba(185, 28, 28, 0.24), 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-actions-cell .btn i {
+  color: inherit !important;
+}
+
 html[data-theme='light'] body.admin-panel.admin-dashboard-page .batch-counter {
   background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(241, 245, 255, 0.96)) !important;
   border-color: rgba(96, 165, 250, 0.2) !important;
@@ -17265,6 +17531,119 @@ html:not([data-theme='light']) body.admin-panel.admin-dashboard-page .kanban-boa
   gap: 14px;
   padding: 16px;
   background: linear-gradient(180deg, rgba(8, 15, 30, 0.28), rgba(8, 15, 30, 0.12));
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-workspace-head {
+  border-color: rgba(245, 158, 11, 0.38) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(245, 158, 11, 0.22), transparent 34%),
+    linear-gradient(150deg, rgba(255, 251, 235, 0.98), rgba(255, 237, 213, 0.92)) !important;
+  box-shadow: 0 18px 32px rgba(194, 65, 12, 0.14) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .tab-kicker {
+  color: #b45309 !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .tab-chip {
+  font-weight: 800 !important;
+  border-width: 1px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .tab-chip-pending {
+  background: linear-gradient(180deg, #fef3c7 0%, #f59e0b 100%) !important;
+  border-color: rgba(180, 83, 9, 0.54) !important;
+  color: #4a2405 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .tab-chip-soft {
+  background: linear-gradient(180deg, #dbeafe 0%, #60a5fa 100%) !important;
+  border-color: rgba(29, 78, 216, 0.44) !important;
+  color: #0b2b66 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .tab-chip-alert {
+  background: linear-gradient(180deg, #fee2e2 0%, #fb7185 100%) !important;
+  border-color: rgba(190, 24, 93, 0.52) !important;
+  color: #5c1022 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-card {
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(59, 130, 246, 0.16), transparent 36%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.99), rgba(239, 246, 255, 0.95)) !important;
+  box-shadow: 0 16px 30px rgba(30, 64, 175, 0.12) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-card.approval-metric-card-attention {
+  border-color: rgba(217, 119, 6, 0.44) !important;
+  background: linear-gradient(165deg, rgba(255, 251, 235, 0.99), rgba(253, 230, 138, 0.9)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-card.approval-metric-card-critical {
+  border-color: rgba(220, 38, 38, 0.42) !important;
+  background: linear-gradient(165deg, rgba(255, 241, 242, 0.99), rgba(254, 202, 202, 0.88)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-label {
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-value {
+  color: #0f172a !important;
+  font-weight: 900 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-metric-note {
+  color: #334155 !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-section {
+  border-color: rgba(96, 165, 250, 0.28) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(239, 246, 255, 0.94)) !important;
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-section-kicker {
+  color: #1d4ed8 !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-section-head h6 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap {
+  border-color: rgba(96, 165, 250, 0.3) !important;
+  box-shadow: 0 14px 28px rgba(30, 64, 175, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table thead th {
+  background: linear-gradient(180deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+  border-bottom-color: rgba(59, 130, 246, 0.32) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table tbody td {
+  color: #1e293b !important;
+  font-weight: 600;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table tbody tr:hover {
+  background: rgba(191, 219, 254, 0.46) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-batch-counter {
+  background: linear-gradient(180deg, #eff6ff 0%, #bfdbfe 100%) !important;
+  border-color: rgba(37, 99, 235, 0.34) !important;
+  color: #1e3a8a !important;
+  font-weight: 900 !important;
 }
 
 html:not([data-theme='light']) body.admin-panel.admin-dashboard-page .kanban-col {
@@ -18325,3 +18704,221 @@ html[data-theme='dark'] body.admin-panel :is(
 }
 
 /* ============================================================================ */
+
+/* FORCE LIGHT APPROVAL CHIPS + ALWAYS VISIBLE ACTIONS */
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.amber-card::after,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.green-card::after,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.red-card::after {
+  font-size: 0.68rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase;
+  border-width: 1px !important;
+  padding: 6px 11px !important;
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.14) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.amber-card::after {
+  color: #7c2d12 !important;
+  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 100%) !important;
+  border-color: #d97706 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.green-card::after {
+  color: #14532d !important;
+  background: linear-gradient(180deg, #bbf7d0 0%, #22c55e 100%) !important;
+  border-color: #16a34a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .pcard.red-card::after {
+  color: #7f1d1d !important;
+  background: linear-gradient(180deg, #fecaca 0%, #f87171 100%) !important;
+  border-color: #dc2626 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .ai-chip {
+  font-size: 0.7rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.02em !important;
+  border-width: 1px !important;
+  padding: 5px 10px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.88), 0 8px 18px rgba(15, 23, 42, 0.1) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .ai-chip.good {
+  background: linear-gradient(180deg, #dcfce7 0%, #86efac 100%) !important;
+  color: #14532d !important;
+  border-color: #22c55e !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .ai-chip.warning {
+  background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 100%) !important;
+  color: #78350f !important;
+  border-color: #f59e0b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .ai-chip.danger {
+  background: linear-gradient(180deg, #fee2e2 0%, #fca5a5 100%) !important;
+  color: #7f1d1d !important;
+  border-color: #ef4444 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .ai-chip.neutral {
+  background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 100%) !important;
+  color: #1e3a8a !important;
+  border-color: #3b82f6 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-actions {
+  opacity: 1 !important;
+  transform: none !important;
+  border-top-color: rgba(148, 163, 184, 0.26) !important;
+  background: linear-gradient(180deg, rgba(241, 245, 255, 0.9), rgba(255, 255, 255, 0.98)) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn {
+  min-height: 40px !important;
+  font-size: 0.84rem !important;
+  font-weight: 900 !important;
+  letter-spacing: 0.01em;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn.approve {
+  background: linear-gradient(145deg, #16a34a 0%, #15803d 100%) !important;
+  color: #f0fdf4 !important;
+  border-color: #166534 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn.reject {
+  background: linear-gradient(145deg, #dc2626 0%, #b91c1c 100%) !important;
+  color: #fff1f2 !important;
+  border-color: #991b1b !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-panel .pcard-btn.details {
+  background: linear-gradient(145deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #eff6ff !important;
+  border-color: #1e40af !important;
+}
+
+/* FORCE LIGHT KPI GREEN + BLUE VISIBILITY */
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile.green-tile .stat-tile-num {
+  color: #166534 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile.blue-tile .stat-tile-num {
+  color: #1e3a8a !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-icon.green {
+  background: linear-gradient(145deg, #dcfce7 0%, #86efac 100%) !important;
+  color: #166534 !important;
+  border: 1px solid #22c55e !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-icon.blue {
+  background: linear-gradient(145deg, #dbeafe 0%, #93c5fd 100%) !important;
+  color: #1e3a8a !important;
+  border: 1px solid #3b82f6 !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-trend.trend-good {
+  color: #14532d !important;
+  background: linear-gradient(180deg, #dcfce7 0%, #86efac 100%) !important;
+  border-color: #22c55e !important;
+  font-weight: 900 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 8px 18px rgba(22, 163, 74, 0.16) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-trend.trend-neutral {
+  color: #1e3a8a !important;
+  background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 100%) !important;
+  border-color: #3b82f6 !important;
+  font-weight: 900 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 8px 18px rgba(37, 99, 235, 0.16) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-trend.trend-good i,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .stat-tile-trend.trend-neutral i {
+  color: inherit !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions {
+  margin-left: auto;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 18px;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88), rgba(241, 245, 255, 0.86));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.94), 0 10px 24px rgba(37, 99, 235, 0.1);
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions :is(.event-scope-switch, .motion-mode-switch) {
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .live-badge {
+  font-weight: 800 !important;
+  border: 1px solid rgba(16, 185, 129, 0.26) !important;
+  background: linear-gradient(135deg, rgba(236, 253, 245, 0.96), rgba(209, 250, 229, 0.92)) !important;
+  color: #047857 !important;
+}
+
+/* FORCE LIGHT DASHBOARD ACTIONS EXECUTIVE COMPACT */
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 16px;
+  margin-left: auto;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions :is(
+  .event-scope-switch,
+  .motion-mode-switch,
+  .btn-action-primary,
+  .live-badge
+) {
+  min-height: 38px;
+  border-radius: 12px !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .event-scope-switch,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .motion-mode-switch {
+  padding: 2px;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .event-scope-btn,
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .motion-mode-btn {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .btn-action-primary {
+  padding: 0 18px;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions .live-badge {
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  font-size: 0.92rem;
+}
+
+@media (max-width: 1280px) {
+  html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}

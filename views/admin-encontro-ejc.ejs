@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260417-admin-buttons-premium-38">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260422-approval-light-contrast-52">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -328,6 +328,7 @@
   <script id="dados-encontristas" type="application/json"><%- JSON.stringify(encontristas || []) %></script>
   <script id="dados-encontreiros" type="application/json"><%- JSON.stringify(encontreiros || []) %></script>
   <script id="dados-vinculos" type="application/json"><%- JSON.stringify(vinculos || []) %></script>
+  <script id="dados-admin-permissoes" type="application/json"><%- JSON.stringify(adminPermissoesLista || []) %></script>
 
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/page-transitions.js?v=20260417-premium-feedback-27"></script>
@@ -341,7 +342,7 @@
 
     const mapEncontristas = Object.fromEntries(encontristas.map((p) => [String(p._id), p]));
     const mapEncontreiros = Object.fromEntries(encontreiros.map((p) => [String(p._id), p]));
-    const currentAdminPermissions = <%- JSON.stringify(adminPermissoesLista || []) %>;
+    const currentAdminPermissions = JSON.parse(document.getElementById('dados-admin-permissoes').textContent || '[]');
 
     function hasPermission(permissionKey) {
       if (!permissionKey) return true;

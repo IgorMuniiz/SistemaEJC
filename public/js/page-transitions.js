@@ -1532,9 +1532,9 @@
 
     const host = resolveThemeToggleHost();
     if (!host) {
-      toggle.classList.remove('app-theme-toggle--inline');
-      if (toggle.parentElement !== document.body) {
-        document.body.appendChild(toggle);
+      // Do not render a floating theme toggle at the end of the page.
+      if (toggle.parentElement) {
+        toggle.remove();
       }
       return;
     }
