@@ -849,10 +849,10 @@ const clearTiosCoupleLink = async (encontroId) => {
 
 const linkTiosCouple = async (encontroId, parceiroId, preferredGroupId = '') => {
   if (!mongoose.Types.ObjectId.isValid(encontroId) || !mongoose.Types.ObjectId.isValid(parceiroId)) {
-    throw new Error('IDs invalidos para vinculo de tios.');
+    throw new Error('IDs inválidos para vínculo de tios.');
   }
   if (String(encontroId) === String(parceiroId)) {
-    throw new Error('Nao e possivel vincular o mesmo tio a ele proprio.');
+    throw new Error('Não é possível vincular o mesmo tio a ele próprio.');
   }
 
   const [encontroAtual, parceiroAtual] = await Promise.all([
@@ -861,10 +861,10 @@ const linkTiosCouple = async (encontroId, parceiroId, preferredGroupId = '') => 
   ]);
 
   if (!encontroAtual || !parceiroAtual) {
-    throw new Error('Tio/Tia selecionado(a) nao encontrado(a).');
+    throw new Error('Tio/Tia selecionado(a) não encontrado(a).');
   }
   if (encontroAtual.tipo !== 'tios' || parceiroAtual.tipo !== 'tios') {
-    throw new Error('O vinculo de casal so pode ser feito entre tios.');
+    throw new Error('O vínculo de casal só pode ser feito entre tios.');
   }
 
   if (encontroAtual.tioParceiroId && String(encontroAtual.tioParceiroId) !== String(parceiroId)) {
@@ -1197,7 +1197,7 @@ const adminCsrfGuard = (req, res, next) => {
 
   return res.status(403).json({
     success: false,
-    error: 'Falha de validacao CSRF. Recarregue a pagina e tente novamente.',
+    error: 'Falha de validação CSRF. Recarregue a página e tente novamente.',
   });
 };
 
@@ -1354,12 +1354,12 @@ const mapToEncontroPayload = (row, fotoPadrao = '', options = {}) => {
     tipo,
     tiosCategoria: normalizeTextInput(row.tiosCategoria || row.categoriaTios).toLowerCase() === 'casal' ? 'casal' : '',
     foto,
-    ejc: normalizeTextInput(row.ejc) || 'Nao informado',
+    ejc: normalizeTextInput(row.ejc) || 'Não informado',
     qualEjcPertence: normalizeTextInput(row.qualEjcPertence || row.ejcPertence || row.ejc_pertence),
-    logradouro: normalizeTextInput(row.logradouro || row.endereco) || 'Nao informado',
-    bairro: normalizeTextInput(row.bairro) || 'Nao informado',
+    logradouro: normalizeTextInput(row.logradouro || row.endereco) || 'Não informado',
+    bairro: normalizeTextInput(row.bairro) || 'Não informado',
     dataNascimento: parseDateInput(row.dataNascimento || row.data_nascimento || row.nascimento || row.niver) || new Date('2000-01-01'),
-    telefone: normalizeTextInput(row.telefone || row.celular) || 'Nao informado',
+    telefone: normalizeTextInput(row.telefone || row.celular) || 'Não informado',
     instagram: normalizeTextInput(row.instagram),
     origemTios: normalizeBooleanInput(row.origemTios || row.origem),
     tiosGrupoId: normalizeTextInput(row.tiosGrupoId || row.tios_grupo_id || row.grupoId),
@@ -1721,7 +1721,7 @@ const truncateText = (value, max = 42) => {
 };
 
 const buildPdfDisplayName = (nomeCompleto, comoQuerSerChamado, max = 28) => {
-  const nome = normalizeTextInput(nomeCompleto) || 'Nao informado';
+  const nome = normalizeTextInput(nomeCompleto) || 'Não informado';
   const apelido = normalizeTextInput(comoQuerSerChamado);
   const parts = nome.split(/\s+/).filter(Boolean);
 
@@ -1778,6 +1778,11 @@ const fitPdfTextToWidth = (doc, value, width, options = {}) => {
 
   return suffix;
 };
+
+const normalizeSingleLineText = (value) => normalizeTextInput(value)
+  .replace(/[\r\n\t]+/g, ' ')
+  .replace(/\s{2,}/g, ' ')
+  .trim();
 
 const resolvePhotoPath = (fileName) => {
   if (!fileName) return null;
@@ -1839,8 +1844,8 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
   const textY = y + textYOffset;
 
   if (showLabels && alignColumns) {
-    const safeLabel = truncateText(label, 12);
-    const rawValue = normalizeTextInput(value) || '-';
+    const safeLabel = truncateText(normalizeSingleLineText(label), 12);
+    const rawValue = normalizeSingleLineText(value) || '-';
     const valueWidth = Math.max(10, width - labelWidth - 3);
 
     let adjustedFontSize = fontSize;
@@ -1873,10 +1878,10 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
       ellipsis: true,
     });
   } else {
-    const rawValue = normalizeTextInput(value) || '-';
+    const rawValue = normalizeSingleLineText(value) || '-';
     const renderedValue = truncateValue ? truncateText(rawValue, textMax) : rawValue;
     const normalizedLine = showLabels
-      ? `${label}: ${renderedValue}`
+      ? `${normalizeSingleLineText(label)}: ${renderedValue}`
       : `${renderedValue}`;
     doc.font(fontName).fontSize(fontSize).fillColor(valueColor).text(normalizedLine, x, textY, {
       width,
@@ -1977,7 +1982,8 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   const textWidth = cardWidth - (textX - cardX) - photoInset;
   const headerOffset = badgeLabel ? 24 : topPadding;
 
-  const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, 28);
+  const nameMaxChars = Number(options.nameMaxChars) > 0 ? Number(options.nameMaxChars) : 28;
+  const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, nameMaxChars);
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
@@ -2844,6 +2850,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
     const equipeCoordenadorCardOptions = {
       ...equipeCardOptions,
       outerInset: 4,
+      nameMaxChars: 22,
     };
 
     let y = equipeStartY;
@@ -4660,12 +4667,12 @@ app.get('/sucesso', (req, res) => {
   const isEncontro = origem === 'encontro';
 
   return res.render('success', {
-    successTitle: isEncontro ? 'Inscricao de encontro confirmada' : 'Inscricao confirmada',
+    successTitle: isEncontro ? 'Inscrição de encontro confirmada' : 'Inscrição confirmada',
     successText: isEncontro
-      ? 'Recebemos seus dados com sucesso. Agora voce pode fazer uma nova inscricao para encontro ou voltar para a pagina principal.'
-      : 'Recebemos seus dados com sucesso. Agora voce pode fazer uma nova inscricao de encontrista ou voltar para a pagina principal.',
+      ? 'Recebemos seus dados com sucesso. Agora você pode fazer uma nova inscrição para encontro ou voltar para a página principal.'
+      : 'Recebemos seus dados com sucesso. Agora você pode fazer uma nova inscrição de encontrista ou voltar para a página principal.',
     successPrimaryHref: isEncontro ? '/encontro' : '/inscricao',
-    successPrimaryLabel: isEncontro ? 'Fazer nova inscricao de encontro' : 'Fazer novo cadastro',
+    successPrimaryLabel: isEncontro ? 'Fazer nova inscrição de encontro' : 'Fazer novo cadastro',
     successSecondaryHref: '/',
     successSecondaryLabel: 'Voltar ao menu principal',
   });

@@ -161,18 +161,18 @@ function GenericForm() {
     },
     {
       key: 'contexto',
-      label: 'Endereco',
-      description: 'Onde voce vive e como facilitar o contato da equipe',
+      label: 'Endereço',
+      description: '',
     },
     {
       key: 'familia',
-      label: 'Familia e igreja',
-      description: 'Rede de apoio e vivencia na comunidade',
+      label: 'Família e igreja',
+      description: 'Rede de apoio e vivência na comunidade',
     },
     {
       key: 'finalizacao',
-      label: 'Finalizacao',
-      description: 'Expectativas, foto e autorizacao',
+      label: 'Finalização',
+      description: 'Expectativas, foto e autorização',
     },
   ];
 
@@ -180,22 +180,22 @@ function GenericForm() {
     {
       key: 'perfil',
       label: 'Perfil',
-      description: 'Identidade basica para o encontro',
+      description: 'Identidade básica para o encontro',
     },
     {
       key: 'trajetoria',
-      label: 'Trajetoria',
-      description: 'Historico no EJC e equipes de servico',
+      label: 'Trajetória',
+      description: 'Histórico no EJC e equipes de serviço',
     },
     {
       key: 'contato',
       label: 'Contato',
-      description: 'Endereco e meios para retorno da equipe',
+      description: 'Endereço e meios para retorno',
     },
     {
       key: 'encerramento',
       label: 'Encerramento',
-      description: 'Foto, observacoes e autorizacao final',
+      description: 'Foto, observações e autorização final',
     },
   ];
 
@@ -207,17 +207,17 @@ function GenericForm() {
     },
     {
       key: 'trajetoria',
-      label: 'Trajetoria',
-      description: 'Vivencia no EJC e equipes de servico',
+      label: 'Trajetória',
+      description: 'Vivência no EJC e equipes de serviço',
     },
     {
       key: 'contato',
       label: 'Contato',
-      description: 'Localizacao, relacao com a equipe e apoio logistico',
+      description: 'Localização, relação com a equipe e apoio logístico',
     },
     {
       key: 'revisao',
-      label: 'Revisao',
+      label: 'Revisão',
       description: 'Confira os dados finais antes de enviar',
     },
   ];
@@ -527,7 +527,7 @@ function GenericForm() {
 
   const handleNextStep = () => {
     if (!validateCurrentStep()) {
-      setErrors([{ msg: 'Preencha os campos obrigatorios desta etapa antes de continuar.' }]);
+      setErrors([{ msg: 'Preencha os campos obrigatórios desta etapa antes de continuar.' }]);
       return;
     }
 
@@ -600,7 +600,7 @@ function GenericForm() {
     pessoa,
     data,
     handleCh,
-    label = 'Observacoes',
+    label = 'Observações',
     placeholder = '',
     helperText = '',
     required = false,
@@ -675,7 +675,7 @@ function GenericForm() {
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`genero-${pessoa}`} className="form-label">
-              Genero *
+              Gênero *
             </label>
             <div className="input-group">
               <span className="input-group-text">
@@ -731,7 +731,7 @@ function GenericForm() {
             <label htmlFor={`email-${pessoa}`} className="form-label">
               E-mail
             </label>
-            <input type="email" className="form-control" id={`email-${pessoa}`} name="email" value={data.email} onChange={handleCh} placeholder="voce@email.com" />
+            <input type="email" className="form-control" id={`email-${pessoa}`} name="email" value={data.email} onChange={handleCh} placeholder="você@email.com" />
           </div>
         </div>
       </section>
@@ -739,7 +739,7 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 1 ? ' is-active' : ''}`} data-step-panel="1" hidden={currentStep !== 1}>
         <div className="form-section-title">
           <i className="fas fa-location-dot"></i>
-          Endereco e convivencia
+          Endereço e convivência
         </div>
 
         <div className="form-row">
@@ -762,26 +762,26 @@ function GenericForm() {
           <label htmlFor={`logradouro-${pessoa}`} className="form-label">
             Logradouro *
           </label>
-          <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} placeholder="Rua e numero" required />
+          <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} placeholder="Rua e número" required />
         </div>
 
         <div className="mb-3">
           <label htmlFor={`complementoReferencia-${pessoa}`} className="form-label">
-            Complemento ou referencia
+            Complemento ou referência
           </label>
-          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia} onChange={handleCh} placeholder="Casa, bloco, ponto de referencia" />
+          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia} onChange={handleCh} placeholder="Casa, bloco, ponto de referência" />
         </div>
 
         <div className="mb-3">
           <label htmlFor={`comQuemReside-${pessoa}`} className="form-label">
-            Com quem voce reside no endereco acima?
+            Com quem você reside no endereço acima?
           </label>
           <textarea className="form-control" id={`comQuemReside-${pessoa}`} name="comQuemReside" value={data.comQuemReside} onChange={handleCh} rows="3"></textarea>
         </div>
 
         <div className="mb-3">
           <label htmlFor={`paisVivosContato-${pessoa}`} className="form-label">
-            Os pais sao vivos? Se sim, tem contato com eles?
+            Os pais são vivos? Se sim, têm contato com eles?
           </label>
           <textarea className="form-control" id={`paisVivosContato-${pessoa}`} name="paisVivosContato" value={data.paisVivosContato} onChange={handleCh} rows="3"></textarea>
         </div>
@@ -790,16 +790,16 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 2 ? ' is-active' : ''}`} data-step-panel="2" hidden={currentStep !== 2}>
         <div className="form-section-title">
           <i className="fas fa-people-roof"></i>
-          Familia, saude e igreja
+          Família, saúde e igreja
         </div>
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`nomeMae-${pessoa}`} className="form-label">Nome da Mae *</label>
+            <label htmlFor={`nomeMae-${pessoa}`} className="form-label">Nome da Mãe *</label>
             <input type="text" className="form-control" id={`nomeMae-${pessoa}`} name="nomeMae" value={data.nomeMae} onChange={handleCh} required />
           </div>
           <div className="mb-3">
-            <label htmlFor={`telefoneMae-${pessoa}`} className="form-label">Telefone da Mae *</label>
+            <label htmlFor={`telefoneMae-${pessoa}`} className="form-label">Telefone da Mãe *</label>
             <input type="tel" className="form-control" id={`telefoneMae-${pessoa}`} name="telefoneMae" placeholder="(11) 99999-9999" value={data.telefoneMae} onChange={handleCh} required />
           </div>
         </div>
@@ -820,7 +820,7 @@ function GenericForm() {
             Estado civil *
           </label>
           <div className="step-radio-grid">
-            {['Solteiro (a)', 'Casado (a)', 'Divorciado (a)', 'Viuvo (a)', 'Noivo (a)', 'Amasiado (a) (Morando junto)'].map((opt) => (
+            {['Solteiro (a)', 'Casado (a)', 'Divorciado (a)', 'Viúvo (a)', 'Noivo (a)', 'Amasiado (a) (Morando junto)'].map((opt) => (
               <div className="form-check step-choice" key={`${pessoa || 'unico'}-estado-${opt}`}>
                 <input className="form-check-input" type="radio" id={`estadoCivil-${pessoa}-${opt}`} name="estadoCivil" value={opt} checked={data.estadoCivil === opt} onChange={handleCh} required />
                 <label className="form-check-label" htmlFor={`estadoCivil-${pessoa}-${opt}`}>
@@ -845,7 +845,7 @@ function GenericForm() {
           <div className="mb-3">
             <label htmlFor={`possuiFilhos-${pessoa}`} className="form-label">Possui filhos?</label>
             <select className="form-control" id={`possuiFilhos-${pessoa}`} name="possuiFilhos" value={data.possuiFilhos || 'nao'} onChange={handleCh}>
-              <option value="nao">Nao</option>
+              <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
@@ -862,11 +862,11 @@ function GenericForm() {
               <option value="">Selecione</option>
               <option value="Fundamental incompleto">Fundamental incompleto</option>
               <option value="Fundamental completo">Fundamental completo</option>
-              <option value="Medio incompleto">Medio incompleto</option>
-              <option value="Medio completo">Medio completo</option>
+              <option value="Médio incompleto">Médio incompleto</option>
+              <option value="Médio completo">Médio completo</option>
               <option value="Superior incompleto">Superior incompleto</option>
               <option value="Superior completo">Superior completo</option>
-              <option value="Pos-graduacao">Pos-graduacao</option>
+              <option value="Pós-graduação">Pós-graduação</option>
               <option value="Outro">Outro</option>
             </select>
           </div>
@@ -885,17 +885,17 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artistica que goste de praticar?</label>
+          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
           <textarea className="form-control" id={`talentoHabilidadeArtistica-${pessoa}`} name="talentoHabilidadeArtistica" value={data.talentoHabilidadeArtistica} onChange={handleCh} rows="3"></textarea>
         </div>
 
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`instrumentoMusical-${pessoa}`} className="form-label">Toca algum instrumento musical ou canta? *</label>
-            <input type="text" className="form-control" id={`instrumentoMusical-${pessoa}`} name="instrumentoMusical" value={data.instrumentoMusical} onChange={handleCh} placeholder="Ex: Violao, canto, teclado ou Nao" required />
+            <input type="text" className="form-control" id={`instrumentoMusical-${pessoa}`} name="instrumentoMusical" value={data.instrumentoMusical} onChange={handleCh} placeholder="Ex: Violão, canto, teclado ou Não" required />
           </div>
           <div className="mb-3">
-            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saude fisico ou mental? Qual?</label>
+            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saúde físico ou mental? Qual?</label>
             <input type="text" className="form-control" id={`quadroSaude-${pessoa}`} name="quadroSaude" value={data.quadroSaude} onChange={handleCh} />
           </div>
         </div>
@@ -906,16 +906,16 @@ function GenericForm() {
             <input type="text" className="form-control" id={`medicamentoControlado-${pessoa}`} name="medicamentoControlado" value={data.medicamentoControlado} onChange={handleCh} />
           </div>
           <div className="mb-3">
-            <label htmlFor={`intolerante-${pessoa}`} className="form-label">Intolerancia ou restricao alimentar</label>
+            <label htmlFor={`intolerante-${pessoa}`} className="form-label">Intolerância ou restrição alimentar</label>
             <input type="text" className="form-control" id={`intolerante-${pessoa}`} name="intolerante" value={data.intolerante} onChange={handleCh} />
           </div>
         </div>
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">É alérgico?</label>
             <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
-              <option value="nao">Nao</option>
+              <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
@@ -937,11 +937,11 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como voce se considera hoje?</label>
+            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como você se considera hoje?</label>
             <input type="text" className="form-control" id={`religiosidadeAtual-${pessoa}`} name="religiosidadeAtual" value={data.religiosidadeAtual} onChange={handleCh} />
           </div>
           <div className="mb-3">
-            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paroquia frequenta? *</label>
+            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paróquia frequenta? *</label>
             <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta} onChange={handleCh} required />
           </div>
         </div>
@@ -955,42 +955,42 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
         <div className="form-section-title">
           <i className="fas fa-flag-checkered"></i>
-          Finalizacao da inscricao
+          Finalização da inscrição
         </div>
 
         <div className="form-row">
           <div className="mb-3 final-question-col">
             <div className="final-question-box final-question-box-lg">
-              <label htmlFor={`conhecidoInscricaoHoje-${pessoa}`} className="form-label">Tem algum conhecido fazendo a inscricao hoje? *</label>
-              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoInscricaoHoje-${pessoa}`} name="conhecidoInscricaoHoje" value={data.conhecidoInscricaoHoje} onChange={handleCh} placeholder="Ex: Nome do conhecido ou Nao" rows="3" required></textarea>
+              <label htmlFor={`conhecidoInscricaoHoje-${pessoa}`} className="form-label">Tem algum conhecido fazendo a inscrição hoje? *</label>
+              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoInscricaoHoje-${pessoa}`} name="conhecidoInscricaoHoje" value={data.conhecidoInscricaoHoje} onChange={handleCh} placeholder="Ex: Nome do conhecido ou Não" rows="3" required></textarea>
             </div>
           </div>
           <div className="mb-3 final-question-col">
             <div className="final-question-box final-question-box-lg">
-              <label htmlFor={`conhecidoFezEjc-${pessoa}`} className="form-label">Tem algum conhecido que ja fez EJC? *</label>
-              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoFezEjc-${pessoa}`} name="conhecidoFezEjc" value={data.conhecidoFezEjc} onChange={handleCh} placeholder="Ex: Nome de quem ja fez ou Nao" rows="3" required></textarea>
+              <label htmlFor={`conhecidoFezEjc-${pessoa}`} className="form-label">Tem algum conhecido que já fez EJC? *</label>
+              <textarea className="form-control final-question-input final-question-textarea-lg" id={`conhecidoFezEjc-${pessoa}`} name="conhecidoFezEjc" value={data.conhecidoFezEjc} onChange={handleCh} placeholder="Ex: Nome de quem já fez ou Não" rows="3" required></textarea>
             </div>
           </div>
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`inscricaoAnterior-${pessoa}`} className="form-label">Voce ja fez alguma inscricao antes? Se sim, qual EJC. *</label>
-          <textarea className="form-control compact-response-textarea" id={`inscricaoAnterior-${pessoa}`} name="inscricaoAnterior" value={data.inscricaoAnterior} onChange={handleCh} rows="2" placeholder="Ex: Nao / EJC 2024" required></textarea>
+          <label htmlFor={`inscricaoAnterior-${pessoa}`} className="form-label">Você já fez alguma inscrição antes? Se sim, qual EJC. *</label>
+          <textarea className="form-control compact-response-textarea" id={`inscricaoAnterior-${pessoa}`} name="inscricaoAnterior" value={data.inscricaoAnterior} onChange={handleCh} rows="2" placeholder="Ex: Não / EJC 2024" required></textarea>
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`expectativaXixEjcCop-${pessoa}`} className="form-label">Qual sua expectativa para o XIX ECJ COP? E porque quer fazer o encontro? *</label>
+          <label htmlFor={`expectativaXixEjcCop-${pessoa}`} className="form-label">Qual sua expectativa para o XIX ECJ COP? E por que quer fazer o encontro? *</label>
           <textarea className="form-control compact-response-textarea" id={`expectativaXixEjcCop-${pessoa}`} name="expectativaXixEjcCop" value={data.expectativaXixEjcCop} onChange={handleCh} rows="3" required></textarea>
         </div>
 
         <div className="mb-3">
           <div className="final-question-box">
-            <label className="form-label d-block">O XIX EJC COP esta previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que voce esteja disponivel:</label>
-            <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sabado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
+            <label className="form-label d-block">O XIX EJC COP está previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que você esteja disponível:</label>
+            <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sábado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
             <div className="form-check">
               <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} required />
               <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
-                Confirmo minha disponibilidade integral para os dias e horarios informados.
+                Confirmo minha disponibilidade integral para os dias e horários informados.
               </label>
             </div>
           </div>
@@ -1004,11 +1004,11 @@ function GenericForm() {
           {!isNoivo && renderObservacoesField({ pessoa, data, handleCh })}
         </div>
 
-        {renderReviewSummary('Resumo da inscricao', [
+        {renderReviewSummary('Resumo da inscrição', [
           ['Nome', data.nomeCompleto],
           ['Telefone', data.telefone],
           ['Instagram', data.instagram],
-          ['Paroquia', data.paroquiaFrequenta],
+          ['Paróquia', data.paroquiaFrequenta],
           ['Disponibilidade', data.disponibilidadeEncontro ? 'Confirmada' : 'Pendente'],
         ])}
 
@@ -1050,7 +1050,7 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`genero-${pessoa}`} className="form-label">Genero *</label>
+            <label htmlFor={`genero-${pessoa}`} className="form-label">Gênero *</label>
             <div className="input-group">
               <span className="input-group-text"><i className="fas fa-venus-mars"></i></span>
               <select className="form-control" id={`genero-${pessoa}`} name="genero" value={data.genero} onChange={handleCh} required>
@@ -1081,7 +1081,7 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 1 ? ' is-active' : ''}`} data-step-panel="1" hidden={currentStep !== 1}>
         <div className="form-section-title">
           <i className="fas fa-cross"></i>
-          Trajetoria no EJC
+          Trajetória no EJC
         </div>
 
         <div className="form-row">
@@ -1117,7 +1117,7 @@ function GenericForm() {
                   }
                 }}
               >
-                <option value="nao">Nao</option>
+                <option value="nao">Não</option>
                 <option value="sim">Sim</option>
               </select>
             </div>
@@ -1135,14 +1135,14 @@ function GenericForm() {
                   <option value="">Selecione</option>
                   {tiosDisponiveis.map((item) => (
                     <option key={item.id} value={item.id}>
-                      {item.nomeCompleto}{item.tioParceiroId ? ' • ja vinculado(a)' : ''}
+                      {item.nomeCompleto}{item.tioParceiroId ? ' • já vinculado(a)' : ''}
                     </option>
                   ))}
                 </select>
                 <small className="form-text text-light d-block mt-2">
                   {carregandoTiosDisponiveis
                     ? 'Carregando tios cadastrados...'
-                    : 'Esse vinculo faz o casal sair lado a lado no PDF das equipes e no quadrante.'}
+                    : 'Esse vínculo faz o casal sair lado a lado no PDF das equipes e no quadrante.'}
                 </small>
               </div>
             )}
@@ -1150,7 +1150,7 @@ function GenericForm() {
         )}
 
         <div className="mb-3">
-          <label htmlFor={`equipeServiu-${pessoa}`} className="form-label">Equipe que ja serviu</label>
+          <label htmlFor={`equipeServiu-${pessoa}`} className="form-label">Equipe que já serviu</label>
           <div className="equipe-options-grid d-flex flex-column gap-2">
             {equipeOptions.map((opt) => (
               <div className="form-check" key={`${pessoa || 'unico'}-serviu-${opt}`}>
@@ -1159,11 +1159,11 @@ function GenericForm() {
               </div>
             ))}
           </div>
-          <small className="text-muted">Pode selecionar mais de uma opcao.</small>
+          <small className="text-muted">Pode selecionar mais de uma opção.</small>
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`equipeCoordenou-${pessoa}`} className="form-label">Equipe que ja coordenou</label>
+          <label htmlFor={`equipeCoordenou-${pessoa}`} className="form-label">Equipe que já coordenou</label>
           <div className="equipe-options-grid d-flex flex-column gap-2">
             {equipeOptions.map((opt) => (
               <div className="form-check" key={`${pessoa || 'unico'}-coordenou-${opt}`}>
@@ -1172,14 +1172,14 @@ function GenericForm() {
               </div>
             ))}
           </div>
-          <small className="text-muted">Pode selecionar mais de uma opcao.</small>
+          <small className="text-muted">Pode selecionar mais de uma opção.</small>
         </div>
       </section>
 
       <section className={`form-step-panel${currentStep === 2 ? ' is-active' : ''}`} data-step-panel="2" hidden={currentStep !== 2}>
         <div className="form-section-title">
           <i className="fas fa-address-book"></i>
-          Contato e localizacao
+          Contato e localização
         </div>
 
         <div className="form-row">
@@ -1198,8 +1198,8 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`complementoReferencia-${pessoa}`} className="form-label">Complemento ou referencia</label>
-          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia || ''} onChange={handleCh} placeholder="Casa, bloco, ponto de referencia" />
+          <label htmlFor={`complementoReferencia-${pessoa}`} className="form-label">Complemento ou referência</label>
+          <input type="text" className="form-control" id={`complementoReferencia-${pessoa}`} name="complementoReferencia" value={data.complementoReferencia || ''} onChange={handleCh} placeholder="Casa, bloco, ponto de referência" />
         </div>
 
         <div className="form-row">
@@ -1228,17 +1228,17 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
         <div className="form-section-title">
           <i className="fas fa-camera-retro"></i>
-          Finalizacao e cuidados
+          Finalização e cuidados
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artistica que goste de praticar?</label>
+          <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
           <textarea className="form-control" id={`talentoHabilidadeArtistica-${pessoa}`} name="talentoHabilidadeArtistica" value={data.talentoHabilidadeArtistica || ''} onChange={handleCh} rows="3"></textarea>
         </div>
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saude fisico ou mental? Qual?</label>
+            <label htmlFor={`quadroSaude-${pessoa}`} className="form-label">Possui algum quadro de saúde físico ou mental? Qual?</label>
             <input type="text" className="form-control" id={`quadroSaude-${pessoa}`} name="quadroSaude" value={data.quadroSaude || ''} onChange={handleCh} />
           </div>
           <div className="mb-3">
@@ -1255,7 +1255,7 @@ function GenericForm() {
           <div className="mb-3">
             <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">Possui alguma alergia?</label>
             <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
-              <option value="nao">Nao</option>
+              <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
@@ -1266,11 +1266,11 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como voce se considera hoje?</label>
+            <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como você se considera hoje?</label>
             <input type="text" className="form-control" id={`religiosidadeAtual-${pessoa}`} name="religiosidadeAtual" value={data.religiosidadeAtual || ''} onChange={handleCh} />
           </div>
           <div className="mb-3">
-            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paroquia frequenta? *</label>
+            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paróquia frequenta? *</label>
             <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta || ''} onChange={handleCh} required />
           </div>
         </div>
@@ -1298,7 +1298,7 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
+          <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observações</label>
           <textarea className="form-control" id={`observacoes-${pessoa}`} name="observacoes" value={data.observacoes} onChange={handleCh} rows="3"></textarea>
         </div>
 
@@ -1307,8 +1307,8 @@ function GenericForm() {
           ['EJC', data.ejc],
           ['Telefone', data.telefone],
           ['Email', data.email],
-          ['Paroquia', data.paroquiaFrequenta],
-          ['Endereco', `${data.logradouro || ''}${data.logradouro && data.bairro ? ' - ' : ''}${data.bairro || ''}`],
+          ['Paróquia', data.paroquiaFrequenta],
+          ['Endereço', `${data.logradouro || ''}${data.logradouro && data.bairro ? ' - ' : ''}${data.bairro || ''}`],
         ])}
 
         <div className="mb-3 form-check step-consent-box">
@@ -1331,7 +1331,7 @@ function GenericForm() {
         {rows.map(([label, value]) => (
           <div className="review-summary-item" key={label}>
             <span>{label}</span>
-            <strong>{value && String(value).trim() !== '' ? value : 'Nao informado'}</strong>
+            <strong>{value && String(value).trim() !== '' ? value : 'Não informado'}</strong>
           </div>
         ))}
       </div>
@@ -1365,7 +1365,7 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`genero-${pessoa}`} className="form-label">Genero *</label>
+            <label htmlFor={`genero-${pessoa}`} className="form-label">Gênero *</label>
             <div className="input-group">
               <span className="input-group-text"><i className="fas fa-venus-mars"></i></span>
               <select className="form-control" id={`genero-${pessoa}`} name="genero" value={data.genero} onChange={handleCh} required>
@@ -1389,7 +1389,7 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 1 ? ' is-active' : ''}`} data-step-panel="1" hidden={currentStep !== 1}>
         <div className="form-section-title">
           <i className="fas fa-cross"></i>
-          Trajetoria no EJC
+          Trajetória no EJC
         </div>
 
         <div className="form-row">
@@ -1411,7 +1411,7 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`equipeServiu-${pessoa}`} className="form-label">Equipe que ja serviu</label>
+          <label htmlFor={`equipeServiu-${pessoa}`} className="form-label">Equipe que já serviu</label>
           <div className="equipe-options-grid d-flex flex-column gap-2">
             {equipeOptions.map((opt) => (
               <div className="form-check" key={`${pessoa || 'unico'}-serviu-${opt}`}>
@@ -1423,7 +1423,7 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`equipeCoordenou-${pessoa}`} className="form-label">Equipe que ja coordenou</label>
+          <label htmlFor={`equipeCoordenou-${pessoa}`} className="form-label">Equipe que já coordenou</label>
           <div className="equipe-options-grid d-flex flex-column gap-2">
             {equipeOptions.map((opt) => (
               <div className="form-check" key={`${pessoa || 'unico'}-coordenou-${opt}`}>
@@ -1439,7 +1439,7 @@ function GenericForm() {
           <select className="form-control" id={`temVeiculoProprio-${pessoa}`} name="temVeiculoProprio" value={data.temVeiculoProprio} onChange={handleCh}>
             <option value="">Selecione</option>
             <option value="true">Sim</option>
-            <option value="false">Nao</option>
+            <option value="false">Não</option>
           </select>
         </div>
       </section>
@@ -1447,7 +1447,7 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 2 ? ' is-active' : ''}`} data-step-panel="2" hidden={currentStep !== 2}>
         <div className="form-section-title">
           <i className="fas fa-address-book"></i>
-          Contato e localizacao
+          Contato e localização
         </div>
 
         <div className="form-row">
@@ -1490,9 +1490,9 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">E alergico?</label>
+            <label htmlFor={`ehAlergico-${pessoa}`} className="form-label">É alérgico?</label>
             <select className="form-control" id={`ehAlergico-${pessoa}`} name="ehAlergico" value={data.ehAlergico || 'nao'} onChange={handleCh}>
-              <option value="nao">Nao</option>
+              <option value="nao">Não</option>
               <option value="sim">Sim</option>
             </select>
           </div>
@@ -1516,7 +1516,7 @@ function GenericForm() {
       <section className={`form-step-panel${currentStep === 3 ? ' is-active' : ''}`} data-step-panel="3" hidden={currentStep !== 3}>
         <div className="form-section-title">
           <i className="fas fa-flag-checkered"></i>
-          Revisao final
+          Revisão final
         </div>
 
         <div className="form-row">
@@ -1524,7 +1524,7 @@ function GenericForm() {
             {renderPhotoUploadField({ pessoa, data, handleF, label: 'Upload de foto (JPG ou PNG) *' })}
           </div>
           <div className="mb-3">
-            <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observacoes</label>
+            <label htmlFor={`observacoes-${pessoa}`} className="form-label">Observações</label>
             <textarea className="form-control" id={`observacoes-${pessoa}`} name="observacoes" value={data.observacoes} onChange={handleCh} rows="3"></textarea>
           </div>
         </div>
@@ -1534,7 +1534,7 @@ function GenericForm() {
           ['EJC', data.ejc],
           ['Telefone', data.telefone],
           ['Email', data.email],
-          ['Veiculo proprio', data.temVeiculoProprio === 'true' ? 'Sim' : data.temVeiculoProprio === 'false' ? 'Nao' : 'Nao informado'],
+          ['Veículo próprio', data.temVeiculoProprio === 'true' ? 'Sim' : data.temVeiculoProprio === 'false' ? 'Não' : 'Não informado'],
         ])}
 
         <div className="mb-3 form-check step-consent-box">
@@ -1553,21 +1553,21 @@ function GenericForm() {
     const successContent = isEncontro
       ? (tipo === 'tios'
           ? {
-              title: 'Inscricao dos Tios Confirmada!',
-              subtitle: tiosModo === 'casal' ? 'Cadastro de casal concluido com sucesso' : (tioComParceiro === 'sim' ? 'Cadastro com vinculo de casal concluido com sucesso' : 'Cadastro de tio solo concluido com sucesso'),
-              description: 'Recebemos as informacoes e sua participacao no encontro foi registrada. Em breve voce recebera os proximos passos.',
+              title: 'Inscrição dos Tios Confirmada!',
+              subtitle: tiosModo === 'casal' ? 'Cadastro de casal concluído com sucesso' : (tioComParceiro === 'sim' ? 'Cadastro com vínculo de casal concluído com sucesso' : 'Cadastro de tio solo concluído com sucesso'),
+              description: 'Recebemos as informações e sua participação no encontro foi registrada. Em breve você receberá os próximos passos.',
               note: 'Dados dos tios validados e gravados no sistema',
             }
           : {
-              title: 'Inscricao de Encontreiro Confirmada!',
+              title: 'Inscrição de Encontreiro Confirmada!',
               subtitle: 'Tudo certo com seu cadastro para o encontro',
-              description: 'Seu envio foi concluido com sucesso. Agora nossa equipe seguira com a organizacao e retornara com orientacoes.',
+              description: 'Seu envio foi concluído com sucesso. Agora nossa equipe seguirá com a organização e retornará com orientações.',
               note: 'Cadastro de encontro registrado com sucesso',
             })
       : {
-          title: 'Inscricao Confirmada!',
-          subtitle: 'Obrigado por sua inscricao no EJC COP',
-          description: 'Seus dados foram enviados com sucesso. Aguarde a confirmacao para as proximas etapas do evento.',
+          title: 'Inscrição Confirmada!',
+          subtitle: 'Obrigado por sua inscrição no EJC COP',
+          description: 'Seus dados foram enviados com sucesso. Aguarde a confirmação para as próximas etapas do evento.',
           note: 'Dados registrados no banco de dados',
         };
 
@@ -1604,7 +1604,7 @@ function GenericForm() {
             }}
           >
             <i className="fas fa-plus-circle"></i>
-            Fazer nova inscricao
+            Fazer nova inscrição
           </button>
         </div>
       </div>
@@ -1652,7 +1652,7 @@ function GenericForm() {
         filled,
         total,
         percent,
-        label: tiosModo === 'casal' ? 'Cadastro de casal' : (tioComParceiro === 'sim' ? 'Cadastro com vinculo de casal' : 'Cadastro de tio solo'),
+        label: tiosModo === 'casal' ? 'Cadastro de casal' : (tioComParceiro === 'sim' ? 'Cadastro com vínculo de casal' : 'Cadastro de tio solo'),
       };
     }
 
@@ -1744,7 +1744,7 @@ function GenericForm() {
 
               {shouldUseStepper && activeSteps && (
                 <>
-                  <div className="form-stepper" aria-label="Etapas do formulario">
+                  <div className="form-stepper" aria-label="Etapas do formulário">
                     {activeSteps.map((step, index) => {
                       const isCompleted = index < currentStep;
                       const isActive = index === currentStep;
@@ -1763,7 +1763,7 @@ function GenericForm() {
                           <span className="form-stepper-index">{index + 1}</span>
                           <span className="form-stepper-copy">
                             <strong>{step.label}</strong>
-                            <small>{step.description}</small>
+                            {step.description ? <small>{step.description}</small> : null}
                           </span>
                         </button>
                       );
@@ -1773,7 +1773,7 @@ function GenericForm() {
                   <div className="form-step-summary" role="status" aria-live="polite">
                     <span>Etapa {currentStep + 1} de {activeSteps.length}</span>
                     <strong>{currentStepMeta.label}</strong>
-                    <p>{currentStepMeta.description}</p>
+                    {currentStepMeta.description ? <p>{currentStepMeta.description}</p> : null}
                   </div>
                 </>
               )}
@@ -1828,7 +1828,7 @@ function GenericForm() {
                     onClick={handleNextStep}
                     disabled={submitting}
                   >
-                    Proxima etapa<i className="fas fa-arrow-right ms-2"></i>
+                    Próxima etapa<i className="fas fa-arrow-right ms-2"></i>
                   </button>
                 ) : (
                   <button
@@ -1849,7 +1849,7 @@ function GenericForm() {
                     {submitting ? (
                       'Enviando...'
                     ) : (
-                      <><i className="fas fa-paper-plane me-2"></i>{!isEncontro ? 'Finalizar inscricao' : 'Enviar inscrição'}</>
+                      <><i className="fas fa-paper-plane me-2"></i>{!isEncontro ? 'Finalizar inscrição' : 'Enviar inscrição'}</>
                     )}
                   </button>
                 )}
@@ -1865,3 +1865,4 @@ function GenericForm() {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(<GenericForm />);
+
