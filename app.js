@@ -38,6 +38,7 @@ const {
 const APPROVAL_STATUSES = ['pendente', 'aprovado', 'reprovado', 'pendente_contato', 'documentacao_pendente', 'desistiu', 'remanejado'];
 const PENDING_APPROVAL_STATUSES = ['pendente', 'pendente_contato', 'documentacao_pendente', 'remanejado'];
 const LGPD_RETENTION_DAYS_DEFAULT = 730;
+const ALLOW_PUBLIC_FORM_OVERWRITE = String(process.env.ALLOW_PUBLIC_FORM_OVERWRITE || '').trim() === '1';
 const runtimeConfig = buildRuntimeConfig(process.env);
 const IS_PRODUCTION = runtimeConfig.isProduction;
 
@@ -168,6 +169,7 @@ const cadastroSchema = new mongoose.Schema({
   ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
   alergiaDescricao: { type: String, default: '' },
   email: { type: String, default: '' },
+  emailCanonical: { type: String, default: '', trim: true },
   instagram: { type: String },
   disponibilidadeEncontro: { type: Boolean, default: false },
   subequipeCoordenou: { type: [String], default: [] },
@@ -194,6 +196,7 @@ const cadastroSchema = new mongoose.Schema({
 cadastroSchema.index({ dataCadastro: -1 });
 cadastroSchema.index({ ejcVinculadoId: 1, dataCadastro: -1 });
 cadastroSchema.index({ email: 1 });
+cadastroSchema.index({ ejcVinculadoId: 1, emailCanonical: 1 });
 
 const Cadastro = mongoose.model('Cadastro_EJC', cadastroSchema);
 
@@ -240,6 +243,7 @@ const encontroSchema = new mongoose.Schema({
   ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
   alergiaDescricao: { type: String, default: '' },
   email: { type: String, required: true },
+  emailCanonical: { type: String, default: '', trim: true },
   temRelacionamento: { type: String, default: '' },
   instagram: { type: String, default: '' },
   foto: { type: String, required: true },
@@ -256,6 +260,7 @@ const encontroSchema = new mongoose.Schema({
 encontroSchema.index({ dataCadastro: -1 });
 encontroSchema.index({ ejcVinculadoId: 1, dataCadastro: -1 });
 encontroSchema.index({ ejc: 1, email: 1 });
+encontroSchema.index({ ejcVinculadoId: 1, emailCanonical: 1 });
 
 const Encontro = mongoose.model('Encontro', encontroSchema);
 
@@ -1132,6 +1137,15 @@ const resolveApprovalStatus = (doc) => {
 };
 
 const normalizeTextInput = (value) => String(value || '').trim();
+const normalizeEmailInput = (value) => normalizeTextInput(value).toLowerCase();
+
+const cleanupUploadedFile = (filename) => {
+  if (!filename) return;
+  const filePath = path.join(__dirname, 'uploads', filename);
+  if (fs.existsSync(filePath)) {
+    fs.unlinkSync(filePath);
+  }
+};
 
 const ensureAdminCsrfToken = (req, res, next) => {
   if (!req.session) return next();
@@ -1420,6 +1434,7 @@ const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'
 const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = '', options = {}) => {
   const nome = String(nomeCompleto || '').trim();
   const mail = String(email || '').trim();
+  const mailCanonical = normalizeEmailInput(email);
   const phoneDigits = normalizePhoneDigits(telefone);
   const ejcScope = normalizeTextInput(options.ejc);
   const querySession = options.session || null;
@@ -1440,8 +1455,13 @@ const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = 
     };
   };
 
-  const emailFilter = mail && !mail.includes('@pendente.local')
-    ? { email: new RegExp(`^${escapeRegExp(mail)}$`, 'i') }
+  const emailFilter = mailCanonical && !mailCanonical.includes('@pendente.local')
+    ? {
+      $or: [
+        { emailCanonical: mailCanonical },
+        { email: new RegExp(`^${escapeRegExp(mail)}$`, 'i') },
+      ],
+    }
     : null;
   const nomeFilter = nome
     ? { nomeCompleto: new RegExp(`^${escapeRegExp(nome)}$`, 'i') }
@@ -1508,6 +1528,7 @@ const buildEncontroPayloadFromEncontrista = (encontrista, ejcDestino) => {
     ehAlergico: encontrista.ehAlergico || 'nao',
     alergiaDescricao: encontrista.alergiaDescricao || '',
     email: encontrista.email,
+    emailCanonical: normalizeEmailInput(encontrista.email),
     temRelacionamento: '',
     instagram: encontrista.instagram || '',
     foto: encontrista.foto,
@@ -4921,6 +4942,20 @@ app.post(
         req.body.email || '',
         req.body.telefone
       );
+
+      if (cadastroExistente && !ALLOW_PUBLIC_FORM_OVERWRITE) {
+        if (req.file && req.file.filename) {
+          cleanupUploadedFile(req.file.filename);
+        }
+        const allErrors = [{ msg: 'Ja existe uma inscricao para este email neste encontro. Entre em contato com a equipe para atualizar os dados.' }];
+        if (isJson) {
+          return res.status(409).json({ success: false, errors: allErrors });
+        }
+        return res.status(409).render('inscricao', {
+          errors: allErrors,
+          formData: req.body,
+        });
+      }
       const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
@@ -4979,6 +5014,7 @@ app.post(
         ehAlergico: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao',
         alergiaDescricao: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '',
         email: req.body.email || '',
+        emailCanonical: normalizeEmailInput(req.body.email || ''),
         instagram: req.body.instagram || '',
         disponibilidadeEncontro,
         observacoes: req.body.observacoes || '',
@@ -4996,10 +5032,7 @@ app.post(
         const updateData = { ...cadastroData };
         if (req.file) {
           if (cadastroExistente.foto) {
-            const oldPhotoPath = path.join(__dirname, 'uploads', cadastroExistente.foto);
-            if (fs.existsSync(oldPhotoPath)) {
-              fs.unlinkSync(oldPhotoPath);
-            }
+            cleanupUploadedFile(cadastroExistente.foto);
           }
           updateData.foto = req.file.filename;
         }
@@ -5113,6 +5146,20 @@ app.post(
         req.body.email || '',
         req.body.telefone
       );
+
+      if (encontroExistente && !ALLOW_PUBLIC_FORM_OVERWRITE) {
+        if (req.file && req.file.filename) {
+          cleanupUploadedFile(req.file.filename);
+        }
+        const allErrors = [{ msg: 'Ja existe uma inscricao para este email neste encontro. Entre em contato com a equipe para atualizar os dados.' }];
+        if (isJson) {
+          return res.status(409).json({ success: false, errors: allErrors });
+        }
+        return res.status(409).render('encontro', {
+          errors: allErrors,
+          formData: req.body,
+        });
+      }
       const lgpdConsentimento = req.body.lgpdConsentimento === 'true'
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
@@ -5177,6 +5224,7 @@ app.post(
         ehAlergico: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? 'sim' : 'nao',
         alergiaDescricao: normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim' ? normalizeTextInput(req.body.alergiaDescricao) : '',
         email: req.body.email,
+        emailCanonical: normalizeEmailInput(req.body.email),
         temRelacionamento: req.body.temRelacionamento || '',
         instagram: req.body.instagram || '',
         observacoes: req.body.observacoes || '',
@@ -5194,10 +5242,7 @@ app.post(
         const updateData = { ...encontroData };
         if (req.file) {
           if (encontroExistente.foto) {
-            const oldPhotoPath = path.join(__dirname, 'uploads', encontroExistente.foto);
-            if (fs.existsSync(oldPhotoPath)) {
-              fs.unlinkSync(oldPhotoPath);
-            }
+            cleanupUploadedFile(encontroExistente.foto);
           }
           updateData.foto = req.file.filename;
         }
