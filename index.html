@@ -68,10 +68,40 @@
             left: 0;
             width: 100%;
             text-align: center;
-            padding: 12px;
-            font-family: sans-serif;
-            font-size: 0.85rem;
-            color: rgba(255, 255, 255, 0.5);
+            padding: 14px 18px 16px;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(180deg, rgba(6, 16, 28, 0.1) 0%, rgba(10, 28, 44, 0.78) 100%);
+            border-top: 1px solid rgba(148, 190, 220, 0.2);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 -8px 24px rgba(4, 12, 22, 0.35);
+        }
+
+        .footer-main {
+            margin: 0;
+            font-size: 0.92rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            color: rgba(227, 238, 249, 0.92);
+        }
+
+        .footer-sub {
+            margin: 4px 0 0;
+            font-size: 0.74rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(173, 201, 224, 0.76);
+        }
+
+        @media (max-width: 640px) {
+            .footer-main {
+                font-size: 0.82rem;
+                line-height: 1.35;
+            }
+
+            .footer-sub {
+                font-size: 0.68rem;
+            }
         }
     </style>
 </head>
@@ -81,7 +111,8 @@
     </div>
     <img class="rose-img" src="public/images/rosa-simplesmente-amar-sem-fundo.png" alt="O importante é a rosa">
     <footer class="footer">
-        <p>&copy; 2026 EJC COP</p>
+        <p class="footer-main">&copy; 2026 EJC COP | Desenvolvido por Igor Muniz de Melo</p>
+        <p class="footer-sub">Todos os direitos reservados</p>
     </footer>
 </body>
 </html>

@@ -1110,6 +1110,32 @@ textarea:disabled {
   margin-top: var(--space-10);
 }
 
+.main-footer-primary {
+  margin: 0;
+  font-weight: 700;
+  font-size: 0.96rem;
+  letter-spacing: 0.01em;
+}
+
+.main-footer-secondary {
+  margin: 0.38rem 0 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.9;
+}
+
+@media (max-width: 560px) {
+  .main-footer-primary {
+    font-size: 0.84rem;
+    line-height: 1.4;
+  }
+
+  .main-footer-secondary {
+    font-size: 0.66rem;
+  }
+}
+
 .scroll-reveal {
   opacity: 0;
   transform: translate3d(0, 28px, 0) scale(0.985);
