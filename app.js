@@ -5104,12 +5104,48 @@ app.post(
       }
 
       const eventLinkData = buildEventLinkPayload(encontroAtivo);
-      const encontroExistente = await findExistingByNameOrEmail(
+      let encontroExistente = await findExistingByNameOrEmail(
         Encontro,
         req.body.nomeCompleto,
         req.body.email || '',
         req.body.telefone
       );
+
+      const tipoNormalizado = normalizeTipoEncontro(req.body.tipo);
+      if (!tipoNormalizado) {
+        const allErrors = [{ msg: 'Tipo de encontreiro inválido' }];
+        if (isJson) {
+          return res.status(400).json({ success: false, errors: allErrors });
+        }
+        return res.render('encontro', {
+          errors: allErrors,
+          formData: req.body,
+        });
+      }
+
+      const tiosCategoriaNormalizada = tipoNormalizado === 'tios'
+        ? (normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' ? 'casal' : 'solo')
+        : '';
+      const origemTios = req.body.origemTios === 'true';
+      const tiosGrupoId = (tipoNormalizado === 'tios' && tiosCategoriaNormalizada === 'casal')
+        ? normalizeTextInput(req.body.tiosGrupoId)
+        : '';
+
+      // Exceção de duplicidade APENAS para o formulário de tio casal:
+      // permite que duas pessoas do mesmo casal compartilhem o mesmo email.
+      const permiteMesmoEmailNoCasal = Boolean(
+        encontroExistente
+        && tipoNormalizado === 'tios'
+        && tiosCategoriaNormalizada === 'casal'
+        && origemTios
+        && tiosGrupoId
+        && normalizeTextInput(encontroExistente.tiosGrupoId) === tiosGrupoId
+        && normalizeTextInput(encontroExistente.nomeCompleto).toLowerCase() !== normalizeTextInput(req.body.nomeCompleto).toLowerCase()
+      );
+
+      if (permiteMesmoEmailNoCasal) {
+        encontroExistente = null;
+      }
 
       if (encontroExistente && !ALLOW_PUBLIC_FORM_OVERWRITE) {
         if (req.file && req.file.filename) {
@@ -5133,19 +5169,6 @@ app.post(
         || req.body.disponibilidadeEncontro === '1'
         || req.body.disponibilidadeEncontro === true;
 
-      // Normalizar tipo para garantir que 'casal' seja convertido para 'tios'
-      const tipoNormalizado = normalizeTipoEncontro(req.body.tipo);
-      if (!tipoNormalizado) {
-        const allErrors = [{ msg: 'Tipo de encontreiro inválido' }];
-        if (isJson) {
-          return res.status(400).json({ success: false, errors: allErrors });
-        }
-        return res.render('encontro', {
-          errors: allErrors,
-          formData: req.body,
-        });
-      }
-
       const encontroData = {
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
@@ -5154,11 +5177,9 @@ app.post(
         ...eventLinkData,
         qualEjcPertence: req.body.qualEjcPertence || '',
         tipo: tipoNormalizado,
-        tiosCategoria: tipoNormalizado === 'tios' ? (normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' ? 'casal' : 'solo') : '',
-        origemTios: req.body.origemTios === 'true',
-        tiosGrupoId: (tipoNormalizado === 'tios' && normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal')
-          ? normalizeTextInput(req.body.tiosGrupoId)
-          : '',
+        tiosCategoria: tiosCategoriaNormalizada,
+        origemTios,
+        tiosGrupoId,
         tioParceiroId: (tipoNormalizado === 'tios' && normalizeTextInput(req.body.tiosCategoria).toLowerCase() === 'casal' && mongoose.Types.ObjectId.isValid(req.body.tioParceiroId))
           ? req.body.tioParceiroId
           : null,
