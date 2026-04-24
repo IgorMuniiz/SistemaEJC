@@ -3327,7 +3327,7 @@ app.get('/export-encontro-relatorio', async (req, res) => {
     const equipes = [
       'Sala', 'Garçom', 'Cozinha', 'Cafezinho', 'Tios de externa',
       'Liturgia interna', 'Liturgia externa', 'Secretaria',
-      'Ordem e limpeza', 'Apoio e acolhida', 'Compras'
+      'Ordem e limpeza', 'Apoio e acolhida', 'Dirigente', 'CGS', 'Compras'
     ];
     
     // Calculate age from birthdate
@@ -3513,6 +3513,8 @@ app.get('/export-encontro-excel', async (req, res) => {
       'Secretaria',
       'Ordem e limpeza',
       'Apoio e acolhida',
+      'Dirigente',
+      'CGS',
       'Compras',
     ];
 
