@@ -384,6 +384,11 @@ function GenericForm() {
       return;
     }
 
+    if (!validateCurrentStep()) {
+      setErrors([{ msg: 'Preencha os campos obrigatórios desta etapa antes de enviar.' }]);
+      return;
+    }
+
     setSubmitting(true);
     const timeoutId = setTimeout(() => {
       console.error('Requisição travou, desbloqueando interface...');
@@ -1318,15 +1323,12 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-
-        <div className="form-row">
-          <div className="mb-3">
             <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como você se considera hoje?</label>
             <input type="text" className="form-control" id={`religiosidadeAtual-${pessoa}`} name="religiosidadeAtual" value={data.religiosidadeAtual || ''} onChange={handleCh} />
           </div>
           <div className="mb-3">
-            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paróquia frequenta? *</label>
-            <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta || ''} onChange={handleCh} required />
+            <label htmlFor={`paroquiaFrequenta-${pessoa}`} className="form-label">Qual paróquia frequenta?</label>
+            <input type="text" className="form-control" id={`paroquiaFrequenta-${pessoa}`} name="paroquiaFrequenta" value={data.paroquiaFrequenta || ''} onChange={handleCh} />
           </div>
         </div>
 
@@ -1334,22 +1336,24 @@ function GenericForm() {
           <label htmlFor={`participaMovimentoIgreja-${pessoa}`} className="form-label">Participa de algum movimento ou pastoral da igreja?</label>
           <input type="text" className="form-control" id={`participaMovimentoIgreja-${pessoa}`} name="participaMovimentoIgreja" value={data.participaMovimentoIgreja || ''} onChange={handleCh} />
         </div>
-            <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
-            <input
-              type="text"
-              className="form-control"
-              id={`alergiaDescricao-${pessoa}`}
-              name="alergiaDescricao"
-              value={data.alergiaDescricao || ''}
-              onChange={handleCh}
-              placeholder="Ex: amendoim, dipirona, lactose"
-              disabled={(data.ehAlergico || 'nao') !== 'sim'}
-              required={(data.ehAlergico || 'nao') === 'sim'}
-            />
-          </div>
-          <div className="mb-3">
-              {renderPhotoUploadField({ pessoa, data, handleF, label: 'Upload de foto (JPG ou PNG) *' })}
-          </div>
+
+        <div className="mb-3">
+          <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
+          <input
+            type="text"
+            className="form-control"
+            id={`alergiaDescricao-${pessoa}`}
+            name="alergiaDescricao"
+            value={data.alergiaDescricao || ''}
+            onChange={handleCh}
+            placeholder="Ex: amendoim, dipirona, lactose"
+            disabled={(data.ehAlergico || 'nao') !== 'sim'}
+            required={(data.ehAlergico || 'nao') === 'sim'}
+          />
+        </div>
+
+        <div className="mb-3">
+          {renderPhotoUploadField({ pessoa, data, handleF, label: 'Upload de foto (JPG ou PNG) *' })}
         </div>
 
         <div className="mb-3">
