@@ -11,6 +11,8 @@ const equipeOptions = [
   'Secretaria',
   'Ordem e limpeza',
   'Apoio e acolhida',
+  'Dirigente',
+  'CGS',
   'Compras',
 ];
 
