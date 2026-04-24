@@ -675,13 +675,12 @@ test('POST /admin/aprovar vincula o aprovado ao encontro ativo sem alterar o EJC
   assert.equal(cadastroAtual.ejc, 'EJC 2019');
 });
 
-test('POST /encontro reaproveita cadastro existente, volta para pendente e vincula ao encontro ativo atual mantendo o EJC digitado', async (t) => {
+test('POST /encontro retorna 409 quando a mesma pessoa tenta reenviar cadastro e a sobrescrita publica esta desabilitada', async (t) => {
   invalidarCacheEncontroAtivo();
 
   const originalAdminFindOne = Admin.findOne;
   const originalEjcFindOne = Ejc.findOne;
   const originalEncontroFindOne = Encontro.findOne;
-  const originalEncontroFindByIdAndUpdate = Encontro.findByIdAndUpdate;
   const originalSubscriptionFind = PushSubscription.find;
 
   const cadastroId = '507f1f77bcf86cd799439140';
@@ -702,29 +701,18 @@ test('POST /encontro reaproveita cadastro existente, volta para pendente e vincu
     tipo: 'jovens',
   };
 
-  let payloadAtualizado = null;
-
   Admin.findOne = () => ({ lean: async () => null });
   Ejc.findOne = (query = {}) => ({
     lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
     sort: () => ({ lean: async () => encontroAtivo }),
   });
   Encontro.findOne = async () => cadastroExistente;
-  Encontro.findByIdAndUpdate = async (_id, payload) => {
-    payloadAtualizado = payload;
-    return {
-      ...cadastroExistente,
-      ...payload,
-      _id: cadastroId,
-    };
-  };
   PushSubscription.find = () => ({ lean: async () => [] });
 
   t.after(() => {
     Admin.findOne = originalAdminFindOne;
     Ejc.findOne = originalEjcFindOne;
     Encontro.findOne = originalEncontroFindOne;
-    Encontro.findByIdAndUpdate = originalEncontroFindByIdAndUpdate;
     PushSubscription.find = originalSubscriptionFind;
     invalidarCacheEncontroAtivo();
   });
@@ -744,17 +732,13 @@ test('POST /encontro reaproveita cadastro existente, volta para pendente e vincu
       telefone: '88999999999',
       ehAlergico: 'nao',
       email: 'maria.reentrada@example.com',
+      disponibilidadeEncontro: 'true',
       lgpdConsentimento: 'true',
     });
 
-  assert.equal(response.status, 200);
-  assert.equal(response.body.success, true);
-  assert.equal(response.body.updated, true);
-  assert.equal(payloadAtualizado.aprovado, false);
-  assert.equal(payloadAtualizado.statusAprovacao, 'pendente');
-  assert.equal(payloadAtualizado.ejc, 'EJC Digitado no Cadastro');
-  assert.equal(String(payloadAtualizado.ejcVinculadoId), encontroAtivo._id);
-  assert.equal(payloadAtualizado.ejcVinculadoNome, encontroAtivo.nome);
+  assert.equal(response.status, 409);
+  assert.equal(response.body.success, false);
+  assert.match(response.body.errors[0].msg, /ja existe uma inscricao para este email/i);
 });
 
 test('POST /encontro cria novo cadastro quando o nome e igual mas o email e diferente', async (t) => {
@@ -786,7 +770,7 @@ test('POST /encontro cria novo cadastro quando o nome e igual mas o email e dife
   });
   Encontro.findOne = async (query) => {
     if (query && query.$and) return null;
-    if (query && query.email) return null;
+    if (query && query.$or) return null;
     return encontroExistenteMesmoNome;
   };
   Encontro.prototype.save = async function mockSave() {
@@ -824,6 +808,7 @@ test('POST /encontro cria novo cadastro quando o nome e igual mas o email e dife
     .field('telefone', '88999999999')
     .field('ehAlergico', 'nao')
     .field('email', 'maria.nova@example.com')
+    .field('disponibilidadeEncontro', 'true')
     .field('lgpdConsentimento', 'true')
     .attach('foto', Buffer.from('foto-simulada'), 'foto.jpg');
 
@@ -835,6 +820,31 @@ test('POST /encontro cria novo cadastro quando o nome e igual mas o email e dife
   assert.equal(savedPayload.ejc, 'EJC Digitado no Cadastro');
   assert.equal(savedPayload.ejcVinculadoNome, encontroAtivo.nome);
   assert.equal(savedPayload.statusAprovacao, 'pendente');
+});
+
+test('POST /encontro retorna 400 com mensagem clara quando a foto tem formato invalido', async (t) => {
+  const originalAdminFindOne = Admin.findOne;
+
+  Admin.findOne = () => ({ lean: async () => null });
+
+  t.after(() => {
+    Admin.findOne = originalAdminFindOne;
+  });
+
+  const response = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .field('nomeCompleto', 'Tio Teste')
+    .field('tipo', 'tios')
+    .field('logradouro', 'Rua A, 10')
+    .field('dataNascimento', '1980-01-01')
+    .field('email', 'tio.teste@example.com')
+    .field('disponibilidadeEncontro', 'true')
+    .attach('foto', Buffer.from('conteudo-invalido'), 'foto.gif');
+
+  assert.equal(response.status, 400);
+  assert.equal(response.body.success, false);
+  assert.match(response.body.errors[0].msg, /jpg|png/i);
 });
 test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
   mockAdminAuthFlow(t);
@@ -1104,6 +1114,16 @@ const findRowByName = (sheet, nome) => {
   return null;
 };
 
+const findDashboardRowByEquipe = (sheet, equipe) => {
+  for (let rowNumber = 5; rowNumber <= sheet.rowCount; rowNumber += 1) {
+    const row = sheet.getRow(rowNumber);
+    if (row.getCell(2).value === equipe) {
+      return row;
+    }
+  }
+  return null;
+};
+
 test('GET /export-encontro-excel mantém tios em todas as equipes e zera histórico só no relatório', async (t) => {
   const originalFind = Encontro.find;
   const originalVinculoFind = VinculoEncontro.find;
@@ -1344,8 +1364,12 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
   const secretariaSheet = workbook.getWorksheet('Secretaria');
   const salaSheet = workbook.getWorksheet('Sala');
 
-  assert.equal(dashboard.getCell('C5').value, 1);
-  assert.equal(dashboard.getCell('E15').value, 1);
+  const salaDashboardRow = findDashboardRowByEquipe(dashboard, 'Sala');
+  const comprasDashboardRow = findDashboardRowByEquipe(dashboard, 'Compras');
+  assert.ok(salaDashboardRow, 'A equipe Sala deve existir no dashboard');
+  assert.ok(comprasDashboardRow, 'A equipe Compras deve existir no dashboard');
+  assert.equal(salaDashboardRow.getCell(3).value, 1);
+  assert.equal(comprasDashboardRow.getCell(5).value, 1);
 
   const allRow = findRowByName(allSheet, 'Tia Maria');
   assert.ok(allRow, 'A aba consolidada deve conter a tia');
