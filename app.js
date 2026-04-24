@@ -162,13 +162,13 @@ const cadastroSchema = new mongoose.Schema({
   medicamentoControlado: { type: String, default: '' },
   expectativaXixEjcCop: { type: String, default: '' },
   logradouro: { type: String, required: true },
-  bairro: { type: String, required: true },
+  bairro: { type: String, default: '' },
   dataNascimento: { type: Date, required: true },
-  telefone: { type: String, required: true },
+  telefone: { type: String, default: '' },
   intolerante: { type: String, default: '' },
   ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
   alergiaDescricao: { type: String, default: '' },
-  email: { type: String, default: '' },
+  email: { type: String, required: true },
   emailCanonical: { type: String, default: '', trim: true },
   instagram: { type: String },
   disponibilidadeEncontro: { type: Boolean, default: false },
@@ -182,7 +182,7 @@ const cadastroSchema = new mongoose.Schema({
     }],
     default: [],
   },
-  foto: { type: String, required: true },
+  foto: { type: String, default: '' },
   observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false },
   statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
@@ -236,9 +236,9 @@ const encontroSchema = new mongoose.Schema({
   quadroSaude: { type: String, default: '' },
   medicamentoControlado: { type: String, default: '' },
   logradouro: { type: String, required: true },
-  bairro: { type: String, required: true },
+  bairro: { type: String, default: '' },
   dataNascimento: { type: Date, required: true },
-  telefone: { type: String, required: true },
+  telefone: { type: String, default: '' },
   intolerante: { type: String, default: '' },
   ehAlergico: { type: String, enum: ['sim', 'nao'], default: 'nao' },
   alergiaDescricao: { type: String, default: '' },
@@ -246,7 +246,8 @@ const encontroSchema = new mongoose.Schema({
   emailCanonical: { type: String, default: '', trim: true },
   temRelacionamento: { type: String, default: '' },
   instagram: { type: String, default: '' },
-  foto: { type: String, required: true },
+  foto: { type: String, default: '' },
+  disponibilidadeEncontro: { type: Boolean, default: false },
   observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false }, // novo campo para aprovação
   statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
@@ -4845,48 +4846,9 @@ app.post(
   upload.single('foto'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
-    body('comoQuerSerChamado').notEmpty().withMessage('Como quer ser chamado é obrigatório'),
-    body('genero').custom((value) => {
-      if (!normalizeTextInput(value)) {
-        throw new Error('Genero é obrigatório');
-      }
-      if (!['masculino', 'feminino', 'outros'].includes(normalizeGeneroEncontro(value))) {
-        throw new Error('Genero inválido');
-      }
-      return true;
-    }),
-    body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
-    body('cep').notEmpty().withMessage('CEP é obrigatório'),
-    body('estadoCivil').notEmpty().withMessage('Estado civil é obrigatório'),
-    body('observacoes').custom((value, { req }) => {
-      const estadoCivil = normalizeTextInput(req.body.estadoCivil).toLowerCase();
-      if (estadoCivil === 'noivo (a)' && !normalizeTextInput(value)) {
-        throw new Error('Se o estado civil for Noivo(a), informe a data prevista do casamento.');
-      }
-      return true;
-    }),
-    body('nomeMae').notEmpty().withMessage('Nome da mãe é obrigatório'),
-    body('telefoneMae').notEmpty().withMessage('Telefone da mãe é obrigatório'),
-    body('nomePai').notEmpty().withMessage('Nome do pai é obrigatório'),
-    body('telefonePai').notEmpty().withMessage('Telefone do pai é obrigatório'),
-    body('paroquiaFrequenta').notEmpty().withMessage('Paróquia é obrigatória'),
-    body('participaMovimentoIgreja').notEmpty().withMessage('Movimento ou pastoral é obrigatório'),
-    body('conhecidoInscricaoHoje').notEmpty().withMessage('Informe conhecido na inscrição de hoje'),
-    body('conhecidoFezEjc').notEmpty().withMessage('Informe conhecido que já fez EJC'),
-    body('inscricaoAnterior').notEmpty().withMessage('Informe inscrição anterior'),
-    body('instrumentoMusical').notEmpty().withMessage('Campo de instrumento musical é obrigatório'),
-    body('expectativaXixEjcCop').notEmpty().withMessage('Campo de expectativa é obrigatório'),
-    body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
+    body('logradouro').notEmpty().withMessage('Endereco é obrigatório'),
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
-    body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
-    body('instagram').notEmpty().withMessage('Instagram é obrigatório'),
-    body('filhosDetalhes').custom((value, { req }) => {
-      const possuiFilhos = normalizeTextInput(req.body.possuiFilhos).toLowerCase() === 'sim';
-      if (possuiFilhos && !normalizeTextInput(value)) {
-        throw new Error('Se possui filhos, informe quantos e a idade.');
-      }
-      return true;
-    }),
+    body('email').isEmail().withMessage('Email inválido'),
     body('ehAlergico').optional({ checkFalsy: true }).isIn(['sim', 'nao']).withMessage('Campo de alergia inválido'),
     body('alergiaDescricao').custom((value, { req }) => {
       const ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim';
@@ -4895,15 +4857,9 @@ app.post(
       }
       return true;
     }),
-    body('email').optional({ checkFalsy: true }).isEmail().withMessage('Email inválido'),
     body('disponibilidadeEncontro').custom((value) => {
       const ok = value === true || value === 'true' || value === 'on' || value === '1';
       if (!ok) throw new Error('Confirme a disponibilidade para os dias do encontro.');
-      return true;
-    }),
-    body('lgpdConsentimento').custom((value) => {
-      const ok = value === true || value === 'true' || value === 'on' || value === '1';
-      if (!ok) throw new Error('É obrigatório aceitar os termos de privacidade (LGPD).');
       return true;
     }),
   ],
@@ -4966,17 +4922,6 @@ app.post(
         || req.body.disponibilidadeEncontro === 'on'
         || req.body.disponibilidadeEncontro === '1'
         || req.body.disponibilidadeEncontro === true;
-
-      if (!req.file && !cadastroExistente) {
-        const allErrors = [{ msg: 'Foto é obrigatória' }];
-        if (isJson) {
-          return res.status(400).json({ success: false, errors: allErrors });
-        }
-        return res.render('inscricao', {
-          errors: allErrors,
-          formData: req.body,
-        });
-      }
 
       const cadastroData = {
         nomeCompleto: req.body.nomeCompleto,
@@ -5044,7 +4989,7 @@ app.post(
         created = true;
         cadastro = new Cadastro({
           ...cadastroData,
-          foto: req.file.filename,
+          foto: req.file ? req.file.filename : '',
         });
         await cadastro.save();
       }
@@ -5084,26 +5029,21 @@ app.post(
   upload.single('foto'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
-    body('genero').isIn(['masculino', 'feminino', 'outros', 'homem', 'mulher']).withMessage('Gênero inválido'),
     body('tipo').isIn(['jovens', 'tios']).withMessage('Tipo inválido'),
-    body('ejc').notEmpty().withMessage('Informe qual EJC você fez'),
-    body('paroquiaFrequenta').notEmpty().withMessage('Paróquia é obrigatória'),
-    body('logradouro').notEmpty().withMessage('Logradouro é obrigatório'),
-    body('bairro').notEmpty().withMessage('Bairro é obrigatório'),
+    body('logradouro').notEmpty().withMessage('Endereco é obrigatório'),
     body('dataNascimento').notEmpty().withMessage('Data de nascimento é obrigatória'),
-    body('telefone').notEmpty().withMessage('Telefone é obrigatório'),
+    body('email').isEmail().withMessage('Email inválido'),
+    body('disponibilidadeEncontro').custom((value) => {
+      const ok = value === true || value === 'true' || value === 'on' || value === '1';
+      if (!ok) throw new Error('Confirme a disponibilidade para os dias do encontro.');
+      return true;
+    }),
     body('ehAlergico').optional({ checkFalsy: true }).isIn(['sim', 'nao']).withMessage('Campo de alergia inválido'),
     body('alergiaDescricao').custom((value, { req }) => {
       const ehAlergico = normalizeTextInput(req.body.ehAlergico).toLowerCase() === 'sim';
       if (ehAlergico && !normalizeTextInput(value)) {
         throw new Error('Se for alergico, informe a alergia.');
       }
-      return true;
-    }),
-    body('email').isEmail().withMessage('Email inválido'),
-    body('lgpdConsentimento').custom((value) => {
-      const ok = value === true || value === 'true' || value === 'on' || value === '1';
-      if (!ok) throw new Error('É obrigatório aceitar os termos de privacidade (LGPD).');
       return true;
     }),
   ],
@@ -5166,17 +5106,10 @@ app.post(
         || req.body.lgpdConsentimento === 'on'
         || req.body.lgpdConsentimento === '1'
         || req.body.lgpdConsentimento === true;
-
-      if (!req.file && !encontroExistente) {
-        const allErrors = [{ msg: 'Foto é obrigatória' }];
-        if (isJson) {
-          return res.status(400).json({ success: false, errors: allErrors });
-        }
-        return res.render('encontro', {
-          errors: allErrors,
-          formData: req.body,
-        });
-      }
+      const disponibilidadeEncontro = req.body.disponibilidadeEncontro === 'true'
+        || req.body.disponibilidadeEncontro === 'on'
+        || req.body.disponibilidadeEncontro === '1'
+        || req.body.disponibilidadeEncontro === true;
 
       // Normalizar tipo para garantir que 'casal' seja convertido para 'tios'
       const tipoNormalizado = normalizeTipoEncontro(req.body.tipo);
@@ -5229,6 +5162,7 @@ app.post(
         emailCanonical: normalizeEmailInput(req.body.email),
         temRelacionamento: req.body.temRelacionamento || '',
         instagram: req.body.instagram || '',
+        disponibilidadeEncontro,
         observacoes: req.body.observacoes || '',
         aprovado: false,
         statusAprovacao: 'pendente',
@@ -5253,7 +5187,7 @@ app.post(
         created = true;
         encontro = new Encontro({
           ...encontroData,
-          foto: req.file.filename,
+          foto: req.file ? req.file.filename : '',
         });
         await encontro.save();
       }

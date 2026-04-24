@@ -106,6 +106,7 @@ function GenericForm() {
       ehAlergico: 'nao',
       alergiaDescricao: '',
       email: '',
+      disponibilidadeEncontro: false,
       temRelacionamento: '',
       instagram: '',
       lgpdConsentimento: false,
@@ -129,6 +130,7 @@ function GenericForm() {
       ehAlergico: 'nao',
       alergiaDescricao: '',
       email: '',
+      disponibilidadeEncontro: false,
       temRelacionamento: '',
       instagram: '',
       lgpdConsentimento: false,
@@ -407,7 +409,13 @@ function GenericForm() {
 
         const submitTiosMember = async (pessoa) => {
           const data = new FormData();
-          const dataToSend = tiosData[pessoa];
+          const dataToSend = { ...tiosData[pessoa] };
+
+          if (tiosModo === 'casal' && pessoa === 'pessoa2') {
+            dataToSend.logradouro = tiosData.pessoa1.logradouro;
+            dataToSend.bairro = tiosData.pessoa1.bairro;
+          }
+
           Object.entries(dataToSend).forEach(([k, v]) => {
             if (Array.isArray(v)) {
               v.forEach((item) => data.append(k, item));
@@ -482,6 +490,34 @@ function GenericForm() {
     }
   };
 
+  const getFieldPessoa = (field) => {
+    const source = String(field?.id || field?.name || '');
+    if (source.includes('pessoa2')) return 'pessoa2';
+    if (source.includes('pessoa1')) return 'pessoa1';
+    return 'unico';
+  };
+
+  const isEssentialRequiredField = (field) => {
+    if (!field || !field.name) return false;
+    const fieldName = String(field.name);
+    const pessoa = getFieldPessoa(field);
+
+    if (fieldName === 'nomeCompleto') return true;
+    if (fieldName === 'email') return true;
+    if (fieldName === 'dataNascimento') return true;
+    if (fieldName === 'disponibilidadeEncontro') return true;
+
+    // Em casal de tios, endereço é preenchido uma única vez (pessoa1).
+    if (fieldName === 'logradouro') {
+      if (isEncontro && tipo === 'tios' && tiosModo === 'casal') {
+        return pessoa === 'pessoa1';
+      }
+      return true;
+    }
+
+    return false;
+  };
+
   const validateCurrentStep = () => {
     if (!shouldUseStepper) return true;
 
@@ -492,24 +528,28 @@ function GenericForm() {
     if (!stepPanels.length) return true;
 
     for (const stepPanel of stepPanels) {
-      const requiredFields = Array.from(stepPanel.querySelectorAll('input[required], select[required], textarea[required]'));
-      const validatedRadioGroups = new Set();
+      const essentialFields = Array.from(stepPanel.querySelectorAll('input[name], select[name], textarea[name]'))
+        .filter((field) => isEssentialRequiredField(field));
 
-      for (const field of requiredFields) {
-        if (field.type === 'radio') {
-          if (validatedRadioGroups.has(field.name)) continue;
-          validatedRadioGroups.add(field.name);
-          const group = Array.from(stepPanel.querySelectorAll(`input[type="radio"][name="${field.name}"]`));
-          if (!group.some((radio) => radio.checked)) {
-            group[0].reportValidity();
-            return false;
+      for (const field of essentialFields) {
+        const value = field.type === 'checkbox' ? field.checked : String(field.value || '').trim();
+        const isFilled = field.type === 'checkbox' ? !!value : value.length > 0;
+
+        if (!isFilled) {
+          if (typeof field.reportValidity === 'function') {
+            field.reportValidity();
           }
-          continue;
+          return false;
         }
 
-        if (!field.checkValidity()) {
-          field.reportValidity();
-          return false;
+        if (field.name === 'email' && String(field.value || '').trim()) {
+          const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(field.value || '').trim());
+          if (!emailOk) {
+            field.setCustomValidity('Informe um email válido.');
+            field.reportValidity();
+            field.setCustomValidity('');
+            return false;
+          }
         }
       }
     }
@@ -1234,6 +1274,19 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
+          <div className="final-question-box">
+            <label className="form-label d-block">O XIX EJC COP está previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que você esteja disponível:</label>
+            <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sábado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
+            <div className="form-check">
+              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} />
+              <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
+                Confirmo minha disponibilidade integral para os dias e horários informados.
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-3">
           <label htmlFor={`talentoHabilidadeArtistica-${pessoa}`} className="form-label">Possui algum talento ou habilidade artística que goste de praticar?</label>
           <textarea className="form-control" id={`talentoHabilidadeArtistica-${pessoa}`} name="talentoHabilidadeArtistica" value={data.talentoHabilidadeArtistica || ''} onChange={handleCh} rows="3"></textarea>
         </div>
@@ -1452,16 +1505,25 @@ function GenericForm() {
           Contato e localização
         </div>
 
-        <div className="form-row">
-          <div className="mb-3">
-            <label htmlFor={`logradouro-${pessoa}`} className="form-label">Logradouro *</label>
-            <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} required />
+        {tiosModo === 'casal' && pessoa === 'pessoa2' && (
+          <div className="alert alert-info mb-3">
+            <i className="fas fa-location-dot me-2"></i>
+            Endereço informado uma única vez no cadastro da Pessoa 1 e compartilhado para o casal.
           </div>
-          <div className="mb-3">
-            <label htmlFor={`bairro-${pessoa}`} className="form-label">Bairro *</label>
-            <input type="text" className="form-control" id={`bairro-${pessoa}`} name="bairro" value={data.bairro} onChange={handleCh} required />
+        )}
+
+        {!(tiosModo === 'casal' && pessoa === 'pessoa2') && (
+          <div className="form-row">
+            <div className="mb-3">
+              <label htmlFor={`logradouro-${pessoa}`} className="form-label">Logradouro *</label>
+              <input type="text" className="form-control" id={`logradouro-${pessoa}`} name="logradouro" value={data.logradouro} onChange={handleCh} required />
+            </div>
+            <div className="mb-3">
+              <label htmlFor={`bairro-${pessoa}`} className="form-label">Bairro</label>
+              <input type="text" className="form-control" id={`bairro-${pessoa}`} name="bairro" value={data.bairro} onChange={handleCh} />
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="form-row">
           <div className="mb-3">
@@ -1519,6 +1581,19 @@ function GenericForm() {
         <div className="form-section-title">
           <i className="fas fa-flag-checkered"></i>
           Revisão final
+        </div>
+
+        <div className="mb-3">
+          <div className="final-question-box">
+            <label className="form-label d-block">O XIX EJC COP está previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que você esteja disponível:</label>
+            <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sábado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
+            <div className="form-check">
+              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} />
+              <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
+                Confirmo minha disponibilidade integral para os dias e horários informados.
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="form-row">
@@ -1779,7 +1854,7 @@ function GenericForm() {
                 </>
               )}
 
-            <form ref={formRef} onSubmit={handleSubmit} encType="multipart/form-data" aria-busy={submitting ? 'true' : 'false'}>
+            <form ref={formRef} onSubmit={handleSubmit} encType="multipart/form-data" noValidate aria-busy={submitting ? 'true' : 'false'}>
               {errors.length > 0 && (
                 <div className="alert alert-danger form-alert" role="alert">
                   <div className="form-alert-title">
@@ -1835,17 +1910,7 @@ function GenericForm() {
                   <button
                     type="submit"
                     className="btn btn-primary form-submit-btn"
-                    disabled={
-                      submitting ||
-                      (isEncontro && tipo === 'tios' && (
-                        !tiosData.pessoa1.nomeCompleto || !tiosData.pessoa1.email || !tiosData.pessoa1.foto ||
-                        !tiosData.pessoa1.genero || !tiosData.pessoa1.comoQuerSerChamado ||
-                        !tiosData.pessoa1.lgpdConsentimento ||
-                        (tiosModo === 'casal' && (!tiosData.pessoa2.nomeCompleto || !tiosData.pessoa2.email || !tiosData.pessoa2.foto || !tiosData.pessoa2.genero || !tiosData.pessoa2.comoQuerSerChamado || !tiosData.pessoa2.lgpdConsentimento))
-                      )) ||
-                      (isEncontro && tipo !== 'tios' && (!formData.foto || !formData.genero || !formData.comoQuerSerChamado || !formData.lgpdConsentimento)) ||
-                      (!isEncontro && !formData.lgpdConsentimento)
-                    }
+                    disabled={submitting}
                   >
                     {submitting ? (
                       'Enviando...'
