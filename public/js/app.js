@@ -409,6 +409,32 @@ function GenericForm() {
       return payload;
     };
 
+    const appendFieldToFormData = (data, key, value) => {
+      if (Array.isArray(value)) {
+        value.forEach((item) => data.append(key, item));
+        return;
+      }
+
+      if (typeof value === 'boolean') {
+        if (value) {
+          data.append(key, 'true');
+        }
+        return;
+      }
+
+      if (value !== null && value !== '') {
+        data.append(key, value);
+      }
+    };
+
+    const resolveCheckboxValue = (selector, fallback) => {
+      const checkbox = formRef.current?.querySelector(selector);
+      if (checkbox) {
+        return Boolean(checkbox.checked);
+      }
+      return Boolean(fallback);
+    };
+
     try {
       const endpoint = isEncontro ? '/encontro' : '/inscricao';
 
@@ -429,17 +455,16 @@ function GenericForm() {
           const data = new FormData();
           const dataToSend = { ...tiosData[pessoa] };
 
+          dataToSend.disponibilidadeEncontro = resolveCheckboxValue(`#disponibilidadeEncontro-${pessoa}`, dataToSend.disponibilidadeEncontro);
+          dataToSend.lgpdConsentimento = resolveCheckboxValue(`#lgpdConsentimento-${pessoa}`, dataToSend.lgpdConsentimento);
+
           if (tiosModo === 'casal' && pessoa === 'pessoa2') {
             dataToSend.logradouro = tiosData.pessoa1.logradouro;
             dataToSend.bairro = tiosData.pessoa1.bairro;
           }
 
           Object.entries(dataToSend).forEach(([k, v]) => {
-            if (Array.isArray(v)) {
-              v.forEach((item) => data.append(k, item));
-            } else if (v !== null && v !== '') {
-              data.append(k, v);
-            }
+            appendFieldToFormData(data, k, v);
           });
           data.append('tipo', 'tios');
           data.append('tiosCategoria', categoriaTios);
@@ -471,12 +496,14 @@ function GenericForm() {
       } else {
         // Para pessoa individual
         const data = new FormData();
-        Object.entries(formData).forEach(([k, v]) => {
-          if (Array.isArray(v)) {
-            v.forEach((item) => data.append(k, item));
-          } else if (v !== null && v !== '') {
-            data.append(k, v);
-          }
+        const formDataToSend = {
+          ...formData,
+          disponibilidadeEncontro: resolveCheckboxValue('#disponibilidadeEncontro-unico', formData.disponibilidadeEncontro),
+          lgpdConsentimento: resolveCheckboxValue('#lgpdConsentimento-unico', formData.lgpdConsentimento),
+        };
+
+        Object.entries(formDataToSend).forEach(([k, v]) => {
+          appendFieldToFormData(data, k, v);
         });
         data.append('tipo', tipo);
         data.append('tiosCategoria', '');
