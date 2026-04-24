@@ -1092,6 +1092,28 @@ app.use(buildSessionMiddleware({
 const upload = createImageUpload();
 const importUploadSingle = createImportUploadSingle();
 
+const publicImageUploadSingle = (viewName) => (req, res, next) => {
+  upload.single('foto')(req, res, (err) => {
+    if (!err) return next();
+
+    const isJson = req.headers.accept && req.headers.accept.includes('application/json');
+    const msg = normalizeTextInput(err.message) || 'Falha ao processar a foto enviada.';
+    const allErrors = [{ msg }];
+
+    if (isJson) {
+      return res.status(400).json({ success: false, errors: allErrors });
+    }
+
+    return res.status(400).render(viewName, {
+      errors: allErrors,
+      formData: req.body,
+      bloqueado: false,
+      motivoBloqueio: '',
+      ejcAtivo: '',
+    });
+  });
+};
+
 const parseDateInput = (value) => {
   if (!value) return null;
 
@@ -4843,7 +4865,7 @@ const middlewareVerificaBloqueoEncontreiro = async (req, res, next) => {
 app.post(
   '/inscricao',
   middlewareVerificaBloqueoEncontrista,
-  upload.single('foto'),
+  publicImageUploadSingle('inscricao'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
     body('logradouro').notEmpty().withMessage('Endereco é obrigatório'),
@@ -5026,7 +5048,7 @@ app.post(
 app.post(
   '/encontro',
   middlewareVerificaBloqueoEncontreiro,
-  upload.single('foto'),
+  publicImageUploadSingle('encontro'),
   [
     body('nomeCompleto').notEmpty().withMessage('Nome completo é obrigatório'),
     body('tipo').isIn(['jovens', 'tios']).withMessage('Tipo inválido'),

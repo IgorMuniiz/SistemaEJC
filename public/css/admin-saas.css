@@ -3869,6 +3869,30 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     /* ������ MAIN PANEL ��������������������������������������������������������������������������������������������������������������������������������� */
     body.admin-panel.admin-manager-page .main-panel { flex: 1; padding: 24px; min-width: 0; }
 
+    /* Garante uso total da viewport no manager revamp em monitores largos. */
+    body.admin-panel.admin-manager-page.admin-manager-revamp .admin-shell {
+      width: 100vw;
+      max-width: 100vw;
+      margin: 0;
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .main-panel {
+      width: calc(100vw - var(--sidebar-w));
+      max-width: none;
+      padding-inline: clamp(14px, 2vw, 28px);
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar:hover + .main-panel {
+      width: calc(100vw - var(--sidebar-w-open));
+    }
+    body.admin-panel.admin-manager-page.admin-manager-revamp :is(
+      .topbar.workspace-hero-manager,
+      .manager-module-grid,
+      .manager-shortcut-hint,
+      .content-card.content-card-premium
+    ) {
+      width: 100%;
+      max-width: none;
+    }
+
     body.admin-panel.admin-manager-page .admin-shell.admin-shell-admins-only .manager-module-grid,
     body.admin-panel.admin-manager-page .admin-shell.admin-shell-admins-only .manager-shortcut-hint {
       display: none;
@@ -6087,6 +6111,10 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     @media (max-width: 991px) {
       body.admin-panel.admin-manager-page .admin-shell {
         flex-direction: column;
+      }
+      body.admin-panel.admin-manager-page.admin-manager-revamp .admin-shell {
+        width: 100%;
+        max-width: none;
       }
       body.admin-panel.admin-manager-page .sidebar,
       body.admin-panel.admin-manager-page .sidebar:hover {
@@ -17641,6 +17669,23 @@ html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revam
 html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap {
   border-color: rgba(96, 165, 250, 0.3) !important;
   box-shadow: 0 14px 28px rgba(30, 64, 175, 0.1) !important;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap {
+  max-height: 26rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table {
+  min-width: 980px;
+}
+
+body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
 html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #aprovacoes .approval-table-wrap .table thead th {

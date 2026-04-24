@@ -396,6 +396,19 @@ function GenericForm() {
       setErrors([{ msg: 'Requisição demorou muito. Tente novamente.' }]);
     }, 30000); // 30 segundos de timeout
 
+    const readSubmitResponse = async (res) => {
+      const contentType = String(res.headers.get('content-type') || '').toLowerCase();
+      const isJsonResponse = contentType.includes('application/json');
+      const payload = isJsonResponse ? await res.json() : null;
+
+      if (!res.ok) {
+        const serverMessage = payload?.errors?.[0]?.msg || payload?.error || `HTTP ${res.status}`;
+        throw new Error(serverMessage);
+      }
+
+      return payload;
+    };
+
     try {
       const endpoint = isEncontro ? '/encontro' : '/inscricao';
 
@@ -443,8 +456,7 @@ function GenericForm() {
             body: data,
             headers: { Accept: 'application/json' },
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          return await res.json();
+          return await readSubmitResponse(res);
         };
 
         const results = await Promise.all(pessoas.map((pessoa) => submitTiosMember(pessoa)));
@@ -476,8 +488,7 @@ function GenericForm() {
           body: data,
           headers: { Accept: 'application/json' },
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
+        const json = await readSubmitResponse(res);
         if (json.success) {
           console.log('[INFO] Individual enviado com sucesso');
           clearTimeout(timeoutId);
