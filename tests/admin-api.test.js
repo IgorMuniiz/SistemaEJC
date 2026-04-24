@@ -846,6 +846,106 @@ test('POST /encontro retorna 400 com mensagem clara quando a foto tem formato in
   assert.equal(response.body.success, false);
   assert.match(response.body.errors[0].msg, /jpg|png/i);
 });
+
+test('POST /encontro aceita mesmo email apenas para tio casal no mesmo grupo', async (t) => {
+  invalidarCacheEncontroAtivo();
+
+  const originalAdminFindOne = Admin.findOne;
+  const originalEjcFindOne = Ejc.findOne;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroPrototypeSave = Encontro.prototype.save;
+  const originalSubscriptionFind = PushSubscription.find;
+
+  const encontroAtivo = {
+    _id: '507f1f77bcf86cd799439181',
+    nome: 'EJC Atual 2026',
+    ativo: true,
+  };
+  const emailCompartilhado = 'casal.tios@example.com';
+  const grupoCasal = 'tios-casal-001';
+
+  const registrosSalvos = [];
+
+  Admin.findOne = () => ({ lean: async () => null });
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
+    sort: () => ({ lean: async () => encontroAtivo }),
+  });
+  Encontro.findOne = async (query) => {
+    const porAnd = query && query.$and;
+    const porEmail = query && query.$or;
+
+    if (porAnd) {
+      const nomeRegex = porAnd[0]?.nomeCompleto;
+      if (!nomeRegex || typeof nomeRegex.test !== 'function') return null;
+      return registrosSalvos.find((item) => nomeRegex.test(item.nomeCompleto)) || null;
+    }
+
+    if (porEmail) {
+      return registrosSalvos.find((item) => String(item.email).toLowerCase() === emailCompartilhado) || null;
+    }
+
+    return null;
+  };
+  Encontro.prototype.save = async function mockSave() {
+    this._id = this._id || new mongoose.Types.ObjectId();
+    registrosSalvos.push({
+      _id: this._id,
+      nomeCompleto: this.nomeCompleto,
+      email: this.email,
+      tipo: this.tipo,
+      tiosCategoria: this.tiosCategoria,
+      tiosGrupoId: this.tiosGrupoId,
+    });
+    return this;
+  };
+  PushSubscription.find = () => ({ lean: async () => [] });
+
+  t.after(() => {
+    Admin.findOne = originalAdminFindOne;
+    Ejc.findOne = originalEjcFindOne;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.prototype.save = originalEncontroPrototypeSave;
+    PushSubscription.find = originalSubscriptionFind;
+    invalidarCacheEncontroAtivo();
+  });
+
+  const payloadBase = {
+    tipo: 'tios',
+    tiosCategoria: 'casal',
+    origemTios: 'true',
+    tiosGrupoId: grupoCasal,
+    logradouro: 'Rua A, 10',
+    dataNascimento: '1980-01-01',
+    disponibilidadeEncontro: 'true',
+  };
+
+  const primeiraResposta = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .send({
+      ...payloadBase,
+      nomeCompleto: 'Tio Carlos',
+      email: emailCompartilhado,
+    });
+
+  const segundaResposta = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .send({
+      ...payloadBase,
+      nomeCompleto: 'Tia Maria',
+      email: emailCompartilhado,
+    });
+
+  assert.equal(primeiraResposta.status, 200);
+  assert.equal(primeiraResposta.body.success, true);
+  assert.equal(segundaResposta.status, 200);
+  assert.equal(segundaResposta.body.success, true);
+  assert.equal(registrosSalvos.length, 2);
+  assert.equal(registrosSalvos[0].tiosGrupoId, grupoCasal);
+  assert.equal(registrosSalvos[1].tiosGrupoId, grupoCasal);
+});
 test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
   mockAdminAuthFlow(t);
 
