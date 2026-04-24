@@ -10,6 +10,7 @@ test('buildHelmetConfig expõe CSP em modo report-only com origens seguras', () 
   assert.deepEqual(config.contentSecurityPolicy.directives.defaultSrc, ["'self'"]);
   assert.ok(config.contentSecurityPolicy.directives.scriptSrc.includes("'self'"));
   assert.ok(config.contentSecurityPolicy.directives.styleSrc.includes("'unsafe-inline'"));
+  assert.equal(config.contentSecurityPolicy.directives.upgradeInsecureRequests, null);
 });
 
 test('buildHelmetConfig mantém object e frame ancenstors restritos', () => {

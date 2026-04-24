@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ejc-cache-v11-admin-hard-refresh-16';
+const CACHE_NAME = 'ejc-cache-v12-success-csp-fix-17';
 const ASSETS_TO_CACHE = [
   '/',
   '/inscricao',
@@ -35,6 +35,10 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   const isNavigationRequest = event.request.mode === 'navigate';
   const isStaticAsset = ['style', 'script', 'image', 'font'].includes(event.request.destination);
 

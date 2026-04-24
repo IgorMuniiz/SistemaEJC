@@ -14,6 +14,7 @@ const buildHelmetConfig = () => ({
       frameAncestors: ["'self'"],
       baseUri: ["'self'"],
       formAction: ["'self'"],
+      upgradeInsecureRequests: null,
     },
   },
 });
