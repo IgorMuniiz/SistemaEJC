@@ -1683,7 +1683,6 @@ function GenericForm() {
           Voltar
         </a>
         <div className="portal-header-main text-center">
-          <p className="portal-eyebrow">EJC COP Digital Experience</p>
           <h1 className="display-5 fw-bold">{isEncontro ? 'Inscrição para Encontro' : 'Inscrição EJC'}</h1>
           <p className="lead">{isEncontro ? 'Forneça as informações para participar do encontro.' : 'Preencha seus dados abaixo e junte-se ao evento.'}</p>
         </div>
