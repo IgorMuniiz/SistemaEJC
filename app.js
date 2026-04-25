@@ -1865,6 +1865,7 @@ const resolvePhotoPath = (fileName) => {
 
 const PDF_PHOTO_CACHE_MAX_ITEMS = 220;
 const pdfPhotoCoverCache = new Map();
+const PDF_FOTO_AJUSTE_FOCO_DEFAULT = 28;
 
 const resolvePdfCoverGravity = (align = 'center', valign = 'top') => {
   if (align === 'left' && valign === 'top') return 'northwest';
@@ -1905,8 +1906,12 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
   const valign = options.valign === 'center' ? 'center' : (options.valign === 'bottom' ? 'bottom' : 'top');
   const strategy = options.strategy === 'entropy' ? 'entropy' : 'attention';
   const manualRotation = Number.isFinite(Number(options.rotation)) ? Number(options.rotation) : 0;
-  const focusY = Number.isFinite(Number(options.focoY)) ? Number(options.focoY) : NaN;
-  const normalizedFocusY = Number.isFinite(focusY) ? Math.max(0, Math.min(100, focusY)) : NaN;
+  const rawFocusY = Number(options.focoY);
+  const hasFocusY = Number.isFinite(rawFocusY);
+  const isDefaultFocusY = hasFocusY && Math.abs(rawFocusY - PDF_FOTO_AJUSTE_FOCO_DEFAULT) < 0.0001;
+  const forceManualFocus = options.forceManualFocus === true;
+  const shouldApplyManualFocus = hasFocusY && (forceManualFocus || !isDefaultFocusY || manualRotation !== 0);
+  const normalizedFocusY = shouldApplyManualFocus ? Math.max(0, Math.min(100, rawFocusY)) : NaN;
   const focusValign = Number.isFinite(normalizedFocusY)
     ? (normalizedFocusY <= 33 ? 'top' : (normalizedFocusY >= 67 ? 'bottom' : 'center'))
     : valign;
@@ -2272,15 +2277,17 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   let rowY = contentAreaTop + Math.max(0, (contentAreaHeight - linesHeight) / 2);
 
   lines.forEach(([label, value, extraSpace, fontSize], idx) => {
-    const disableDividerForLine = noDividerLabels.includes(normalizeTextInput(label).toLowerCase());
-    const isNameLine = normalizeTextInput(label).toLowerCase() === 'nome';
-    const isNicknameLine = normalizeTextInput(label).toLowerCase() === 'apelido';
-    const isEjcLine = normalizeTextInput(label).toLowerCase() === 'ejc';
+    const normalizedLabel = normalizeTextInput(label).toLowerCase();
+    const disableDividerForLine = noDividerLabels.includes(normalizedLabel);
+    const isNameLine = normalizedLabel === 'nome';
+    const isNicknameLine = normalizedLabel === 'apelido';
+    const isEjcLine = normalizedLabel === 'ejc';
+    const hideFieldLabel = ['instagram', 'telefone', 'niver', 'ejc'].includes(normalizedLabel);
     const isIdentityLine = isNameLine || isNicknameLine;
     drawCardLine(doc, textX, rowY, textWidth, label, value, extraSpace, fontSize, {
       rowHeight,
       textMax,
-      showLabels: isIdentityLine ? false : showLabels,
+      showLabels: (isIdentityLine || hideFieldLabel) ? false : showLabels,
       alignColumns,
       labelWidth: isNameLine ? Math.max(30, labelWidth - 8) : labelWidth,
       lineInset: 1,
@@ -2961,8 +2968,8 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const monitorCardHeight = mmToPt(32);
       const personCardWidth = mmToPt(85);
       const personCardHeight = mmToPt(34);
-      const photoWidth = mmToPt(24);
-      const photoHeight = mmToPt(28);
+      const photoWidth = mmToPt(26);
+      const photoHeight = mmToPt(30);
       const colGap = mmToPt(10);
       const rowGap = mmToPt(8);
 
@@ -3084,8 +3091,8 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const equipeStartY = topStart;
     const equipeCardWidth = mmToPt(85);
     const equipeCardHeight = mmToPt(34);
-    const equipePhotoWidth = mmToPt(24);
-    const equipePhotoHeight = mmToPt(28);
+    const equipePhotoWidth = mmToPt(26);
+    const equipePhotoHeight = mmToPt(30);
     const equipeColGap = mmToPt(10);
     const equipeRowGap = mmToPt(5);
     const equipeCardOptions = {
@@ -3195,8 +3202,8 @@ const renderCardGridPdf = async (res, entries, options) => {
   const rowGap = mmToPt(8);
 
   const sharedCardOptions = {
-    photoWidth: mmToPt(24),
-    photoHeight: mmToPt(28),
+    photoWidth: mmToPt(26),
+    photoHeight: mmToPt(30),
     photoInset: 5,
     textGap: 6,
     rowHeight: 13,
