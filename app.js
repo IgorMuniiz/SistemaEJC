@@ -1934,7 +1934,7 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
           ? resolvePdfCoverGravity(align, focusValign)
           : strategyPosition,
       })
-      .jpeg({ quality: 90, mozjpeg: true })
+      .jpeg({ quality: 95, mozjpeg: true })
       .toBuffer();
 
     if (pdfPhotoCoverCache.size >= PDF_PHOTO_CACHE_MAX_ITEMS) {
@@ -1957,7 +1957,7 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
           fit: 'cover',
           position: resolvePdfCoverGravity(align, focusValign || valign),
         })
-        .jpeg({ quality: 90, mozjpeg: true })
+        .jpeg({ quality: 95, mozjpeg: true })
         .toBuffer();
     } catch {
       return null;
@@ -2385,7 +2385,7 @@ const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) =
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
 
-  const doc = new PDFDocument({ margin: 28, size: 'A4', layout: 'landscape' });
+  const doc = new PDFDocument({ margin: 28, size: 'A4', layout: 'landscape', compress: false });
   doc.pipe(res);
 
   const safeGroups = Array.isArray(groups) ? groups : [];
@@ -2652,7 +2652,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
 
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const doc = new PDFDocument({ margin: 40, size: 'A4', compress: false });
   doc.pipe(res);
 
   const left = 40;
@@ -3128,7 +3128,7 @@ const renderCardGridPdf = async (res, entries, options) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${options.fileName}"`);
 
-  const doc = new PDFDocument({ margin: 40, size: 'A4' });
+  const doc = new PDFDocument({ margin: 40, size: 'A4', compress: false });
   doc.pipe(res);
 
   const mmToPt = (mm) => (mm * 72) / 25.4;
