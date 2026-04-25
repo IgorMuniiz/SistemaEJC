@@ -3278,7 +3278,7 @@ const checkAdminAuth = async (req, res, next) => {
 
 app.get('/', (req, res) => {
   // renderizar tela de escolha de tipo de inscrição
-  res.render('index');
+  res.render('index-simplesmente-amar');
 });
 
 app.get('/index', (req, res) => {

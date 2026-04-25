@@ -3572,6 +3572,8 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       display: flex;
       min-height: 100vh;
       position: relative; z-index: 1;
+      margin: 0 auto;
+      max-width: 1490px;
     }
 
     /* ������ SIDEBAR ��������������������������������������������������������������������������������������������������������������������������������������������� */
