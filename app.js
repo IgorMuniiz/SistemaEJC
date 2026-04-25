@@ -183,6 +183,10 @@ const cadastroSchema = new mongoose.Schema({
     default: [],
   },
   foto: { type: String, default: '' },
+  fotoAjuste: {
+    rotacao: { type: Number, default: 0 },
+    focoY: { type: Number, default: 28 },
+  },
   observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false },
   statusAprovacao: { type: String, enum: APPROVAL_STATUSES, default: 'pendente' },
@@ -247,6 +251,10 @@ const encontroSchema = new mongoose.Schema({
   temRelacionamento: { type: String, default: '' },
   instagram: { type: String, default: '' },
   foto: { type: String, default: '' },
+  fotoAjuste: {
+    rotacao: { type: Number, default: 0 },
+    focoY: { type: Number, default: 28 },
+  },
   disponibilidadeEncontro: { type: Boolean, default: false },
   observacoes: { type: String, default: '' },
   aprovado: { type: Boolean, default: false }, // novo campo para aprovação
@@ -1162,6 +1170,27 @@ const resolveApprovalStatus = (doc) => {
 const normalizeTextInput = (value) => String(value || '').trim();
 const normalizeEmailInput = (value) => normalizeTextInput(value).toLowerCase();
 
+const normalizeFotoAjusteInput = (rawInput, currentValue = {}) => {
+  const currentRotacao = Number(currentValue && currentValue.rotacao);
+  const currentFocoY = Number(currentValue && currentValue.focoY);
+
+  const rawRotacao = Number(rawInput && rawInput.fotoAjusteRotacao);
+  const rawFocoY = Number(rawInput && rawInput.fotoAjusteFocoY);
+
+  const rotacao = Number.isFinite(rawRotacao)
+    ? Math.max(-270, Math.min(270, rawRotacao))
+    : (Number.isFinite(currentRotacao) ? currentRotacao : 0);
+
+  const focoY = Number.isFinite(rawFocoY)
+    ? Math.max(0, Math.min(100, rawFocoY))
+    : (Number.isFinite(currentFocoY) ? currentFocoY : 28);
+
+  return {
+    rotacao,
+    focoY,
+  };
+};
+
 const cleanupUploadedFile = (filename) => {
   if (!filename) return;
   const filePath = path.join(__dirname, 'uploads', filename);
@@ -1875,7 +1904,13 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
   const align = options.align === 'left' ? 'left' : (options.align === 'right' ? 'right' : 'center');
   const valign = options.valign === 'center' ? 'center' : (options.valign === 'bottom' ? 'bottom' : 'top');
   const strategy = options.strategy === 'entropy' ? 'entropy' : 'attention';
-  const cacheKey = buildPdfPhotoCacheKey(photoPath, safeWidth, safeHeight, strategy, align, valign);
+  const manualRotation = Number.isFinite(Number(options.rotation)) ? Number(options.rotation) : 0;
+  const focusY = Number.isFinite(Number(options.focoY)) ? Number(options.focoY) : NaN;
+  const normalizedFocusY = Number.isFinite(focusY) ? Math.max(0, Math.min(100, focusY)) : NaN;
+  const focusValign = Number.isFinite(normalizedFocusY)
+    ? (normalizedFocusY <= 33 ? 'top' : (normalizedFocusY >= 67 ? 'bottom' : 'center'))
+    : valign;
+  const cacheKey = `${buildPdfPhotoCacheKey(photoPath, safeWidth, safeHeight, strategy, align, valign)}|rot:${manualRotation}|fy:${Number.isFinite(normalizedFocusY) ? normalizedFocusY.toFixed(2) : 'na'}`;
 
   if (pdfPhotoCoverCache.has(cacheKey)) {
     const cached = pdfPhotoCoverCache.get(cacheKey);
@@ -1886,11 +1921,18 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
 
   try {
     const strategyPosition = strategy === 'entropy' ? sharp.strategy.entropy : sharp.strategy.attention;
-    const smartBuffer = await sharp(photoPath, { failOn: 'none' })
-      .rotate()
+    let smartPipeline = sharp(photoPath, { failOn: 'none' })
+      .rotate();
+    if (manualRotation) {
+      smartPipeline = smartPipeline.rotate(manualRotation);
+    }
+
+    const smartBuffer = await smartPipeline
       .resize(safeWidth, safeHeight, {
         fit: 'cover',
-        position: strategyPosition,
+        position: Number.isFinite(normalizedFocusY)
+          ? resolvePdfCoverGravity(align, focusValign)
+          : strategyPosition,
       })
       .jpeg({ quality: 90, mozjpeg: true })
       .toBuffer();
@@ -1904,11 +1946,16 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
   } catch {
     try {
       const fallbackPosition = resolvePdfCoverGravity(align, valign);
-      return await sharp(photoPath, { failOn: 'none' })
-        .rotate()
+      let fallbackPipeline = sharp(photoPath, { failOn: 'none' })
+        .rotate();
+      if (manualRotation) {
+        fallbackPipeline = fallbackPipeline.rotate(manualRotation);
+      }
+
+      return await fallbackPipeline
         .resize(safeWidth, safeHeight, {
           fit: 'cover',
-          position: fallbackPosition,
+          position: resolvePdfCoverGravity(align, focusValign || valign),
         })
         .jpeg({ quality: 90, mozjpeg: true })
         .toBuffer();
@@ -2092,10 +2139,13 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const photoPath = resolvePhotoPath(entry.foto);
   if (photoPath) {
     try {
+      const fotoAjuste = entry && typeof entry.fotoAjuste === 'object' ? entry.fotoAjuste : {};
       const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoWidth - 2, photoHeight - 2, {
         strategy: 'attention',
         align: photoAlign,
         valign: photoValign,
+        rotation: fotoAjuste.rotacao,
+        focoY: fotoAjuste.focoY,
       });
       if (!photoBuffer) {
         throw new Error('photo-buffer-unavailable');
@@ -2119,13 +2169,13 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const headerOffset = badgeLabel ? 24 : topPadding;
 
   const nameMaxChars = Number(options.nameMaxChars) > 0 ? Number(options.nameMaxChars) : 28;
-  const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, nameMaxChars);
+  const displayName = truncateText(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
+  const displayNickname = truncateText(normalizeSingleLineText(entry.comoQuerSerChamado) || '-', Math.max(16, Math.min(26, nameMaxChars - 2)));
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
-    ['Logradouro', entry.logradouro, 4, 8.5 + fontBoost],
-    ['Bairro', entry.bairro, 0, 8.5 + fontBoost],
-    ['Email', entry.email, 0, 7.5 + fontBoost],
+    ['Apelido', displayNickname, 0, 8.5 + fontBoost],
+    ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
     ['EJC', entry.ejc, 0, 8.5 + fontBoost],
@@ -2133,6 +2183,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const availableFieldLines = {
     nome: ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
+    apelido: ['Apelido', displayNickname, 0, 8.5 + fontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     aniversario: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
@@ -2171,10 +2222,12 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   lines.forEach(([label, value, extraSpace, fontSize], idx) => {
     const disableDividerForLine = noDividerLabels.includes(normalizeTextInput(label).toLowerCase());
     const isNameLine = normalizeTextInput(label).toLowerCase() === 'nome';
+    const isNicknameLine = normalizeTextInput(label).toLowerCase() === 'apelido';
+    const isIdentityLine = isNameLine || isNicknameLine;
     drawCardLine(doc, textX, rowY, textWidth, label, value, extraSpace, fontSize, {
       rowHeight,
       textMax,
-      showLabels,
+      showLabels: isIdentityLine ? false : showLabels,
       alignColumns,
       labelWidth: isNameLine ? Math.max(30, labelWidth - 8) : labelWidth,
       lineInset: 1,
@@ -2204,6 +2257,10 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   email: pessoa?.email || 'Nao informado',
   instagram: pessoa?.instagram || '',
   foto: pessoa?.foto || '',
+  fotoAjuste: {
+    rotacao: Number(pessoa?.fotoAjuste?.rotacao) || 0,
+    focoY: Number.isFinite(Number(pessoa?.fotoAjuste?.focoY)) ? Number(pessoa.fotoAjuste.focoY) : 28,
+  },
   tipo: pessoa?.tipo || 'jovens',
   tiosCategoria: pessoa?.tiosCategoria || '',
   tiosGrupoId: pessoa?.tiosGrupoId || '',
@@ -2428,6 +2485,8 @@ const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) =
           strategy: 'attention',
           align: 'center',
           valign: 'top',
+          rotation: entry?.fotoAjuste?.rotacao,
+          focoY: entry?.fotoAjuste?.focoY,
         });
         if (!photoBuffer) {
           throw new Error('photo-buffer-unavailable');
@@ -2881,7 +2940,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         topDivider: false,
         hideEmail: true,
         hideEjc: false,
-        fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
+        fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
         photoValign: 'top',
       };
@@ -2902,7 +2961,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         topDivider: false,
         hideEmail: true,
         hideEjc: false,
-        fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
+        fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
         photoValign: 'top',
       };
@@ -2991,7 +3050,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       topDivider: false,
       hideEmail: true,
       hideEjc: false,
-      fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
+      fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
       photoAlign: 'center',
       photoValign: 'top',
     };
@@ -3097,7 +3156,7 @@ const renderCardGridPdf = async (res, entries, options) => {
     topDivider: false,
     hideEmail: true,
     hideEjc: false,
-    fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
+    fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
     photoAlign: 'center',
     photoValign: 'top',
   };
@@ -6235,6 +6294,7 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
     const statusAprovacao = normalizeApprovalStatusInput(req.body.statusAprovacao)
       || (req.body.aprovado === 'true' ? 'aprovado' : 'pendente');
     const hasField = (fieldName) => Object.prototype.hasOwnProperty.call(req.body, fieldName);
+    const fotoAjusteInput = normalizeFotoAjusteInput(req.body, cadastroAtual.fotoAjuste || {});
 
     const updateData = {
       nomeCompleto: req.body.nomeCompleto,
@@ -6245,6 +6305,7 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       email: req.body.email,
       instagram: req.body.instagram,
       dataNascimento: req.body.dataNascimento,
+      fotoAjuste: fotoAjusteInput,
     };
 
     Object.assign(updateData, await buildApprovalStateUpdate(statusAprovacao));
@@ -7460,11 +7521,11 @@ app.get('/admin/encontros/:ejcId', checkAdminAuth, requireAdminPermission('encon
       Equipe.find({ ejcId }).sort({ nome: 1 }).lean(),
       Cadastro.find()
         .sort({ nomeCompleto: 1 })
-        .select('nomeCompleto ejc telefone email bairro foto')
+        .select('nomeCompleto ejc telefone email bairro foto fotoAjuste')
         .lean(),
       Encontro.find()
         .sort({ nomeCompleto: 1 })
-        .select('nomeCompleto tipo ejc telefone email bairro foto')
+        .select('nomeCompleto tipo ejc telefone email bairro foto fotoAjuste')
         .lean(),
       VinculoEncontro.find({ ejcId }).lean(),
     ]);
@@ -8053,12 +8114,12 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
     const [listaEncontristas, listaEncontreiros] = await Promise.all([
       idsEncontristas.length
         ? Cadastro.find({ _id: { $in: idsEncontristas } })
-          .select('nomeCompleto telefone email ejc bairro foto logradouro dataNascimento instagram')
+          .select('nomeCompleto telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto logradouro dataNascimento instagram')
+          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
@@ -8427,12 +8488,12 @@ app.get('/admin/encontros/:ejcId/export/crachas/pdf', checkAdminAuth, requireAdm
     const [encontristas, encontreiros] = await Promise.all([
       idsEncontristas.length
         ? Cadastro.find({ _id: { $in: idsEncontristas } })
-          .select('nomeCompleto comoQuerSerChamado logradouro bairro dataNascimento telefone email instagram foto')
+          .select('nomeCompleto comoQuerSerChamado logradouro bairro dataNascimento telefone email instagram foto fotoAjuste')
           .lean()
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto')
+          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto fotoAjuste')
           .lean()
         : [],
     ]);
@@ -8510,12 +8571,12 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
     const [listaEncontristas, listaEncontreiros] = await Promise.all([
       idsEncontristas.length
         ? Cadastro.find({ _id: { $in: idsEncontristas } })
-          .select('nomeCompleto telefone email ejc bairro foto logradouro dataNascimento instagram')
+          .select('nomeCompleto telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto logradouro dataNascimento instagram')
+          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);

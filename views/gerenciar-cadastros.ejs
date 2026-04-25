@@ -3251,6 +3251,60 @@
                       <label class="form-label">Nova Foto (JPG ou PNG)</label>
                       <input type="file" class="form-control" id="edit_foto" name="foto" accept="image/jpeg,image/png">
                     </div>
+
+                    <div>
+                      <label class="form-label">Ajuste da Foto no PDF</label>
+                      <div class="edit-photo-adjust-panel">
+                        <div class="edit-photo-adjust-row">
+                          <label class="form-label small mb-1" for="edit_fotoAjusteRotacao">Rotação</label>
+                          <span class="edit-photo-adjust-tip">Ajuste fino para alinhamento do rosto</span>
+                        </div>
+                        <select class="form-select edit-photo-rotation-select" id="edit_fotoAjusteRotacao" name="fotoAjusteRotacao">
+                          <option value="-270">-270°</option>
+                          <option value="-180">-180°</option>
+                          <option value="-90">-90°</option>
+                          <option value="0" selected>0°</option>
+                          <option value="90">90°</option>
+                          <option value="180">180°</option>
+                          <option value="270">270°</option>
+                        </select>
+                        <div class="edit-photo-quick-actions" role="group" aria-label="Atalhos de rotação e enquadramento da foto">
+                          <button type="button" class="btn btn-outline-secondary edit-photo-quick-btn" data-photo-quick-action="rot-minus" onclick="aplicarAjusteRapidoFotoPdf('rot-minus')" title="Girar 90 graus para a esquerda" aria-label="Girar 90 graus para a esquerda">
+                            <i class="fas fa-rotate-left" aria-hidden="true"></i><span>-90°</span>
+                          </button>
+                          <button type="button" class="btn btn-outline-secondary edit-photo-quick-btn" data-photo-quick-action="rot-plus" onclick="aplicarAjusteRapidoFotoPdf('rot-plus')" title="Girar 90 graus para a direita" aria-label="Girar 90 graus para a direita">
+                            <i class="fas fa-rotate-right" aria-hidden="true"></i><span>+90°</span>
+                          </button>
+                          <button type="button" class="btn btn-outline-secondary edit-photo-quick-btn" data-photo-quick-action="top" onclick="aplicarAjusteRapidoFotoPdf('top')" title="Levar enquadramento para o topo" aria-label="Levar enquadramento para o topo">
+                            <i class="fas fa-up-long" aria-hidden="true"></i><span>Topo</span>
+                          </button>
+                          <button type="button" class="btn btn-outline-secondary edit-photo-quick-btn" data-photo-quick-action="bottom" onclick="aplicarAjusteRapidoFotoPdf('bottom')" title="Levar enquadramento para a base" aria-label="Levar enquadramento para a base">
+                            <i class="fas fa-down-long" aria-hidden="true"></i><span>Base</span>
+                          </button>
+                          <button type="button" class="btn btn-outline-secondary edit-photo-quick-btn" data-photo-quick-action="center" onclick="aplicarAjusteRapidoFotoPdf('center')" title="Centralizar enquadramento" aria-label="Centralizar enquadramento">
+                            <i class="fas fa-arrows-to-dot" aria-hidden="true"></i><span>Centro</span>
+                          </button>
+                        </div>
+                        <div class="edit-photo-focus-wrap">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                          <label class="form-label small mb-0" for="edit_fotoAjusteFocoY">Enquadramento vertical</label>
+                          <span id="edit_fotoAjusteFocoYLabel" class="small text-muted">Topo (28%)</span>
+                        </div>
+                          <input type="range" class="form-range edit-photo-focus-range" id="edit_fotoAjusteFocoY" name="fotoAjusteFocoY" min="0" max="100" step="1" value="28">
+                          <div class="form-text">0 = topo, 50 = centro, 100 = base.</div>
+                        </div>
+                        <div id="edit_fotoPdfPreviewWrap" class="edit-photo-preview-wrap d-none">
+                          <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="form-label small mb-0">Pré-visualização do card</span>
+                            <span id="edit_fotoPdfPreviewInfo" class="small text-muted">Rotação 0° • Foco 28%</span>
+                          </div>
+                          <div class="edit-photo-preview-frame">
+                            <img id="edit_fotoPdfPreviewImg" class="edit-photo-preview-image" alt="Prévia da foto no PDF" decoding="async">
+                            <div class="edit-photo-preview-overlay"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </section>
 
@@ -3563,6 +3617,8 @@
     }
 
     let modalEdicao = createFixedEditorModalController(modalEdicaoElement);
+    let editFotoPreviewObjectUrl = '';
+    let editFotoPreviewFileRef = null;
     let adminInlineEditorRemoveTimer = null;
     let adminInlineEditorBusy = false;
     let adminInlineEditLastClickAt = 0;
@@ -4490,6 +4546,132 @@
       field.value = value == null ? '' : value;
     }
 
+    function atualizarLabelFocoFotoPdf() {
+      const focoInput = document.getElementById('edit_fotoAjusteFocoY');
+      const focoLabel = document.getElementById('edit_fotoAjusteFocoYLabel');
+      if (!focoInput || !focoLabel) return;
+
+      const valor = Number(focoInput.value);
+      const textoBase = Number.isFinite(valor)
+        ? (valor <= 33 ? 'Topo' : (valor >= 67 ? 'Base' : 'Centro'))
+        : 'Centro';
+      const valorExibido = Number.isFinite(valor) ? Math.round(valor) : 50;
+      focoLabel.textContent = `${textoBase} (${valorExibido}%)`;
+    }
+
+    function liberarPreviewObjectUrl() {
+      if (editFotoPreviewObjectUrl) {
+        URL.revokeObjectURL(editFotoPreviewObjectUrl);
+        editFotoPreviewObjectUrl = '';
+      }
+      editFotoPreviewFileRef = null;
+    }
+
+    function obterFonteFotoParaPreviewPdf() {
+      const fileInput = document.getElementById('edit_foto');
+      const arquivo = fileInput && fileInput.files && fileInput.files[0] ? fileInput.files[0] : null;
+
+      if (arquivo) {
+        if (editFotoPreviewFileRef !== arquivo) {
+          liberarPreviewObjectUrl();
+          editFotoPreviewObjectUrl = URL.createObjectURL(arquivo);
+          editFotoPreviewFileRef = arquivo;
+        }
+        return editFotoPreviewObjectUrl;
+      }
+
+      liberarPreviewObjectUrl();
+      const fotoAtual = document.querySelector('#fotoAtualContainer .modal-foto-preview');
+      return fotoAtual ? fotoAtual.src : '';
+    }
+
+    function atualizarPreviewFotoPdf() {
+      const wrap = document.getElementById('edit_fotoPdfPreviewWrap');
+      const img = document.getElementById('edit_fotoPdfPreviewImg');
+      const info = document.getElementById('edit_fotoPdfPreviewInfo');
+      const focoInput = document.getElementById('edit_fotoAjusteFocoY');
+      const rotacaoInput = document.getElementById('edit_fotoAjusteRotacao');
+      if (!wrap || !img || !info || !focoInput || !rotacaoInput) return;
+
+      const atualizarEstadoAtalhos = (foco, rotacao) => {
+        const quickButtons = Array.from(document.querySelectorAll('.edit-photo-quick-btn[data-photo-quick-action]'));
+        quickButtons.forEach((button) => {
+          const action = button.getAttribute('data-photo-quick-action');
+          let active = false;
+          if (action === 'top') active = foco <= 4;
+          if (action === 'center') active = Math.abs(foco - 50) <= 4;
+          if (action === 'bottom') active = foco >= 96;
+          if (action === 'rot-minus') active = rotacao < 0;
+          if (action === 'rot-plus') active = rotacao > 0;
+          button.classList.toggle('is-active', active);
+        });
+      };
+
+      const src = obterFonteFotoParaPreviewPdf();
+      if (!src) {
+        wrap.classList.add('d-none');
+        img.removeAttribute('src');
+        atualizarEstadoAtalhos(50, 0);
+        return;
+      }
+
+      if (img.src !== src) {
+        img.src = src;
+      }
+
+      wrap.classList.remove('d-none');
+
+      const focoY = Number.isFinite(Number(focoInput.value)) ? Math.max(0, Math.min(100, Number(focoInput.value))) : 28;
+      const rotacao = Number.isFinite(Number(rotacaoInput.value)) ? Number(rotacaoInput.value) : 0;
+      const rotacaoNormalizada = ((rotacao % 360) + 360) % 360;
+      const usarEscalaMaior = rotacaoNormalizada === 90 || rotacaoNormalizada === 270;
+      const escala = usarEscalaMaior ? 1.34 : (rotacaoNormalizada === 180 ? 1.08 : 1);
+
+      img.style.objectPosition = `50% ${focoY}%`;
+      img.style.transform = `rotate(${rotacao}deg) scale(${escala})`;
+      info.textContent = `Rotação ${rotacao}° • Foco ${Math.round(focoY)}%`;
+      atualizarEstadoAtalhos(focoY, rotacao);
+    }
+
+    function aplicarAjusteRapidoFotoPdf(acao) {
+      const focoInput = document.getElementById('edit_fotoAjusteFocoY');
+      const rotacaoInput = document.getElementById('edit_fotoAjusteRotacao');
+      if (!focoInput || !rotacaoInput) return;
+
+      const rotacaoAtual = Number.isFinite(Number(rotacaoInput.value)) ? Number(rotacaoInput.value) : 0;
+      let proximaRotacao = rotacaoAtual;
+
+      if (acao === 'rot-minus') {
+        proximaRotacao = rotacaoAtual - 90;
+      }
+
+      if (acao === 'rot-plus') {
+        proximaRotacao = rotacaoAtual + 90;
+      }
+
+      while (proximaRotacao > 270) proximaRotacao -= 540;
+      while (proximaRotacao < -270) proximaRotacao += 540;
+
+      if (acao === 'center') {
+        focoInput.value = '50';
+      }
+
+      if (acao === 'top') {
+        focoInput.value = '0';
+      }
+
+      if (acao === 'bottom') {
+        focoInput.value = '100';
+      }
+
+      if (acao === 'rot-minus' || acao === 'rot-plus') {
+        rotacaoInput.value = String(proximaRotacao);
+      }
+
+      atualizarLabelFocoFotoPdf();
+      atualizarPreviewFotoPdf();
+    }
+
     function editarCadastro(tipo, id) {
       const lista = tipo === 'encontrista' ? encontristas : encontreiros;
       const cadastro = lista.find(c => String(c._id) === String(id));
@@ -4516,6 +4698,11 @@
       document.getElementById('edit_temRelacionamento').value = cadastro.temRelacionamento || '';
       document.getElementById('edit_instagram').value = cadastro.instagram || '';
       document.getElementById('edit_observacoes').value = cadastro.observacoes || '';
+      document.getElementById('edit_fotoAjusteRotacao').value = Number(cadastro?.fotoAjuste?.rotacao) || 0;
+      document.getElementById('edit_fotoAjusteFocoY').value = Number.isFinite(Number(cadastro?.fotoAjuste?.focoY))
+        ? Number(cadastro.fotoAjuste.focoY)
+        : 28;
+      atualizarLabelFocoFotoPdf();
       document.getElementById('edit_cep').value = cadastro.cep || '';
       document.getElementById('edit_complementoReferencia').value = cadastro.complementoReferencia || '';
       document.getElementById('edit_estadoCivil').value = cadastro.estadoCivil || '';
@@ -4605,6 +4792,7 @@
       atualizarAvatarResumoEdicao(cadastro);
 
       const fotoContainer = document.getElementById('fotoAtualContainer');
+      liberarPreviewObjectUrl();
       document.getElementById('edit_foto').value = '';
       if (cadastro.foto) {
         fotoContainer.innerHTML = `
@@ -4625,10 +4813,21 @@
       const fotoPreview = fotoContainer.querySelector('.modal-foto-preview');
       if (fotoPreview && !fotoPreview.complete) {
         fotoPreview.addEventListener('load', ajustarEditorEncontreiroSemRolagem, { once: true });
+        fotoPreview.addEventListener('load', atualizarPreviewFotoPdf, { once: true });
       }
+
+      atualizarPreviewFotoPdf();
 
       modalEdicao.show();
     }
+
+    document.getElementById('edit_fotoAjusteFocoY')?.addEventListener('input', () => {
+      atualizarLabelFocoFotoPdf();
+      atualizarPreviewFotoPdf();
+    });
+    document.getElementById('edit_fotoAjusteRotacao')?.addEventListener('change', atualizarPreviewFotoPdf);
+    document.getElementById('edit_foto')?.addEventListener('change', atualizarPreviewFotoPdf);
+    modalEdicaoElement.addEventListener('hidden.bs.modal', liberarPreviewObjectUrl);
 
     async function salvarEdicao() {
       const formData = new FormData(document.getElementById('formEdicao'));

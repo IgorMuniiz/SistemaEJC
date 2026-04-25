@@ -151,6 +151,17 @@ function GenericForm() {
   const [currentStep, setCurrentStep] = useState(0);
   const [ejcAtivo, setEjcAtivo] = useState(initialEjcAtivo);
   const formRef = useRef(null);
+  const photoPreviewUrlsRef = useRef({});
+  const [photoPreviewByPessoa, setPhotoPreviewByPessoa] = useState({
+    unico: '',
+    pessoa1: '',
+    pessoa2: '',
+  });
+  const [photoProcessingByPessoa, setPhotoProcessingByPessoa] = useState({
+    unico: false,
+    pessoa1: false,
+    pessoa2: false,
+  });
 
   const redirectToSuccessPage = () => {
     const destino = isEncontro ? '/sucesso?origem=encontro' : '/sucesso?origem=inscricao';
@@ -301,6 +312,15 @@ function GenericForm() {
     }
   }, [tiosModo]);
 
+  useEffect(() => {
+    return () => {
+      Object.values(photoPreviewUrlsRef.current || {}).forEach((url) => {
+        if (url) URL.revokeObjectURL(url);
+      });
+      photoPreviewUrlsRef.current = {};
+    };
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, options, multiple, type, checked } = e.target;
     if (type === 'checkbox') {
@@ -317,8 +337,135 @@ function GenericForm() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFile = (e) => {
-    setFormData((prev) => ({ ...prev, foto: e.target.files[0] }));
+  const setPreviewForPessoa = (pessoa, file) => {
+    const key = pessoa || 'unico';
+    const oldUrl = photoPreviewUrlsRef.current[key];
+    if (oldUrl) {
+      URL.revokeObjectURL(oldUrl);
+      photoPreviewUrlsRef.current[key] = '';
+    }
+
+    if (!file) {
+      setPhotoPreviewByPessoa((prev) => ({ ...prev, [key]: '' }));
+      return;
+    }
+
+    const nextUrl = URL.createObjectURL(file);
+    photoPreviewUrlsRef.current[key] = nextUrl;
+    setPhotoPreviewByPessoa((prev) => ({ ...prev, [key]: nextUrl }));
+  };
+
+  const readImageFromFile = (file) => new Promise((resolve, reject) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(img);
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(new Error('Nao foi possivel ler a imagem enviada.'));
+    };
+
+    img.src = objectUrl;
+  });
+
+  const normalizeCardPhotoFile = async (file) => {
+    if (!file) return null;
+
+    const image = await readImageFromFile(file);
+    const sourceWidth = Number(image.naturalWidth || image.width || 0);
+    const sourceHeight = Number(image.naturalHeight || image.height || 0);
+    if (!sourceWidth || !sourceHeight) {
+      throw new Error('Imagem invalida para recorte.');
+    }
+
+    const targetWidth = 900;
+    const targetHeight = 1200;
+    const targetRatio = targetWidth / targetHeight;
+    const sourceRatio = sourceWidth / sourceHeight;
+
+    let cropWidth = sourceWidth;
+    let cropHeight = sourceHeight;
+    let cropX = 0;
+    let cropY = 0;
+
+    if (sourceRatio > targetRatio) {
+      cropWidth = Math.round(sourceHeight * targetRatio);
+      cropX = Math.max(0, Math.round((sourceWidth - cropWidth) / 2));
+    } else if (sourceRatio < targetRatio) {
+      cropHeight = Math.round(sourceWidth / targetRatio);
+      const extraVertical = Math.max(0, sourceHeight - cropHeight);
+      // Mantem mais area superior para privilegiar o rosto no card.
+      cropY = Math.max(0, Math.round(extraVertical * 0.22));
+    }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      throw new Error('Nao foi possivel preparar a imagem para o card.');
+    }
+
+    context.imageSmoothingEnabled = true;
+    context.imageSmoothingQuality = 'high';
+    context.drawImage(
+      image,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      targetWidth,
+      targetHeight,
+    );
+
+    const blob = await new Promise((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', 0.92);
+    });
+
+    if (!blob) {
+      throw new Error('Nao foi possivel gerar o arquivo final da foto.');
+    }
+
+    const baseName = String(file.name || 'foto')
+      .replace(/\.[^.]+$/, '')
+      .replace(/[^a-zA-Z0-9_-]+/g, '_')
+      .replace(/_+/g, '_')
+      .replace(/^_|_$/g, '') || 'foto';
+
+    return new File([blob], `${baseName}_card.jpg`, {
+      type: 'image/jpeg',
+      lastModified: Date.now(),
+    });
+  };
+
+  const handleFile = async (e) => {
+    const selectedFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    if (!selectedFile) {
+      setFormData((prev) => ({ ...prev, foto: null }));
+      setPhotoProcessingByPessoa((prev) => ({ ...prev, unico: false }));
+      setPreviewForPessoa('unico', null);
+      return;
+    }
+
+    setPhotoProcessingByPessoa((prev) => ({ ...prev, unico: true }));
+    setErrors([]);
+    try {
+      const normalizedFile = await normalizeCardPhotoFile(selectedFile);
+      setFormData((prev) => ({ ...prev, foto: normalizedFile }));
+      setPreviewForPessoa('unico', normalizedFile);
+    } catch (error) {
+      setFormData((prev) => ({ ...prev, foto: selectedFile }));
+      setPreviewForPessoa('unico', selectedFile);
+      setErrors([{ msg: `Nao foi possivel ajustar automaticamente a foto: ${error.message}` }]);
+    } finally {
+      setPhotoProcessingByPessoa((prev) => ({ ...prev, unico: false }));
+    }
   };
 
   const handleTiosChange = (pessoa, e) => {
@@ -346,11 +493,37 @@ function GenericForm() {
     }));
   };
 
-  const handleTiosFile = (pessoa, e) => {
-    setTiosData((prev) => ({
-      ...prev,
-      [pessoa]: { ...prev[pessoa], foto: e.target.files[0] },
-    }));
+  const handleTiosFile = async (pessoa, e) => {
+    const selectedFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    if (!selectedFile) {
+      setTiosData((prev) => ({
+        ...prev,
+        [pessoa]: { ...prev[pessoa], foto: null },
+      }));
+      setPhotoProcessingByPessoa((prev) => ({ ...prev, [pessoa]: false }));
+      setPreviewForPessoa(pessoa, null);
+      return;
+    }
+
+    setPhotoProcessingByPessoa((prev) => ({ ...prev, [pessoa]: true }));
+    setErrors([]);
+    try {
+      const normalizedFile = await normalizeCardPhotoFile(selectedFile);
+      setTiosData((prev) => ({
+        ...prev,
+        [pessoa]: { ...prev[pessoa], foto: normalizedFile },
+      }));
+      setPreviewForPessoa(pessoa, normalizedFile);
+    } catch (error) {
+      setTiosData((prev) => ({
+        ...prev,
+        [pessoa]: { ...prev[pessoa], foto: selectedFile },
+      }));
+      setPreviewForPessoa(pessoa, selectedFile);
+      setErrors([{ msg: `Nao foi possivel ajustar automaticamente a foto: ${error.message}` }]);
+    } finally {
+      setPhotoProcessingByPessoa((prev) => ({ ...prev, [pessoa]: false }));
+    }
   };
 
   const toggleEquipeSelection = (pessoa, field, value, checked) => {
@@ -378,6 +551,12 @@ function GenericForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('[INFO] Iniciando submissão do formulário');
+
+    const hasPendingPhotoProcessing = Object.values(photoProcessingByPessoa).some(Boolean);
+    if (hasPendingPhotoProcessing) {
+      setErrors([{ msg: 'Aguarde o ajuste automatico da foto terminar para enviar.' }]);
+      return;
+    }
 
     if (!ejcAtivo) {
       setErrors([{ msg: 'Nenhum encontro ativo foi criado ainda. Aguarde a abertura do proximo EJC.' }]);
@@ -645,6 +824,9 @@ function GenericForm() {
 
   const renderPhotoUploadField = ({ pessoa, data, handleF, label = 'Anexar foto (JPG ou PNG) *' }) => {
     const fileName = data?.foto?.name || '';
+    const pessoaKey = pessoa || 'unico';
+    const previewUrl = photoPreviewByPessoa[pessoaKey] || '';
+    const isPhotoProcessing = !!photoProcessingByPessoa[pessoaKey];
 
     return (
       <div className="upload-field-shell">
@@ -655,7 +837,7 @@ function GenericForm() {
           <div className="upload-field-copy">
             <label htmlFor={`foto-${pessoa}`} className="form-label upload-field-label">{label}</label>
             <small className="upload-field-hint">
-              {fileName ? 'Arquivo selecionado. Revise abaixo antes de enviar.' : 'Selecione uma imagem nítida, preferencialmente em retrato.'}
+              {fileName ? 'Foto ajustada para o padrao do card PDF.' : 'Selecione uma imagem nitida, preferencialmente em retrato.'}
             </small>
           </div>
         </div>
@@ -667,15 +849,29 @@ function GenericForm() {
           name="foto"
           accept="image/*"
           onChange={handleF}
+          disabled={isPhotoProcessing}
           required
         />
+
+        {previewUrl ? (
+          <div className="mt-3">
+            <div className="mb-1 text-light" style={{ fontSize: '0.8rem' }}>
+              Previa do enquadramento final do card
+            </div>
+            <div style={{ width: 'min(210px, 100%)', aspectRatio: '3 / 4', borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.25)', background: 'rgba(7, 11, 28, 0.75)' }}>
+              <img src={previewUrl} alt="Previa da foto ajustada para o card" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            </div>
+          </div>
+        ) : null}
 
         <div className="upload-field-meta" aria-live="polite">
           <span className={`upload-file-pill${fileName ? ' has-file' : ''}`}>
             <i className={`fas ${fileName ? 'fa-circle-check' : 'fa-image'}`}></i>
             {fileName || 'Nenhum arquivo selecionado'}
           </span>
-          <span className="upload-file-spec">Formatos aceitos: JPG e PNG.</span>
+          <span className="upload-file-spec">
+            {isPhotoProcessing ? 'Ajustando foto para o card...' : 'Formatos aceitos: JPG e PNG. A foto sera enviada no enquadramento do card PDF.'}
+          </span>
         </div>
       </div>
     );
