@@ -1834,6 +1834,90 @@ const resolvePhotoPath = (fileName) => {
   return fs.existsSync(filePath) ? filePath : null;
 };
 
+const PDF_PHOTO_CACHE_MAX_ITEMS = 220;
+const pdfPhotoCoverCache = new Map();
+
+const resolvePdfCoverGravity = (align = 'center', valign = 'top') => {
+  if (align === 'left' && valign === 'top') return 'northwest';
+  if (align === 'left' && valign === 'center') return 'west';
+  if (align === 'left' && valign === 'bottom') return 'southwest';
+  if (align === 'right' && valign === 'top') return 'northeast';
+  if (align === 'right' && valign === 'center') return 'east';
+  if (align === 'right' && valign === 'bottom') return 'southeast';
+  if (valign === 'bottom') return 'south';
+  if (valign === 'center') return 'center';
+  return 'north';
+};
+
+const buildPdfPhotoCacheKey = (photoPath, width, height, strategy, align, valign) => {
+  try {
+    const stat = fs.statSync(photoPath);
+    return [
+      photoPath,
+      String(width),
+      String(height),
+      strategy,
+      align,
+      valign,
+      String(stat.size),
+      String(Number(stat.mtimeMs || 0).toFixed(0)),
+    ].join('|');
+  } catch {
+    return [photoPath, String(width), String(height), strategy, align, valign].join('|');
+  }
+};
+
+const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) => {
+  if (!photoPath || width <= 0 || height <= 0) return null;
+
+  const safeWidth = Math.max(1, Math.round(width));
+  const safeHeight = Math.max(1, Math.round(height));
+  const align = options.align === 'left' ? 'left' : (options.align === 'right' ? 'right' : 'center');
+  const valign = options.valign === 'center' ? 'center' : (options.valign === 'bottom' ? 'bottom' : 'top');
+  const strategy = options.strategy === 'entropy' ? 'entropy' : 'attention';
+  const cacheKey = buildPdfPhotoCacheKey(photoPath, safeWidth, safeHeight, strategy, align, valign);
+
+  if (pdfPhotoCoverCache.has(cacheKey)) {
+    const cached = pdfPhotoCoverCache.get(cacheKey);
+    pdfPhotoCoverCache.delete(cacheKey);
+    pdfPhotoCoverCache.set(cacheKey, cached);
+    return cached;
+  }
+
+  try {
+    const strategyPosition = strategy === 'entropy' ? sharp.strategy.entropy : sharp.strategy.attention;
+    const smartBuffer = await sharp(photoPath, { failOn: 'none' })
+      .rotate()
+      .resize(safeWidth, safeHeight, {
+        fit: 'cover',
+        position: strategyPosition,
+      })
+      .jpeg({ quality: 90, mozjpeg: true })
+      .toBuffer();
+
+    if (pdfPhotoCoverCache.size >= PDF_PHOTO_CACHE_MAX_ITEMS) {
+      const oldestKey = pdfPhotoCoverCache.keys().next().value;
+      if (oldestKey) pdfPhotoCoverCache.delete(oldestKey);
+    }
+    pdfPhotoCoverCache.set(cacheKey, smartBuffer);
+    return smartBuffer;
+  } catch {
+    try {
+      const fallbackPosition = resolvePdfCoverGravity(align, valign);
+      return await sharp(photoPath, { failOn: 'none' })
+        .rotate()
+        .resize(safeWidth, safeHeight, {
+          fit: 'cover',
+          position: fallbackPosition,
+        })
+        .jpeg({ quality: 90, mozjpeg: true })
+        .toBuffer();
+    } catch {
+      return null;
+    }
+  }
+};
+
 const drawPdfTitle = (doc, title, subtitle) => {
   const headerY = 30;
   const headerHeight = 44;
@@ -1942,7 +2026,7 @@ const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize =
   }
 };
 
-const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {}) => {
+const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, options = {}) => {
   // Card com acabamento mais limpo e profissional.
   const outerInset = Math.max(0, Number(options.outerInset) || 0);
   const cardX = x + outerInset;
@@ -1976,7 +2060,7 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   const rowHeight = Number(options.rowHeight) > 0 ? Number(options.rowHeight) : 16;
   const topPadding = Number(options.topPadding) >= 0 ? Number(options.topPadding) : 8;
   const textMax = Number(options.textMax) > 0 ? Number(options.textMax) : 46;
-  const photoValign = options.photoValign === 'top' ? 'top' : 'center';
+  const photoValign = options.photoValign === 'center' ? 'center' : 'top';
   const photoAlign = options.photoAlign === 'left' ? 'left' : (options.photoAlign === 'right' ? 'right' : 'center');
   const showLabels = options.showLabels !== false;
   const hideEmail = Boolean(options.hideEmail);
@@ -2008,13 +2092,21 @@ const drawRegistrationCard = (doc, entry, x, y, width, height, mode, options = {
   const photoPath = resolvePhotoPath(entry.foto);
   if (photoPath) {
     try {
-      // Cover preenche todo o quadrado, alinhamento superior garante que o rosto apareça
-      doc.save();
-      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).clip();
-      doc.image(photoPath, photoX + 1, photoY + 1, {
-        cover: [photoWidth - 2, photoHeight - 2],
+      const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoWidth - 2, photoHeight - 2, {
+        strategy: 'attention',
         align: photoAlign,
         valign: photoValign,
+      });
+      if (!photoBuffer) {
+        throw new Error('photo-buffer-unavailable');
+      }
+
+      doc.save();
+      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).clip();
+      doc.image(photoBuffer, photoX + 1, photoY + 1, {
+        fit: [photoWidth - 2, photoHeight - 2],
+        align: 'center',
+        valign: 'center',
       });
       doc.restore();
     } catch {
@@ -2231,7 +2323,7 @@ const getCrachaPalette = (groupType, groupName = '') => {
   return resolveEquipeCrachaTheme(groupName);
 };
 
-const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
+const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
@@ -2301,7 +2393,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
     });
   };
 
-  const drawBadgeCard = (entry, group, x, y) => {
+  const drawBadgeCard = async (entry, group, x, y) => {
     const palette = getCrachaPalette(group.tipo, group.nome);
     const displayName = buildPdfDisplayName(entry.nomeCompleto, entry.comoQuerSerChamado, 36);
     const groupLabel = truncateText(group.nome || '-', 30).toUpperCase();
@@ -2332,10 +2424,19 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
     doc.lineWidth(1).strokeColor(isEquipeBadge ? '#f0d9a7' : '#f8e7b2').roundedRect(mediaBoxX + 4, mediaBoxY + 4, mediaBoxWidth - 8, mediaBoxHeight - 8, 14).stroke();
     if (photoPath) {
       try {
+        const photoBuffer = await getPdfSmartCoverBuffer(photoPath, mediaBoxWidth - 12, mediaBoxHeight - 12, {
+          strategy: 'attention',
+          align: 'center',
+          valign: 'top',
+        });
+        if (!photoBuffer) {
+          throw new Error('photo-buffer-unavailable');
+        }
+
         doc.save();
         doc.roundedRect(mediaBoxX + 6, mediaBoxY + 6, mediaBoxWidth - 12, mediaBoxHeight - 12, 12).clip();
-        doc.image(photoPath, mediaBoxX + 6, mediaBoxY + 6, {
-          cover: [mediaBoxWidth - 12, mediaBoxHeight - 12],
+        doc.image(photoBuffer, mediaBoxX + 6, mediaBoxY + 6, {
+          fit: [mediaBoxWidth - 12, mediaBoxHeight - 12],
           align: 'center',
           valign: 'center',
         });
@@ -2350,7 +2451,7 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
         doc.image(artPath, mediaBoxX + 6, mediaBoxY + 6, {
           cover: [mediaBoxWidth - 12, mediaBoxHeight - 12],
           align: 'center',
-          valign: 'center',
+          valign: 'top',
         });
         doc.restore();
       } catch {
@@ -2452,7 +2553,8 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
     return;
   }
 
-  safeGroups.forEach((group, groupIndex) => {
+  for (let groupIndex = 0; groupIndex < safeGroups.length; groupIndex += 1) {
+    const group = safeGroups[groupIndex];
     const entries = Array.isArray(group.entries) ? group.entries : [];
     const totalPages = Math.max(1, Math.ceil(entries.length / cardsPerPage));
 
@@ -2472,20 +2574,21 @@ const renderCrachasPdf = (res, { fileName, mainTitle, ejcName, groups }) => {
         continue;
       }
 
-      pageEntries.forEach((entry, idx) => {
+      for (let idx = 0; idx < pageEntries.length; idx += 1) {
+        const entry = pageEntries[idx];
         const col = idx % cols;
         const row = Math.floor(idx / cols);
         const x = startX + (col * (cardWidth + gapX));
         const y = startY + (row * (cardHeight + gapY));
-        drawBadgeCard(entry, group, x, y);
-      });
+        await drawBadgeCard(entry, group, x, y);
+      }
     }
-  });
+  }
 
   doc.end();
 };
 
-const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) => {
+const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, groups }) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
@@ -2550,7 +2653,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
     return grouped;
   };
 
-  const drawGrid = (entries, startY, config = {}) => {
+  const drawGrid = async (entries, startY, config = {}) => {
     const roleResolver = typeof config.roleResolver === 'function' ? config.roleResolver : null;
     const cardTopLabel = typeof config.cardTopLabel === 'function' ? config.cardTopLabel : null;
     const gridCardHeight = Number(config.cardHeight) > 0 ? Number(config.cardHeight) : cardHeight;
@@ -2579,7 +2682,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
     let col = 0;
     let pendingLeftEntry = null;
 
-    entries.forEach((entry) => {
+    for (const entry of entries) {
       // Garante que tio casal comece sempre em col=0 para ficar lado a lado com o parceiro.
       // Se o primeiro do par chegaria em col=1 (numero impar de entradas anteriores),
       // e o entry atual NAO e o parceiro esperado do pendingLeftEntry, força nova linha.
@@ -2610,7 +2713,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
         }
       }
 
-      drawRegistrationCard(
+      await drawRegistrationCard(
         doc,
         entry,
         x,
@@ -2637,7 +2740,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
         col = 0;
         y += rowHeight + rowGap;
       }
-    });
+    }
 
     if (col === 1) {
       y += rowHeight + rowGap;
@@ -2727,7 +2830,8 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
   drawPageTitle();
   let totalRegistros = 0;
 
-  groups.forEach((group, index) => {
+  for (let index = 0; index < groups.length; index += 1) {
+    const group = groups[index];
     if (index > 0) {
       doc.addPage();
       drawPageTitle();
@@ -2779,7 +2883,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
         hideEjc: false,
         fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
-        photoValign: 'center',
+        photoValign: 'top',
       };
       const circleMemberCardOptions = {
         fontBoost: 0.2,
@@ -2800,7 +2904,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
         hideEjc: false,
         fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
-        photoValign: 'center',
+        photoValign: 'top',
       };
       const moitas = entradas.filter((item) => item.papel === 'moita');
       const outros = entradas.filter((item) => item.papel !== 'moita');
@@ -2821,7 +2925,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
         });
         doc.restore();
 
-        drawRegistrationCard(
+        await drawRegistrationCard(
           doc,
           pessoaMoita,
           moitaX,
@@ -2841,7 +2945,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
       let y = blocoTopoFim + rowGap;
 
       if (listaMembros.length > 0) {
-        drawGrid(listaMembros, y, {
+        await drawGrid(listaMembros, y, {
           left: circleLeft,
           gap: circleGap,
           rowGap,
@@ -2854,7 +2958,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
       if (!entradas.length) {
         doc.font('Helvetica').fontSize(10).fillColor('#6b7280').text('Sem vinculados neste circulo.', left, headerY + 72);
       }
-      return;
+      continue;
     }
 
     const coordenadores = sortEquipeEntriesByTipo(
@@ -2889,7 +2993,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
       hideEjc: false,
       fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
       photoAlign: 'center',
-      photoValign: 'center',
+      photoValign: 'top',
     };
     const equipeCoordenadorCardOptions = {
       ...equipeCardOptions,
@@ -2918,7 +3022,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
 
       doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 7).lineTo(left + 515, headingY + 7).stroke();
       y += 18;
-      y = drawGrid(coordenadores, y, {
+      y = await drawGrid(coordenadores, y, {
         left: equipePageMargin,
         gap: equipeColGap,
         rowGap: equipeRowGap,
@@ -2931,7 +3035,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
     }
 
     if (membros.length > 0) {
-      y = drawGrid(membros, y, {
+      y = await drawGrid(membros, y, {
         left: equipePageMargin,
         gap: equipeColGap,
         rowGap: equipeRowGap,
@@ -2944,7 +3048,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
     if (!entradas.length) {
       doc.font('Helvetica').fontSize(10).fillColor('#6b7280').text('Sem vinculados nesta equipe.', left, y + 10);
     }
-  });
+  }
 
   if (!groups.length) {
     doc.font('Helvetica').fontSize(11).fillColor('#666').text('Nenhuma estrutura cadastrada para este EJC.', 40, 120, { align: 'center' });
@@ -2960,7 +3064,7 @@ const renderEstruturasPdf = (res, { fileName, mainTitle: _mainTitle, groups }) =
   doc.end();
 };
 
-const renderCardGridPdf = (res, entries, options) => {
+const renderCardGridPdf = async (res, entries, options) => {
   const PDFDocument = require('pdfkit');
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${options.fileName}"`);
@@ -2995,7 +3099,7 @@ const renderCardGridPdf = (res, entries, options) => {
     hideEjc: false,
     fields: ['nome', 'instagram', 'telefone', 'aniversario', 'ejc'],
     photoAlign: 'center',
-    photoValign: 'center',
+    photoValign: 'top',
   };
 
   const isTiosCasal = (entry) => {
@@ -3014,7 +3118,8 @@ const renderCardGridPdf = (res, entries, options) => {
   let col = 0;
   let pendingLeftEntry = null;
 
-  entries.forEach((entry, idx) => {
+  for (let idx = 0; idx < entries.length; idx += 1) {
+    const entry = entries[idx];
     if (y + cardHeight > bottomLimit) {
       doc.addPage();
       drawPdfTitle(doc, options.title, `Relatório gerado em ${new Date().toLocaleDateString('pt-BR')}`);
@@ -3024,7 +3129,7 @@ const renderCardGridPdf = (res, entries, options) => {
     }
 
     const x = col === 0 ? left : rightX;
-    drawRegistrationCard(doc, entry, x, y, cardWidth, cardHeight, options.mode, {
+    await drawRegistrationCard(doc, entry, x, y, cardWidth, cardHeight, options.mode, {
       ...sharedCardOptions,
       ...((options && options.drawOptions) || {}),
     });
@@ -3051,7 +3156,7 @@ const renderCardGridPdf = (res, entries, options) => {
         { align: 'center' }
       );
     }
-  });
+  }
 
   if (entries.length === 0) {
     doc.font('Helvetica').fontSize(11).fillColor('#666').text('Nenhum registro encontrado.', 40, 120, { align: 'center' });
@@ -3157,7 +3262,7 @@ app.get('/export', async (req, res) => {
       res.setHeader('Content-Disposition','attachment; filename="cadastro_ejc.csv"');
       return res.send(csv);
     } else if (format === 'pdf') {
-      renderCardGridPdf(res, entries, {
+      await renderCardGridPdf(res, entries, {
         fileName: 'cadastro_ejc.pdf',
         title: 'Inscrições - Encontristas',
         mode: 'cadastro',
@@ -3211,7 +3316,7 @@ app.get('/export-encontro', async (req, res) => {
       });
       sortedEntries.push(...individuais);
       
-      renderCardGridPdf(res, sortedEntries, {
+      await renderCardGridPdf(res, sortedEntries, {
         fileName: 'encontro.pdf',
         title: 'Inscrições - Encontreiros',
         mode: 'encontro',
@@ -3257,7 +3362,7 @@ app.get('/export-tios', async (req, res) => {
     });
     sortedEntries.push(...individuais);
 
-    renderCardGridPdf(res, sortedEntries, {
+    await renderCardGridPdf(res, sortedEntries, {
       fileName: 'tios.pdf',
       title: 'Inscricoes - Tios',
       mode: 'encontro',
@@ -4889,8 +4994,12 @@ app.post(
     console.log('[INFO] POST /inscricao - Requisição recebida');
     const errors = validationResult(req);
     const isJson = req.headers.accept && req.headers.accept.includes('application/json');
-    if (!errors.isEmpty()) {
-      const allErrors = errors.array();
+    const allErrors = errors.array();
+    if (!req.file) {
+      allErrors.push({ msg: 'Anexe uma foto (JPG ou PNG).' });
+    }
+
+    if (allErrors.length > 0) {
 
       if (isJson) {
         return res.status(400).json({ success: false, errors: allErrors });
@@ -5076,9 +5185,13 @@ app.post(
     
     const errors = validationResult(req);
     const isJson = req.headers.accept && req.headers.accept.includes('application/json');
-    
-    if (!errors.isEmpty()) {
-      const allErrors = [...errors.array()];
+
+    const allErrors = [...errors.array()];
+    if (!req.file) {
+      allErrors.push({ msg: 'Anexe uma foto (JPG ou PNG).' });
+    }
+
+    if (allErrors.length > 0) {
 
       if (isJson) {
         return res.status(400).json({ success: false, errors: allErrors });
@@ -8203,7 +8316,7 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
     }
 
     if (formato === 'crachas') {
-      renderCrachasPdf(res, {
+      await renderCrachasPdf(res, {
         fileName: `${arquivoBase}_crachas.pdf`,
         mainTitle: `CRACHAS AUTOMATICOS - ${ejc.nome}`,
         ejcName: ejc.nome,
@@ -8218,7 +8331,7 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
       return;
     }
 
-    renderEstruturasPdf(res, {
+    await renderEstruturasPdf(res, {
       fileName: `${arquivoBase}.pdf`,
       mainTitle: `${entidadeTipo === 'circulo' ? 'Circulos' : 'Equipes'} - ${ejc.nome}`,
       groups: [
@@ -8355,7 +8468,7 @@ app.get('/admin/encontros/:ejcId/export/crachas/pdf', checkAdminAuth, requireAdm
       .replace(/^_|_$/g, '')
       .toLowerCase() || 'crachas_ejc';
 
-    renderCrachasPdf(res, {
+    await renderCrachasPdf(res, {
       fileName: `${arquivoBase}.pdf`,
       mainTitle: `CRACHAS AUTOMATICOS - ${ejc.nome}`,
       ejcName: ejc.nome,
@@ -8447,7 +8560,7 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
       };
     }).filter((group) => Array.isArray(group.entries) && group.entries.length > 0);
 
-    renderEstruturasPdf(res, {
+    await renderEstruturasPdf(res, {
       fileName,
       mainTitle: `Quadrante - ${ejc.nome}`,
       groups: groupsWithEntries,
