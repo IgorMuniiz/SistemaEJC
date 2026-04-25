@@ -1921,21 +1921,72 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
 
   try {
     const strategyPosition = strategy === 'entropy' ? sharp.strategy.entropy : sharp.strategy.attention;
-    let smartPipeline = sharp(photoPath, { failOn: 'none' })
-      .rotate();
-    if (manualRotation) {
-      smartPipeline = smartPipeline.rotate(manualRotation);
-    }
 
-    const smartBuffer = await smartPipeline
-      .resize(safeWidth, safeHeight, {
-        fit: 'cover',
-        position: Number.isFinite(normalizedFocusY)
-          ? resolvePdfCoverGravity(align, focusValign)
-          : strategyPosition,
-      })
-      .jpeg({ quality: 95, mozjpeg: true })
-      .toBuffer();
+    const rotatedPipeline = sharp(photoPath, { failOn: 'none' })
+      .rotate()
+      .rotate(manualRotation || 0);
+
+    const rotatedMetadata = await rotatedPipeline.metadata();
+    const rotatedWidth = Number(rotatedMetadata.width) || 0;
+    const rotatedHeight = Number(rotatedMetadata.height) || 0;
+
+    let smartBuffer;
+
+    // Quando focoY foi informado, aplica recorte contínuo (0..100) para refletir
+    // fielmente o ajuste visual do admin no resultado final do PDF.
+    if (Number.isFinite(normalizedFocusY) && rotatedWidth > 0 && rotatedHeight > 0) {
+      const targetRatio = safeWidth / safeHeight;
+      const sourceRatio = rotatedWidth / rotatedHeight;
+
+      let extractWidth = rotatedWidth;
+      let extractHeight = rotatedHeight;
+      let extractLeft = 0;
+      let extractTop = 0;
+
+      if (sourceRatio > targetRatio) {
+        extractWidth = Math.max(1, Math.round(rotatedHeight * targetRatio));
+        extractHeight = rotatedHeight;
+
+        if (align === 'left') {
+          extractLeft = 0;
+        } else if (align === 'right') {
+          extractLeft = Math.max(0, rotatedWidth - extractWidth);
+        } else {
+          extractLeft = Math.max(0, Math.round((rotatedWidth - extractWidth) / 2));
+        }
+      } else if (sourceRatio < targetRatio) {
+        extractWidth = rotatedWidth;
+        extractHeight = Math.max(1, Math.round(rotatedWidth / targetRatio));
+
+        const focoPx = Math.round((normalizedFocusY / 100) * rotatedHeight);
+        const topByFocus = focoPx - Math.round(extractHeight / 2);
+        const maxTop = Math.max(0, rotatedHeight - extractHeight);
+        extractTop = Math.max(0, Math.min(maxTop, topByFocus));
+      }
+
+      smartBuffer = await rotatedPipeline
+        .extract({
+          left: extractLeft,
+          top: extractTop,
+          width: extractWidth,
+          height: extractHeight,
+        })
+        .resize(safeWidth, safeHeight, {
+          fit: 'fill',
+          kernel: sharp.kernel.lanczos3,
+        })
+        .jpeg({ quality: 97, mozjpeg: true, chromaSubsampling: '4:4:4' })
+        .toBuffer();
+    } else {
+      smartBuffer = await rotatedPipeline
+        .resize(safeWidth, safeHeight, {
+          fit: 'cover',
+          position: strategyPosition,
+          kernel: sharp.kernel.lanczos3,
+        })
+        .jpeg({ quality: 97, mozjpeg: true, chromaSubsampling: '4:4:4' })
+        .toBuffer();
+    }
 
     if (pdfPhotoCoverCache.size >= PDF_PHOTO_CACHE_MAX_ITEMS) {
       const oldestKey = pdfPhotoCoverCache.keys().next().value;
@@ -1956,8 +2007,9 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
         .resize(safeWidth, safeHeight, {
           fit: 'cover',
           position: resolvePdfCoverGravity(align, focusValign || valign),
+          kernel: sharp.kernel.lanczos3,
         })
-        .jpeg({ quality: 95, mozjpeg: true })
+        .jpeg({ quality: 97, mozjpeg: true, chromaSubsampling: '4:4:4' })
         .toBuffer();
     } catch {
       return null;
@@ -2223,6 +2275,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     const disableDividerForLine = noDividerLabels.includes(normalizeTextInput(label).toLowerCase());
     const isNameLine = normalizeTextInput(label).toLowerCase() === 'nome';
     const isNicknameLine = normalizeTextInput(label).toLowerCase() === 'apelido';
+    const isEjcLine = normalizeTextInput(label).toLowerCase() === 'ejc';
     const isIdentityLine = isNameLine || isNicknameLine;
     drawCardLine(doc, textX, rowY, textWidth, label, value, extraSpace, fontSize, {
       rowHeight,
@@ -2233,8 +2286,8 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
       lineInset: 1,
       centerText: true,
       lineGap: 0.6,
-      autoFitValue: isNameLine,
-      minFontSize: 5.4,
+      autoFitValue: isNameLine || isEjcLine,
+      minFontSize: isEjcLine ? 6.2 : 5.4,
       truncateValue: !isNameLine,
       showDivider: disableDividerForLine ? false : options.showDivider,
       fontName: idx === 0 ? 'Helvetica-Bold' : 'Helvetica',
