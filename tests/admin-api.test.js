@@ -1305,7 +1305,7 @@ test('GET /export-encontro-excel preserva histórico de equipes de tios no relat
   const comprasRow = findRowByName(comprasSheet, 'Tio João');
 
   assert.equal(salaRow, null, 'O tio não deve aparecer em equipes em que já serviu');
-  assert.equal(secretariaRow, null, 'O tio não deve aparecer em equipes que já coordenou');
+  assert.ok(secretariaRow, 'O tio deve aparecer na equipe quando apenas coordenou e não serviu');
   assert.ok(comprasRow, 'O tio deve aparecer em equipes que ainda não trabalhou');
   assert.equal(comprasRow.getCell(14).value || '', 'Sala, Cozinha');
   assert.equal(comprasRow.getCell(15).value || '', 'Secretaria');
@@ -1488,7 +1488,7 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
   assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Coordenou')).value, 'Secretaria, Compras');
 
   assert.equal(findRowByName(salaSheet, 'Tia Maria'), null);
-  assert.equal(findRowByName(secretariaSheet, 'Tia Maria'), null);
+  assert.ok(findRowByName(secretariaSheet, 'Tia Maria'), 'Deve aparecer na equipe quando apenas coordenou e não serviu');
 });
 
 test('POST /admin/editar-circulo/:id transfere pessoas selecionadas para outro círculo', async (t) => {

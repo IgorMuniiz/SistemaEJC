@@ -4265,11 +4265,11 @@ app.get('/export-encontro-excel', async (req, res) => {
     // ========== ABAS DE EQUIPES ==========
     // Criar uma aba para cada equipe
     equipes.forEach((equipeAtual) => {
-      // Filtrar apenas pessoas que NAO selecionaram esta equipe
+      // Filtrar apenas pessoas que ainda nao serviram nesta equipe.
+      // Coordenacao nao entra no bloqueio de distribuicao dessas abas.
       const pessoasDisponiveis = entries.filter((e) => {
         const serviuNaEquipe = Array.isArray(e.equipeServiu) && e.equipeServiu.includes(equipeAtual);
-        const coordenouNaEquipe = Array.isArray(e.equipeCoordenou) && e.equipeCoordenou.includes(equipeAtual);
-        return !serviuNaEquipe && !coordenouNaEquipe;
+        return !serviuNaEquipe;
       });
 
       const worksheet = workbook.addWorksheet(equipeAtual, {
