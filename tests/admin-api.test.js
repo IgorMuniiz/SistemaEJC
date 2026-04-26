@@ -720,21 +720,20 @@ test('POST /encontro retorna 409 quando a mesma pessoa tenta reenviar cadastro e
   const response = await request(app)
     .post('/encontro')
     .set('Accept', 'application/json')
-    .send({
-      nomeCompleto: 'Maria Reentrada',
-      genero: 'feminino',
-      tipo: 'jovens',
-      ejc: 'EJC Digitado no Cadastro',
-      paroquiaFrequenta: 'Paroquia Central',
-      logradouro: 'Rua das Flores, 10',
-      bairro: 'Centro',
-      dataNascimento: '1995-02-10',
-      telefone: '88999999999',
-      ehAlergico: 'nao',
-      email: 'maria.reentrada@example.com',
-      disponibilidadeEncontro: 'true',
-      lgpdConsentimento: 'true',
-    });
+    .field('nomeCompleto', 'Maria Reentrada')
+    .field('genero', 'feminino')
+    .field('tipo', 'jovens')
+    .field('ejc', 'EJC Digitado no Cadastro')
+    .field('paroquiaFrequenta', 'Paroquia Central')
+    .field('logradouro', 'Rua das Flores, 10')
+    .field('bairro', 'Centro')
+    .field('dataNascimento', '1995-02-10')
+    .field('telefone', '88999999999')
+    .field('ehAlergico', 'nao')
+    .field('email', 'maria.reentrada@example.com')
+    .field('disponibilidadeEncontro', 'true')
+    .field('lgpdConsentimento', 'true')
+    .attach('foto', Buffer.from('foto-simulada'), 'foto.jpg');
 
   assert.equal(response.status, 409);
   assert.equal(response.body.success, false);
@@ -923,20 +922,30 @@ test('POST /encontro aceita mesmo email apenas para tio casal no mesmo grupo', a
   const primeiraResposta = await request(app)
     .post('/encontro')
     .set('Accept', 'application/json')
-    .send({
-      ...payloadBase,
-      nomeCompleto: 'Tio Carlos',
-      email: emailCompartilhado,
-    });
+    .field('tipo', payloadBase.tipo)
+    .field('tiosCategoria', payloadBase.tiosCategoria)
+    .field('origemTios', payloadBase.origemTios)
+    .field('tiosGrupoId', payloadBase.tiosGrupoId)
+    .field('logradouro', payloadBase.logradouro)
+    .field('dataNascimento', payloadBase.dataNascimento)
+    .field('disponibilidadeEncontro', payloadBase.disponibilidadeEncontro)
+    .field('nomeCompleto', 'Tio Carlos')
+    .field('email', emailCompartilhado)
+    .attach('foto', Buffer.from('foto-tio-carlos'), 'foto-carlos.jpg');
 
   const segundaResposta = await request(app)
     .post('/encontro')
     .set('Accept', 'application/json')
-    .send({
-      ...payloadBase,
-      nomeCompleto: 'Tia Maria',
-      email: emailCompartilhado,
-    });
+    .field('tipo', payloadBase.tipo)
+    .field('tiosCategoria', payloadBase.tiosCategoria)
+    .field('origemTios', payloadBase.origemTios)
+    .field('tiosGrupoId', payloadBase.tiosGrupoId)
+    .field('logradouro', payloadBase.logradouro)
+    .field('dataNascimento', payloadBase.dataNascimento)
+    .field('disponibilidadeEncontro', payloadBase.disponibilidadeEncontro)
+    .field('nomeCompleto', 'Tia Maria')
+    .field('email', emailCompartilhado)
+    .attach('foto', Buffer.from('foto-tia-maria'), 'foto-maria.jpg');
 
   assert.equal(primeiraResposta.status, 200);
   assert.equal(primeiraResposta.body.success, true);
