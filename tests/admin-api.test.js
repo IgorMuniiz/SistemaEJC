@@ -1224,7 +1224,7 @@ const findDashboardRowByEquipe = (sheet, equipe) => {
   return null;
 };
 
-test('GET /export-encontro-excel mantém tios em todas as equipes e zera histórico só no relatório', async (t) => {
+test('GET /export-encontro-excel preserva histórico de equipes de tios no relatório', async (t) => {
   const originalFind = Encontro.find;
   const originalVinculoFind = VinculoEncontro.find;
   const originalEquipeFind = Equipe.find;
@@ -1282,22 +1282,24 @@ test('GET /export-encontro-excel mantém tios em todas as equipes e zera histór
   const dashboard = workbook.getWorksheet('Dashboard');
   const salaSheet = workbook.getWorksheet('Sala');
   const secretariaSheet = workbook.getWorksheet('Secretaria');
+  const comprasSheet = workbook.getWorksheet('Compras');
 
   assert.ok(dashboard, 'A aba Dashboard deve existir');
   assert.ok(salaSheet, 'A aba Sala deve existir');
   assert.ok(secretariaSheet, 'A aba Secretaria deve existir');
-  assert.equal(dashboard.getCell('C5').value, 0);
-  assert.equal(dashboard.getCell('E5').value, 0);
+  assert.ok(comprasSheet, 'A aba Compras deve existir');
+  assert.equal(dashboard.getCell('C5').value, 1);
+  assert.equal(dashboard.getCell('E12').value, 1);
 
   const salaRow = findRowByName(salaSheet, 'Tio João');
   const secretariaRow = findRowByName(secretariaSheet, 'Tio João');
+  const comprasRow = findRowByName(comprasSheet, 'Tio João');
 
-  assert.ok(salaRow, 'O tio deve aparecer também na equipe Sala');
-  assert.ok(secretariaRow, 'O tio deve aparecer também na equipe Secretaria');
-  assert.equal(salaRow.getCell(12).value || '', '');
-  assert.equal(salaRow.getCell(13).value || '', '');
-  assert.equal(secretariaRow.getCell(12).value || '', '');
-  assert.equal(secretariaRow.getCell(13).value || '', '');
+  assert.equal(salaRow, null, 'O tio não deve aparecer em equipes em que já serviu');
+  assert.equal(secretariaRow, null, 'O tio não deve aparecer em equipes que já coordenou');
+  assert.ok(comprasRow, 'O tio deve aparecer em equipes que ainda não trabalhou');
+  assert.equal(comprasRow.getCell(14).value || '', 'Sala, Cozinha');
+  assert.equal(comprasRow.getCell(15).value || '', 'Secretaria');
 });
 
 test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/crachas autenticado retorna PDF bonito de crachás', async (t) => {
@@ -1473,11 +1475,11 @@ test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadas
 
   const allRow = findRowByName(allSheet, 'Tia Maria');
   assert.ok(allRow, 'A aba consolidada deve conter a tia');
-  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Serviu')).value, 'Sala');
-  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Coordenou')).value, 'Compras');
+  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Serviu')).value, 'Sala, Cozinha');
+  assert.equal(allRow.getCell(findColumnByHeader(allSheet, 'Equipes que Coordenou')).value, 'Secretaria, Compras');
 
   assert.equal(findRowByName(salaSheet, 'Tia Maria'), null);
-  assert.ok(findRowByName(secretariaSheet, 'Tia Maria'), 'Ela deve continuar disponível nas demais equipes');
+  assert.equal(findRowByName(secretariaSheet, 'Tia Maria'), null);
 });
 
 test('POST /admin/editar-circulo/:id transfere pessoas selecionadas para outro círculo', async (t) => {

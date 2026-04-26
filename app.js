@@ -1749,6 +1749,23 @@ const buildTiosEquipeReportMap = async (entries = []) => {
   return result;
 };
 
+const mergeUniqueStringArrays = (...lists) => {
+  const merged = [];
+
+  lists.forEach((list) => {
+    if (!Array.isArray(list)) return;
+
+    list.forEach((item) => {
+      const normalized = normalizeTextInput(item);
+      if (normalized && !merged.includes(normalized)) {
+        merged.push(normalized);
+      }
+    });
+  });
+
+  return merged;
+};
+
 const buildEncontroReportEntry = (entry, tiosEquipeMap = new Map()) => {
   if (!entry || normalizeTextInput(entry.tipo).toLowerCase() !== 'tios') {
     return entry;
@@ -1761,8 +1778,8 @@ const buildEncontroReportEntry = (entry, tiosEquipeMap = new Map()) => {
 
   return {
     ...entry,
-    equipeServiu: Array.isArray(equipesAtuais.equipeServiu) ? [...equipesAtuais.equipeServiu] : [],
-    equipeCoordenou: Array.isArray(equipesAtuais.equipeCoordenou) ? [...equipesAtuais.equipeCoordenou] : [],
+    equipeServiu: mergeUniqueStringArrays(entry.equipeServiu, equipesAtuais.equipeServiu),
+    equipeCoordenou: mergeUniqueStringArrays(entry.equipeCoordenou, equipesAtuais.equipeCoordenou),
     subequipeCoordenou: [],
     subequipeCoordenacoes: [],
   };
@@ -3743,8 +3760,8 @@ app.get('/export-encontro-relatorio', async (req, res) => {
 app.get('/export-encontro-excel', async (req, res) => {
   try {
     const Excel = require('exceljs');
-    const rawEntries = await Encontro.find({ aprovado: true }).sort({ dataCadastro: 1 }).lean();
-    const rawAllEncontreiros = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const rawEntries = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const rawAllEncontreiros = rawEntries;
     const tiosEquipeMap = await buildTiosEquipeReportMap([...rawEntries, ...rawAllEncontreiros]);
     const entries = rawEntries.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
     const allEncontreiros = rawAllEncontreiros.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
@@ -3864,7 +3881,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     // KPIs executivos do dashboard
     dashboard.mergeCells('H2:I2');
     const kpiTopCell = dashboard.getCell('H2');
-    kpiTopCell.value = `KPIs EXECUTIVOS | Aprovados: ${entries.length} | Media por pessoa: ${mediaEventosPorPessoa}`;
+    kpiTopCell.value = `KPIs EXECUTIVOS | Cadastros: ${entries.length} | Media por pessoa: ${mediaEventosPorPessoa}`;
     kpiTopCell.font = { bold: true, size: 10, color: { argb: 'FFFFFFFF' }, name: 'Segoe UI Semibold' };
     kpiTopCell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
     kpiTopCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1D4ED8' } };
