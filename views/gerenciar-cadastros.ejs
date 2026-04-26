@@ -3006,6 +3006,18 @@
                       <label class="form-label">Data de Nascimento *</label>
                       <input type="date" class="form-control" id="edit_dataNascimento" name="dataNascimento" required>
                     </div>
+                    <div class="col-lg-6">
+                      <label class="form-label">Tamanho da camisa</label>
+                      <select class="form-select" id="edit_tamanhoCamisa" name="tamanhoCamisa">
+                        <option value="">Selecione</option>
+                        <option value="PP">PP</option>
+                        <option value="P">P</option>
+                        <option value="M">M</option>
+                        <option value="G">G</option>
+                        <option value="GG">GG</option>
+                        <option value="XG">XG</option>
+                      </select>
+                    </div>
                   </div>
                 </section>
 
@@ -4697,6 +4709,7 @@
       document.getElementById('edit_email').value = cadastro.email || '';
       document.getElementById('edit_temRelacionamento').value = cadastro.temRelacionamento || '';
       document.getElementById('edit_instagram').value = cadastro.instagram || '';
+      document.getElementById('edit_tamanhoCamisa').value = cadastro.tamanhoCamisa || '';
       document.getElementById('edit_observacoes').value = cadastro.observacoes || '';
       document.getElementById('edit_fotoAjusteRotacao').value = Number(cadastro?.fotoAjuste?.rotacao) || 0;
       document.getElementById('edit_fotoAjusteFocoY').value = Number.isFinite(Number(cadastro?.fotoAjuste?.focoY))
@@ -4744,7 +4757,6 @@
         'row_encontreiro_identidade',
         'row_encontreiro_ejc_pertence',
         'row_encontreiro_relacionamento',
-        'row_encontreiro_observacoes',
         'row_encontreiro_actions',
       ];
       const mostrarCamposEncontreiro = tipo === 'encontreiro';

@@ -234,6 +234,7 @@ const encontroSchema = new mongoose.Schema({
   cep: { type: String, default: '' },
   complementoReferencia: { type: String, default: '' },
   talentoHabilidadeArtistica: { type: String, default: '' },
+  tamanhoCamisa: { type: String, default: '' },
   paroquiaFrequenta: { type: String, default: '' },
   participaMovimentoIgreja: { type: String, default: '' },
   religiosidadeAtual: { type: String, default: '' },
@@ -1567,6 +1568,7 @@ const buildEncontroPayloadFromEncontrista = (encontrista, ejcDestino) => {
     cep: encontrista.cep || '',
     complementoReferencia: encontrista.complementoReferencia || '',
     talentoHabilidadeArtistica: encontrista.talentoHabilidadeArtistica || '',
+    tamanhoCamisa: encontrista.tamanhoCamisa || '',
     paroquiaFrequenta: encontrista.paroquiaFrequenta || '',
     participaMovimentoIgreja: encontrista.participaMovimentoIgreja || '',
     religiosidadeAtual: encontrista.religiosidadeAtual || '',
@@ -5438,6 +5440,7 @@ app.post(
         cep: req.body.cep || '',
         complementoReferencia: req.body.complementoReferencia || '',
         talentoHabilidadeArtistica: req.body.talentoHabilidadeArtistica || '',
+        tamanhoCamisa: req.body.tamanhoCamisa || '',
         paroquiaFrequenta: req.body.paroquiaFrequenta || '',
         participaMovimentoIgreja: req.body.participaMovimentoIgreja || '',
         religiosidadeAtual: req.body.religiosidadeAtual || '',
@@ -6454,6 +6457,7 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
       updateData.cep = hasField('cep') ? (req.body.cep || '') : (cadastroAtual.cep || '');
       updateData.complementoReferencia = hasField('complementoReferencia') ? (req.body.complementoReferencia || '') : (cadastroAtual.complementoReferencia || '');
       updateData.talentoHabilidadeArtistica = hasField('talentoHabilidadeArtistica') ? (req.body.talentoHabilidadeArtistica || '') : (cadastroAtual.talentoHabilidadeArtistica || '');
+      updateData.tamanhoCamisa = hasField('tamanhoCamisa') ? (req.body.tamanhoCamisa || '') : (cadastroAtual.tamanhoCamisa || '');
       updateData.paroquiaFrequenta = hasField('paroquiaFrequenta') ? (req.body.paroquiaFrequenta || '') : (cadastroAtual.paroquiaFrequenta || '');
       updateData.participaMovimentoIgreja = hasField('participaMovimentoIgreja') ? (req.body.participaMovimentoIgreja || '') : (cadastroAtual.participaMovimentoIgreja || '');
       updateData.religiosidadeAtual = hasField('religiosidadeAtual') ? (req.body.religiosidadeAtual || '') : (cadastroAtual.religiosidadeAtual || '');
