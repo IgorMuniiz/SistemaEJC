@@ -1367,11 +1367,46 @@ function GenericForm() {
 
         <div className="form-row">
           <div className="mb-3">
-            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC você fez? *</label>
+            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
             <div className="input-group">
               <span className="input-group-text"><i className="fas fa-church"></i></span>
-              <input type="text" className="form-control" id={`ejc-${pessoa}`} name="ejc" value={data.ejc} onChange={handleCh} required />
+              <select
+                className="form-control"
+                id={`ejc-${pessoa}`}
+                name="ejc"
+                value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
+                onChange={e => {
+                  const value = e.target.value;
+                  if (value === 'Outro') {
+                    handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
+                  } else {
+                    handleCh({ target: { name: 'ejc', value } });
+                  }
+                }}
+                required
+              >
+                <option value="">Selecione</option>
+                <option value="EJC">EJC</option>
+                <option value="ECC">ECC</option>
+                <option value="Outro">Outro (especificar)</option>
+              </select>
             </div>
+            {/* Campo extra para "Outro" */}
+            {((data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') || (data.ejc === '' && data.ejc !== 'EJC' && data.ejc !== 'ECC')) && (
+              <div className="input-group mt-2">
+                <span className="input-group-text"><i className="fas fa-pen"></i></span>
+                <input
+                  type="text"
+                  className="form-control"
+                  id={`ejc-outro-${pessoa}`}
+                  name="ejc"
+                  value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
+                  onChange={handleCh}
+                  placeholder="Informe o nome do encontro"
+                  required
+                />
+              </div>
+            )}
             {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
           </div>
           <div className="mb-3">
