@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260423-brand-premium-53">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260427-block-lock-54">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -2422,7 +2422,12 @@
                     <div class="card-body">
                       <div class="admin-mini-panel-head">
                         <div>
-                          <h6 class="card-title mb-1"><i class="fas fa-user-graduate me-2"></i>Formulário Encontrista</h6>
+                          <h6 class="card-title mb-1 card-title-inline">
+                            <span><i class="fas fa-user-graduate me-2"></i>Formulário Encontrista</span>
+                            <span id="status-icon-encontrista" class="admin-blocked-status-icon d-none" aria-live="polite">
+                              <i class="fas fa-lock"></i>Bloqueado
+                            </span>
+                          </h6>
                           <p class="admin-mini-panel-subtitle">Controle de abertura, período e justificativa para inscrições de encontristas.</p>
                         </div>
                       </div>
@@ -2458,7 +2463,12 @@
                     <div class="card-body">
                       <div class="admin-mini-panel-head">
                         <div>
-                          <h6 class="card-title mb-1"><i class="fas fa-users me-2"></i>Formulário Encontreiros</h6>
+                          <h6 class="card-title mb-1 card-title-inline">
+                            <span><i class="fas fa-users me-2"></i>Formulário Encontreiros</span>
+                            <span id="status-icon-encontreiros" class="admin-blocked-status-icon d-none" aria-live="polite">
+                              <i class="fas fa-lock"></i>Bloqueado
+                            </span>
+                          </h6>
                           <p class="admin-mini-panel-subtitle">Defina janelas de bloqueio e observações para o formulário de encontreiros.</p>
                         </div>
                       </div>
@@ -7662,6 +7672,25 @@
     atualizarCamposImportacao();
 
     // Funções para Bloqueio de Formulários
+    const bloqueioPainelMinimizado = {
+      encontrista: false,
+      encontreiros: false,
+    };
+
+    function atualizarVisualMiniPainelBloqueio(tipo, bloqueado, minimizado) {
+      const panel = document.querySelector(`.admin-mini-panel-${tipo === 'encontrista' ? 'encontrista' : 'encontreiros'}`);
+      const statusIcon = document.getElementById(`status-icon-${tipo === 'encontrista' ? 'encontrista' : 'encontreiros'}`);
+
+      if (panel) {
+        panel.classList.toggle('is-blocked', bloqueado);
+        panel.classList.toggle('is-collapsed', bloqueado && minimizado);
+      }
+
+      if (statusIcon) {
+        statusIcon.classList.toggle('d-none', !bloqueado);
+      }
+    }
+
     async function carregarConfiguracoesBloqueio() {
       if (!hasPermission('bloqueio.gerenciar')) return;
       try {
@@ -7692,9 +7721,13 @@
             : '';
           document.getElementById('motivo_encontreiros').value = data.motivoEncontreiros || '';
 
-          // Atualizar visibilidade dos campos
-          atualizarCamposEncontrista();
-          atualizarCamposEncontreiros();
+          // Mantém bloqueios já ativos minimizados ao carregar.
+          bloqueioPainelMinimizado.encontrista = data.bloquearEncontrista === true;
+          bloqueioPainelMinimizado.encontreiros = data.bloquearEncontreiros === true;
+
+          // Atualizar visibilidade dos campos e indicador visual
+          atualizarCamposEncontrista(false);
+          atualizarCamposEncontreiros(false);
           
           console.log('[BLOQUEIO-UI] Configurações carregadas com sucesso');
         }
@@ -7703,20 +7736,30 @@
       }
     }
 
-    function atualizarCamposEncontrista() {
+    function atualizarCamposEncontrista(expandirCampos = true) {
       const checked = document.getElementById('bloquear_encontrista')?.checked || false;
       const camposDiv = document.getElementById('campos-encontrista');
+      if (expandirCampos) bloqueioPainelMinimizado.encontrista = false;
+
       if (camposDiv) {
-        camposDiv.style.display = checked ? 'flex' : 'none';
+        const deveMinimizar = checked && bloqueioPainelMinimizado.encontrista;
+        camposDiv.style.display = checked && !deveMinimizar ? 'flex' : 'none';
       }
+
+      atualizarVisualMiniPainelBloqueio('encontrista', checked, bloqueioPainelMinimizado.encontrista);
     }
 
-    function atualizarCamposEncontreiros() {
+    function atualizarCamposEncontreiros(expandirCampos = true) {
       const checked = document.getElementById('bloquear_encontreiros')?.checked || false;
       const camposDiv = document.getElementById('campos-encontreiros');
+      if (expandirCampos) bloqueioPainelMinimizado.encontreiros = false;
+
       if (camposDiv) {
-        camposDiv.style.display = checked ? 'flex' : 'none';
+        const deveMinimizar = checked && bloqueioPainelMinimizado.encontreiros;
+        camposDiv.style.display = checked && !deveMinimizar ? 'flex' : 'none';
       }
+
+      atualizarVisualMiniPainelBloqueio('encontreiros', checked, bloqueioPainelMinimizado.encontreiros);
     }
 
     function setupEventScopeControls() {
@@ -7792,6 +7835,12 @@
         
         if (data.success) {
           queueManagerFeedback({ tabId: 'administradores' });
+
+          bloqueioPainelMinimizado.encontrista = document.getElementById('bloquear_encontrista').checked;
+          bloqueioPainelMinimizado.encontreiros = document.getElementById('bloquear_encontreiros').checked;
+          atualizarCamposEncontrista(false);
+          atualizarCamposEncontreiros(false);
+
           resultDiv.innerHTML = '<div class="alert alert-success" role="alert"><i class="fas fa-check-circle me-2"></i>Configurações salvas com sucesso!</div>';
           setTimeout(() => { resultDiv.innerHTML = ''; }, 3000);
         } else {
