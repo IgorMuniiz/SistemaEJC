@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260422-approval-light-contrast-52">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260501-button-styles-professional-60">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -432,6 +432,9 @@
       const acaoRemover = podeRemover
         ? `<button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
         : '<span class="text-muted small">Sem permissao</span>';
+      const acaoPerfil = pessoa
+        ? `<button class="btn btn-sm btn-perfil" onclick="abrirPerfilPessoa('${escapeHtml(String(pessoa._id || ''))}', '${escapeHtml(String(vinculo.pessoaTipo || ''))}')"><i class="fas fa-user me-1"></i>Perfil</button>`
+        : '<span class="text-muted small">-</span>';
       return `
         <tr>
           <td>${foto}</td>
@@ -441,7 +444,7 @@
           <td>${escapeHtml(pessoa?.telefone || '-')}</td>
           <td>${escapeHtml(pessoa?.email || '-')}</td>
           <td>${escapeHtml(pessoa?.ejc || '-')}</td>
-          <td>${acaoRemover}</td>
+          <td>${acaoPerfil} ${acaoRemover}</td>
         </tr>
       `;
     }
@@ -1725,6 +1728,141 @@
       if (target.closest('.multi-select-panel')) return;
       closeAllChecklists();
     });
+
+    async function abrirPerfilPessoa(pessoaId, pessoaTipo) {
+      if (!pessoaId || !pessoaTipo) return;
+      
+      try {
+        const mapa = pessoaTipo === 'encontrista' ? mapEncontristas : mapEncontreiros;
+        const pessoa = mapa[String(pessoaId)];
+        
+        if (!pessoa) {
+          return await appAlert('Dados da pessoa não encontrados.', 'warning', 'Não encontrado');
+        }
+
+        const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark';
+        const tipoLabel = pessoaTipo === 'encontrista' ? 'Encontrista' : (pessoa.tipo === 'tios' ? 'Tios' : 'Encontreiro');
+        const fotoUrl = pessoa.foto
+          ? `/img/uploads/${encodeURIComponent(pessoa.foto)}?w=200&h=200&fit=cover&format=webp`
+          : null;
+
+        // Cores baseadas no tema
+        const colors = isDarkTheme ? {
+          bg: 'linear-gradient(145deg, rgba(8,15,31,0.95), rgba(15,23,42,0.92))',
+          border: 'rgba(148,163,184,0.2)',
+          borderLight: 'rgba(148,163,184,0.15)',
+          title: '#f0f9ff',
+          label: 'rgba(148,163,184,0.85)',
+          text: '#e0f2fe',
+          buttonClose: 'btn-close-white'
+        } : {
+          bg: 'linear-gradient(145deg, #ffffff, #f8fafc)',
+          border: 'rgba(71,85,105,0.2)',
+          borderLight: 'rgba(71,85,105,0.1)',
+          title: '#0f172a',
+          label: 'rgba(71,85,105,0.9)',
+          text: '#1e293b',
+          buttonClose: 'btn-close'
+        };
+
+        // Criar modal
+        let modalEl = document.getElementById('perfil-pessoa-modal');
+        if (!modalEl) {
+          modalEl = document.createElement('div');
+          modalEl.id = 'perfil-pessoa-modal';
+          modalEl.className = 'modal fade';
+          modalEl.tabIndex = '-1';
+          modalEl.setAttribute('aria-hidden', 'true');
+          document.body.appendChild(modalEl);
+        }
+
+        modalEl.innerHTML = `
+          <div class="modal-dialog modal-dialog-centered" style="max-width: 650px;">
+            <div class="modal-content perfil-pessoa-card" style="background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); margin: 0 auto; max-height: 90vh; display: flex; flex-direction: column;">
+              <div class="modal-header perfil-pessoa-header" style="border-bottom: 2px solid ${colors.borderLight}; padding: 24px; text-align: center; justify-content: center; flex-shrink: 0;">
+                <h5 class="modal-title" style="color: ${colors.title}; font-weight: 700; font-size: 1.3rem; width: 100%;">Perfil do ${escapeHtml(tipoLabel)}</h5>
+                <button type="button" class="btn-close ${colors.buttonClose}" data-bs-dismiss="modal" aria-label="Fechar" style="position: absolute; right: 20px;"></button>
+              </div>
+              <div class="modal-body perfil-pessoa-body" style="padding: 32px; text-align: center; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: ${isDarkTheme ? 'rgba(148,163,184,0.3) rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.3) rgba(71,85,105,0.1)'};">
+                <style>
+                  .perfil-pessoa-body::-webkit-scrollbar {
+                    width: 8px;
+                  }
+                  .perfil-pessoa-body::-webkit-scrollbar-track {
+                    background: ${isDarkTheme ? 'rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.1)'};
+                    border-radius: 10px;
+                  }
+                  .perfil-pessoa-body::-webkit-scrollbar-thumb {
+                    background: ${isDarkTheme ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.3)'};
+                    border-radius: 10px;
+                  }
+                  .perfil-pessoa-body::-webkit-scrollbar-thumb:hover {
+                    background: ${isDarkTheme ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.5)'};
+                  }
+                </style>
+                <div style="margin-bottom: 32px; padding-bottom: 28px; border-bottom: 2px solid ${colors.borderLight};">
+                  ${fotoUrl ? `<img src="${fotoUrl}" alt="Foto" style="width: 140px; height: 140px; border-radius: 14px; object-fit: cover; border: 3px solid ${isDarkTheme ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.2)'}; margin: 0 auto 20px; display: block; box-shadow: 0 10px 30px ${isDarkTheme ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'};">` : `<div style="width: 140px; height: 140px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: ${isDarkTheme ? 'rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.08)'}; border-radius: 14px;"><i class="fas fa-user-circle" style="font-size: 5rem; color: ${isDarkTheme ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.3)'}; opacity: 0.7;"></i></div>`}
+                  <h3 style="margin-top: 16px; margin-bottom: 6px; color: ${colors.title}; font-weight: 700; font-size: 1.5rem;">${escapeHtml(pessoa.nomeCompleto || '-')}</h3>
+                  <p style="color: ${colors.label}; margin: 0; font-size: 0.95rem; font-weight: 500;">${escapeHtml(tipoLabel)}</p>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 0.95rem;">
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Como quer ser chamado</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.comoQuerSerChamado || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Gênero</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.genero || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Data de Nascimento</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${pessoa.dataNascimento ? new Date(pessoa.dataNascimento).toLocaleDateString('pt-BR') : '-'}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Telefone</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.telefone || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Email</label>
+                    <span style="color: ${colors.text}; font-weight: 500; word-break: break-all;">${escapeHtml(pessoa.email || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">EJC</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.ejc || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">CEP</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.cep || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Endereço</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.logradouro || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Bairro</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.bairro || '-')}</span>
+                  </div>
+                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
+                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Observações</label>
+                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.observacoes || '-')}</span>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer perfil-pessoa-footer" style="border-top: 2px solid ${colors.borderLight}; padding: 16px 24px; background: ${isDarkTheme ? 'rgba(0,0,0,0.1)' : 'rgba(71,85,105,0.03)'}; justify-content: center; flex-shrink: 0;">
+                <button type="button" class="btn btn-secondary" style="background: ${isDarkTheme ? 'rgba(148,163,184,0.2)' : 'rgba(71,85,105,0.15)'}; border-color: ${isDarkTheme ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.2)'}; color: ${colors.text}; font-weight: 600;" data-bs-dismiss="modal">Fechar</button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+      } catch (err) {
+        console.error('Erro ao abrir perfil:', err);
+        await appAlert('Erro ao carregar perfil.', 'danger', 'Erro');
+      }
+    }
 
     async function removerVinculo(vinculoId) {
       if (!vinculoId) return;

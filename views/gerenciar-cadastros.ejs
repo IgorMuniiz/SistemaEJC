@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260427-block-lock-54">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260501-button-styles-professional-60">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -153,6 +153,9 @@
           <div class="brand-badge"><img src="/images/rodape.png?v=20260322" alt="EJC COP" loading="lazy" decoding="async"></div>
           <div class="brand-text">EJC COP</div>
         </div>
+        <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Maximizar menu lateral" aria-pressed="false" title="Maximizar menu lateral">
+          <i class="fas fa-angles-right" aria-hidden="true"></i>
+        </button>
       </div>
 
       <nav class="side-menu">
@@ -1586,6 +1589,9 @@
                             <span class="ejc-led-dot" aria-hidden="true"></span>
                             <%= item.ativo ? 'Encontro ativo' : 'Definir como ativo' %>
                           </button>
+                          <button class="btn btn-rename" onclick="renomearEjc('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-pencil"></i><span>Editar nome</span>
+                          </button>
                           <button class="btn btn-delete" onclick="deletarEjc('<%= item._id %>', '<%= item.nome.replace(/'/g, "\\'") %>')">
                             <i class="fas fa-trash me-1"></i>Excluir Encontro
                           </button>
@@ -2178,66 +2184,151 @@
                   </div>
 
                   <form id="formFluxoCaixa" class="row g-3 gastos-form">
-                    <div class="col-md-4">
-                      <label for="fluxo_ejcId" class="form-label">EJC *</label>
-                      <select id="fluxo_ejcId" class="form-select">
-                        <option value="">Selecione o EJC</option>
-                        <% (ejcs || []).forEach(function(item) { %>
-                          <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
-                        <% }); %>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="fluxo_tipoMovimento" class="form-label">Tipo *</label>
-                      <select id="fluxo_tipoMovimento" class="form-select">
-                        <option value="entrada" selected>Entrada</option>
-                        <option value="saida">Saída</option>
-                      </select>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="fluxo_categoria" class="form-label">Categoria</label>
-                      <select id="fluxo_categoria" class="form-select">
-                        <% fluxoCategoryOptionsList.forEach(function(categoria) { %>
-                          <option value="<%= categoria %>"><%= categoria %></option>
-                        <% }); %>
-                      </select>
-                    </div>
-                    <div class="col-md-7">
-                      <label for="fluxo_descricao" class="form-label">Descrição *</label>
-                      <input type="text" id="fluxo_descricao" class="form-control" placeholder="Ex: repasse de inscrições, pagamento de fornecedor" required>
-                    </div>
-                    <div class="col-md-2">
-                      <label for="fluxo_valor" class="form-label">Valor *</label>
-                      <input type="text" id="fluxo_valor" class="form-control" placeholder="0,00" inputmode="decimal" required>
-                    </div>
-                    <div class="col-md-3">
-                      <label for="fluxo_dataMovimento" class="form-label">Data *</label>
-                      <input type="date" id="fluxo_dataMovimento" class="form-control" value="<%= new Date().toISOString().slice(0, 10) %>" required>
-                    </div>
-                    <div class="col-md-4">
-                      <label for="fluxo_origemDestino" class="form-label">Origem / Destino</label>
-                      <input type="text" id="fluxo_origemDestino" class="form-control" placeholder="Ex: família, fornecedor, equipe">
-                    </div>
-                    <div class="col-md-4">
-                      <label for="fluxo_responsavel" class="form-label">Responsável</label>
-                      <input type="text" id="fluxo_responsavel" class="form-control" placeholder="Quem recebeu/pagou">
-                    </div>
-                    <div class="col-md-4">
-                      <label for="fluxo_formaPagamento" class="form-label">Forma</label>
-                      <input type="text" id="fluxo_formaPagamento" class="form-control" placeholder="Pix, Dinheiro, Cartão...">
-                    </div>
                     <div class="col-12">
-                      <label for="fluxo_observacoes" class="form-label">Observações</label>
-                      <textarea id="fluxo_observacoes" class="form-control" rows="2" placeholder="Informações complementares"></textarea>
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">01</span>
+                          <div>
+                            <strong>Contexto do movimento</strong>
+                            <small>Defina se é entrada ou saída de caixa.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="fluxo_ejcId" class="form-label">EJC *</label>
+                            <select id="fluxo_ejcId" class="form-select">
+                              <option value="">Selecione o EJC</option>
+                              <% (ejcs || []).forEach(function(item) { %>
+                                <option value="<%= item._id %>" <%= item.ativo ? 'selected' : '' %>><%= item.nome %><%= item.ativo ? ' (Ativo)' : '' %></option>
+                              <% }); %>
+                            </select>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="fluxo_tipoMovimento" class="form-label">Tipo de movimento *</label>
+                            <select id="fluxo_tipoMovimento" class="form-select" onchange="atualizarOrigemDestino()">
+                              <option value="entrada" selected>💰 Entrada</option>
+                              <option value="saida">💸 Saída</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">02</span>
+                          <div>
+                            <strong>Classificação do lançamento</strong>
+                            <small>Escolha a categoria e origem/destino com rastreabilidade.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-6">
+                            <label for="fluxo_categoria" class="form-label">Categoria *</label>
+                            <select id="fluxo_categoria" class="form-select">
+                              <option value="">Selecione uma categoria</option>
+                              <% fluxoCategoryOptionsList.forEach(function(categoria) { %>
+                                <option value="<%= categoria %>"><%= categoria %></option>
+                              <% }); %>
+                            </select>
+                          </div>
+                          <div class="col-md-6">
+                            <label for="fluxo_origemDestino" class="form-label">Origem / Destino *</label>
+                            <select id="fluxo_origemDestino" class="form-select">
+                              <option value="">Selecione origem ou destino</option>
+                              <optgroup label="📋 Encaminhada">
+                                <option value="dirigentes">→ Dirigentes</option>
+                                <option value="encontro">→ Encontro</option>
+                                <option value="paroquia">→ Paróquia</option>
+                                <option value="sub_equipes">→ Sub equipes</option>
+                                <option value="gincanas">→ Gincanas</option>
+                              </optgroup>
+                              <optgroup label="🎯 Recursos">
+                                <option value="recursos_sub_equipes">→ Sub equipes</option>
+                                <option value="recursos_gincanas">→ Gincanas</option>
+                                <option value="recursos_outros">→ Outros</option>
+                                <option value="recursos_reencrontro">→ Reencrontro</option>
+                              </optgroup>
+
+                            </select>
+                          </div>
+                        </div>
+                        <div class="col-12">
+                          <p id="fluxo_scope_hint" class="gastos-field-hint mb-0">Este movimento será registrado com rastreabilidade completa no livro de caixa.</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">03</span>
+                          <div>
+                            <strong>Detalhes financeiros</strong>
+                            <small>Descreva o movimento com clareza.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-md-8">
+                            <label for="fluxo_descricao" class="form-label">Descrição *</label>
+                            <input type="text" id="fluxo_descricao" class="form-control" placeholder="Ex: repasse de inscrições, pagamento de fornecedor" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="fluxo_valor" class="form-label">Valor *</label>
+                            <input type="text" id="fluxo_valor" class="form-control" placeholder="Ex: 150,00" inputmode="decimal" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="fluxo_dataMovimento" class="form-label">Data do movimento *</label>
+                            <input type="date" id="fluxo_dataMovimento" class="form-control" value="<%= new Date().toISOString().slice(0, 10) %>" required>
+                          </div>
+                          <div class="col-md-4">
+                            <label for="fluxo_responsavel" class="form-label">Responsável</label>
+                            <input type="text" id="fluxo_responsavel" class="form-control" placeholder="Quem recebeu/pagou">
+                          </div>
+                          <div class="col-md-4">
+                            <label for="fluxo_formaPagamento" class="form-label">Forma de pagamento</label>
+                            <select id="fluxo_formaPagamento" class="form-select">
+                              <option value="">Selecione a forma</option>
+                              <option value="dinheiro">Dinheiro</option>
+                              <option value="pix">Pix</option>
+                              <option value="cartao_credito">Cartão de crédito</option>
+                              <option value="cartao_debito">Cartão de débito</option>
+                              <option value="transferencia">Transferência bancária</option>
+                              <option value="cheque">Cheque</option>
+                              <option value="outro">Outro</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-12">
+                      <div class="gastos-form-block">
+                        <div class="gastos-block-heading">
+                          <span class="gastos-block-step">04</span>
+                          <div>
+                            <strong>Rastreabilidade e notas</strong>
+                            <small>Informações complementares para auditoria.</small>
+                          </div>
+                        </div>
+                        <div class="row g-3">
+                          <div class="col-12">
+                            <label for="fluxo_observacoes" class="form-label">Observações</label>
+                            <textarea id="fluxo_observacoes" class="form-control" rows="3" placeholder="Informações complementares para auditoria e conciliação"></textarea>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
                     <div class="col-12">
                       <button type="button" class="btn btn-primary w-100 admin-primary-action gastos-submit-btn" onclick="cadastrarFluxoCaixa()">
-                        <i class="fas fa-plus-circle me-1"></i>Registrar movimento no caixa
+                        <i class="fas fa-check-circle me-1"></i>Registrar movimento no caixa
                       </button>
                       <div class="gastos-assurance-strip" role="note">
-                        <span><i class="fas fa-bolt"></i>Conciliação simples</span>
+                        <span><i class="fas fa-shield-heart"></i>Rastreabilidade completa</span>
                         <span><i class="fas fa-chart-line"></i>Saldo em tempo real</span>
-                        <span><i class="fas fa-shield-heart"></i>Histórico pronto para auditoria</span>
+                        <span><i class="fas fa-lock"></i>Histórico pronto para auditoria</span>
                       </div>
                     </div>
                   </form>
@@ -4476,6 +4567,54 @@
 
     initSidebarDockGlow();
 
+    function initSidebarToggle() {
+      const sidebar = document.querySelector('.admin-shell .sidebar');
+      const toggleButton = document.querySelector('[data-sidebar-toggle]');
+      if (!sidebar || !toggleButton) return;
+
+      const storageKey = 'admin-manager-sidebar-maximized';
+      const icon = toggleButton.querySelector('i');
+      const desktopQuery = window.matchMedia('(min-width: 992px)');
+
+      const syncButtonState = (isMaximized) => {
+        sidebar.classList.toggle('is-maximized', isMaximized);
+        toggleButton.setAttribute('aria-pressed', isMaximized ? 'true' : 'false');
+        toggleButton.setAttribute('aria-label', isMaximized ? 'Minimizar menu lateral' : 'Maximizar menu lateral');
+        toggleButton.setAttribute('title', isMaximized ? 'Minimizar menu lateral' : 'Maximizar menu lateral');
+
+        if (icon) {
+          icon.classList.toggle('fa-angles-right', !isMaximized);
+          icon.classList.toggle('fa-angles-left', isMaximized);
+        }
+      };
+
+      syncButtonState(desktopQuery.matches && window.localStorage.getItem(storageKey) === 'true');
+
+      toggleButton.addEventListener('click', () => {
+        if (!desktopQuery.matches) return;
+        const nextState = !sidebar.classList.contains('is-maximized');
+        syncButtonState(nextState);
+        window.localStorage.setItem(storageKey, String(nextState));
+      });
+
+      const handleViewportChange = (event) => {
+        if (!event.matches) {
+          syncButtonState(false);
+          return;
+        }
+
+        syncButtonState(window.localStorage.getItem(storageKey) === 'true');
+      };
+
+      if (typeof desktopQuery.addEventListener === 'function') {
+        desktopQuery.addEventListener('change', handleViewportChange);
+      } else if (typeof desktopQuery.addListener === 'function') {
+        desktopQuery.addListener(handleViewportChange);
+      }
+    }
+
+    initSidebarToggle();
+
     function formatarStatusCadastro(status) {
       const rotulos = {
         pendente: 'Pendente',
@@ -6057,6 +6196,25 @@
       renderGastosDashboard();
     }
 
+    function atualizarOrigemDestino() {
+      const tipoMovimento = document.getElementById('fluxo_tipoMovimento')?.value || 'entrada';
+      const scopeHint = document.getElementById('fluxo_scope_hint');
+      const descricaoInput = document.getElementById('fluxo_descricao');
+      
+      if (scopeHint) {
+        const mensagem = tipoMovimento === 'entrada'
+          ? '💰 Este movimento será registrado como <strong>entrada de capital</strong> com rastreabilidade completa no fluxo de caixa.'
+          : '💸 Este movimento será registrado como <strong>saída de recursos</strong> com rastreabilidade completa e pronto para conciliação.';
+        scopeHint.innerHTML = mensagem;
+      }
+      
+      if (descricaoInput) {
+        descricaoInput.placeholder = tipoMovimento === 'entrada'
+          ? 'Ex: repasse de inscrições, doação, patrocínio, arrecadação'
+          : 'Ex: pagamento de fornecedor, compra de material, passagens, hospedagem';
+      }
+    }
+
     async function cadastrarGasto() {
       if (!ensurePermission('gastos.gerenciar')) return;
       const submitButton = document.getElementById('gasto_submit_btn');
@@ -6632,6 +6790,40 @@
         }
       } catch (error) {
         await appAlert('Erro ao excluir encontro.', 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(targetRow, false);
+      }
+    }
+
+    async function renomearEjc(ejcId, ejcNomeAtual) {
+      if (!ensurePermission('encontros.gerenciar')) return;
+      const triggerButton = getActionTriggerButton();
+      const targetRow = triggerButton ? [triggerButton.closest('tr')].filter(Boolean) : [];
+
+      const novoNome = await appPrompt(`Novo nome para o encontro:`, ejcNomeAtual, 'Renomear Encontro');
+      if (!novoNome || novoNome.trim() === '' || novoNome.trim() === ejcNomeAtual) return;
+
+      setActionButtonBusy(triggerButton, true, 'Salvando...');
+      setRowsPendingState(targetRow, true);
+
+      try {
+        const response = await fetch(`/admin/renomear-ejc/${ejcId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nome: novoNome.trim() })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
+          await appAlert(result.message || 'Encontro renomeado com sucesso.', 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+        } else {
+          await appAlert(result.error || 'Erro ao renomear encontro.', 'danger', 'Erro');
+        }
+      } catch (error) {
+        await appAlert('Erro ao renomear encontro.', 'danger', 'Erro');
       } finally {
         setActionButtonBusy(triggerButton, false);
         setRowsPendingState(targetRow, false);
@@ -7871,6 +8063,7 @@
     bindGastosDashboardFilters();
     renderGastosDashboard();
     initFluxoCaixaPremiumInputs();
+    atualizarOrigemDestino();
     renderFluxoCaixaDashboard();
 
     carregarConfiguracoesBloqueio();

@@ -5279,7 +5279,7 @@ app.post(
         console.log('[INFO] Inscricao salva com sucesso - Enviando resposta JSON');
         return res.json({ success: true, created, updated: !created });
       } else {
-        return res.render('success');
+        return res.redirect('/sucesso?origem=inscricao');
       }
     } catch (err) {
       console.error('[ERRO] Erro ao salvar inscricao:', err);
@@ -5515,7 +5515,7 @@ app.post(
         console.log(`[INFO] Encontro salvo com sucesso - ID: ${encontro._id}, Tipo: ${encontro.tipo}, Aprovado: ${encontro.aprovado}`);
         return res.json({ success: true, created, updated: !created, id: String(encontro._id) });
       } else {
-        return res.render('success');
+        return res.redirect('/sucesso?origem=encontro');
       }
     } catch (err) {
       console.error('[ERRO] Erro ao salvar encontro:', err.message);
@@ -7302,6 +7302,50 @@ app.post('/admin/deletar-ejc/:id', checkAdminAuth, requireAdminPermission('encon
     });
     console.error('Erro ao deletar EJC:', err);
     return res.status(500).json({ success: false, error: 'Erro ao deletar EJC.' });
+  }
+});
+
+// POST /admin/renomear-ejc/:id - Altera o nome de um EJC existente
+app.post('/admin/renomear-ejc/:id', checkAdminAuth, requireAdminPermission('encontros.gerenciar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID de EJC invalido.' });
+    }
+
+    const novoNome = normalizeTextInput(req.body.nome);
+    if (!novoNome || novoNome.length < 2 || novoNome.length > 80) {
+      return res.status(400).json({ success: false, error: 'Nome invalido. Use entre 2 e 80 caracteres.' });
+    }
+
+    const ejc = await Ejc.findById(id);
+    if (!ejc) {
+      return res.status(404).json({ success: false, error: 'EJC nao encontrado.' });
+    }
+
+    const nomeAntigo = ejc.nome;
+    const novoNomeNormalizado = novoNome.toLowerCase();
+
+    const duplicado = await Ejc.findOne({ nomeNormalizado: novoNomeNormalizado, _id: { $ne: id } }).lean();
+    if (duplicado) {
+      return res.status(409).json({ success: false, error: 'Já existe um encontro com esse nome.' });
+    }
+
+    ejc.nome = novoNome;
+    ejc.nomeNormalizado = novoNomeNormalizado;
+    await ejc.save();
+
+    await logAdminAction(req, {
+      action: 'renomear_ejc',
+      targetType: 'ejc',
+      targetId: id,
+      metadata: { nomeAntigo, novoNome },
+    });
+
+    return res.json({ success: true, message: `Encontro renomeado para "${novoNome}".` });
+  } catch (err) {
+    console.error('Erro ao renomear EJC:', err);
+    return res.status(500).json({ success: false, error: 'Erro ao renomear EJC.' });
   }
 });
 

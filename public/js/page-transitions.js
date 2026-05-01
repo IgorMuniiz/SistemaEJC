@@ -849,12 +849,34 @@
         border-color: transparent !important;
       }
 
+      html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link i {
+        color: #1d4ed8 !important;
+        background: linear-gradient(180deg, rgba(219, 234, 254, 0.96), rgba(255, 255, 255, 0.92)) !important;
+        border-color: rgba(96, 165, 250, 0.24) !important;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92), 0 6px 12px rgba(37, 99, 235, 0.08) !important;
+      }
+
+      html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .sidebar-toggle {
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(239, 246, 255, 0.94)) !important;
+        border-color: rgba(96, 165, 250, 0.2) !important;
+        color: #1d4ed8 !important;
+        box-shadow: 0 8px 16px rgba(37, 99, 235, 0.08) !important;
+      }
+
       html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link:hover,
       html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link.active {
         background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(255, 255, 255, 0.95)) !important;
         border-color: rgba(96, 165, 250, 0.22) !important;
         color: #0f172a !important;
         box-shadow: 0 10px 20px rgba(37, 99, 235, 0.08) !important;
+      }
+
+      html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link:hover i,
+      html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp .sidebar .menu-link.active i {
+        color: #0f172a !important;
+        background: linear-gradient(180deg, rgba(191, 219, 254, 0.98), rgba(255, 255, 255, 0.98)) !important;
+        border-color: rgba(96, 165, 250, 0.3) !important;
+        box-shadow: 0 10px 18px rgba(37, 99, 235, 0.12) !important;
       }
 
       html[data-theme='light'] body.admin-panel.admin-manager-page.admin-manager-revamp #cadastroTabs {
