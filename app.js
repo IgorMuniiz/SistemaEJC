@@ -1884,7 +1884,10 @@ const resolvePhotoPath = (fileName) => {
 
 const PDF_PHOTO_CACHE_MAX_ITEMS = 220;
 const pdfPhotoCoverCache = new Map();
+const PDF_CARD_IMAGE_RENDER_SCALE = 3;
 const PDF_FOTO_AJUSTE_FOCO_DEFAULT = 28;
+const PDF_PAGE_MARGIN_PT = 48;
+const PDF_PAGE_MARGIN_MM = 18;
 
 const resolvePdfCoverGravity = (align = 'center', valign = 'top') => {
   if (align === 'left' && valign === 'top') return 'northwest';
@@ -2042,24 +2045,30 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
 };
 
 const drawPdfTitle = (doc, title, subtitle) => {
-  const headerY = 30;
+  const margin = Number(doc.page?.margins?.left) > 0 ? Number(doc.page.margins.left) : PDF_PAGE_MARGIN_PT;
+  const contentWidth = doc.page.width - (margin * 2);
+  const headerY = margin;
   const headerHeight = 44;
+
   doc.save();
-  doc.roundedRect(40, headerY, 515, headerHeight, 6).fill('#1f2f46');
-  doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16).text(title, 56, headerY + 8, {
-    width: 483,
+  doc.roundedRect(margin, headerY, contentWidth, headerHeight, 6).fill('#1f2f46');
+  doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(16).text(title, margin + 16, headerY + 8, {
+    width: contentWidth - 32,
     align: 'center',
     lineBreak: false,
     ellipsis: true,
   });
   doc.restore();
 
-  doc.font('Helvetica').fontSize(9).fillColor('#5f6b7a').text(subtitle, 40, headerY + headerHeight + 6, {
-    width: 515,
+  doc.font('Helvetica').fontSize(9).fillColor('#5f6b7a').text(subtitle, margin, headerY + headerHeight + 6, {
+    width: contentWidth,
     align: 'center',
     lineBreak: false,
   });
-  doc.strokeColor('#c6d0dc').lineWidth(0.8).moveTo(40, headerY + headerHeight + 22).lineTo(555, headerY + headerHeight + 22).stroke();
+  doc.strokeColor('#c6d0dc').lineWidth(0.8)
+    .moveTo(margin, headerY + headerHeight + 22)
+    .lineTo(margin + contentWidth, headerY + headerHeight + 22)
+    .stroke();
 };
 
 const drawHeartBetweenCards = (doc, centerX, centerY, size = 13, color = '#d94b71') => {
@@ -2216,7 +2225,9 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   if (photoPath) {
     try {
       const fotoAjuste = entry && typeof entry.fotoAjuste === 'object' ? entry.fotoAjuste : {};
-      const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoWidth - 2, photoHeight - 2, {
+      const photoTargetWidth = Math.max(1, Math.round((photoWidth - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
+      const photoTargetHeight = Math.max(1, Math.round((photoHeight - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
+      const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoTargetWidth, photoTargetHeight, {
         strategy: 'attention',
         align: photoAlign,
         valign: photoValign,
@@ -2464,7 +2475,7 @@ const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) =
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
 
-  const doc = new PDFDocument({ margin: 28, size: 'A4', layout: 'landscape', compress: false });
+  const doc = new PDFDocument({ margin: PDF_PAGE_MARGIN_PT, size: 'A4', layout: 'landscape', compress: false });
   doc.pipe(res);
 
   const safeGroups = Array.isArray(groups) ? groups : [];
@@ -2476,7 +2487,7 @@ const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) =
     path.join(__dirname, 'public', 'images', 'rodape.png'),
   ];
   const artPath = artCandidates.find((candidate) => fs.existsSync(candidate)) || null;
-  const pageMargin = 28;
+  const pageMargin = PDF_PAGE_MARGIN_PT;
   const cardWidth = 384;
   const cardHeight = 214;
   const startX = pageMargin;
@@ -2560,7 +2571,9 @@ const renderCrachasPdf = async (res, { fileName, mainTitle, ejcName, groups }) =
     doc.lineWidth(1).strokeColor(isEquipeBadge ? '#f0d9a7' : '#f8e7b2').roundedRect(mediaBoxX + 4, mediaBoxY + 4, mediaBoxWidth - 8, mediaBoxHeight - 8, 14).stroke();
     if (photoPath) {
       try {
-        const photoBuffer = await getPdfSmartCoverBuffer(photoPath, mediaBoxWidth - 12, mediaBoxHeight - 12, {
+        const photoTargetWidth = Math.max(1, Math.round((mediaBoxWidth - 12) * PDF_CARD_IMAGE_RENDER_SCALE));
+        const photoTargetHeight = Math.max(1, Math.round((mediaBoxHeight - 12) * PDF_CARD_IMAGE_RENDER_SCALE));
+        const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoTargetWidth, photoTargetHeight, {
           strategy: 'attention',
           align: 'center',
           valign: 'top',
@@ -2731,19 +2744,28 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${fileName}"`);
 
-  const doc = new PDFDocument({ margin: 40, size: 'A4', compress: false });
+  const doc = new PDFDocument({ margin: PDF_PAGE_MARGIN_PT, size: 'A4', compress: false });
   doc.pipe(res);
 
-  const left = 40;
+  const left = PDF_PAGE_MARGIN_PT;
   const gap = 12;
-  const cardWidth = (515 - gap) / 2;
+  const contentWidth = doc.page.width - (left * 2);
+  const cardWidth = (contentWidth - gap) / 2;
   const cardHeight = 126;
-  const topStart = 40;
-  const bottomLimit = 790;
+  const titleBlockHeight = 80;
+  const topStart = PDF_PAGE_MARGIN_PT + titleBlockHeight;
+  const bottomLimit = doc.page.height - PDF_PAGE_MARGIN_PT;
   const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
   const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
 
-  const drawPageTitle = () => {};
+  const _ejcPart = _mainTitle ? _mainTitle.replace(/^(Equipes|Circulos|Circulos|Quadrante)\s*-\s*/i, '') : '';
+  let _currentGroupTitle = '';
+  const drawPageTitle = () => {
+    const title = _currentGroupTitle && _ejcPart
+      ? `${_currentGroupTitle} - ${_ejcPart}`
+      : (_mainTitle || 'Estruturas do EJC');
+    drawPdfTitle(doc, title);
+  };
 
   const mmToPt = (mm) => (mm * 72) / 25.4;
 
@@ -2935,7 +2957,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const titleFontSize = 18;
     const logoSize = 28;
     const logoGap = 8;
-    const availableWidth = 515;
+    const availableWidth = contentWidth;
     const reservedLogoWidth = hasEquipeHeaderLogo ? (logoSize + logoGap) : 0;
     const textWidth = Math.max(120, availableWidth - reservedLogoWidth);
     const titleText = String(groupName || '').trim() || 'Equipe';
@@ -2965,22 +2987,22 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     return 34;
   };
 
-  drawPageTitle();
   let totalRegistros = 0;
 
   for (let index = 0; index < groups.length; index += 1) {
     const group = groups[index];
+    _currentGroupTitle = group.nome || '';
     if (index > 0) {
       doc.addPage();
-      drawPageTitle();
     }
+    drawPageTitle();
 
     const entradas = Array.isArray(group.entries) ? group.entries : [];
     totalRegistros += entradas.length;
 
     if (group.tipo === 'circulo') {
       // Layout fixo em milimetros conforme especificacao do usuario.
-      const pageMargin = mmToPt(15);
+      const pageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
       const titleWidth = mmToPt(82);
       const titleHeight = mmToPt(38);
       const monitorCardWidth = mmToPt(80);
@@ -3000,7 +3022,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const moitaX = circleRightX - mmToPt(2);
       const topBlockHeight = titleHeight;
       const memberCardHeight = personCardHeight;
-      const headerY = pageMargin;
+      const headerY = topStart;
       const topCardY = headerY + ((titleHeight - monitorCardHeight) / 2);
       const circleTopCardOptions = {
         fontBoost: 0.2,
@@ -3106,7 +3128,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       entradas.filter((item) => !['coordenador', 'coordenou'].includes(item.papel))
     );
 
-    const equipePageMargin = mmToPt(15);
+    const equipePageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
     const equipeStartY = topStart;
     const equipeCardWidth = mmToPt(85);
     const equipeCardHeight = mmToPt(34);
@@ -3135,7 +3157,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     };
     const equipeCoordenadorCardOptions = {
       ...equipeCardOptions,
-      outerInset: 4,
+      photoValign: 'center',
       nameMaxChars: 22,
     };
 
@@ -3158,7 +3180,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       });
       doc.restore();
 
-      doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 7).lineTo(left + 515, headingY + 7).stroke();
+      doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 7).lineTo(left + contentWidth, headingY + 7).stroke();
       y += 18;
       y = await drawGrid(coordenadores, y, {
         left: equipePageMargin,
@@ -3189,12 +3211,12 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   }
 
   if (!groups.length) {
-    doc.font('Helvetica').fontSize(11).fillColor('#666').text('Nenhuma estrutura cadastrada para este EJC.', 40, 120, { align: 'center' });
+    doc.font('Helvetica').fontSize(11).fillColor('#666').text('Nenhuma estrutura cadastrada para este EJC.', left, topStart + 80, { align: 'center' });
   }
 
   doc.font('Helvetica').fontSize(8).fillColor('#666').text(
     `Total de registros no PDF: ${totalRegistros}`,
-    40,
+    left,
     doc.page.height - 30,
     { align: 'center' }
   );
@@ -3207,17 +3229,17 @@ const renderCardGridPdf = async (res, entries, options) => {
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader('Content-Disposition', `inline; filename="${options.fileName}"`);
 
-  const doc = new PDFDocument({ margin: 40, size: 'A4', compress: false });
+  const doc = new PDFDocument({ margin: PDF_PAGE_MARGIN_PT, size: 'A4', compress: false });
   doc.pipe(res);
 
   const mmToPt = (mm) => (mm * 72) / 25.4;
-  const left = mmToPt(15);
-  const topStart = 92;
+  const left = mmToPt(PDF_PAGE_MARGIN_MM);
+  const topStart = PDF_PAGE_MARGIN_PT + 66;
   const gap = mmToPt(10);
   const cardWidth = mmToPt(85);
   const cardHeight = mmToPt(34);
   const rightX = left + cardWidth + gap;
-  const bottomLimit = 790;
+  const bottomLimit = doc.page.height - PDF_PAGE_MARGIN_PT;
   const rowGap = mmToPt(8);
 
   const sharedCardOptions = {
@@ -3250,7 +3272,7 @@ const renderCardGridPdf = async (res, entries, options) => {
     return normalizeTextInput(leftEntry.tiosGrupoId) === normalizeTextInput(rightEntry.tiosGrupoId);
   };
 
-  drawPdfTitle(doc, options.title, `Relatório gerado em ${new Date().toLocaleDateString('pt-BR')}`);
+  drawPdfTitle(doc, options.title);
 
   let y = topStart;
   let col = 0;
@@ -3260,7 +3282,7 @@ const renderCardGridPdf = async (res, entries, options) => {
     const entry = entries[idx];
     if (y + cardHeight > bottomLimit) {
       doc.addPage();
-      drawPdfTitle(doc, options.title, `Relatório gerado em ${new Date().toLocaleDateString('pt-BR')}`);
+      drawPdfTitle(doc, options.title);
       y = topStart;
       col = 0;
       pendingLeftEntry = null;
@@ -3289,7 +3311,7 @@ const renderCardGridPdf = async (res, entries, options) => {
     if (idx === entries.length - 1) {
       doc.font('Helvetica').fontSize(8).fillColor('#666').text(
         `Total de registros: ${entries.length}`,
-        40,
+        left,
         doc.page.height - 30,
         { align: 'center' }
       );
