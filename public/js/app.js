@@ -552,6 +552,10 @@ function GenericForm() {
     e.preventDefault();
     console.log('[INFO] Iniciando submissão do formulário');
 
+    if (submitting) {
+      return;
+    }
+
     const hasPendingPhotoProcessing = Object.values(photoProcessingByPessoa).some(Boolean);
     if (hasPendingPhotoProcessing) {
       setErrors([{ msg: 'Aguarde o ajuste automatico da foto terminar para enviar.' }]);
@@ -569,11 +573,9 @@ function GenericForm() {
     }
 
     setSubmitting(true);
-    const timeoutId = setTimeout(() => {
-      console.error('Requisição travou, desbloqueando interface...');
-      setSubmitting(false);
-      setErrors([{ msg: 'Requisição demorou muito. Tente novamente.' }]);
-    }, 30000); // 30 segundos de timeout
+    const slowRequestHintId = setTimeout(() => {
+      setErrors([{ msg: 'Estamos finalizando sua inscricao. Aguarde alguns instantes sem fechar a pagina.' }]);
+    }, 30000);
 
     const readSubmitResponse = async (res) => {
       const contentType = String(res.headers.get('content-type') || '').toLowerCase();
@@ -666,7 +668,7 @@ function GenericForm() {
         const results = await Promise.all(pessoas.map((pessoa) => submitTiosMember(pessoa)));
         if (results.every((item) => item.success)) {
           console.log('[INFO] Ambos tios enviados com sucesso');
-          clearTimeout(timeoutId);
+          clearTimeout(slowRequestHintId);
           redirectToSuccessPage();
         } else {
           const allErrors = results.flatMap((item) => item.errors || []);
@@ -697,7 +699,7 @@ function GenericForm() {
         const json = await readSubmitResponse(res);
         if (json.success) {
           console.log('[INFO] Individual enviado com sucesso');
-          clearTimeout(timeoutId);
+          clearTimeout(slowRequestHintId);
           redirectToSuccessPage();
         } else {
           setErrors(json.errors || [{ msg: 'Erro inesperado' }]);
@@ -707,7 +709,7 @@ function GenericForm() {
       console.error('Erro:', err);
       setErrors([{ msg: 'Erro ao enviar: ' + err.message }]);
     } finally {
-      clearTimeout(timeoutId);
+      clearTimeout(slowRequestHintId);
       setSubmitting(false);
     }
   };
