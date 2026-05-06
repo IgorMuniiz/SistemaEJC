@@ -1367,57 +1367,67 @@ function GenericForm() {
           Trajetória no EJC
         </div>
 
-        <div className="form-row">
-          <div className="mb-3">
-            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
-            <div className="input-group">
-              <span className="input-group-text"><i className="fas fa-church"></i></span>
-              <select
-                className="form-control"
-                id={`ejc-${pessoa}`}
-                name="ejc"
-                value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
-                onChange={e => {
-                  const value = e.target.value;
-                  if (value === 'Outro') {
-                    handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
-                  } else {
-                    handleCh({ target: { name: 'ejc', value } });
+        <div className="mb-3">
+          <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
+          <div className="input-group">
+            <span className="input-group-text"><i className="fas fa-church"></i></span>
+            <select
+              className="form-control"
+              id={`ejc-${pessoa}`}
+              name="ejc"
+              value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === 'Outro') {
+                  handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
+                } else {
+                  handleCh({ target: { name: 'ejc', value } });
+                  if (value !== 'EJC' && value !== 'ECC') {
+                    handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                   }
-                }}
+                }
+              }}
+              required
+            >
+              <option value="">Selecione</option>
+              <option value="EJC">EJC</option>
+              <option value="ECC">ECC</option>
+              <option value="Outro">Outro (especificar)</option>
+            </select>
+          </div>
+          {/* Campo para especificar qual EJC ou ECC fez */}
+          {(data.ejc === 'EJC' || data.ejc === 'ECC') && (
+            <div className="input-group mt-2">
+              <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
+              <input
+                type="text"
+                className="form-control"
+                id={`qualEjcPertence-${pessoa}`}
+                name="qualEjcPertence"
+                value={data.qualEjcPertence}
+                onChange={handleCh}
+                placeholder={data.ejc === 'EJC' ? 'Ex: XIX EJC COP, EJC 2023...' : 'Ex: ECC 15, ECC 2022...'}
                 required
-              >
-                <option value="">Selecione</option>
-                <option value="EJC">EJC</option>
-                <option value="ECC">ECC</option>
-                <option value="Outro">Outro (especificar)</option>
-              </select>
+              />
             </div>
-            {/* Campo extra para "Outro" */}
-            {((data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') || (data.ejc === '' && data.ejc !== 'EJC' && data.ejc !== 'ECC')) && (
-              <div className="input-group mt-2">
-                <span className="input-group-text"><i className="fas fa-pen"></i></span>
-                <input
-                  type="text"
-                  className="form-control"
-                  id={`ejc-outro-${pessoa}`}
-                  name="ejc"
-                  value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
-                  onChange={handleCh}
-                  placeholder="Informe o nome do encontro"
-                  required
-                />
-              </div>
-            )}
-            {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
-          </div>
-          <div className="mb-3">
-            <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">A qual EJC pertence</label>
-            <div className="input-group">
-              <span className="input-group-text"><i className="fas fa-users"></i></span>
-              <input type="text" className="form-control" id={`qualEjcPertence-${pessoa}`} name="qualEjcPertence" value={data.qualEjcPertence} onChange={handleCh} />
+          )}
+          {/* Campo extra para "Outro" */}
+          {(data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') && (
+            <div className="input-group mt-2">
+              <span className="input-group-text"><i className="fas fa-pen"></i></span>
+              <input
+                type="text"
+                className="form-control"
+                id={`ejc-outro-${pessoa}`}
+                name="ejc"
+                value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
+                onChange={handleCh}
+                placeholder="Informe o nome do encontro"
+                required
+              />
             </div>
-          </div>
+          )}
+          {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
         </div>
 
         {pessoa === 'pessoa1' && tiosModo === 'solo' && (
@@ -1592,6 +1602,21 @@ function GenericForm() {
           </div>
         </div>
 
+        <div className="mb-3">
+          <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
+          <input
+            type="text"
+            className="form-control"
+            id={`alergiaDescricao-${pessoa}`}
+            name="alergiaDescricao"
+            value={data.alergiaDescricao || ''}
+            onChange={handleCh}
+            placeholder="Ex: amendoim, dipirona, lactose"
+            disabled={(data.ehAlergico || 'nao') !== 'sim'}
+            required={(data.ehAlergico || 'nao') === 'sim'}
+          />
+        </div>
+
         <div className="form-row">
           <div className="mb-3">
             <label htmlFor={`religiosidadeAtual-${pessoa}`} className="form-label">Religiosamente, como você se considera hoje?</label>
@@ -1606,21 +1631,6 @@ function GenericForm() {
         <div className="mb-3">
           <label htmlFor={`participaMovimentoIgreja-${pessoa}`} className="form-label">Participa de algum movimento ou pastoral da igreja?</label>
           <input type="text" className="form-control" id={`participaMovimentoIgreja-${pessoa}`} name="participaMovimentoIgreja" value={data.participaMovimentoIgreja || ''} onChange={handleCh} />
-        </div>
-
-        <div className="mb-3">
-          <label htmlFor={`alergiaDescricao-${pessoa}`} className="form-label">Se sim, a que?</label>
-          <input
-            type="text"
-            className="form-control"
-            id={`alergiaDescricao-${pessoa}`}
-            name="alergiaDescricao"
-            value={data.alergiaDescricao || ''}
-            onChange={handleCh}
-            placeholder="Ex: amendoim, dipirona, lactose"
-            disabled={(data.ehAlergico || 'nao') !== 'sim'}
-            required={(data.ehAlergico || 'nao') === 'sim'}
-          />
         </div>
 
         <div className="mb-3">
@@ -1722,57 +1732,67 @@ function GenericForm() {
           Trajetória no EJC
         </div>
 
-        <div className="form-row">
-          <div className="mb-3">
-            <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
-            <div className="input-group">
-              <span className="input-group-text"><i className="fas fa-church"></i></span>
-              <select
-                className="form-control"
-                id={`ejc-${pessoa}`}
-                name="ejc"
-                value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
-                onChange={e => {
-                  const value = e.target.value;
-                  if (value === 'Outro') {
-                    handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
-                  } else {
-                    handleCh({ target: { name: 'ejc', value } });
+        <div className="mb-3">
+          <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
+          <div className="input-group">
+            <span className="input-group-text"><i className="fas fa-church"></i></span>
+            <select
+              className="form-control"
+              id={`ejc-${pessoa}`}
+              name="ejc"
+              value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === 'Outro') {
+                  handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
+                } else {
+                  handleCh({ target: { name: 'ejc', value } });
+                  if (value !== 'EJC' && value !== 'ECC') {
+                    handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                   }
-                }}
+                }
+              }}
+              required
+            >
+              <option value="">Selecione</option>
+              <option value="EJC">EJC</option>
+              <option value="ECC">ECC</option>
+              <option value="Outro">Outro (especificar)</option>
+            </select>
+          </div>
+          {/* Campo para especificar qual EJC ou ECC fez */}
+          {(data.ejc === 'EJC' || data.ejc === 'ECC') && (
+            <div className="input-group mt-2">
+              <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
+              <input
+                type="text"
+                className="form-control"
+                id={`qualEjcPertence-${pessoa}`}
+                name="qualEjcPertence"
+                value={data.qualEjcPertence}
+                onChange={handleCh}
+                placeholder={data.ejc === 'EJC' ? 'Ex: XIX EJC COP, EJC 2023...' : 'Ex: ECC 15, ECC 2022...'}
                 required
-              >
-                <option value="">Selecione</option>
-                <option value="EJC">EJC</option>
-                <option value="ECC">ECC</option>
-                <option value="Outro">Outro (especificar)</option>
-              </select>
+              />
             </div>
-            {/* Campo extra para "Outro" */}
-            {((data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') || (data.ejc === '' && data.ejc !== 'EJC' && data.ejc !== 'ECC')) && (
-              <div className="input-group mt-2">
-                <span className="input-group-text"><i className="fas fa-pen"></i></span>
-                <input
-                  type="text"
-                  className="form-control"
-                  id={`ejc-outro-${pessoa}`}
-                  name="ejc"
-                  value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
-                  onChange={handleCh}
-                  placeholder="Informe o nome do encontro"
-                  required
-                />
-              </div>
-            )}
-            {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
-          </div>
-          <div className="mb-3">
-            <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">A qual EJC pertence</label>
-            <div className="input-group">
-              <span className="input-group-text"><i className="fas fa-users"></i></span>
-              <input type="text" className="form-control" id={`qualEjcPertence-${pessoa}`} name="qualEjcPertence" value={data.qualEjcPertence} onChange={handleCh} />
+          )}
+          {/* Campo extra para "Outro" */}
+          {(data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') && (
+            <div className="input-group mt-2">
+              <span className="input-group-text"><i className="fas fa-pen"></i></span>
+              <input
+                type="text"
+                className="form-control"
+                id={`ejc-outro-${pessoa}`}
+                name="ejc"
+                value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
+                onChange={handleCh}
+                placeholder="Informe o nome do encontro"
+                required
+              />
             </div>
-          </div>
+          )}
+          {!!ejcAtivo && <small className="text-muted d-block mt-2">Vínculo automático com o encontro ativo: {ejcAtivo}</small>}
         </div>
 
         <div className="mb-3">
