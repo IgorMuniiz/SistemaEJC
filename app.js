@@ -2023,7 +2023,6 @@ const getPdfSmartCoverBuffer = async (photoPath, width, height, options = {}) =>
     return smartBuffer;
   } catch {
     try {
-      const fallbackPosition = resolvePdfCoverGravity(align, valign);
       let fallbackPipeline = sharp(photoPath, { failOn: 'none' })
         .rotate();
       if (manualRotation) {
