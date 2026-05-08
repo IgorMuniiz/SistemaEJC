@@ -2260,7 +2260,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
-    ['Apelido', displayNickname, 0, 8.5 + fontBoost],
+    ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
@@ -2269,7 +2269,8 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const availableFieldLines = {
     nome: ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
-    apelido: ['Apelido', displayNickname, 0, 8.5 + fontBoost],
+    apelido: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
+    como_quer_ser_chamado: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     aniversario: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
@@ -2309,7 +2310,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     const normalizedLabel = normalizeTextInput(label).toLowerCase();
     const disableDividerForLine = noDividerLabels.includes(normalizedLabel);
     const isNameLine = normalizedLabel === 'nome';
-    const isNicknameLine = normalizedLabel === 'apelido';
+    const isNicknameLine = normalizedLabel === 'apelido' || normalizedLabel === 'como quer ser chamado';
     const isEjcLine = normalizedLabel === 'ejc';
     const hideFieldLabel = ['instagram', 'telefone', 'niver', 'ejc'].includes(normalizedLabel);
     const isIdentityLine = isNameLine || isNicknameLine;
@@ -3040,7 +3041,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         topDivider: false,
         hideEmail: true,
         hideEjc: false,
-        fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
+        fields: ['nome', 'como_quer_ser_chamado', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
         photoValign: 'top',
       };
@@ -3061,7 +3062,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         topDivider: false,
         hideEmail: true,
         hideEjc: false,
-        fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
+        fields: ['nome', 'como_quer_ser_chamado', 'instagram', 'telefone', 'aniversario', 'ejc'],
         photoAlign: 'center',
         photoValign: 'top',
       };
@@ -3150,7 +3151,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       topDivider: false,
       hideEmail: true,
       hideEjc: false,
-      fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
+      fields: ['nome', 'como_quer_ser_chamado', 'instagram', 'telefone', 'aniversario', 'ejc'],
       photoAlign: 'center',
       photoValign: 'top',
     };
@@ -3256,7 +3257,7 @@ const renderCardGridPdf = async (res, entries, options) => {
     topDivider: false,
     hideEmail: true,
     hideEjc: false,
-    fields: ['nome', 'apelido', 'instagram', 'telefone', 'aniversario', 'ejc'],
+    fields: ['nome', 'como_quer_ser_chamado', 'instagram', 'telefone', 'aniversario', 'ejc'],
     photoAlign: 'center',
     photoValign: 'top',
   };
