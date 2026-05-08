@@ -2202,7 +2202,10 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     ? options.noDividerLabels.map((item) => normalizeTextInput(item).toLowerCase())
     : [];
   const requestedFields = Array.isArray(options.fields)
-    ? options.fields.map((field) => normalizeTextInput(field).toLowerCase()).filter(Boolean)
+    ? options.fields
+      .map((field) => normalizeTextInput(field).toLowerCase())
+      .filter(Boolean)
+      .map((field) => (field === 'apelido' ? 'como_quer_ser_chamado' : field))
     : [];
   if (badgeLabel) {
     doc.save();
@@ -2270,6 +2273,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const availableFieldLines = {
     nome: ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
+    apelido: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     como_quer_ser_chamado: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
@@ -2308,13 +2312,15 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   lines.forEach(([label, value, extraSpace, fontSize], idx) => {
     const normalizedLabel = normalizeTextInput(label).toLowerCase();
-    const disableDividerForLine = noDividerLabels.includes(normalizedLabel);
-    const isNameLine = normalizedLabel === 'nome';
-    const isNicknameLine = normalizedLabel === 'como quer ser chamado';
-    const isEjcLine = normalizedLabel === 'ejc';
-    const hideFieldLabel = ['instagram', 'telefone', 'niver', 'ejc'].includes(normalizedLabel);
+    const safeLabel = normalizedLabel === 'apelido' ? 'Como quer ser chamado' : label;
+    const safeNormalizedLabel = normalizeTextInput(safeLabel).toLowerCase();
+    const disableDividerForLine = noDividerLabels.includes(safeNormalizedLabel) || noDividerLabels.includes(normalizedLabel);
+    const isNameLine = safeNormalizedLabel === 'nome';
+    const isNicknameLine = safeNormalizedLabel === 'como quer ser chamado';
+    const isEjcLine = safeNormalizedLabel === 'ejc';
+    const hideFieldLabel = ['instagram', 'telefone', 'niver', 'ejc'].includes(safeNormalizedLabel);
     const isIdentityLine = isNameLine || isNicknameLine;
-    drawCardLine(doc, textX, rowY, textWidth, label, value, extraSpace, fontSize, {
+    drawCardLine(doc, textX, rowY, textWidth, safeLabel, value, extraSpace, fontSize, {
       rowHeight,
       textMax,
       showLabels: (isIdentityLine || hideFieldLabel) ? false : showLabels,
