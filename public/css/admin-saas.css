@@ -4175,7 +4175,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page .status-badge .status-led-dot.is-active {
       background: #22c55e;
       border-color: rgba(134, 239, 172, 0.88);
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.26), 0 0 8px rgba(34, 197, 94, 0.62);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.34), 0 0 8px rgba(34, 197, 94, 0.48);
       animation: ejcLedPulseGreen 1.2s ease-in-out infinite;
     }
     body.admin-panel.admin-manager-page .status-badge .status-led-dot.is-inactive {
@@ -4648,7 +4648,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-manager-page .btn-ejc-state.is-active .ejc-led-dot {
       background: #22c55e;
       border-color: rgba(134, 239, 172, 0.9);
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3), 0 0 10px rgba(34, 197, 94, 0.7);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.34), 0 0 8px rgba(34, 197, 94, 0.5);
       animation: ejcLedPulseGreen 1.2s ease-in-out infinite;
     }
     body.admin-panel.admin-manager-page .btn-ejc-state.is-inactive {
@@ -5744,7 +5744,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       flex: 0 0 9px;
       background: #22c55e;
       border: 1px solid rgba(134, 239, 172, 0.9);
-      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.28), 0 0 10px rgba(34, 197, 94, 0.66);
+      box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.34), 0 0 8px rgba(34, 197, 94, 0.48);
       animation: ejcLedPulseGreen 1.3s ease-in-out infinite;
     }
 
@@ -8018,10 +8018,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell .table tbody tr {
-      transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+      transition: background-color .18s ease, box-shadow .18s ease;
     }
     body.admin-panel.admin-manager-page.admin-manager-revamp .manager-table-shell .table tbody tr:hover {
-      transform: translateX(2px);
       box-shadow: inset 3px 0 0 rgba(125, 211, 252, 0.4);
     }
     @keyframes managerTabIn {
@@ -8052,11 +8051,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     @keyframes ejcLedPulseGreen {
       0%, 100% {
         opacity: 0.85;
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.26), 0 0 5px rgba(34, 197, 94, 0.34);
       }
       50% {
         opacity: 1;
-        box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.42), 0 0 12px rgba(34, 197, 94, 0.84);
       }
     }
     @keyframes menuCriticalPulse {
@@ -9192,7 +9189,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       text-align: left; font-weight: 600; font-size: .81rem;
       transition: all var(--rt); cursor: pointer;
     }
-    body.admin-panel.admin-encontro-page .menu-btn:hover { background: var(--accent-glow); color: var(--t1); border-color: rgba(99,102,241,.35); transform: translateX(2px); }
+    body.admin-panel.admin-encontro-page .menu-btn:hover { background: var(--accent-glow); color: var(--t1); border-color: rgba(99,102,241,.35); }
     body.admin-panel.admin-encontro-page .menu-btn.active {
       background: linear-gradient(135deg, var(--accent) 0%, #818cf8 100%);
       color: #fff; border-color: transparent;
@@ -9262,6 +9259,47 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     @keyframes rowLiftIn {
       from { opacity: 0; transform: translateY(5px); }
       to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Modo estabilidade: reduz efeitos que provocam tremor/piscada em scroll e hover */
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp {
+      scroll-behavior: auto !important;
+    }
+    body.admin-panel.admin-encontro-page::before {
+      display: none !important;
+    }
+    body.admin-panel.admin-encontro-page .sidebar {
+      position: relative !important;
+      top: auto !important;
+      height: auto !important;
+      overflow: visible !important;
+    }
+    body.admin-panel.admin-encontro-page .panel {
+      transform: none !important;
+    }
+    body.admin-panel.admin-encontro-page .panel.active,
+    body.admin-panel.admin-encontro-page .panel.active .surface,
+    body.admin-panel.admin-encontro-page .panel.panel-entering .entity-card {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(
+      .surface,
+      .entity-card,
+      .encontro-module-card,
+      .workspace-stat-card,
+      .hero-strip-pill,
+      .panel-premium-chip,
+      .table tbody tr,
+      .btn,
+      .form-control,
+      .form-select,
+      .multi-check-toggle,
+      .multi-check-item,
+      .btn-clear-mini
+    ) {
+      transition: none !important;
     }
     /* ������ SURFACE CARDS ��������������������������������������������������������������������������������������������������������������������� */
     body.admin-panel.admin-encontro-page .surface {
@@ -9398,6 +9436,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-radius: 11px;
       background: rgba(2, 6, 23, 0.35);
       max-height: 430px;
+      scrollbar-gutter: stable;
     }
     body.admin-panel.admin-encontro-page .table {
       --bs-table-bg: transparent;
@@ -11484,11 +11523,55 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: .9rem;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr {
-      transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+      transition: background-color .18s ease, box-shadow .18s ease;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr:hover {
-      transform: translateX(2px);
       box-shadow: inset 3px 0 0 rgba(125, 211, 252, 0.38);
+    }
+
+    /* Hotfix de estabilidade: evita tremor/piscada por deslocamento em hover */
+    body.admin-panel.admin-encontro-page .table-wrap,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .table-wrap {
+      scrollbar-gutter: stable both-edges;
+    }
+
+    body.admin-panel.admin-encontro-page .entity-export-btn-excel:hover,
+    body.admin-panel.admin-encontro-page .entity-export-btn-pdf:hover,
+    body.admin-panel.admin-encontro-page .entity-export-btn-cracha:hover,
+    body.admin-panel.admin-encontro-page .link-form-grid-modern .link-action-btn:hover,
+    body.admin-panel.admin-encontro-page .btn-primary:hover,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe:hover .pill.equipe.pill-equipe-premium {
+      transform: none !important;
+      filter: none !important;
+    }
+
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe .pill.equipe.pill-equipe-premium {
+      transition: background-color .18s ease, box-shadow .18s ease, border-color .18s ease, color .18s ease !important;
+    }
+
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(
+      .menu-btn,
+      .form-control,
+      .form-select,
+      .btn,
+      .entity-export-btn,
+      .encontro-module-card,
+      .entity-card,
+      .hero-strip-pill,
+      .panel-premium-chip,
+      .workspace-stat-card,
+      .entity-table tbody tr,
+      .multi-check-toggle,
+      .multi-check-item,
+      .btn-clear-mini
+    ) {
+      transition-property: background-color, border-color, box-shadow, color, opacity !important;
+      transition-duration: .12s !important;
+      transition-timing-function: ease !important;
     }
 
     @media (max-width: 1200px) {
@@ -17552,6 +17635,14 @@ html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-rev
   transform: translateY(-2px);
 }
 
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill:hover,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-chip:hover,
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card:hover {
+  transform: none !important;
+}
+
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .surface-head span,
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel-premium-head h2 {
   font-weight: 800;
@@ -19618,4 +19709,51 @@ html[data-theme='light'] body.admin-panel.admin-dashboard-page .db-header-action
     flex-wrap: wrap;
     justify-content: flex-end;
   }
+}
+
+/* ============================================================================
+   MODO ANTI-TREMOR GLOBAL (admin-manager + admin-encontro)
+   ============================================================================ */
+body.admin-panel.admin-manager-page :is(*, *::before, *::after),
+body.admin-panel.admin-encontro-page :is(*, *::before, *::after) {
+  animation: none !important;
+}
+
+body.admin-panel.admin-manager-page :is(*, *::before, *::after):hover,
+body.admin-panel.admin-encontro-page :is(*, *::before, *::after):hover {
+  transform: none !important;
+  filter: none !important;
+}
+
+body.admin-panel.admin-manager-page :is(
+  .sidebar,
+  .main-panel,
+  .content-area,
+  .admin-form-card,
+  .admin-table-card,
+  .table-wrap,
+  .manager-table-shell,
+  .workspace-hero-manager,
+  .manager-module-card,
+  .menu-link,
+  .nav-link,
+  .btn,
+  .form-control,
+  .form-select,
+  tbody tr
+),
+body.admin-panel.admin-encontro-page :is(
+  .sidebar,
+  .content-area,
+  .surface,
+  .entity-card,
+  .table-wrap,
+  .encontro-module-card,
+  .menu-btn,
+  .btn,
+  .form-control,
+  .form-select,
+  tbody tr
+) {
+  transition: none !important;
 }
