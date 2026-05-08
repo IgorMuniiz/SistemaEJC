@@ -2256,7 +2256,8 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const nameMaxChars = Number(options.nameMaxChars) > 0 ? Number(options.nameMaxChars) : 28;
   const displayName = truncateText(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
-  const displayNickname = truncateText(normalizeSingleLineText(entry.comoQuerSerChamado) || '-', Math.max(16, Math.min(26, nameMaxChars - 2)));
+  const preferredName = normalizeSingleLineText(entry.comoQuerSerChamado || entry.apelido || entry.nomeSocial) || '-';
+  const displayNickname = truncateText(preferredName, Math.max(16, Math.min(26, nameMaxChars - 2)));
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
@@ -2269,7 +2270,6 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const availableFieldLines = {
     nome: ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
-    apelido: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     como_quer_ser_chamado: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
@@ -2310,7 +2310,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     const normalizedLabel = normalizeTextInput(label).toLowerCase();
     const disableDividerForLine = noDividerLabels.includes(normalizedLabel);
     const isNameLine = normalizedLabel === 'nome';
-    const isNicknameLine = normalizedLabel === 'apelido' || normalizedLabel === 'como quer ser chamado';
+    const isNicknameLine = normalizedLabel === 'como quer ser chamado';
     const isEjcLine = normalizedLabel === 'ejc';
     const hideFieldLabel = ['instagram', 'telefone', 'niver', 'ejc'].includes(normalizedLabel);
     const isIdentityLine = isNameLine || isNicknameLine;
@@ -2338,7 +2338,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
 const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
-  comoQuerSerChamado: pessoa?.comoQuerSerChamado || '',
+  comoQuerSerChamado: pessoa?.comoQuerSerChamado || pessoa?.apelido || pessoa?.nomeSocial || '',
   ejc: pessoa?.ejc || ejcNome,
   logradouro: pessoa?.logradouro || 'Nao informado',
   bairro: pessoa?.bairro || 'Nao informado',
