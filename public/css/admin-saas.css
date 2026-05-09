@@ -9405,7 +9405,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-color: rgba(74, 222, 128, 0.88) !important;
       background: linear-gradient(135deg, rgba(22, 163, 74, 0.62), rgba(74, 222, 128, 0.3)) !important;
       box-shadow: 0 6px 16px rgba(22, 163, 74, 0.34);
-      transform: translateY(-1px);
     }
     body.admin-panel.admin-encontro-page .entity-export-btn-pdf {
       color: #fecaca !important;
@@ -9418,7 +9417,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-color: rgba(252, 165, 165, 0.9) !important;
       background: linear-gradient(135deg, rgba(185, 28, 28, 0.62), rgba(248, 113, 113, 0.3)) !important;
       box-shadow: 0 6px 16px rgba(220, 38, 38, 0.34);
-      transform: translateY(-1px);
+       
     }
     body.admin-panel.admin-encontro-page .entity-export-btn-cracha {
       color: #f3e8ff !important;
@@ -9431,7 +9430,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       border-color: rgba(216, 180, 254, 0.95) !important;
       background: linear-gradient(135deg, rgba(124, 58, 237, 0.72), rgba(196, 181, 253, 0.34)) !important;
       box-shadow: 0 6px 16px rgba(124, 58, 237, 0.34);
-      transform: translateY(-1px);
     }
     body.admin-panel.admin-encontro-page .entity-export-btn:focus {
       box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.3);
@@ -9751,7 +9749,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page .link-form-grid-modern .link-action-btn:hover {
       box-shadow: 0 8px 20px rgba(37, 99, 235, 0.34);
-      transform: translateY(-1px);
     }
     /* ������ PILLS ��������������������������������������������������������������������������������������������������������������������������������������������� */
     body.admin-panel.admin-encontro-page .muted { color: var(--t3); font-size: .88rem; }
@@ -9779,7 +9776,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .btn-primary:hover {
       background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%) !important;
       border-color: rgba(191, 219, 254, 0.62) !important;
-      transform: translateY(-1px);
+   
     }
     body.admin-panel.admin-encontro-page .btn-primary:focus {
       box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.26), 0 6px 18px rgba(29, 78, 216, 0.28) !important;
@@ -10839,7 +10836,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-input-modal .app-input-field:focus {
       border-color: rgba(125, 211, 252, 0.8);
-      box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.14);
+      /* transform: translateY(-2px); */ /* Commented out instead of removing */
       background: rgba(15, 23, 42, 0.62);
       color: rgba(248, 250, 252, 0.98);
     }
