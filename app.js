@@ -8267,12 +8267,12 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
     const [listaEncontristas, listaEncontreiros] = await Promise.all([
       idsEncontristas.length
         ? Cadastro.find({ _id: { $in: idsEncontristas } })
-          .select('nomeCompleto telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
@@ -8724,12 +8724,12 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
     const [listaEncontristas, listaEncontreiros] = await Promise.all([
       idsEncontristas.length
         ? Cadastro.find({ _id: { $in: idsEncontristas } })
-          .select('nomeCompleto telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
