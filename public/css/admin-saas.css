@@ -9299,7 +9299,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       .multi-check-item,
       .btn-clear-mini
     ) {
-      transition: none !important;
+      transition-property: background-color, border-color, box-shadow, color, opacity !important;
+      transition-duration: .12s !important;
+      transition-timing-function: ease !important;
     }
     /* ������ SURFACE CARDS ��������������������������������������������������������������������������������������������������������������������� */
     body.admin-panel.admin-encontro-page .surface {
@@ -11545,7 +11547,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card,
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card,
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe .pill.equipe.pill-equipe-premium {
-      transition: background-color .18s ease, box-shadow .18s ease, border-color .18s ease, color .18s ease !important;
+      transition-property: background-color, border-color, box-shadow, color, opacity !important;
+      transition-duration: .12s !important;
+      transition-timing-function: ease !important;
     }
 
     body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(
