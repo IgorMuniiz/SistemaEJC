@@ -9261,7 +9261,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Modo estabilidade: reduz efeitos que provocam tremor/piscada em scroll e hover */
     body.admin-panel.admin-encontro-page.admin-encontro-revamp {
       scroll-behavior: auto !important;
     }
@@ -9284,17 +9283,26 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       opacity: 1 !important;
       transform: none !important;
     }
+    /* Evita flickering em elementos que não devem animar */
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .table-wrap,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .content-area,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .panel,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card::after,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head::before,
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head::after {
+      transition: none !important;
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(
       .surface,
-      .entity-card,
       .encontro-module-card,
       .workspace-stat-card,
       .hero-strip-pill,
       .panel-premium-chip,
-      .table tbody tr,
-      .btn,
+      .menu-btn,
       .form-control,
       .form-select,
+      .btn,
+      .entity-export-btn,
       .multi-check-toggle,
       .multi-check-item,
       .btn-clear-mini
@@ -10255,7 +10263,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
       position: relative;
       overflow: hidden;
-      transition: border-color .18s ease, box-shadow .18s ease;
+      transition: border-color .18s ease, box-shadow .18s ease !important;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover {
       box-shadow: 0 18px 34px rgba(2, 6, 23, 0.28);
@@ -10266,6 +10274,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       inset: 0;
       pointer-events: none;
       background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 22%);
+      transition: none !important;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head {
       padding: 11px 12px;
@@ -10288,6 +10297,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       pointer-events: none;
       opacity: .9;
       background: radial-gradient(circle at 0% 50%, rgba(45, 212, 191, 0.16), transparent 40%), linear-gradient(90deg, rgba(34, 197, 94, 0.08), transparent 58%);
+      transition: none !important;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-circulo .entity-head::before {
       content: '';
@@ -10296,6 +10306,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       pointer-events: none;
       opacity: .9;
       background: linear-gradient(90deg, rgba(148, 163, 184, 0.08), transparent 56%);
+      transition: none !important;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-head strong {
       font-size: .96rem;
@@ -11523,7 +11534,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       font-size: .9rem;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr {
-      transition: background-color .18s ease;
+      transition: none !important;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr:hover {
       background-color: rgba(31, 41, 59, 0.5);
@@ -11542,35 +11553,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .btn-primary:hover,
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover {
       filter: none !important;
-    }
-
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card,
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card,
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe .pill.equipe.pill-equipe-premium {
-      transition-property: background-color, border-color, box-shadow, color, opacity !important;
-      transition-duration: .12s !important;
-      transition-timing-function: ease !important;
-    }
-
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(
-      .menu-btn,
-      .form-control,
-      .form-select,
-      .btn,
-      .entity-export-btn,
-      .encontro-module-card,
-      .entity-card,
-      .hero-strip-pill,
-      .panel-premium-chip,
-      .workspace-stat-card,
-      .entity-table tbody tr,
-      .multi-check-toggle,
-      .multi-check-item,
-      .btn-clear-mini
-    ) {
-      transition-property: background-color, border-color, box-shadow, color, opacity !important;
-      transition-duration: .12s !important;
-      transition-timing-function: ease !important;
     }
 
     @media (max-width: 1200px) {
@@ -17406,6 +17388,10 @@ html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-rev
   opacity: 0.9;
 }
 
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card {
+  transition: border-color .18s ease, box-shadow .18s ease !important;
+}
+
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover {
   border-color: rgba(96, 165, 250, 0.28) !important;
   box-shadow: 0 22px 40px rgba(37, 99, 235, 0.12), 0 10px 18px rgba(15, 23, 42, 0.05) !important;
@@ -17553,6 +17539,10 @@ html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-rev
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.equipe.pill-equipe-premium.theme-rosa { background: linear-gradient(135deg, rgba(219, 39, 119, 0.14), rgba(253, 242, 248, 0.98)) !important; color: #be185d !important; border-color: rgba(219, 39, 119, 0.24) !important; }
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.equipe.pill-equipe-premium.theme-roxo { background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(245, 243, 255, 0.98)) !important; color: #6d28d9 !important; border-color: rgba(124, 58, 237, 0.24) !important; }
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .pill.equipe.pill-equipe-premium.theme-preto { background: linear-gradient(135deg, rgba(51, 65, 85, 0.12), rgba(248, 250, 252, 0.98)) !important; color: #334155 !important; border-color: rgba(51, 65, 85, 0.2) !important; }
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr {
+  transition: none !important;
+}
 
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-table tbody tr:hover {
   background: rgba(37, 99, 235, 0.04) !important;
