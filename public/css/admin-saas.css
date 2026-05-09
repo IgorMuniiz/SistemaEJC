@@ -18058,6 +18058,47 @@ html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-batch-h
   color: rgba(71, 85, 105, 0.92) !important;
 }
 
+/* Modo estatico total de estabilidade para Encontro (circulos/equipes). */
+body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) :is(
+  .surface,
+  .surface *,
+  .panel-premium-head,
+  .panel-premium-head *,
+  .entity-card,
+  .entity-card *,
+  .table-wrap,
+  .table-wrap *,
+  .entity-export-btn,
+  .btn,
+  .link-action-btn,
+  .menu-btn,
+  .hero-strip-pill,
+  .panel-premium-chip,
+  .workspace-stat-card,
+  .encontro-module-card
+) {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  filter: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .table-hover > tbody > tr:hover > * {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .entity-table tbody tr:hover {
+  background: inherit !important;
+}
+
+body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .entity-card:hover {
+  box-shadow: inherit !important;
+  border-color: inherit !important;
+}
+
 /* Hotfix final de estabilidade (aba Equipes/Circulos do Encontro):
   evita flicker/tremor por repaints de GPU e transicoes de layout. */
 body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-equipes, #panel-circulos) :is(
