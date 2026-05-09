@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260509-encontro-stability-final-06">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260509-encontro-stability-final-07">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -1531,10 +1531,6 @@
 
       document.querySelectorAll('.panel').forEach((panel) => panel.classList.remove('active', 'panel-entering'));
       targetPanel.classList.add('active');
-      targetPanel.classList.add('panel-entering');
-      window.setTimeout(() => {
-        targetPanel.classList.remove('panel-entering');
-      }, 320);
 
       document.querySelectorAll('.menu-btn').forEach((b) => b.classList.remove('active'));
       const menuButton = btn || document.querySelector(`.menu-btn[data-panel="${panelId}"]`);
