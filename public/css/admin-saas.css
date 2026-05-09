@@ -18094,12 +18094,16 @@ body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, 
 }
 
 body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .table-hover > tbody > tr:hover > * {
-  background-color: transparent !important;
+  background-color: rgba(59, 130, 246, 0.06) !important;
   color: inherit !important;
 }
 
 body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .entity-table tbody tr:hover {
-  background: inherit !important;
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .entity-table tbody tr:hover td {
+  color: #0f172a !important;
 }
 
 body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#panel-circulos, #panel-equipes) .entity-card:hover {
