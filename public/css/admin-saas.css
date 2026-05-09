@@ -18058,6 +18058,65 @@ html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-batch-h
   color: rgba(71, 85, 105, 0.92) !important;
 }
 
+/* Hotfix final de estabilidade (aba Equipes/Circulos do Encontro):
+   evita flicker/tremor causado por transform e transicoes conflitantes. */
+body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-equipes,
+body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-circulos {
+  contain: layout paint;
+}
+
+body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-equipes :is(
+  .entity-card,
+  .entity-card:hover,
+  .entity-table tbody tr,
+  .entity-table tbody tr:hover,
+  .table-wrap,
+  .table-wrap:hover,
+  .entity-export-btn,
+  .entity-export-btn:hover,
+  .btn,
+  .btn:hover,
+  .link-action-btn,
+  .link-action-btn:hover,
+  .encontro-module-card,
+  .encontro-module-card:hover,
+  .workspace-stat-card,
+  .workspace-stat-card:hover,
+  .hero-strip-pill,
+  .hero-strip-pill:hover,
+  .panel-premium-chip,
+  .panel-premium-chip:hover
+) {
+  transform: none !important;
+  animation: none !important;
+  transition-property: background-color, border-color, box-shadow, color, opacity !important;
+}
+
+body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-equipes :is(
+  .entity-card::before,
+  .entity-card::after,
+  .entity-head::before,
+  .entity-head::after,
+  .encontro-module-card::before,
+  .encontro-module-card::after
+) {
+  transition: none !important;
+  animation: none !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp #panel-equipes :is(
+  .encontro-module-card,
+  .encontro-module-card:hover,
+  .entity-card,
+  .entity-card:hover,
+  .btn,
+  .btn:hover,
+  .link-action-btn,
+  .link-action-btn:hover
+) {
+  transform: none !important;
+}
+
 html[data-theme='light'] body.admin-panel.admin-dashboard-page .approval-batch-helper i {
   color: #2563eb !important;
 }
