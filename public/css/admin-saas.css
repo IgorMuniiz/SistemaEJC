@@ -10253,10 +10253,9 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 10px 24px rgba(2, 6, 23, 0.24);
       position: relative;
       overflow: hidden;
-      transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+      transition: border-color .18s ease, box-shadow .18s ease;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover {
-      transform: translateY(-2px);
       box-shadow: 0 18px 34px rgba(2, 6, 23, 0.28);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card::after {
@@ -11507,7 +11506,6 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
       box-shadow: 0 14px 28px rgba(220, 38, 38, 0.2);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe:hover .pill.equipe.pill-equipe-premium {
-      transform: translateY(-1px);
       border-color: rgba(103, 232, 249, 0.52);
       background: linear-gradient(135deg, rgba(13, 148, 136, 0.28), rgba(14, 116, 144, 0.22));
       color: #ecfeff;
@@ -11540,10 +11538,7 @@ body.admin-home-page .reveal-on-scroll.reveal-stagger.is-visible .card-option {
     body.admin-panel.admin-encontro-page .entity-export-btn-cracha:hover,
     body.admin-panel.admin-encontro-page .link-form-grid-modern .link-action-btn:hover,
     body.admin-panel.admin-encontro-page .btn-primary:hover,
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover,
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card:hover,
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp .entity-card-equipe:hover .pill.equipe.pill-equipe-premium {
-      transform: none !important;
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover {
       filter: none !important;
     }
 
