@@ -321,8 +321,153 @@ function GenericForm() {
     };
   }, []);
 
+  const getFieldValidationShell = (field) => {
+    if (!field) return null;
+
+    return field.closest('.upload-field-shell')
+      || field.closest('.step-consent-box')
+      || field.closest('.final-question-box')
+      || field.closest('.form-check')
+      || field.closest('.mb-3')
+      || field.parentElement;
+  };
+
+  const clearFieldValidationState = (field) => {
+    if (!field) return;
+
+    field.classList.remove('is-invalid');
+    field.removeAttribute('aria-invalid');
+
+    const shell = getFieldValidationShell(field);
+    if (shell) {
+      shell.classList.remove('field-validation-error');
+    }
+  };
+
+  const clearValidationState = (root = formRef.current) => {
+    if (!root || typeof root.querySelectorAll !== 'function') return;
+
+    root.querySelectorAll('.is-invalid').forEach((field) => {
+      field.classList.remove('is-invalid');
+      field.removeAttribute('aria-invalid');
+    });
+
+    root.querySelectorAll('.field-validation-error').forEach((element) => {
+      element.classList.remove('field-validation-error');
+    });
+  };
+
+  const markFieldInvalid = (field) => {
+    if (!field) return;
+
+    field.classList.add('is-invalid');
+    field.setAttribute('aria-invalid', 'true');
+
+    const shell = getFieldValidationShell(field);
+    if (shell) {
+      shell.classList.add('field-validation-error');
+    }
+  };
+
+  const getFieldLabel = (field, scope = formRef.current) => {
+    if (!field) return 'campo obrigatório';
+
+    const fieldId = String(field.id || '').trim();
+    let label = null;
+
+    if (scope && fieldId) {
+      label = scope.querySelector(`label[for="${fieldId}"]`);
+    }
+
+    if (!label) {
+      label = field.closest('.form-check')?.querySelector('.form-check-label') || null;
+    }
+
+    if (!label) {
+      label = field.closest('.mb-3')?.querySelector('.form-label') || null;
+    }
+
+    const text = String(label?.textContent || field.name || 'campo obrigatório')
+      .replace(/\s+/g, ' ')
+      .replace(/\*/g, '')
+      .trim();
+
+    return text || 'campo obrigatório';
+  };
+
+  const getStepCandidateFields = (stepPanel) => {
+    if (!stepPanel) return [];
+
+    return Array.from(stepPanel.querySelectorAll('input[name], select[name], textarea[name]'))
+      .filter((field) => !field.disabled)
+      .filter((field) => field.required || isEssentialRequiredField(field));
+  };
+
+  const buildValidationMessage = (field, label) => {
+    if (field.type === 'checkbox') {
+      return `Marque "${label}".`;
+    }
+
+    if (field.type === 'radio' || field.tagName === 'SELECT') {
+      return `Selecione "${label}".`;
+    }
+
+    if (field.type === 'file') {
+      return `Envie "${label}".`;
+    }
+
+    return `Preencha "${label}".`;
+  };
+
+  const validateStepPanels = (stepPanels) => {
+    const invalidEntries = [];
+    const processedRadioNames = new Set();
+
+    stepPanels.forEach((stepPanel) => {
+      const candidateFields = getStepCandidateFields(stepPanel);
+
+      candidateFields.forEach((field) => {
+        if (field.type === 'radio') {
+          if (processedRadioNames.has(field.name)) return;
+          processedRadioNames.add(field.name);
+
+          const radioGroup = candidateFields.filter((item) => item.type === 'radio' && item.name === field.name);
+          const hasChecked = radioGroup.some((item) => item.checked);
+          if (hasChecked) return;
+
+          radioGroup.forEach((item) => markFieldInvalid(item));
+          invalidEntries.push({ field, message: buildValidationMessage(field, getFieldLabel(field)) });
+          return;
+        }
+
+        if (field.type === 'email') {
+          field.setCustomValidity('');
+          const rawValue = String(field.value || '').trim();
+          if (rawValue && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawValue)) {
+            field.setCustomValidity('Informe um email válido.');
+          }
+        }
+
+        const isValid = field.checkValidity();
+        if (field.type === 'email') {
+          field.setCustomValidity('');
+        }
+
+        if (isValid) return;
+
+        markFieldInvalid(field);
+        invalidEntries.push({ field, message: buildValidationMessage(field, getFieldLabel(field)) });
+      });
+    });
+
+    return invalidEntries;
+  };
+
   const handleChange = (e) => {
     const { name, value, options, multiple, type, checked } = e.target;
+    clearFieldValidationState(e.target);
+    setErrors([]);
+
     if (type === 'checkbox') {
       setFormData((prev) => ({ ...prev, [name]: checked }));
       return;
@@ -446,6 +591,8 @@ function GenericForm() {
 
   const handleFile = async (e) => {
     const selectedFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    clearFieldValidationState(e.target);
+
     if (!selectedFile) {
       setFormData((prev) => ({ ...prev, foto: null }));
       setPhotoProcessingByPessoa((prev) => ({ ...prev, unico: false }));
@@ -470,6 +617,9 @@ function GenericForm() {
 
   const handleTiosChange = (pessoa, e) => {
     const { name, value, options, multiple, type, checked } = e.target;
+    clearFieldValidationState(e.target);
+    setErrors([]);
+
     if (type === 'checkbox') {
       setTiosData((prev) => ({
         ...prev,
@@ -495,6 +645,8 @@ function GenericForm() {
 
   const handleTiosFile = async (pessoa, e) => {
     const selectedFile = e.target.files && e.target.files[0] ? e.target.files[0] : null;
+    clearFieldValidationState(e.target);
+
     if (!selectedFile) {
       setTiosData((prev) => ({
         ...prev,
@@ -748,34 +900,29 @@ function GenericForm() {
     const formElement = formRef.current;
     if (!formElement) return true;
 
+    clearValidationState(formElement);
+
     const stepPanels = Array.from(formElement.querySelectorAll(`[data-step-panel="${currentStep}"]`));
     if (!stepPanels.length) return true;
 
-    for (const stepPanel of stepPanels) {
-      const essentialFields = Array.from(stepPanel.querySelectorAll('input[name], select[name], textarea[name]'))
-        .filter((field) => isEssentialRequiredField(field));
+    const invalidEntries = validateStepPanels(stepPanels);
+    if (invalidEntries.length > 0) {
+      const uniqueMessages = [...new Set(invalidEntries.map((entry) => entry.message))];
+      setErrors(uniqueMessages.map((msg) => ({ msg })));
 
-      for (const field of essentialFields) {
-        const value = field.type === 'checkbox' ? field.checked : String(field.value || '').trim();
-        const isFilled = field.type === 'checkbox' ? !!value : value.length > 0;
-
-        if (!isFilled) {
-          if (typeof field.reportValidity === 'function') {
-            field.reportValidity();
-          }
-          return false;
+      const firstInvalidField = invalidEntries[0].field;
+      if (firstInvalidField) {
+        if (typeof firstInvalidField.focus === 'function') {
+          firstInvalidField.focus({ preventScroll: true });
         }
 
-        if (field.name === 'email' && String(field.value || '').trim()) {
-          const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(field.value || '').trim());
-          if (!emailOk) {
-            field.setCustomValidity('Informe um email válido.');
-            field.reportValidity();
-            field.setCustomValidity('');
-            return false;
-          }
+        firstInvalidField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (typeof firstInvalidField.reportValidity === 'function') {
+          firstInvalidField.reportValidity();
         }
       }
+
+      return false;
     }
 
     return true;
@@ -1564,7 +1711,7 @@ function GenericForm() {
             <label className="form-label d-block">O XIX EJC COP está previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que você esteja disponível:</label>
             <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sábado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} />
+              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} required />
               <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
                 Confirmo minha disponibilidade integral para os dias e horários informados.
               </label>
@@ -1918,7 +2065,7 @@ function GenericForm() {
             <label className="form-label d-block">O XIX EJC COP está previsto para os dias 31/07, 01/08 e 02/08. Para participar precisamos que você esteja disponível:</label>
             <small className="final-question-hint d-block mb-3">Sexta-feira (31/07): A partir das 18:00h<br />Sábado (01/08): Dia todo<br />Domingo (02/08): Dia todo</small>
             <div className="form-check">
-              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} />
+              <input className="form-check-input" type="checkbox" id={`disponibilidadeEncontro-${pessoa || 'unico'}`} name="disponibilidadeEncontro" checked={!!data.disponibilidadeEncontro} onChange={handleCh} required />
               <label className="form-check-label" htmlFor={`disponibilidadeEncontro-${pessoa || 'unico'}`}>
                 Confirmo minha disponibilidade integral para os dias e horários informados.
               </label>
