@@ -955,6 +955,158 @@ test('POST /encontro aceita mesmo email apenas para tio casal no mesmo grupo', a
   assert.equal(registrosSalvos[0].tiosGrupoId, grupoCasal);
   assert.equal(registrosSalvos[1].tiosGrupoId, grupoCasal);
 });
+
+test('POST /encontro vincula automaticamente os dois cadastros de tio casal no campo de parceiro', async (t) => {
+  invalidarCacheEncontroAtivo();
+
+  const originalAdminFindOne = Admin.findOne;
+  const originalEjcFindOne = Ejc.findOne;
+  const originalEncontroFindOne = Encontro.findOne;
+  const originalEncontroFindById = Encontro.findById;
+  const originalEncontroUpdateOne = Encontro.updateOne;
+  const originalEncontroPrototypeSave = Encontro.prototype.save;
+  const originalSubscriptionFind = PushSubscription.find;
+
+  const encontroAtivo = {
+    _id: '507f1f77bcf86cd799439181',
+    nome: 'EJC Atual 2026',
+    ativo: true,
+  };
+  const grupoCasal = 'tios-casal-auto-001';
+  const registrosSalvos = [];
+
+  Admin.findOne = () => ({ lean: async () => null });
+  Ejc.findOne = (query = {}) => ({
+    lean: async () => ((query && query.ativo === true) ? encontroAtivo : encontroAtivo),
+    sort: () => ({ lean: async () => encontroAtivo }),
+  });
+  Encontro.findOne = async (query = {}) => {
+    if (query && query.$and) return null;
+    if (query && query.$or) return null;
+
+    if (query && query.tiosGrupoId && query._id && query._id.$ne) {
+      return registrosSalvos.find((item) => (
+        String(item._id) !== String(query._id.$ne)
+        && item.tipo === 'tios'
+        && item.tiosCategoria === 'casal'
+        && item.origemTios === true
+        && item.tiosGrupoId === query.tiosGrupoId
+      )) || null;
+    }
+
+    return null;
+  };
+  Encontro.findById = async (id) => {
+    const found = registrosSalvos.find((item) => String(item._id) === String(id));
+    if (!found) return null;
+
+    return {
+      _id: found._id,
+      tipo: found.tipo,
+      tiosCategoria: found.tiosCategoria,
+      tiosGrupoId: found.tiosGrupoId,
+      tioParceiroId: found.tioParceiroId,
+      origemTios: found.origemTios,
+    };
+  };
+  Encontro.updateOne = async (filter = {}, update = {}) => {
+    const found = registrosSalvos.find((item) => {
+      if (String(item._id) !== String(filter._id)) return false;
+      if (Object.prototype.hasOwnProperty.call(filter, 'tioParceiroId')) {
+        return String(item.tioParceiroId || '') === String(filter.tioParceiroId || '');
+      }
+      return true;
+    });
+
+    if (!found) return { acknowledged: true, matchedCount: 0, modifiedCount: 0 };
+    if (update && update.$set && typeof update.$set === 'object') {
+      Object.assign(found, update.$set);
+    }
+
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+  Encontro.prototype.save = async function mockSave() {
+    this._id = this._id || new mongoose.Types.ObjectId();
+    registrosSalvos.push({
+      _id: this._id,
+      nomeCompleto: this.nomeCompleto,
+      email: this.email,
+      tipo: this.tipo,
+      tiosCategoria: this.tiosCategoria,
+      origemTios: this.origemTios,
+      tiosGrupoId: this.tiosGrupoId,
+      tioParceiroId: this.tioParceiroId,
+    });
+    return this;
+  };
+  PushSubscription.find = () => ({ lean: async () => [] });
+
+  t.after(() => {
+    Admin.findOne = originalAdminFindOne;
+    Ejc.findOne = originalEjcFindOne;
+    Encontro.findOne = originalEncontroFindOne;
+    Encontro.findById = originalEncontroFindById;
+    Encontro.updateOne = originalEncontroUpdateOne;
+    Encontro.prototype.save = originalEncontroPrototypeSave;
+    PushSubscription.find = originalSubscriptionFind;
+    invalidarCacheEncontroAtivo();
+  });
+
+  const payloadBase = {
+    tipo: 'tios',
+    tiosCategoria: 'casal',
+    origemTios: 'true',
+    tiosGrupoId: grupoCasal,
+    logradouro: 'Rua A, 10',
+    dataNascimento: '1980-01-01',
+    disponibilidadeEncontro: 'true',
+  };
+
+  const primeiraResposta = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .field('tipo', payloadBase.tipo)
+    .field('tiosCategoria', payloadBase.tiosCategoria)
+    .field('origemTios', payloadBase.origemTios)
+    .field('tiosGrupoId', payloadBase.tiosGrupoId)
+    .field('logradouro', payloadBase.logradouro)
+    .field('dataNascimento', payloadBase.dataNascimento)
+    .field('disponibilidadeEncontro', payloadBase.disponibilidadeEncontro)
+    .field('nomeCompleto', 'Tio Carlos')
+    .field('email', 'tio.carlos.auto@example.com')
+    .attach('foto', Buffer.from('foto-tio-carlos'), 'foto-carlos.jpg');
+
+  const segundaResposta = await request(app)
+    .post('/encontro')
+    .set('Accept', 'application/json')
+    .field('tipo', payloadBase.tipo)
+    .field('tiosCategoria', payloadBase.tiosCategoria)
+    .field('origemTios', payloadBase.origemTios)
+    .field('tiosGrupoId', payloadBase.tiosGrupoId)
+    .field('logradouro', payloadBase.logradouro)
+    .field('dataNascimento', payloadBase.dataNascimento)
+    .field('disponibilidadeEncontro', payloadBase.disponibilidadeEncontro)
+    .field('nomeCompleto', 'Tia Maria')
+    .field('email', 'tia.maria.auto@example.com')
+    .attach('foto', Buffer.from('foto-tia-maria'), 'foto-maria.jpg');
+
+  assert.equal(primeiraResposta.status, 200);
+  assert.equal(segundaResposta.status, 200);
+  assert.equal(registrosSalvos.length, 2);
+
+  const primeiro = registrosSalvos.find((item) => item.nomeCompleto === 'Tio Carlos');
+  const segundo = registrosSalvos.find((item) => item.nomeCompleto === 'Tia Maria');
+
+  assert.ok(primeiro);
+  assert.ok(segundo);
+  assert.equal(primeiro.tiosCategoria, 'casal');
+  assert.equal(segundo.tiosCategoria, 'casal');
+  assert.equal(primeiro.tiosGrupoId, grupoCasal);
+  assert.equal(segundo.tiosGrupoId, grupoCasal);
+  assert.equal(String(primeiro.tioParceiroId), String(segundo._id));
+  assert.equal(String(segundo.tioParceiroId), String(primeiro._id));
+});
+
 test('POST /admin/vincular-encontreiro-subequipe autenticado retorna sucesso', async (t) => {
   mockAdminAuthFlow(t);
 

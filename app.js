@@ -5522,6 +5522,19 @@ app.post(
           if (grupoIdSincronizado !== encontro.tiosGrupoId) {
             encontro = await Encontro.findById(encontro._id);
           }
+        } else if (encontro.tiosCategoria === 'casal' && encontro.origemTios && encontro.tiosGrupoId) {
+          const parceiroAutomatico = await Encontro.findOne({
+            _id: { $ne: encontro._id },
+            tipo: 'tios',
+            tiosCategoria: 'casal',
+            origemTios: true,
+            tiosGrupoId: encontro.tiosGrupoId,
+          });
+
+          if (parceiroAutomatico) {
+            await linkTiosCouple(encontro._id, parceiroAutomatico._id, encontro.tiosGrupoId);
+            encontro = await Encontro.findById(encontro._id);
+          }
         } else if (encontro.tiosCategoria !== 'casal') {
           await clearTiosCoupleLink(encontro._id);
           encontro = await Encontro.findById(encontro._id);
