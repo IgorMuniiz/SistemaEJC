@@ -1522,16 +1522,14 @@ function GenericForm() {
               className="form-control"
               id={`ejc-${pessoa}`}
               name="ejc"
-              value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
+              value={['EJC', 'ECC'].includes(data.ejc) ? data.ejc : (data.ejc ? 'Outro' : '')}
               onChange={e => {
                 const value = e.target.value;
                 if (value === 'Outro') {
-                  handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
+                  handleCh({ target: { name: 'ejc', value: data.ejc && !['EJC','ECC'].includes(data.ejc) ? data.ejc : '' } });
                 } else {
                   handleCh({ target: { name: 'ejc', value } });
-                  if (value !== 'EJC' && value !== 'ECC') {
-                    handleCh({ target: { name: 'qualEjcPertence', value: '' } });
-                  }
+                  handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                 }
               }}
               required
@@ -1543,7 +1541,7 @@ function GenericForm() {
             </select>
           </div>
           {/* Campo para especificar qual EJC ou ECC fez */}
-          {(data.ejc === 'EJC' || data.ejc === 'ECC') && (
+          {(['EJC', 'ECC'].includes(data.ejc)) && (
             <div className="input-group mt-2">
               <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
               <input
@@ -1559,7 +1557,7 @@ function GenericForm() {
             </div>
           )}
           {/* Campo extra para "Outro" */}
-          {(data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') && (
+          {(!['EJC', 'ECC', ''].includes(data.ejc)) && (
             <div className="input-group mt-2">
               <span className="input-group-text"><i className="fas fa-pen"></i></span>
               <input
@@ -1567,7 +1565,7 @@ function GenericForm() {
                 className="form-control"
                 id={`ejc-outro-${pessoa}`}
                 name="ejc"
-                value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
+                value={data.ejc}
                 onChange={handleCh}
                 placeholder="Informe o nome do encontro"
                 required
