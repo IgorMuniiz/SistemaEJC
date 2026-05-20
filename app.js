@@ -55,19 +55,32 @@ const vapidKeys = configureWebPush({
 
 const app = express();
 
-if (!IS_PRODUCTION) {
+const ENABLE_LIVERELOAD = String(process.env.ENABLE_LIVERELOAD || '').trim() === '1';
+
+if (!IS_PRODUCTION && ENABLE_LIVERELOAD) {
   try {
     const livereload = require('livereload');
     const connectLivereload = require('connect-livereload');
+    const liveReloadPort = Number.parseInt(process.env.LIVERELOAD_PORT || '35729', 10);
     const liveReloadServer = livereload.createServer({
+      port: Number.isFinite(liveReloadPort) ? liveReloadPort : 35729,
       exts: ['ejs', 'html', 'htm', 'css', 'js', 'png', 'gif', 'jpg', 'svg'],
     });
+    if (liveReloadServer && liveReloadServer.server) {
+      liveReloadServer.server.on('error', (err) => {
+        if (err && err.code === 'EADDRINUSE') {
+          console.warn('[DEV] porta do livereload em uso; seguindo sem recarga automatica.');
+          return;
+        }
+        console.warn('[DEV] falha no servidor de livereload:', err && err.message ? err.message : err);
+      });
+    }
     liveReloadServer.watch([
       path.join(__dirname, 'views'),
       path.join(__dirname, 'public'),
       path.join(__dirname, 'src'),
     ]);
-    app.use(connectLivereload());
+    app.use(connectLivereload({ port: Number.isFinite(liveReloadPort) ? liveReloadPort : 35729 }));
     liveReloadServer.server.once('connection', () => {
       setTimeout(() => liveReloadServer.refresh('/'), 100);
     });

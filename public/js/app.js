@@ -40,6 +40,7 @@ function GenericForm() {
     telefonePai: 'tel',
   };
 
+  // (mantido apenas uma vez, removida duplicidade)
   const [formData, setFormData] = useState({
     nomeCompleto: '',
     comoQuerSerChamado: '',
@@ -74,6 +75,7 @@ function GenericForm() {
     expectativaXixEjcCop: '',
     ejc: '',
     qualEjcPertence: '',
+    ejcOutro: '',
     logradouro: '',
     bairro: '',
     equipeServiu: [],
@@ -94,6 +96,7 @@ function GenericForm() {
       comoQuerSerChamado: '',
       genero: '',
       ejc: '',
+      ejcOutro: '',
       qualEjcPertence: '',
       logradouro: '',
       bairro: '',
@@ -118,6 +121,7 @@ function GenericForm() {
       comoQuerSerChamado: '',
       genero: '',
       ejc: '',
+      ejcOutro: '',
       qualEjcPertence: '',
       logradouro: '',
       bairro: '',
@@ -333,10 +337,12 @@ function GenericForm() {
   };
 
   const clearFieldValidationState = (field) => {
-    if (!field) return;
+    if (!field || !field.classList || typeof field.classList.remove !== 'function') return;
 
     field.classList.remove('is-invalid');
-    field.removeAttribute('aria-invalid');
+    if (typeof field.removeAttribute === 'function') {
+      field.removeAttribute('aria-invalid');
+    }
 
     const shell = getFieldValidationShell(field);
     if (shell) {
@@ -786,7 +792,10 @@ function GenericForm() {
 
         const submitTiosMember = async (pessoa) => {
           const data = new FormData();
-          const dataToSend = { ...tiosData[pessoa] };
+          const dataToSend = {
+            ...tiosData[pessoa],
+            ejc: tiosData[pessoa].ejc === 'Outro' ? tiosData[pessoa].ejcOutro : tiosData[pessoa].ejc,
+          };
 
           dataToSend.disponibilidadeEncontro = resolveCheckboxValue(`#disponibilidadeEncontro-${pessoa}`, dataToSend.disponibilidadeEncontro);
           dataToSend.lgpdConsentimento = resolveCheckboxValue(`#lgpdConsentimento-${pessoa}`, dataToSend.lgpdConsentimento);
@@ -831,6 +840,7 @@ function GenericForm() {
         const data = new FormData();
         const formDataToSend = {
           ...formData,
+          ejc: formData.ejc === 'Outro' ? formData.ejcOutro : formData.ejc,
           disponibilidadeEncontro: resolveCheckboxValue('#disponibilidadeEncontro-unico', formData.disponibilidadeEncontro),
           lgpdConsentimento: resolveCheckboxValue('#lgpdConsentimento-unico', formData.lgpdConsentimento),
         };
@@ -1522,11 +1532,12 @@ function GenericForm() {
               className="form-control"
               id={`ejc-${pessoa}`}
               name="ejc"
-              value={['EJC', 'ECC'].includes(data.ejc) ? data.ejc : (data.ejc ? 'Outro' : '')}
+              value={['EJC', 'ECC', 'Outro', ''].includes(data.ejc) ? data.ejc : 'Outro'}
               onChange={e => {
                 const value = e.target.value;
                 if (value === 'Outro') {
-                  handleCh({ target: { name: 'ejc', value: data.ejc && !['EJC','ECC'].includes(data.ejc) ? data.ejc : '' } });
+                  handleCh({ target: { name: 'ejc', value: 'Outro' } });
+                  handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                 } else {
                   handleCh({ target: { name: 'ejc', value } });
                   handleCh({ target: { name: 'qualEjcPertence', value: '' } });
@@ -1557,15 +1568,15 @@ function GenericForm() {
             </div>
           )}
           {/* Campo extra para "Outro" */}
-          {(!['EJC', 'ECC', ''].includes(data.ejc)) && (
+          {data.ejc === 'Outro' && (
             <div className="input-group mt-2">
               <span className="input-group-text"><i className="fas fa-pen"></i></span>
               <input
                 type="text"
                 className="form-control"
                 id={`ejc-outro-${pessoa}`}
-                name="ejc"
-                value={data.ejc}
+                name="ejcOutro"
+                value={data.ejcOutro || ''}
                 onChange={handleCh}
                 placeholder="Informe o nome do encontro"
                 required
@@ -1885,16 +1896,15 @@ function GenericForm() {
               className="form-control"
               id={`ejc-${pessoa}`}
               name="ejc"
-              value={data.ejc === 'EJC' || data.ejc === 'ECC' ? data.ejc : (data.ejc ? 'Outro' : '')}
+              value={['EJC', 'ECC', 'Outro', ''].includes(data.ejc) ? data.ejc : 'Outro'}
               onChange={e => {
                 const value = e.target.value;
                 if (value === 'Outro') {
-                  handleCh({ target: { name: 'ejc', value: data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : '' } });
+                  handleCh({ target: { name: 'ejc', value: 'Outro' } });
+                  handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                 } else {
                   handleCh({ target: { name: 'ejc', value } });
-                  if (value !== 'EJC' && value !== 'ECC') {
-                    handleCh({ target: { name: 'qualEjcPertence', value: '' } });
-                  }
+                  handleCh({ target: { name: 'qualEjcPertence', value: '' } });
                 }
               }}
               required
@@ -1922,15 +1932,15 @@ function GenericForm() {
             </div>
           )}
           {/* Campo extra para "Outro" */}
-          {(data.ejc && data.ejc !== 'EJC' && data.ejc !== 'ECC') && (
+          {data.ejc === 'Outro' && (
             <div className="input-group mt-2">
               <span className="input-group-text"><i className="fas fa-pen"></i></span>
               <input
                 type="text"
                 className="form-control"
                 id={`ejc-outro-${pessoa}`}
-                name="ejc"
-                value={data.ejc !== 'EJC' && data.ejc !== 'ECC' ? data.ejc : ''}
+                name="ejcOutro"
+                value={data.ejcOutro || ''}
                 onChange={handleCh}
                 placeholder="Informe o nome do encontro"
                 required
