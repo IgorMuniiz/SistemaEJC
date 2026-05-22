@@ -711,6 +711,21 @@ async function syncEquipeHistoryAfterTransfer({ pessoaId, papel, origemNomes = [
   }
 }
 
+function normalizeSelectedEntityPersonIds(pessoaIds = []) {
+  const idsNormalizados = [...new Set(
+    (Array.isArray(pessoaIds) ? pessoaIds : [])
+      .map((id) => normalizeTextInput(id))
+      .filter(Boolean)
+  )];
+
+  const validIds = idsNormalizados.filter((id) => mongoose.Types.ObjectId.isValid(id));
+
+  return {
+    validIds,
+    ignoredIds: idsNormalizados.filter((id) => !mongoose.Types.ObjectId.isValid(id)),
+  };
+}
+
 async function transferSelectedEntityLinks({
   ejcId,
   entidadeTipo,
@@ -720,7 +735,9 @@ async function transferSelectedEntityLinks({
   origemNomes = [],
   destinoNome = '',
 }) {
-  if (!destinoId || !Array.isArray(pessoaIds) || !pessoaIds.length) {
+  const { validIds, ignoredIds } = normalizeSelectedEntityPersonIds(pessoaIds);
+
+  if (!destinoId || !validIds.length) {
     return { transferidos: 0, mesclados: 0, ignorados: 0, removidos: 0 };
   }
 
@@ -728,11 +745,11 @@ async function transferSelectedEntityLinks({
     ejcId,
     entidadeTipo,
     entidadeId: origemId,
-    pessoaId: { $in: pessoaIds },
+    pessoaId: { $in: validIds },
   }).lean();
 
   if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
-    return { transferidos: 0, mesclados: 0, ignorados: pessoaIds.length, removidos: 0 };
+    return { transferidos: 0, mesclados: 0, ignorados: validIds.length + ignoredIds.length, removidos: 0 };
   }
 
   let transferidos = 0;
@@ -779,7 +796,7 @@ async function transferSelectedEntityLinks({
     transferidos,
     mesclados,
     removidos: 0,
-    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+    ignorados: Math.max(validIds.length + ignoredIds.length - vinculosSelecionados.length, 0),
   };
 }
 
@@ -790,7 +807,9 @@ async function removeSelectedEntityLinks({
   pessoaIds,
   origemNomes = [],
 }) {
-  if (!Array.isArray(pessoaIds) || !pessoaIds.length) {
+  const { validIds, ignoredIds } = normalizeSelectedEntityPersonIds(pessoaIds);
+
+  if (!validIds.length) {
     return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: 0 };
   }
 
@@ -798,11 +817,11 @@ async function removeSelectedEntityLinks({
     ejcId,
     entidadeTipo,
     entidadeId: origemId,
-    pessoaId: { $in: pessoaIds },
+    pessoaId: { $in: validIds },
   }).lean();
 
   if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
-    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: pessoaIds.length };
+    return { transferidos: 0, mesclados: 0, removidos: 0, ignorados: validIds.length + ignoredIds.length };
   }
 
   let removidos = 0;
@@ -825,7 +844,7 @@ async function removeSelectedEntityLinks({
     transferidos: 0,
     mesclados: 0,
     removidos,
-    ignorados: Math.max(pessoaIds.length - vinculosSelecionados.length, 0),
+    ignorados: Math.max(validIds.length + ignoredIds.length - vinculosSelecionados.length, 0),
   };
 }
 

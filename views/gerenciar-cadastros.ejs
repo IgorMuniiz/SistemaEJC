@@ -8114,10 +8114,7 @@
 
           #beautiful-dialog-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
+            inset: 0;
             z-index: 30000;
             display: none;
             align-items: center;
@@ -8460,7 +8457,7 @@
       const wrapper = document.createElement('div');
       wrapper.innerHTML = html;
       while (wrapper.firstChild) {
-        document.documentElement.appendChild(wrapper.firstChild);
+        document.body.appendChild(wrapper.firstChild);
       }
 
       overlay = document.getElementById('beautiful-dialog-overlay');

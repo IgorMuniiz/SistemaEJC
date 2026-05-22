@@ -475,11 +475,15 @@
         .filter((vinculo) => vinculo.entidadeTipo === entidadeTipo && String(vinculo.entidadeId) === String(entidadeId))
         .map((vinculo) => {
           const pessoa = personByVinculo(vinculo);
+          const pessoaId = String(vinculo.pessoaId || '');
+          const isLegacy = !/^[a-f\d]{24}$/i.test(pessoaId) || !pessoa;
           return {
-            pessoaId: String(vinculo.pessoaId || ''),
+            pessoaId,
             nome: String(pessoa?.nomeCompleto || 'Pessoa vinculada'),
             tipo: personTipoLabel(vinculo, pessoa),
             papel: transferRoleLabel(vinculo),
+            isLegacy,
+            legadoTexto: !pessoa ? 'Vínculo legado ou pessoa não localizada' : 'ID de vínculo legado',
           };
         })
         .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -1287,13 +1291,14 @@
 
       if (hasLinkedPeople) {
         transferList.innerHTML = linkedPeople.map((person) => `
-          <label class="app-entity-person-card" data-transfer-row="true">
-            <input class="form-check-input app-entity-person-check" type="checkbox" value="${escapeHtml(person.pessoaId)}" data-transfer-person="true">
+          <label class="app-entity-person-card${person.isLegacy ? ' is-legacy' : ''}" data-transfer-row="true">
+            <input class="form-check-input app-entity-person-check" type="checkbox" value="${escapeHtml(person.pessoaId)}" data-transfer-person="true"${person.isLegacy ? ' disabled' : ''}>
             <span class="app-entity-person-main">
               <strong>${escapeHtml(person.nome)}</strong>
               <small>${escapeHtml(person.tipo)}</small>
             </span>
-            <span class="app-entity-person-role">${escapeHtml(person.papel)}</span>
+            <span class="app-entity-person-role${person.isLegacy ? ' is-legacy-badge' : ''}">${escapeHtml(person.isLegacy ? 'Legado' : person.papel)}</span>
+            ${person.isLegacy ? '<small class="app-entity-person-legacy-note">' + escapeHtml(person.legadoTexto) + '</small>' : ''}
           </label>
         `).join('');
       } else {

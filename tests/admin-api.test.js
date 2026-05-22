@@ -1843,6 +1843,119 @@ test('POST /admin/editar-equipe/:id transfere vínculos e atualiza o histórico 
   assert.ok(historyUpdates.length > 0, 'O histórico do encontreiro deve ser sincronizado após a transferência');
 });
 
+test('POST /admin/editar-equipe/:id ignora pessoas com id legado inválido sem quebrar a transferência', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439181';
+  const equipeId = '507f1f77bcf86cd799439182';
+  const destinoId = '507f1f77bcf86cd799439183';
+  const pessoaValidaId = '507f1f77bcf86cd799439184';
+  const vinculoId = '507f1f77bcf86cd799439185';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalEquipeFindById = Equipe.findById;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoFindOne = VinculoEncontro.findOne;
+  const originalVinculoUpdateOne = VinculoEncontro.updateOne;
+  const originalEncontroUpdateOne = Encontro.updateOne;
+
+  const equipeDoc = {
+    _id: equipeId,
+    ejcId,
+    nome: 'Liturgia',
+    ejcNome: 'EJC Teste',
+    nomeReferencia: 'EJC Teste - Liturgia',
+    nomeNormalizado: 'ejc teste::liturgia',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Equipe.findOne = (query) => {
+    if (String(query?._id) === equipeId && String(query?.ejcId) === ejcId) {
+      return equipeDoc;
+    }
+    if (query && query.nomeNormalizado && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    if (String(query?._id) === destinoId && String(query?.ejcId) === ejcId) {
+      return { _id: destinoId, ejcId, nome: 'Recepção', nomeReferencia: 'EJC Teste - Recepção' };
+    }
+    return null;
+  };
+
+  Equipe.findById = async (id) => {
+    if (String(id) === destinoId) {
+      return { _id: destinoId, ejcId, nome: 'Recepção', nomeReferencia: 'EJC Teste - Recepção' };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = (query) => ({
+    lean: async () => {
+      assert.deepEqual(query.pessoaId, { $in: [pessoaValidaId] });
+      return [
+        {
+          _id: vinculoId,
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId: pessoaValidaId,
+          papel: 'membro',
+          descricaoPapel: '',
+        },
+      ];
+    },
+  });
+
+  VinculoEncontro.findOne = async () => null;
+
+  const transferUpdates = [];
+  VinculoEncontro.updateOne = async (filter, update) => {
+    transferUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  const historyUpdates = [];
+  Encontro.updateOne = async (filter, update) => {
+    historyUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    Equipe.findById = originalEquipeFindById;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.findOne = originalVinculoFindOne;
+    VinculoEncontro.updateOne = originalVinculoUpdateOne;
+    Encontro.updateOne = originalEncontroUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-equipe/${equipeId}`))
+    .send({
+      ejcId,
+      nome: 'Liturgia',
+      transferirPessoaIds: [pessoaValidaId, 'legacy-id-invalido'],
+      transferirParaId: destinoId,
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(
+    transferUpdates.some(({ update }) => String(update?.$set?.entidadeId || '') === destinoId),
+    'O vínculo válido deveria ser atualizado para a equipe de destino',
+  );
+  assert.ok(historyUpdates.length > 0, 'O histórico do encontreiro deve ser sincronizado após a transferência');
+});
+
 test('POST /admin/editar-equipe/:id remove pessoas selecionadas da equipe', async (t) => {
   mockAdminAuthFlow(t);
 
