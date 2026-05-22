@@ -1745,6 +1745,11 @@
         const fotoUrl = pessoa.foto
           ? `/img/uploads/${encodeURIComponent(pessoa.foto)}?w=200&h=200&fit=cover&format=webp`
           : null;
+        const dataNascimentoFormatada = (() => {
+          if (!pessoa.dataNascimento) return '-';
+          const parsed = new Date(pessoa.dataNascimento);
+          return Number.isNaN(parsed.getTime()) ? '-' : parsed.toLocaleDateString('pt-BR');
+        })();
 
         // Cores baseadas no tema
         const colors = isDarkTheme ? {
@@ -1774,6 +1779,11 @@
           modalEl.tabIndex = '-1';
           modalEl.setAttribute('aria-hidden', 'true');
           document.body.appendChild(modalEl);
+        } else {
+          const existingInstance = bootstrap.Modal.getInstance(modalEl);
+          if (existingInstance) {
+            existingInstance.dispose();
+          }
         }
 
         modalEl.innerHTML = `
@@ -1817,7 +1827,7 @@
                   </div>
                   <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
                     <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Data de Nascimento</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${pessoa.dataNascimento ? new Date(pessoa.dataNascimento).toLocaleDateString('pt-BR') : '-'}</span>
+                    <span style="color: ${colors.text}; font-weight: 500;">${dataNascimentoFormatada}</span>
                   </div>
                   <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
                     <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Telefone</label>
@@ -1856,7 +1866,7 @@
           </div>
         `;
 
-        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const modal = new bootstrap.Modal(modalEl);
         modal.show();
       } catch (err) {
         console.error('Erro ao abrir perfil:', err);
