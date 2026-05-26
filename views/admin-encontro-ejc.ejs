@@ -1729,6 +1729,16 @@
       closeAllChecklists();
     });
 
+    function getPerfilModalScrollMode() {
+      const datasetMode = String(document.body?.dataset?.perfilModalScroll || '').trim().toLowerCase();
+      if (datasetMode === 'fixed' || datasetMode === 'follow') return datasetMode;
+
+      const windowMode = String(window?.EJC_PROFILE_MODAL_SCROLL_MODE || '').trim().toLowerCase();
+      if (windowMode === 'fixed' || windowMode === 'follow') return windowMode;
+
+      return 'follow';
+    }
+
     async function abrirPerfilPessoa(pessoaId, pessoaTipo) {
       if (!pessoaId || !pessoaTipo) return;
       
@@ -1751,31 +1761,64 @@
           return Number.isNaN(parsed.getTime()) ? '-' : parsed.toLocaleDateString('pt-BR');
         })();
 
-        // Cores baseadas no tema
         const colors = isDarkTheme ? {
-          bg: 'linear-gradient(145deg, rgba(8,15,31,0.95), rgba(15,23,42,0.92))',
-          border: 'rgba(148,163,184,0.2)',
-          borderLight: 'rgba(148,163,184,0.15)',
-          title: '#f0f9ff',
-          label: 'rgba(148,163,184,0.85)',
-          text: '#e0f2fe',
-          buttonClose: 'btn-close-white'
+          overlay: 'rgba(2, 6, 23, 0.58)',
+          surface: 'linear-gradient(156deg, rgba(6, 12, 24, 0.96) 0%, rgba(16, 28, 50, 0.95) 100%)',
+          border: 'rgba(148, 163, 184, 0.30)',
+          borderSoft: 'rgba(148, 163, 184, 0.18)',
+          title: '#f8fafc',
+          subtitle: 'rgba(186, 230, 253, 0.85)',
+          text: '#e2e8f0',
+          muted: 'rgba(148, 163, 184, 0.88)',
+          chipBg: 'rgba(14, 116, 144, 0.28)',
+          chipText: '#bae6fd',
+          cardBg: 'rgba(15, 23, 42, 0.52)',
+          shadow: '0 26px 58px rgba(2, 6, 23, 0.62), 0 1px 0 rgba(255,255,255,0.08) inset',
+          closeClass: 'btn-close-white'
         } : {
-          bg: 'linear-gradient(145deg, #ffffff, #f8fafc)',
-          border: 'rgba(71,85,105,0.2)',
-          borderLight: 'rgba(71,85,105,0.1)',
+          overlay: 'rgba(15, 23, 42, 0.38)',
+          surface: 'linear-gradient(150deg, #ffffff 0%, #f7fbff 55%, #eff6ff 100%)',
+          border: 'rgba(30, 64, 175, 0.16)',
+          borderSoft: 'rgba(30, 64, 175, 0.10)',
           title: '#0f172a',
-          label: 'rgba(71,85,105,0.9)',
+          subtitle: 'rgba(30, 64, 175, 0.82)',
           text: '#1e293b',
-          buttonClose: 'btn-close'
+          muted: 'rgba(71, 85, 105, 0.92)',
+          chipBg: 'rgba(14, 165, 233, 0.14)',
+          chipText: '#075985',
+          cardBg: 'rgba(248, 250, 252, 0.92)',
+          shadow: '0 24px 52px rgba(15, 23, 42, 0.18), 0 1px 0 rgba(255,255,255,0.9) inset',
+          closeClass: 'btn-close'
         };
+
+        const renderField = (icon, label, value, extraClass = '') => `
+          <article class="perfil-pessoa-field ${extraClass}">
+            <span class="perfil-pessoa-field-icon" aria-hidden="true"><i class="fas ${icon}"></i></span>
+            <div class="perfil-pessoa-field-copy">
+              <span class="perfil-pessoa-field-label">${escapeHtml(label)}</span>
+              <span class="perfil-pessoa-field-value">${escapeHtml(value || '-')}</span>
+            </div>
+          </article>
+        `;
+
+        const fieldsHtml = [
+          renderField('fa-tag', 'Como quer ser chamado', pessoa.comoQuerSerChamado),
+          renderField('fa-venus-mars', 'Genero', pessoa.genero),
+          renderField('fa-calendar-day', 'Data de nascimento', dataNascimentoFormatada),
+          renderField('fa-phone', 'Telefone', pessoa.telefone),
+          renderField('fa-envelope', 'Email', pessoa.email, 'is-email'),
+          renderField('fa-church', 'EJC', pessoa.ejc),
+          renderField('fa-location-dot', 'CEP', pessoa.cep),
+          renderField('fa-road', 'Endereco', pessoa.logradouro),
+          renderField('fa-map-pin', 'Bairro', pessoa.bairro),
+          renderField('fa-note-sticky', 'Observacoes', pessoa.observacoes),
+        ].join('');
 
         // Criar modal
         let modalEl = document.getElementById('perfil-pessoa-modal');
         if (!modalEl) {
           modalEl = document.createElement('div');
           modalEl.id = 'perfil-pessoa-modal';
-          modalEl.className = 'modal fade';
           modalEl.tabIndex = '-1';
           modalEl.setAttribute('aria-hidden', 'true');
           document.body.appendChild(modalEl);
@@ -1786,87 +1829,102 @@
           }
         }
 
+        modalEl.className = `modal fade perfil-pessoa-modal ${isDarkTheme ? 'perfil-theme-dark' : 'perfil-theme-light'}`;
+        modalEl.style.setProperty('--perfil-overlay', colors.overlay);
+        modalEl.style.setProperty('--perfil-surface', colors.surface);
+        modalEl.style.setProperty('--perfil-border', colors.border);
+        modalEl.style.setProperty('--perfil-border-soft', colors.borderSoft);
+        modalEl.style.setProperty('--perfil-title', colors.title);
+        modalEl.style.setProperty('--perfil-subtitle', colors.subtitle);
+        modalEl.style.setProperty('--perfil-text', colors.text);
+        modalEl.style.setProperty('--perfil-muted', colors.muted);
+        modalEl.style.setProperty('--perfil-chip-bg', colors.chipBg);
+        modalEl.style.setProperty('--perfil-chip-text', colors.chipText);
+        modalEl.style.setProperty('--perfil-card-bg', colors.cardBg);
+        modalEl.style.setProperty('--perfil-shadow', colors.shadow);
+
         modalEl.innerHTML = `
-          <div class="modal-dialog modal-dialog-centered" style="max-width: 650px;">
-            <div class="modal-content perfil-pessoa-card" style="background: ${colors.bg}; border: 2px solid ${colors.border}; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); margin: 0 auto; max-height: 90vh; display: flex; flex-direction: column;">
-              <div class="modal-header perfil-pessoa-header" style="border-bottom: 2px solid ${colors.borderLight}; padding: 24px; text-align: center; justify-content: center; flex-shrink: 0;">
-                <h5 class="modal-title" style="color: ${colors.title}; font-weight: 700; font-size: 1.3rem; width: 100%;">Perfil do ${escapeHtml(tipoLabel)}</h5>
-                <button type="button" class="btn-close ${colors.buttonClose}" data-bs-dismiss="modal" aria-label="Fechar" style="position: absolute; right: 20px;"></button>
-              </div>
-              <div class="modal-body perfil-pessoa-body" style="padding: 32px; text-align: center; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: ${isDarkTheme ? 'rgba(148,163,184,0.3) rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.3) rgba(71,85,105,0.1)'};">
-                <style>
-                  .perfil-pessoa-body::-webkit-scrollbar {
-                    width: 8px;
-                  }
-                  .perfil-pessoa-body::-webkit-scrollbar-track {
-                    background: ${isDarkTheme ? 'rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.1)'};
-                    border-radius: 10px;
-                  }
-                  .perfil-pessoa-body::-webkit-scrollbar-thumb {
-                    background: ${isDarkTheme ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.3)'};
-                    border-radius: 10px;
-                  }
-                  .perfil-pessoa-body::-webkit-scrollbar-thumb:hover {
-                    background: ${isDarkTheme ? 'rgba(148,163,184,0.5)' : 'rgba(71,85,105,0.5)'};
-                  }
-                </style>
-                <div style="margin-bottom: 32px; padding-bottom: 28px; border-bottom: 2px solid ${colors.borderLight};">
-                  ${fotoUrl ? `<img src="${fotoUrl}" alt="Foto" style="width: 140px; height: 140px; border-radius: 14px; object-fit: cover; border: 3px solid ${isDarkTheme ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.2)'}; margin: 0 auto 20px; display: block; box-shadow: 0 10px 30px ${isDarkTheme ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)'};">` : `<div style="width: 140px; height: 140px; margin: 0 auto 20px; display: flex; align-items: center; justify-content: center; background: ${isDarkTheme ? 'rgba(148,163,184,0.1)' : 'rgba(71,85,105,0.08)'}; border-radius: 14px;"><i class="fas fa-user-circle" style="font-size: 5rem; color: ${isDarkTheme ? 'rgba(148,163,184,0.4)' : 'rgba(71,85,105,0.3)'}; opacity: 0.7;"></i></div>`}
-                  <h3 style="margin-top: 16px; margin-bottom: 6px; color: ${colors.title}; font-weight: 700; font-size: 1.5rem;">${escapeHtml(pessoa.nomeCompleto || '-')}</h3>
-                  <p style="color: ${colors.label}; margin: 0; font-size: 0.95rem; font-weight: 500;">${escapeHtml(tipoLabel)}</p>
+          <div class="modal-dialog modal-dialog-scrollable perfil-pessoa-dialog">
+            <div class="modal-content perfil-pessoa-card">
+              <div class="modal-header perfil-pessoa-header">
+                <div class="perfil-pessoa-headline">
+                  <span class="perfil-pessoa-badge">Ficha completa</span>
+                  <h5 class="modal-title">Perfil do ${escapeHtml(tipoLabel)}</h5>
                 </div>
-                
-                <div style="display: grid; grid-template-columns: 1fr; gap: 14px; font-size: 0.95rem;">
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Como quer ser chamado</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.comoQuerSerChamado || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Gênero</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.genero || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Data de Nascimento</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${dataNascimentoFormatada}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Telefone</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.telefone || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Email</label>
-                    <span style="color: ${colors.text}; font-weight: 500; word-break: break-all;">${escapeHtml(pessoa.email || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">EJC</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.ejc || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">CEP</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.cep || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Endereço</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.logradouro || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Bairro</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.bairro || '-')}</span>
-                  </div>
-                  <div style="background: ${isDarkTheme ? 'rgba(148,163,184,0.05)' : 'rgba(71,85,105,0.03)'}; padding: 14px; border-radius: 10px; border-left: 4px solid #06b6d4; text-align: left;">
-                    <label style="display: block; color: ${colors.label}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; font-weight: 700;">Observações</label>
-                    <span style="color: ${colors.text}; font-weight: 500;">${escapeHtml(pessoa.observacoes || '-')}</span>
+                <button type="button" class="btn-close ${colors.closeClass}" data-bs-dismiss="modal" aria-label="Fechar"></button>
+              </div>
+              <div class="modal-body perfil-pessoa-body">
+                <section class="perfil-pessoa-hero">
+                  ${fotoUrl
+                    ? `<img src="${fotoUrl}" alt="Foto" class="perfil-pessoa-avatar">`
+                    : `<div class="perfil-pessoa-avatar perfil-pessoa-avatar-placeholder"><i class="fas fa-user-circle"></i></div>`}
+                  <div class="perfil-pessoa-main-info">
+                    <h3>${escapeHtml(pessoa.nomeCompleto || '-')}</h3>
+                    <p>${escapeHtml(tipoLabel)}</p>
                   </div>
                 </div>
+                <div class="perfil-pessoa-grid">
+                  ${fieldsHtml}
+                </div>
               </div>
-              <div class="modal-footer perfil-pessoa-footer" style="border-top: 2px solid ${colors.borderLight}; padding: 16px 24px; background: ${isDarkTheme ? 'rgba(0,0,0,0.1)' : 'rgba(71,85,105,0.03)'}; justify-content: center; flex-shrink: 0;">
-                <button type="button" class="btn btn-secondary" style="background: ${isDarkTheme ? 'rgba(148,163,184,0.2)' : 'rgba(71,85,105,0.15)'}; border-color: ${isDarkTheme ? 'rgba(148,163,184,0.3)' : 'rgba(71,85,105,0.2)'}; color: ${colors.text}; font-weight: 600;" data-bs-dismiss="modal">Fechar</button>
+              <div class="modal-footer perfil-pessoa-footer">
+                <button type="button" class="btn perfil-pessoa-close-btn" data-bs-dismiss="modal">Fechar</button>
               </div>
             </div>
           </div>
         `;
 
-        const modal = new bootstrap.Modal(modalEl);
+        const liberarScrollPagina = () => {
+          document.body.classList.remove('modal-open');
+          document.body.style.overflowY = 'auto';
+          document.body.style.removeProperty('padding-right');
+        };
+
+        let perfilScrollRafId = null;
+        const syncModalWithPageScroll = () => {
+          modalEl.style.top = `${Math.max(0, window.scrollY)}px`;
+        };
+
+        const requestModalScrollSync = () => {
+          if (perfilScrollRafId !== null) return;
+          perfilScrollRafId = window.requestAnimationFrame(() => {
+            perfilScrollRafId = null;
+            syncModalWithPageScroll();
+          });
+        };
+
+        const enableFollowScroll = () => {
+          modalEl.classList.add('perfil-pessoa-follow-scroll');
+          syncModalWithPageScroll();
+          window.addEventListener('scroll', requestModalScrollSync, { passive: true });
+          window.addEventListener('resize', requestModalScrollSync);
+        };
+
+        const restaurarScrollPadrao = () => {
+          if (perfilScrollRafId !== null) {
+            window.cancelAnimationFrame(perfilScrollRafId);
+            perfilScrollRafId = null;
+          }
+          window.removeEventListener('scroll', requestModalScrollSync);
+          window.removeEventListener('resize', requestModalScrollSync);
+          modalEl.classList.remove('perfil-pessoa-follow-scroll');
+          modalEl.style.removeProperty('top');
+          document.body.style.removeProperty('overflow-y');
+        };
+
+        modalEl.addEventListener('shown.bs.modal', () => {
+          liberarScrollPagina();
+          if (getPerfilModalScrollMode() === 'follow') {
+            enableFollowScroll();
+          }
+        }, { once: true });
+        modalEl.addEventListener('hidden.bs.modal', restaurarScrollPadrao, { once: true });
+
+        const modal = new bootstrap.Modal(modalEl, {
+          backdrop: true,
+          keyboard: true,
+          focus: true,
+        });
         modal.show();
       } catch (err) {
         console.error('Erro ao abrir perfil:', err);

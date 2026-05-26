@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel de Aprovação EJC Admin" />
-  <title>Aprovações — EJC Admin</title>
+  <meta name="description" content="Painel de Aprovaï¿½ï¿½o EJC Admin" />
+  <title>Aprovaï¿½ï¿½es ï¿½ EJC Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -28,7 +28,7 @@
       </div>
     </a>
     <nav class="topbar-nav">
-      <a href="/" class="topbar-link"><i class="fas fa-house"></i>Início</a>
+      <a href="/" class="topbar-link"><i class="fas fa-house"></i>Inï¿½cio</a>
       <a href="/admin/gerenciar-cadastros" class="topbar-link"><i class="fas fa-table-columns"></i>Cadastros</a>
       <span class="topbar-user">
         <span class="topbar-user-avatar"><%= ((adminUsername || 'A').trim().charAt(0) || 'A').toUpperCase() %></span>
@@ -77,24 +77,24 @@
         acoesRecomendadas.push({
           tone: 'amber',
           icon: 'fa-clock',
-          titulo: 'Reduzir fila de pendências',
-          texto: `${totalPendentes} cadastros estão aguardando (${pressaoPendencia}% do funil). Priorize aprovação em lote agora.`,
+          titulo: 'Reduzir fila de pendï¿½ncias',
+          texto: `${totalPendentes} cadastros estï¿½o aguardando (${pressaoPendencia}% do funil). Priorize aprovaï¿½ï¿½o em lote agora.`,
         });
       }
       if (totalProcessados > 0 && !aprovacaoSaudavel) {
         acoesRecomendadas.push({
           tone: 'blue',
           icon: 'fa-chart-line',
-          titulo: 'Aumentar conversão de aprovações',
-          texto: `Taxa atual em ${taxaAprovacao}%. Revisar critérios de triagem pode recuperar conversão sem perder qualidade.`,
+          titulo: 'Aumentar conversï¿½o de aprovaï¿½ï¿½es',
+          texto: `Taxa atual em ${taxaAprovacao}%. Revisar critï¿½rios de triagem pode recuperar conversï¿½o sem perder qualidade.`,
         });
       }
       if (riscoAlto) {
         acoesRecomendadas.push({
           tone: 'red',
           icon: 'fa-triangle-exclamation',
-          titulo: 'Investigar padrão de reprovação',
-          texto: `${indiceRisco}% de reprovação entre processados. Vale auditar dados incompletos ou inconsistências recorrentes.`,
+          titulo: 'Investigar padrï¿½o de reprovaï¿½ï¿½o',
+          texto: `${indiceRisco}% de reprovaï¿½ï¿½o entre processados. Vale auditar dados incompletos ou inconsistï¿½ncias recorrentes.`,
         });
       }
       if (acoesRecomendadas.length === 0) {
@@ -102,20 +102,20 @@
           {
             tone: 'green',
             icon: 'fa-circle-check',
-            titulo: 'Fluxo saudável',
-            texto: 'Os indicadores estão equilibrados. Mantenha rotina de revisão em lote para preservar a velocidade.',
+            titulo: 'Fluxo saudï¿½vel',
+            texto: 'Os indicadores estï¿½o equilibrados. Mantenha rotina de revisï¿½o em lote para preservar a velocidade.',
           },
           {
             tone: 'blue',
             icon: 'fa-list-check',
-            titulo: 'Ação rápida sugerida',
-            texto: 'Faça uma rodada curta nos cadastros pendentes de maior tempo para evitar gargalos futuros.',
+            titulo: 'Aï¿½ï¿½o rï¿½pida sugerida',
+            texto: 'Faï¿½a uma rodada curta nos cadastros pendentes de maior tempo para evitar gargalos futuros.',
           },
           {
             tone: 'amber',
             icon: 'fa-bullseye',
             titulo: 'Meta do dia',
-            texto: 'Busque manter pendência abaixo de 30% do funil e taxa de aprovação acima de 70%.',
+            texto: 'Busque manter pendï¿½ncia abaixo de 30% do funil e taxa de aprovaï¿½ï¿½o acima de 70%.',
           }
         );
       }
@@ -179,8 +179,8 @@
     <!-- Page Header -->
     <div class="db-header">
       <div>
-        <h1 class="db-header-title">Painel de Aprovação</h1>
-        <p class="db-header-sub">Gerencie inscrições de encontristas e encontreiros em tempo real</p>
+        <h1 class="db-header-title">Painel de Aprovaï¿½ï¿½o</h1>
+        <p class="db-header-sub">Gerencie inscriï¿½ï¿½es de encontristas e encontreiros em tempo real</p>
       </div>
       <div class="db-header-actions">
         <div class="event-scope-switch" role="group" aria-label="Escopo de evento">
@@ -203,7 +203,7 @@
           <i class="fas fa-users-cog"></i>Gerenciar Cadastros
         </a>
         <span class="live-badge"><span class="live-dot"></span>Fluxo ativo</span>
-        <div class="motion-mode-switch" role="group" aria-label="Modo de animação">
+        <div class="motion-mode-switch" role="group" aria-label="Modo de animaï¿½ï¿½o">
           <button type="button" class="motion-mode-btn" data-motion-mode="executivo" aria-pressed="false">
             <i class="fas fa-gauge-high"></i>Executivo
           </button>
@@ -224,17 +224,17 @@
       </span>
     </div>
 
-    <section class="quick-workbench" aria-label="Filtros avançados">
+    <section class="quick-workbench" aria-label="Filtros avanï¿½ados">
       <div class="quick-workbench-title">
         <i class="fas fa-sliders"></i>
-        <span>Filtros avançados</span>
+        <span>Filtros avanï¿½ados</span>
       </div>
       <div class="quick-filters-grid">
         <label class="quick-filter-field">
           <span>Status</span>
           <select id="filter-status">
             <option value="all">Todos</option>
-            <option value="pendente">Em análise</option>
+            <option value="pendente">Em anï¿½lise</option>
             <option value="aprovado">Aprovados</option>
             <option value="reprovado">Reprovados</option>
           </select>
@@ -253,7 +253,7 @@
           <input type="date" id="filter-date-from" />
         </label>
         <label class="quick-filter-field">
-          <span>Até</span>
+          <span>Atï¿½</span>
           <input type="date" id="filter-date-to" />
         </label>
       </div>
@@ -263,10 +263,10 @@
       </div>
     </section>
 
-    <section class="strategy-strip" aria-label="Ações recomendadas hoje">
+    <section class="strategy-strip" aria-label="Aï¿½ï¿½es recomendadas hoje">
       <div class="strategy-head">
-        <h2 class="strategy-title"><i class="fas fa-compass"></i>Ações recomendadas hoje</h2>
-        <span class="strategy-sub">Priorização automática com base no estado atual do funil</span>
+        <h2 class="strategy-title"><i class="fas fa-compass"></i>Aï¿½ï¿½es recomendadas hoje</h2>
+        <span class="strategy-sub">Priorizaï¿½ï¿½o automï¿½tica com base no estado atual do funil</span>
       </div>
       <div class="strategy-grid">
         <% acoesRecomendadas.slice(0, 3).forEach((acao) => { %>
@@ -290,7 +290,7 @@
           <div class="stat-tile-lbl">Pendentes (Prioridade)</div>
           <div class="stat-tile-trend <%= pendenciaCritica ? 'trend-up trend-alert' : 'trend-down trend-good' %>">
             <i class="fas <%= pendenciaCritica ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
-            <span><%= pressaoPendencia %>% do funil aguardando análise</span>
+            <span><%= pressaoPendencia %>% do funil aguardando anï¿½lise</span>
           </div>
         </div>
       </div>
@@ -298,7 +298,7 @@
         <div class="stat-tile-icon green"><i class="fas fa-chart-line"></i></div>
         <div>
           <div class="stat-tile-num"><%= taxaAprovacao %>%</div>
-          <div class="stat-tile-lbl">Taxa de Aprovação</div>
+          <div class="stat-tile-lbl">Taxa de Aprovaï¿½ï¿½o</div>
           <div class="stat-tile-trend <%= aprovacaoSaudavel ? 'trend-up trend-good' : 'trend-down trend-alert' %>">
             <i class="fas <%= aprovacaoSaudavel ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
             <span><%= totalAprovados %> aprovados de <%= totalProcessados %> processados</span>
@@ -335,7 +335,7 @@
         <div class="approval-head-main">
           <div>
             <h2 class="section-panel-title"><i class="fas fa-user-graduate"></i>Encontristas</h2>
-            <p class="approval-head-sub">Central de triagem e decisão operacional para inscrições de encontristas.</p>
+            <p class="approval-head-sub">Central de triagem e decisï¿½o operacional para inscriï¿½ï¿½es de encontristas.</p>
           </div>
           <div class="section-meta">
             <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontristas %> pendente(s)</span>
@@ -345,7 +345,7 @@
         </div>
         <div class="export-row approval-head-tools">
           <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontrista')">
-            <i class="fas fa-list-check"></i>Aprovação em massa
+            <i class="fas fa-list-check"></i>Aprovaï¿½ï¿½o em massa
           </button>
           <a href="/export?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
@@ -358,19 +358,19 @@
             <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontrista','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
           </div>
           <div class="batch-cluster batch-cluster-counter">
-            <span class="batch-counter-label">Seleção atual</span>
+            <span class="batch-counter-label">Seleï¿½ï¿½o atual</span>
             <span class="batch-counter">0 selecionado(s)</span>
           </div>
           <div class="batch-cluster batch-cluster-manage">
             <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontrista')"><i class="fas fa-check-double"></i>Todos</button>
-            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar seleção</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar seleï¿½ï¿½o</button>
           </div>
           <div class="batch-cluster batch-cluster-actions">
             <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
             <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
           </div>
         </div>
-        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vários cadastros e use os botões de aprovação ou reprovação em lote.</p>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vï¿½rios cadastros e use os botï¿½es de aprovaï¿½ï¿½o ou reprovaï¿½ï¿½o em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -389,7 +389,7 @@
           <% if (pendentesEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição pendente</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o pendente</p>
             </div>
           <% } else { %>
             <% pendentesEncontristas.forEach(r => { %>
@@ -450,7 +450,7 @@
           <% if (aprovadosEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição aprovada</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o aprovada</p>
             </div>
           <% } else { %>
             <% aprovadosEncontristas.forEach(r => { %>
@@ -507,7 +507,7 @@
           <% if (reprovadosEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição reprovada</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o reprovada</p>
             </div>
           <% } else { %>
             <% reprovadosEncontristas.forEach(r => { %>
@@ -564,7 +564,7 @@
         <div class="approval-head-main">
           <div>
             <h2 class="section-panel-title"><i class="fas fa-people-group"></i>Encontreiros</h2>
-            <p class="approval-head-sub">Fila inteligente de aprovação para equipes de serviço, jovens e tios.</p>
+            <p class="approval-head-sub">Fila inteligente de aprovaï¿½ï¿½o para equipes de serviï¿½o, jovens e tios.</p>
           </div>
           <div class="section-meta">
             <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontreiros %> pendente(s)</span>
@@ -574,7 +574,7 @@
         </div>
         <div class="export-row approval-head-tools">
           <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontreiro')">
-            <i class="fas fa-list-check"></i>Aprovação em massa
+            <i class="fas fa-list-check"></i>Aprovaï¿½ï¿½o em massa
           </button>
           <a href="/export-encontro?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
@@ -587,19 +587,19 @@
             <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontreiro','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
           </div>
           <div class="batch-cluster batch-cluster-counter">
-            <span class="batch-counter-label">Seleção atual</span>
+            <span class="batch-counter-label">Seleï¿½ï¿½o atual</span>
             <span class="batch-counter">0 selecionado(s)</span>
           </div>
           <div class="batch-cluster batch-cluster-manage">
             <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontreiro')"><i class="fas fa-check-double"></i>Todos</button>
-            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar seleção</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar seleï¿½ï¿½o</button>
           </div>
           <div class="batch-cluster batch-cluster-actions">
             <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
             <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
           </div>
         </div>
-        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vários cadastros e use os botões de aprovação ou reprovação em lote.</p>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque vï¿½rios cadastros e use os botï¿½es de aprovaï¿½ï¿½o ou reprovaï¿½ï¿½o em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -618,7 +618,7 @@
           <% if (pendentesEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição pendente</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o pendente</p>
             </div>
           <% } else { %>
             <% pendentesEncontreiros.forEach(r => { %>
@@ -680,7 +680,7 @@
           <% if (aprovadosEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição aprovada</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o aprovada</p>
             </div>
           <% } else { %>
             <% aprovadosEncontreiros.forEach(r => { %>
@@ -739,7 +739,7 @@
           <% if (reprovadosEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscrição reprovada</p>
+              <p class="empty-col-text">Nenhuma inscriï¿½ï¿½o reprovada</p>
             </div>
           <% } else { %>
             <% reprovadosEncontreiros.forEach(r => { %>
@@ -798,7 +798,7 @@
     <span>Novo encontrista</span>
   </a>
 
-  <nav class="mobile-quick-nav" aria-label="Navegação rápida">
+  <nav class="mobile-quick-nav" aria-label="Navegaï¿½ï¿½o rï¿½pida">
     <a href="/admin" class="mobile-quick-item"><i class="fas fa-gauge"></i><span>Painel</span></a>
     <a href="/inscricao" class="mobile-quick-item"><i class="fas fa-user-plus"></i><span>Novo</span></a>
     <a href="/admin/gerenciar-cadastros" class="mobile-quick-item"><i class="fas fa-table-columns"></i><span>Cadastros</span></a>
@@ -807,6 +807,16 @@
   <script src="/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script>
     const adminCsrfToken = '<%= adminCsrfToken %>';
+
+    function getPerfilModalScrollMode() {
+      const datasetMode = String(document.body?.dataset?.perfilModalScroll || '').trim().toLowerCase();
+      if (datasetMode === 'fixed' || datasetMode === 'follow') return datasetMode;
+
+      const windowMode = String(window?.EJC_PROFILE_MODAL_SCROLL_MODE || '').trim().toLowerCase();
+      if (windowMode === 'fixed' || windowMode === 'follow') return windowMode;
+
+      return 'follow';
+    }
 
     /* -- Modal helper ------------------------------------------ */
     function ensureAppPopup() {
@@ -824,7 +834,7 @@
               <div class="app-popup-headline">
                 <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
                 <div class="app-popup-title-stack">
-                  <span class="app-popup-kicker" id="app-popup-kicker">Ação rápida</span>
+                  <span class="app-popup-kicker" id="app-popup-kicker">Aï¿½ï¿½o rï¿½pida</span>
                   <h5 class="modal-title" id="app-popup-title">Aviso</h5>
                 </div>
               </div>
@@ -858,7 +868,7 @@
       const toneLabels = {
         primary: 'Acao rapida',
         warning: 'Confirmacao',
-        danger: 'Atenção',
+        danger: 'Atenï¿½ï¿½o',
         success: 'Concluido',
       };
       const toneNotes = {
@@ -913,7 +923,7 @@
 
     const appAlert   = (msg, tone = 'primary', title = 'Aviso') =>
       showAppPopup({ title, message: msg, confirmText: 'Entendi', tone });
-    const appConfirm = (msg, title = 'Confirmação') =>
+    const appConfirm = (msg, title = 'Confirmaï¿½ï¿½o') =>
       showAppPopup({ title, message: msg, confirmText: 'Confirmar', cancelText: 'Cancelar', tone: 'warning' });
 
     const MOTION_MODE_STORAGE_KEY = 'ejc-dashboard-motion-mode';
@@ -984,9 +994,9 @@
     }
 
     function formatarDataCurta(dateIso) {
-      if (!dateIso) return 'Data não informada';
+      if (!dateIso) return 'Data nï¿½o informada';
       const data = new Date(`${dateIso}T00:00:00`);
-      if (Number.isNaN(data.getTime())) return 'Data não informada';
+      if (Number.isNaN(data.getTime())) return 'Data nï¿½o informada';
       return data.toLocaleDateString('pt-BR');
     }
 
@@ -1036,7 +1046,7 @@
           metaClass: 'green',
           label: 'Aprovado',
           columnLabel: 'Aprovados',
-          emptyText: 'Nenhuma inscrição aprovada',
+          emptyText: 'Nenhuma inscriï¿½ï¿½o aprovada',
           primaryAction: '<i class="fas fa-check"></i>Aprovar',
           secondaryAction: '<i class="fas fa-xmark"></i>Desaprovar',
         };
@@ -1048,7 +1058,7 @@
           metaClass: 'red',
           label: 'Reprovado',
           columnLabel: 'Reprovados',
-          emptyText: 'Nenhuma inscrição reprovada',
+          emptyText: 'Nenhuma inscriï¿½ï¿½o reprovada',
           primaryAction: '<i class="fas fa-rotate-left"></i>Reativar',
           secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
         };
@@ -1059,7 +1069,7 @@
         metaClass: 'amber',
         label: 'Pendente',
         columnLabel: 'Pendentes',
-        emptyText: 'Nenhuma inscrição pendente',
+        emptyText: 'Nenhuma inscriï¿½ï¿½o pendente',
         primaryAction: '<i class="fas fa-check"></i>Aprovar',
         secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
       };
@@ -1133,10 +1143,10 @@
     }
 
     function syncCardTimeline(card, status) {
-      const timelineStatus = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em análise';
+      const timelineStatus = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em anï¿½lise';
       const timelineValue = card.querySelector('.pcard-timeline li:last-child strong');
       if (timelineValue) {
-        timelineValue.textContent = `${timelineStatus} • Equipe Admin`;
+        timelineValue.textContent = `${timelineStatus} ï¿½ Equipe Admin`;
       }
     }
 
@@ -1271,7 +1281,7 @@
 
         const saved = saveCurrentFilters();
         if (!saved) {
-          await appAlert('Não foi possível salvar os filtros neste navegador.', 'warning', 'Atenção');
+          await appAlert('Nï¿½o foi possï¿½vel salvar os filtros neste navegador.', 'warning', 'Atenï¿½ï¿½o');
           return;
         }
 
@@ -1316,7 +1326,7 @@
           body: JSON.stringify({ id, tipoLista }),
         });
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Falha na ação rápida');
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha na aï¿½ï¿½o rï¿½pida');
 
         if (card) {
           moveApprovalCard(card, action === 'aprovar' ? 'aprovado' : 'reprovado');
@@ -1324,7 +1334,7 @@
       } catch (error) {
         setCardPendingState(card);
         if (button) button.disabled = false;
-        await appAlert('Erro: ' + error.message, 'danger', 'Ação rápida falhou');
+        await appAlert('Erro: ' + error.message, 'danger', 'Aï¿½ï¿½o rï¿½pida falhou');
       }
     }
 
@@ -1344,13 +1354,13 @@
             ai.innerHTML += '<span class="ai-chip warning"><i class="fas fa-triangle-exclamation"></i>Dados incompletos</span>';
           }
           if (card.dataset.duplicate === '1') {
-            ai.innerHTML += '<span class="ai-chip danger"><i class="fas fa-clone"></i>Possível duplicado</span>';
+            ai.innerHTML += '<span class="ai-chip danger"><i class="fas fa-clone"></i>Possï¿½vel duplicado</span>';
           }
           if (card.dataset.recommended === '1') {
             ai.innerHTML += '<span class="ai-chip good"><i class="fas fa-wand-magic-sparkles"></i>Recomendado aprovar</span>';
           }
           if (!ai.innerHTML) {
-            ai.innerHTML = '<span class="ai-chip neutral"><i class="fas fa-circle-info"></i>Cadastro estável</span>';
+            ai.innerHTML = '<span class="ai-chip neutral"><i class="fas fa-circle-info"></i>Cadastro estï¿½vel</span>';
           }
           meta.appendChild(ai);
         }
@@ -1360,13 +1370,13 @@
           timeline.className = 'pcard-timeline';
           const createdDate = formatarDataCurta(card.dataset.date);
           const updatedDate = formatarDataCurta(card.dataset.updatedDate || card.dataset.date);
-          const statusLabel = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em análise';
+          const statusLabel = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em anï¿½lise';
           timeline.innerHTML = `
             <div class="timeline-title"><i class="fas fa-timeline"></i>Timeline</div>
             <ul>
-              <li><span>Inscrição</span><strong>${createdDate}</strong></li>
-              <li><span>Última alteração</span><strong>${updatedDate}</strong></li>
-              <li><span>Status atual</span><strong>${statusLabel} • Equipe Admin</strong></li>
+              <li><span>Inscriï¿½ï¿½o</span><strong>${createdDate}</strong></li>
+              <li><span>ï¿½ltima alteraï¿½ï¿½o</span><strong>${updatedDate}</strong></li>
+              <li><span>Status atual</span><strong>${statusLabel} ï¿½ Equipe Admin</strong></li>
             </ul>`;
           details.appendChild(timeline);
         }
@@ -1502,7 +1512,7 @@
         .map((checkbox) => checkbox.dataset.batchId);
 
       if (selecionados.length === 0) {
-        await appAlert('Selecione pelo menos um cadastro para continuar.', 'warning', 'Nenhuma seleção');
+        await appAlert('Selecione pelo menos um cadastro para continuar.', 'warning', 'Nenhuma seleï¿½ï¿½o');
         return;
       }
 
@@ -1519,11 +1529,11 @@
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Falha ao processar atualização em lote');
+          throw new Error(data.error || 'Falha ao processar atualizaï¿½ï¿½o em lote');
         }
 
         const complemento = data.missingCount > 0
-          ? ` ${data.missingCount} cadastro(s) não foram encontrados.`
+          ? ` ${data.missingCount} cadastro(s) nï¿½o foram encontrados.`
           : '';
 
         await appAlert(`${data.updatedCount} cadastro(s) atualizados com sucesso.${complemento}`, 'success', 'Sucesso');
@@ -1585,15 +1595,228 @@
       });
     });
 
-    function toggleCardDetails(trigger) {
-      const card = trigger.closest('.pcard');
+    function getProfileInfoFromCard(card) {
+      if (!card) return null;
+
+      const safeText = (value, fallback = '-') => {
+        const normalized = String(value || '').replace(/\s+/g, ' ').trim();
+        return normalized || fallback;
+      };
+
+      const detailMap = {};
+      card.querySelectorAll('.pcard-details > div').forEach((item) => {
+        const label = safeText(item.querySelector('.pcard-field-lbl')?.textContent, '').toLowerCase();
+        if (!label) return;
+        detailMap[label] = safeText(item.querySelector('.pcard-field-val')?.textContent);
+      });
+
+      const metaItems = Array.from(card.querySelectorAll('.pcard-meta span')).map((span) => safeText(span.textContent));
+      const ejcFromMeta = metaItems[0] || '-';
+      const nome = safeText(card.querySelector('.pcard-name')?.textContent);
+      const tipoCadastro = safeText(card.dataset.tipo === 'encontreiro' ? 'Encontreiro' : 'Encontrista');
+      const foto = card.querySelector('.pcard-avatar img')?.getAttribute('src') || '';
+
+      return {
+        nome,
+        tipoCadastro,
+        foto,
+        fields: {
+          'Como quer ser chamado': detailMap['como quer ser chamado'] || '-',
+          'Genero': detailMap['gÃªnero'] || detailMap['genero'] || '-',
+          'Data de nascimento': detailMap['nascimento'] || '-',
+          'Telefone': detailMap['telefone'] || '-',
+          'Email': detailMap['email'] || '-',
+          'EJC': detailMap['ejc'] || ejcFromMeta || '-',
+          'Endereco': detailMap['logradouro'] || detailMap['endereÃ§o'] || detailMap['endereco'] || '-',
+          'Bairro': detailMap['bairro'] || '-',
+          'Observacoes': detailMap['observaÃ§Ãµes'] || detailMap['observacoes'] || '-',
+        },
+      };
+    }
+
+    function ensurePerfilDashboardModal() {
+      let el = document.getElementById('perfil-pessoa-modal');
+      if (el) {
+        const existingInstance = bootstrap.Modal.getInstance(el);
+        if (existingInstance) existingInstance.dispose();
+        return el;
+      }
+
+      el = document.createElement('div');
+      el.id = 'perfil-pessoa-modal';
+      el.tabIndex = -1;
+      el.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(el);
+      return el;
+    }
+
+    function abrirPerfilCard(trigger) {
+      const card = trigger?.closest('.pcard');
       if (!card) return;
-      card.classList.toggle('is-expanded');
+
+      const profile = getProfileInfoFromCard(card);
+      if (!profile) return;
+
+      const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark' || !document.documentElement.getAttribute('data-theme');
+      const colors = isDarkTheme ? {
+        overlay: 'rgba(2, 6, 23, 0.58)',
+        surface: 'linear-gradient(156deg, rgba(6, 12, 24, 0.96) 0%, rgba(16, 28, 50, 0.95) 100%)',
+        border: 'rgba(148, 163, 184, 0.30)',
+        borderSoft: 'rgba(148, 163, 184, 0.18)',
+        title: '#f8fafc',
+        subtitle: 'rgba(186, 230, 253, 0.85)',
+        text: '#e2e8f0',
+        muted: 'rgba(148, 163, 184, 0.88)',
+        chipBg: 'rgba(14, 116, 144, 0.28)',
+        chipText: '#bae6fd',
+        cardBg: 'rgba(15, 23, 42, 0.52)',
+        shadow: '0 26px 58px rgba(2, 6, 23, 0.62), 0 1px 0 rgba(255,255,255,0.08) inset',
+        closeClass: 'btn-close-white'
+      } : {
+        overlay: 'rgba(15, 23, 42, 0.38)',
+        surface: 'linear-gradient(150deg, #ffffff 0%, #f7fbff 55%, #eff6ff 100%)',
+        border: 'rgba(30, 64, 175, 0.16)',
+        borderSoft: 'rgba(30, 64, 175, 0.10)',
+        title: '#0f172a',
+        subtitle: 'rgba(30, 64, 175, 0.82)',
+        text: '#1e293b',
+        muted: 'rgba(71, 85, 105, 0.92)',
+        chipBg: 'rgba(14, 165, 233, 0.14)',
+        chipText: '#075985',
+        cardBg: 'rgba(248, 250, 252, 0.92)',
+        shadow: '0 24px 52px rgba(15, 23, 42, 0.18), 0 1px 0 rgba(255,255,255,0.9) inset',
+        closeClass: 'btn-close'
+      };
+
+      const renderField = (icon, label, value, extraClass = '') => `
+        <article class="perfil-pessoa-field ${extraClass}">
+          <span class="perfil-pessoa-field-icon" aria-hidden="true"><i class="fas ${icon}"></i></span>
+          <div class="perfil-pessoa-field-copy">
+            <span class="perfil-pessoa-field-label">${escapeHtml(label)}</span>
+            <span class="perfil-pessoa-field-value">${escapeHtml(value || '-')}</span>
+          </div>
+        </article>
+      `;
+
+      const fieldsHtml = [
+        renderField('fa-tag', 'Como quer ser chamado', profile.fields['Como quer ser chamado']),
+        renderField('fa-venus-mars', 'Genero', profile.fields['Genero']),
+        renderField('fa-calendar-day', 'Data de nascimento', profile.fields['Data de nascimento']),
+        renderField('fa-phone', 'Telefone', profile.fields['Telefone']),
+        renderField('fa-envelope', 'Email', profile.fields['Email'], 'is-email'),
+        renderField('fa-church', 'EJC', profile.fields['EJC']),
+        renderField('fa-road', 'Endereco', profile.fields['Endereco']),
+        renderField('fa-map-pin', 'Bairro', profile.fields['Bairro']),
+        renderField('fa-note-sticky', 'Observacoes', profile.fields['Observacoes']),
+      ].join('');
+
+      const modalEl = ensurePerfilDashboardModal();
+      modalEl.className = `modal fade perfil-pessoa-modal ${isDarkTheme ? 'perfil-theme-dark' : 'perfil-theme-light'}`;
+      modalEl.style.setProperty('--perfil-overlay', colors.overlay);
+      modalEl.style.setProperty('--perfil-surface', colors.surface);
+      modalEl.style.setProperty('--perfil-border', colors.border);
+      modalEl.style.setProperty('--perfil-border-soft', colors.borderSoft);
+      modalEl.style.setProperty('--perfil-title', colors.title);
+      modalEl.style.setProperty('--perfil-subtitle', colors.subtitle);
+      modalEl.style.setProperty('--perfil-text', colors.text);
+      modalEl.style.setProperty('--perfil-muted', colors.muted);
+      modalEl.style.setProperty('--perfil-chip-bg', colors.chipBg);
+      modalEl.style.setProperty('--perfil-chip-text', colors.chipText);
+      modalEl.style.setProperty('--perfil-card-bg', colors.cardBg);
+      modalEl.style.setProperty('--perfil-shadow', colors.shadow);
+
+      modalEl.innerHTML = `
+        <div class="modal-dialog modal-dialog-scrollable perfil-pessoa-dialog">
+          <div class="modal-content perfil-pessoa-card">
+            <div class="modal-header perfil-pessoa-header">
+              <div class="perfil-pessoa-headline">
+                <span class="perfil-pessoa-badge">Ficha completa</span>
+                <h5 class="modal-title">Perfil do ${escapeHtml(profile.tipoCadastro)}</h5>
+              </div>
+              <button type="button" class="btn-close ${colors.closeClass}" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body perfil-pessoa-body">
+              <section class="perfil-pessoa-hero">
+                ${profile.foto
+                  ? `<img src="${escapeHtml(profile.foto)}" alt="Foto" class="perfil-pessoa-avatar">`
+                  : `<div class="perfil-pessoa-avatar perfil-pessoa-avatar-placeholder"><i class="fas fa-user-circle"></i></div>`}
+                <div class="perfil-pessoa-main-info">
+                  <h3>${escapeHtml(profile.nome)}</h3>
+                  <p>${escapeHtml(profile.tipoCadastro)}</p>
+                </div>
+              </section>
+              <div class="perfil-pessoa-grid">
+                ${fieldsHtml}
+              </div>
+            </div>
+            <div class="modal-footer perfil-pessoa-footer">
+              <button type="button" class="btn perfil-pessoa-close-btn" data-bs-dismiss="modal">Fechar</button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      const liberarScrollPagina = () => {
+        document.body.classList.remove('modal-open');
+        document.body.style.overflowY = 'auto';
+        document.body.style.removeProperty('padding-right');
+      };
+
+      let perfilScrollRafId = null;
+      const syncModalWithPageScroll = () => {
+        modalEl.style.top = `${Math.max(0, window.scrollY)}px`;
+      };
+
+      const requestModalScrollSync = () => {
+        if (perfilScrollRafId !== null) return;
+        perfilScrollRafId = window.requestAnimationFrame(() => {
+          perfilScrollRafId = null;
+          syncModalWithPageScroll();
+        });
+      };
+
+      const enableFollowScroll = () => {
+        modalEl.classList.add('perfil-pessoa-follow-scroll');
+        syncModalWithPageScroll();
+        window.addEventListener('scroll', requestModalScrollSync, { passive: true });
+        window.addEventListener('resize', requestModalScrollSync);
+      };
+
+      const restaurarScrollPadrao = () => {
+        if (perfilScrollRafId !== null) {
+          window.cancelAnimationFrame(perfilScrollRafId);
+          perfilScrollRafId = null;
+        }
+        window.removeEventListener('scroll', requestModalScrollSync);
+        window.removeEventListener('resize', requestModalScrollSync);
+        modalEl.classList.remove('perfil-pessoa-follow-scroll');
+        modalEl.style.removeProperty('top');
+        document.body.style.removeProperty('overflow-y');
+      };
+
+      modalEl.addEventListener('shown.bs.modal', () => {
+        liberarScrollPagina();
+        if (getPerfilModalScrollMode() === 'follow') {
+          enableFollowScroll();
+        }
+      }, { once: true });
+      modalEl.addEventListener('hidden.bs.modal', restaurarScrollPadrao, { once: true });
+
+      const modal = new bootstrap.Modal(modalEl, {
+        backdrop: true,
+        keyboard: true,
+        focus: true,
+      });
+      modal.show();
+    }
+
+    function toggleCardDetails(trigger) {
+      abrirPerfilCard(trigger);
     }
 
     /* -- Actions ----------------------------------------------- */
     async function aprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovação')) return;
+      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovaï¿½ï¿½o')) return;
       const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
       setCardPendingState(card, 'approve');
       try {
@@ -1614,7 +1837,7 @@
     }
 
     async function desaprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprovação')) return;
+      if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprovaï¿½ï¿½o')) return;
       const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
       setCardPendingState(card, 'reject');
       try {

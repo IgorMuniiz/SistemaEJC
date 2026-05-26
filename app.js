@@ -2809,10 +2809,10 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
 
   const getEquipeTipoOrder = (entry) => {
     const tipo = normalizeTextInput(entry && entry.tipo).toLowerCase();
-    if (tipo !== 'tios') return 0; // jovens/encontreiro primeiro
+    if (tipo !== 'tios') return 2;
     const categoria = normalizeTextInput(entry && entry.tiosCategoria).toLowerCase();
-    if (categoria === 'casal') return 1;
-    return 2; // tios solo depois
+    if (categoria === 'casal') return 0;
+    return 1; // tios solo depois de casal
   };
 
   const sortEquipeEntriesByTipo = (items) => {
@@ -2870,6 +2870,10 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
       return Boolean(entry && entry.tipo === 'tios' && entry.tiosCategoria === 'casal' && grupoId);
     };
+    const isTiosSolo = (entry) => {
+      if (!entry || entry.tipo !== 'tios') return false;
+      return normalizeTextInput(entry.tiosCategoria).toLowerCase() !== 'casal';
+    };
     const isCasalPair = (leftEntry, rightEntry) => {
       if (!isTiosCasal(leftEntry) || !isTiosCasal(rightEntry)) return false;
       return normalizeTextInput(leftEntry.tiosGrupoId) === normalizeTextInput(rightEntry.tiosGrupoId);
@@ -2880,14 +2884,25 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     let col = 0;
     let pendingLeftEntry = null;
 
-    for (const entry of entries) {
+    const pendingEntries = Array.isArray(entries) ? [...entries] : [];
+
+    while (pendingEntries.length > 0) {
+      let entry = pendingEntries.shift();
+
       // Garante que tio casal comece sempre em col=0 para ficar lado a lado com o parceiro.
       // Se o primeiro do par chegaria em col=1 (numero impar de entradas anteriores),
       // e o entry atual NAO e o parceiro esperado do pendingLeftEntry, força nova linha.
       if (col === 1 && isTiosCasal(entry) && !(pendingLeftEntry && isCasalPair(pendingLeftEntry, entry))) {
-        y += rowHeight + rowGap;
-        col = 0;
-        pendingLeftEntry = null;
+        const nextSoloIndex = pendingEntries.findIndex((candidate) => isTiosSolo(candidate));
+        if (nextSoloIndex >= 0) {
+          const soloCandidate = pendingEntries.splice(nextSoloIndex, 1)[0];
+          pendingEntries.unshift(entry);
+          entry = soloCandidate;
+        } else {
+          y += rowHeight + rowGap;
+          col = 0;
+          pendingLeftEntry = null;
+        }
       }
 
       if (y + rowHeight > bottomLimit) {
