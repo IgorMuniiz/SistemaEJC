@@ -7734,11 +7734,11 @@ app.get('/admin/encontros/:ejcId', checkAdminAuth, requireAdminPermission('encon
       Equipe.find({ ejcId }).sort({ nome: 1 }).lean(),
       Cadastro.find()
         .sort({ nomeCompleto: 1 })
-        .select('nomeCompleto ejc telefone email bairro foto fotoAjuste')
+        .select('nomeCompleto comoQuerSerChamado genero dataNascimento ejc telefone email cep logradouro bairro observacoes foto fotoAjuste')
         .lean(),
       Encontro.find()
         .sort({ nomeCompleto: 1 })
-        .select('nomeCompleto tipo ejc telefone email bairro foto fotoAjuste')
+        .select('nomeCompleto tipo comoQuerSerChamado genero dataNascimento ejc telefone email cep logradouro bairro observacoes foto fotoAjuste')
         .lean(),
       VinculoEncontro.find({ ejcId }).lean(),
     ]);

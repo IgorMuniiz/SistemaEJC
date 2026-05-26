@@ -928,6 +928,26 @@
 
     const MOTION_MODE_STORAGE_KEY = 'ejc-dashboard-motion-mode';
     const FILTERS_STORAGE_KEY = 'ejc-dashboard-filters';
+    const PROFILE_SOURCE_DATA = <%- JSON.stringify((todosCadastros || []).map((item) => ({
+      id: String(item._id || ''),
+      nomeCompleto: item.nomeCompleto || '',
+      tipo: item.tipo || '',
+      comoQuerSerChamado: item.comoQuerSerChamado || '',
+      genero: item.genero || '',
+      dataNascimento: item.dataNascimento || '',
+      telefone: item.telefone || '',
+      email: item.email || '',
+      ejc: item.ejc || '',
+      cep: item.cep || '',
+      logradouro: item.logradouro || '',
+      bairro: item.bairro || '',
+      observacoes: item.observacoes || '',
+      foto: item.foto || '',
+    }))).replace(/</g, '\\u003c') %>;
+    const PROFILE_SOURCE_BY_ID = PROFILE_SOURCE_DATA.reduce((acc, item) => {
+      if (item && item.id) acc[item.id] = item;
+      return acc;
+    }, {});
 
     function applyMotionMode(mode) {
       const normalized = mode === 'executivo' ? 'executivo' : 'premium';
@@ -1603,6 +1623,9 @@
         return normalized || fallback;
       };
 
+      const profileId = String(card.dataset.id || '').trim();
+      const source = profileId ? PROFILE_SOURCE_BY_ID[profileId] : null;
+
       const detailMap = {};
       card.querySelectorAll('.pcard-details > div').forEach((item) => {
         const label = safeText(item.querySelector('.pcard-field-lbl')?.textContent, '').toLowerCase();
@@ -1612,24 +1635,35 @@
 
       const metaItems = Array.from(card.querySelectorAll('.pcard-meta span')).map((span) => safeText(span.textContent));
       const ejcFromMeta = metaItems[0] || '-';
-      const nome = safeText(card.querySelector('.pcard-name')?.textContent);
+      const dataNascimentoFormatada = (() => {
+        const value = source?.dataNascimento || '';
+        if (!value) return '';
+        const parsed = new Date(value);
+        if (Number.isNaN(parsed.getTime())) return '';
+        return parsed.toLocaleDateString('pt-BR');
+      })();
+
+      const nome = safeText(source?.nomeCompleto || card.querySelector('.pcard-name')?.textContent);
       const tipoCadastro = safeText(card.dataset.tipo === 'encontreiro' ? 'Encontreiro' : 'Encontrista');
-      const foto = card.querySelector('.pcard-avatar img')?.getAttribute('src') || '';
+      const foto = source?.foto
+        ? `/img/uploads/${encodeURIComponent(source.foto)}?w=200&h=200&fit=cover&format=webp`
+        : (card.querySelector('.pcard-avatar img')?.getAttribute('src') || '');
 
       return {
         nome,
         tipoCadastro,
         foto,
         fields: {
-          'Como quer ser chamado': detailMap['como quer ser chamado'] || '-',
-          'Genero': detailMap['gênero'] || detailMap['genero'] || '-',
-          'Data de nascimento': detailMap['nascimento'] || '-',
-          'Telefone': detailMap['telefone'] || '-',
-          'Email': detailMap['email'] || '-',
-          'EJC': detailMap['ejc'] || ejcFromMeta || '-',
-          'Endereco': detailMap['logradouro'] || detailMap['endereço'] || detailMap['endereco'] || '-',
-          'Bairro': detailMap['bairro'] || '-',
-          'Observacoes': detailMap['observações'] || detailMap['observacoes'] || '-',
+          'Como quer ser chamado': source?.comoQuerSerChamado || detailMap['como quer ser chamado'] || '-',
+          'Genero': source?.genero || detailMap['gênero'] || detailMap['genero'] || '-',
+          'Data de nascimento': dataNascimentoFormatada || detailMap['nascimento'] || '-',
+          'Telefone': source?.telefone || detailMap['telefone'] || '-',
+          'Email': source?.email || detailMap['email'] || '-',
+          'EJC': source?.ejc || detailMap['ejc'] || ejcFromMeta || '-',
+          'CEP': source?.cep || detailMap['cep'] || '-',
+          'Endereco': source?.logradouro || detailMap['logradouro'] || detailMap['endereço'] || detailMap['endereco'] || '-',
+          'Bairro': source?.bairro || detailMap['bairro'] || '-',
+          'Observacoes': source?.observacoes || detailMap['observações'] || detailMap['observacoes'] || '-',
         },
       };
     }
@@ -1705,6 +1739,7 @@
         renderField('fa-phone', 'Telefone', profile.fields['Telefone']),
         renderField('fa-envelope', 'Email', profile.fields['Email'], 'is-email'),
         renderField('fa-church', 'EJC', profile.fields['EJC']),
+        renderField('fa-location-dot', 'CEP', profile.fields['CEP']),
         renderField('fa-road', 'Endereco', profile.fields['Endereco']),
         renderField('fa-map-pin', 'Bairro', profile.fields['Bairro']),
         renderField('fa-note-sticky', 'Observacoes', profile.fields['Observacoes']),
