@@ -2807,19 +2807,47 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
 
   const mmToPt = (mm) => (mm * 72) / 25.4;
 
-  const getEquipeTipoOrder = (entry) => {
+  const resolveEquipeTipoBucket = (entry) => {
     const tipo = normalizeTextInput(entry && entry.tipo).toLowerCase();
-    if (tipo !== 'tios') return 2;
+    if (tipo === 'tios') return 'tios';
+    if (tipo === 'jovens') return 'jovens';
+
+    // Fallback para registros legados/incompletos.
     const categoria = normalizeTextInput(entry && entry.tiosCategoria).toLowerCase();
-    if (categoria === 'casal') return 0;
-    return 1; // tios solo depois de casal
+    const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
+    if (categoria === 'casal' || categoria === 'solo' || Boolean(grupoId)) {
+      return 'tios';
+    }
+
+    return 'jovens';
   };
 
-  const sortEquipeEntriesByTipo = (items) => {
+  const isEquipeTiosCasal = (entry) => {
+    if (resolveEquipeTipoBucket(entry) !== 'tios') return false;
+    const categoria = normalizeTextInput(entry && entry.tiosCategoria).toLowerCase();
+    const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
+    return categoria === 'casal' || Boolean(grupoId);
+  };
+
+  const getEquipeCoordenadorOrder = (entry) => {
+    // Ordem solicitada na coordenacao: jovens -> tios.
+    return resolveEquipeTipoBucket(entry) === 'tios' ? 1 : 0;
+  };
+
+  const getEquipeMembroOrder = (entry) => {
+    // Ordem solicitada no PDF de equipes:
+    // 1) jovens, 2) tios casal, 3) tios solo.
+    const tipoBucket = resolveEquipeTipoBucket(entry);
+    if (tipoBucket !== 'tios') return 0;
+    if (isEquipeTiosCasal(entry)) return 1;
+    return 2;
+  };
+
+  const sortEquipeEntriesByOrder = (items, getOrder) => {
     const ordered = (items || [])
       .map((entry, idx) => ({ entry, idx }))
       .sort((a, b) => {
-        const orderDiff = getEquipeTipoOrder(a.entry) - getEquipeTipoOrder(b.entry);
+        const orderDiff = getOrder(a.entry) - getOrder(b.entry);
         if (orderDiff !== 0) return orderDiff;
         return a.idx - b.idx;
       });
@@ -2829,7 +2857,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
 
     ordered.forEach(({ entry }) => {
       const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
-      const isCasal = Boolean(entry && entry.tipo === 'tios' && entry.tiosCategoria === 'casal' && grupoId);
+      const isCasal = Boolean(isEquipeTiosCasal(entry) && grupoId);
 
       if (!isCasal) {
         grouped.push(entry);
@@ -2868,11 +2896,10 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     };
     const isTiosCasal = (entry) => {
       const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
-      return Boolean(entry && entry.tipo === 'tios' && entry.tiosCategoria === 'casal' && grupoId);
+      return Boolean(isEquipeTiosCasal(entry) && grupoId);
     };
     const isTiosSolo = (entry) => {
-      if (!entry || entry.tipo !== 'tios') return false;
-      return normalizeTextInput(entry.tiosCategoria).toLowerCase() !== 'casal';
+      return resolveEquipeTipoBucket(entry) === 'tios' && !isEquipeTiosCasal(entry);
     };
     const isCasalPair = (leftEntry, rightEntry) => {
       if (!isTiosCasal(leftEntry) || !isTiosCasal(rightEntry)) return false;
@@ -3174,11 +3201,13 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       continue;
     }
 
-    const coordenadores = sortEquipeEntriesByTipo(
-      entradas.filter((item) => ['coordenador', 'coordenou'].includes(item.papel))
+    const coordenadores = sortEquipeEntriesByOrder(
+      entradas.filter((item) => ['coordenador', 'coordenou'].includes(item.papel)),
+      getEquipeCoordenadorOrder
     );
-    const membros = sortEquipeEntriesByTipo(
-      entradas.filter((item) => !['coordenador', 'coordenou'].includes(item.papel))
+    const membros = sortEquipeEntriesByOrder(
+      entradas.filter((item) => !['coordenador', 'coordenou'].includes(item.papel)),
+      getEquipeMembroOrder
     );
 
     const equipePageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
