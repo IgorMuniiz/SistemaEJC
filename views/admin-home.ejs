@@ -11,7 +11,7 @@
   <noscript><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260501-button-styles-professional-60">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260531-admin-premium-01">
 </head>
 <body class="admin-panel admin-home-page">
   <div class="admin-background"></div>
@@ -20,6 +20,40 @@
       <i class="fas fa-user-shield"></i>
       Logado como: <strong><%= adminUsername %></strong>
     </div>
+
+    <section class="admin-home-hero reveal-on-scroll reveal-up" data-reveal>
+      <div class="admin-home-hero-copy">
+        <div class="admin-home-kicker">Centro de comando</div>
+        <h2>Gestao do EJC em linguagem executiva.</h2>
+        <p>
+          Um painel de entrada mais sofisticado, com foco em clareza operacional, proximidade humana e decisao rapida.
+          Acesso direto aos fluxos que mais importam, sem o aspecto genérico de template.
+        </p>
+        <div class="admin-home-pills" aria-label="Destaques da operacao">
+          <span class="admin-home-pill"><i class="fas fa-bolt"></i>Velocidade para a equipe</span>
+          <span class="admin-home-pill"><i class="fas fa-shield-halved"></i>Fluxo confiavel</span>
+          <span class="admin-home-pill"><i class="fas fa-wand-magic-sparkles"></i>Acabamento premium</span>
+        </div>
+      </div>
+
+      <div class="admin-home-hero-actions">
+        <div class="hero-admin-theme-slot" aria-hidden="true"></div>
+        <a href="/admin/gerenciar-cadastros" class="admin-home-action-link">
+          <span>
+            <strong>Gerenciar cadastros</strong>
+            <small>Abrir a operacao central</small>
+          </span>
+          <i class="fas fa-arrow-right"></i>
+        </a>
+        <a href="/admin/liberacoes-externas" class="admin-home-action-link">
+          <span>
+            <strong>Liberacoes externas</strong>
+            <small>Consultar triagem publica</small>
+          </span>
+          <i class="fas fa-globe"></i>
+        </a>
+      </div>
+    </section>
 
     <div class="admin-header reveal-on-scroll reveal-up" data-reveal>
       <h1><i class="fas fa-clipboard-list"></i> Painel Administrativo</h1>
@@ -95,7 +129,7 @@
       revealElements.forEach((el) => el.classList.add('is-visible'));
     }
   </script>
-  <script defer src="/js/page-transitions.js?v=20260417-premium-feedback-27"></script>
+  <script defer src="/js/page-transitions.js?v=20260531-admin-premium-01"></script>
 
 </body>
 </html>

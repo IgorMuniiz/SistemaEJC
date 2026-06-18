@@ -1595,6 +1595,168 @@ footer {
 }
 
 /* ----------------------------------------------------------------------------
+   REFINO PREMIUM DO PORTAL PUBLICO
+   ---------------------------------------------------------------------------- */
+body.portal-page {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(124, 188, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 18%, rgba(138, 125, 255, 0.14), transparent 26%),
+    radial-gradient(circle at 50% 96%, rgba(64, 215, 181, 0.1), transparent 32%),
+    linear-gradient(155deg, #050913 0%, #091224 48%, #0d1730 100%);
+}
+
+html[data-theme='light'] body.portal-page {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(122, 176, 232, 0.2), transparent 28%),
+    radial-gradient(circle at 92% 18%, rgba(153, 141, 255, 0.14), transparent 26%),
+    linear-gradient(155deg, #f6f9fd 0%, #ecf3fb 56%, #e3edf8 100%);
+}
+
+body.portal-page .portal-header,
+body.portal-page .form-card,
+body.portal-page .form-progress-shell,
+body.portal-page .form-step-summary,
+body.portal-page .step-choice,
+body.portal-page .step-consent-box,
+body.portal-page .upload-field-shell,
+body.portal-page .review-summary-card,
+body.portal-page .portal-success-shell,
+body.portal-page .portal-blocked-card,
+body.portal-page .success-card {
+  border-color: rgba(154, 188, 230, 0.18) !important;
+  box-shadow: 0 22px 52px rgba(3, 8, 20, 0.28) !important;
+}
+
+body.portal-page .portal-header {
+  padding: 1.15rem 1.3rem;
+  border-radius: 1.35rem;
+  background: linear-gradient(160deg, rgba(11, 19, 33, 0.92), rgba(8, 14, 26, 0.9));
+}
+
+html[data-theme='light'] body.portal-page .portal-header {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.96), rgba(245, 250, 255, 0.94));
+}
+
+body.portal-page .portal-header h1,
+body.portal-page .form-card .card-title,
+body.portal-page .success-title,
+body.portal-page .portal-success-title {
+  letter-spacing: -0.03em;
+}
+
+body.portal-page .portal-header .lead,
+body.portal-page .portal-header .text-muted,
+body.portal-page .form-step-summary p,
+body.portal-page .upload-field-hint,
+body.portal-page .review-summary-item strong,
+body.portal-page .portal-success-text,
+body.portal-page .portal-blocked-text,
+body.portal-page .success-description {
+  color: rgba(186, 203, 225, 0.9) !important;
+}
+
+html[data-theme='light'] body.portal-page .portal-header .lead,
+html[data-theme='light'] body.portal-page .portal-header .text-muted,
+html[data-theme='light'] body.portal-page .form-step-summary p,
+html[data-theme='light'] body.portal-page .upload-field-hint,
+html[data-theme='light'] body.portal-page .review-summary-item strong,
+html[data-theme='light'] body.portal-page .portal-success-text,
+html[data-theme='light'] body.portal-page .portal-blocked-text,
+html[data-theme='light'] body.portal-page .success-description {
+  color: #50677f !important;
+}
+
+body.portal-page .form-card {
+  background:
+    linear-gradient(180deg, rgba(13, 22, 37, 0.95), rgba(8, 14, 26, 0.94)) !important,
+    linear-gradient(140deg, rgba(124, 188, 255, 0.08), rgba(138, 125, 255, 0.06)) !important;
+}
+
+html[data-theme='light'] body.portal-page .form-card {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(245, 250, 255, 0.95)) !important,
+    linear-gradient(140deg, rgba(124, 188, 255, 0.08), rgba(138, 125, 255, 0.05)) !important;
+}
+
+body.portal-page .form-stepper-item,
+body.portal-page .step-choice,
+body.portal-page .step-consent-box,
+body.portal-page .upload-field-shell,
+body.portal-page .review-summary-item,
+body.portal-page .form-step-summary {
+  background: rgba(255, 255, 255, 0.035) !important;
+}
+
+html[data-theme='light'] body.portal-page .form-stepper-item,
+html[data-theme='light'] body.portal-page .step-choice,
+html[data-theme='light'] body.portal-page .step-consent-box,
+html[data-theme='light'] body.portal-page .upload-field-shell,
+html[data-theme='light'] body.portal-page .review-summary-item,
+html[data-theme='light'] body.portal-page .form-step-summary {
+  background: rgba(255, 255, 255, 0.82) !important;
+}
+
+body.portal-page .form-control,
+body.portal-page .form-select,
+body.portal-page .form-control-file-modern,
+body.portal-page .final-question-input {
+  border-radius: 14px !important;
+  background: rgba(6, 14, 30, 0.78) !important;
+  border-color: rgba(154, 188, 230, 0.16) !important;
+}
+
+html[data-theme='light'] body.portal-page .form-control,
+html[data-theme='light'] body.portal-page .form-select,
+html[data-theme='light'] body.portal-page .form-control-file-modern,
+html[data-theme='light'] body.portal-page .final-question-input {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(86, 132, 181, 0.22) !important;
+  color: #13283d !important;
+}
+
+body.portal-page .btn-primary {
+  background: linear-gradient(135deg, #4d8ff3 0%, #6d64f4 58%, #4fd0b2 120%) !important;
+  box-shadow: 0 16px 32px rgba(64, 130, 239, 0.3) !important;
+}
+
+body.portal-page .btn-outline-light,
+body.portal-page .btn-outline-secondary,
+body.portal-page .portal-back-link,
+body.portal-page .portal-blocked-link {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border-color: rgba(154, 188, 230, 0.16) !important;
+}
+
+html[data-theme='light'] body.portal-page .btn-outline-light,
+html[data-theme='light'] body.portal-page .btn-outline-secondary,
+html[data-theme='light'] body.portal-page .portal-back-link,
+html[data-theme='light'] body.portal-page .portal-blocked-link {
+  background: rgba(255, 255, 255, 0.84) !important;
+  border-color: rgba(86, 132, 181, 0.18) !important;
+  color: #17324a !important;
+}
+
+body.portal-page .form-progress-shell {
+  backdrop-filter: blur(16px);
+}
+
+body.portal-page .success-card,
+body.portal-page .portal-success-shell,
+body.portal-page .portal-blocked-card {
+  backdrop-filter: blur(18px);
+}
+
+@media (max-width: 768px) {
+  body.portal-page .portal-header {
+    border-radius: 1.1rem;
+  }
+
+  body.portal-page .form-card .card-body {
+    padding: 28px 20px !important;
+  }
+}
+
+/* ----------------------------------------------------------------------------
    UX PREMIUM LAYER
    ---------------------------------------------------------------------------- */
 :root {

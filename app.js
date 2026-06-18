@@ -525,6 +525,150 @@ const ejcSchema = new mongoose.Schema({
 
 const Ejc = mongoose.model('Ejc', ejcSchema);
 
+const EXTERNAL_EJC_COP_OPTIONS = [
+  'I EJC COP',
+  'II EJC COP',
+  'III EJC COP',
+  'IV EJC COP',
+  'V EJC COP',
+  'VI EJC COP',
+  'VII EJC COP',
+  'VIII EJC COP',
+  'IX EJC COP',
+  'X EJC COP',
+  'XI EJC COP',
+  'XII EJC COP',
+  'XIII EJC COP',
+  'XIV EJC COP',
+  'XV EJC COP',
+  'XVI EJC COP',
+  'XVII EJC COP',
+  'XVIII EJC COP',
+];
+
+const EXTERNAL_PAROQUIA_OPTIONS = [
+  'EJC',
+  'ECC',
+  'Pastoral da Musica',
+  'Liturgia',
+  'Dizimo',
+  'Pastoral Familiar',
+  'Ministro da Eucaristia',
+  'Pastoral da Saude',
+  'Leitores',
+  'Movimento Servindo Amor',
+  'Ornamentacao e Canto',
+  'Acolhida',
+  'Legiao de Maria',
+  'Batismo',
+  'Catequese Adulto',
+  'Catequese Infantil',
+  'Apostolado da Oracao',
+  'Catequese Matrimonial',
+  'Pastoral de Eventos',
+  'Pastoral dos Coroinhas e Acolitos',
+  'PASCOM',
+  'Outro',
+];
+
+const EXTERNAL_EQUIPE_OPTIONS = [
+  'Apoio e Acolhida',
+  'Cafezinho',
+  'Coordenacao Geral',
+  'Compras',
+  'Cozinha',
+  'Dirigencia',
+  'Garcom',
+  'Liturgia Externa',
+  'Liturgia Interna',
+  'Ordem e Limpeza',
+  'Sala',
+  'Secretaria',
+];
+
+const EXTERNAL_ESTADO_CIVIL_OPTIONS = [
+  'Solteiro',
+  'Casado',
+  'Uniao Estavel',
+  'Divorciado',
+  'Viuvo',
+];
+
+const EXTERNAL_PERFIL_STATUS = {
+  APTO: 'perfil_apto',
+  ANALISE: 'em_analise',
+  FORA: 'fora_perfil',
+};
+
+const externalLiberacaoSchema = new mongoose.Schema({
+  nomeCompleto: { type: String, required: true, trim: true },
+  dataNascimento: { type: Date, required: true },
+  telefone: { type: String, required: true, trim: true },
+  email: { type: String, required: true, trim: true },
+  emailCanonical: { type: String, default: '', trim: true },
+  genero: { type: String, enum: ['masculino', 'feminino', 'nao_informado'], default: 'nao_informado' },
+  enderecoRua: { type: String, required: true, trim: true },
+  enderecoNumero: { type: String, required: true, trim: true },
+  enderecoBairro: { type: String, required: true, trim: true },
+  enderecoCidade: { type: String, required: true, trim: true },
+  domMusicalPossui: { type: Boolean, default: false },
+  domMusicalDescricao: { type: String, default: '', trim: true },
+  participaParoquia: { type: Boolean, default: false },
+  pastorais: { type: [String], default: [] },
+  pastoralOutroDescricao: { type: String, default: '', trim: true },
+  ejcCopHistorico: { type: String, enum: EXTERNAL_EJC_COP_OPTIONS, default: '' },
+  serveEjcAnoAtual: { type: Boolean, default: false },
+  equipeAtual: { type: [String], default: [] },
+  serveOutroEjcAnoAtual: { type: Boolean, default: false },
+  outrosEjcsDescricao: { type: String, default: '', trim: true },
+  interesseOutroEjc2026: { type: Boolean, default: false },
+  indisponibilidadeOutroEjc2026: { type: String, default: '', trim: true },
+  recadoDiris: { type: String, default: '', trim: true },
+  estadoCivil: { type: String, enum: EXTERNAL_ESTADO_CIVIL_OPTIONS, required: true },
+  idadeCalculada: { type: Number, default: 0 },
+  perfilStatus: { type: String, enum: Object.values(EXTERNAL_PERFIL_STATUS), default: EXTERNAL_PERFIL_STATUS.FORA },
+  perfilRazoes: { type: [String], default: [] },
+  origemTipo: { type: String, enum: ['link_publico', 'admin_edicao'], default: 'link_publico' },
+  linkTokenId: { type: mongoose.Schema.Types.ObjectId, ref: 'ExternalLiberacaoLink', default: null },
+  dataCadastro: { type: Date, default: Date.now },
+  dataAtualizacao: { type: Date, default: Date.now },
+});
+
+externalLiberacaoSchema.index({ dataCadastro: -1 });
+externalLiberacaoSchema.index({ perfilStatus: 1, dataCadastro: -1 });
+externalLiberacaoSchema.index({ emailCanonical: 1 });
+
+const ExternalLiberacao = mongoose.model('ExternalLiberacao', externalLiberacaoSchema);
+
+const externalLiberacaoLinkSchema = new mongoose.Schema({
+  token: { type: String, required: true, unique: true },
+  ativo: { type: Boolean, default: true },
+  tokenExp: { type: Date, default: null },
+  criadoPorAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+  criadoPorAdminUsername: { type: String, default: '', trim: true },
+  criadoEm: { type: Date, default: Date.now },
+  revogadoEm: { type: Date, default: null },
+});
+
+externalLiberacaoLinkSchema.index({ ativo: 1, criadoEm: -1 });
+
+const ExternalLiberacaoLink = mongoose.model('ExternalLiberacaoLink', externalLiberacaoLinkSchema);
+
+const externalLiberacaoHistorySchema = new mongoose.Schema({
+  registroId: { type: mongoose.Schema.Types.ObjectId, ref: 'ExternalLiberacao', required: true },
+  acao: { type: String, enum: ['create', 'update', 'delete'], required: true },
+  alteradoPorTipo: { type: String, enum: ['publico', 'admin'], required: true },
+  alteradoPorAdminId: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin', default: null },
+  alteradoPorAdminUsername: { type: String, default: '', trim: true },
+  snapshot: { type: Object, default: {} },
+  diff: { type: Object, default: {} },
+  dataAlteracao: { type: Date, default: Date.now },
+});
+
+externalLiberacaoHistorySchema.index({ registroId: 1, dataAlteracao: -1 });
+
+const ExternalLiberacaoHistory = mongoose.model('ExternalLiberacaoHistory', externalLiberacaoHistorySchema);
+
 let _encontroAtivoCache = null;
 let _encontroAtivoCacheTs = 0;
 const ENCONTRO_ATIVO_CACHE_TTL = 30_000; // 30 segundos
@@ -1514,6 +1658,271 @@ const normalizeMultiField = (value) => {
   return [value];
 };
 
+const calculateAgeFromDate = (birthDate) => {
+  const date = birthDate ? new Date(birthDate) : null;
+  if (!date || Number.isNaN(date.getTime())) return 0;
+
+  const today = new Date();
+  let age = today.getFullYear() - date.getFullYear();
+  const monthDiff = today.getMonth() - date.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < date.getDate())) {
+    age -= 1;
+  }
+
+  return Math.max(0, age);
+};
+
+const normalizeExternalGender = (value) => {
+  const raw = normalizeTextInput(value).toLowerCase();
+  if (['masculino', 'homem', 'm'].includes(raw)) return 'masculino';
+  if (['feminino', 'mulher', 'f'].includes(raw)) return 'feminino';
+  return 'nao_informado';
+};
+
+const normalizeExternalEstadoCivil = (value) => {
+  const raw = normalizeTextInput(value).toLowerCase();
+  if (raw === 'solteiro') return 'Solteiro';
+  if (raw === 'casado') return 'Casado';
+  if (['uniao estavel', 'uniao_estavel'].includes(raw)) return 'Uniao Estavel';
+  if (raw === 'divorciado') return 'Divorciado';
+  if (['viuvo', 'viuva'].includes(raw)) return 'Viuvo';
+  return '';
+};
+
+const normalizeExternalSingleOption = (value, options) => {
+  const text = normalizeTextInput(value);
+  if (!text) return '';
+  const found = options.find((item) => item.toLowerCase() === text.toLowerCase());
+  return found || '';
+};
+
+const normalizeExternalMultiOptions = (value, options) => {
+  const values = normalizeMultiField(value)
+    .map((item) => normalizeTextInput(item))
+    .filter(Boolean);
+
+  const normalized = values
+    .map((item) => options.find((opt) => opt.toLowerCase() === item.toLowerCase()) || '')
+    .filter(Boolean);
+
+  return [...new Set(normalized)];
+};
+
+const classifyExternalProfile = (payload) => {
+  const reasons = [];
+  const age = Number(payload.idadeCalculada) || 0;
+  const estadoCivil = normalizeExternalEstadoCivil(payload.estadoCivil);
+  const historico = normalizeExternalSingleOption(payload.ejcCopHistorico, EXTERNAL_EJC_COP_OPTIONS);
+  const servedRecent = ['XVII EJC COP', 'XVIII EJC COP'].includes(historico);
+  const isCasado = ['Casado', 'Uniao Estavel'].includes(estadoCivil);
+  const isAptoRange = age <= 29;
+  const isAnaliseRange = age >= 30 && age <= 35;
+  const baseCriteriaOk = servedRecent && !isCasado;
+
+  if (age > 35) reasons.push('idade_maior_35');
+  if (isCasado) reasons.push('estado_civil_fora_perfil');
+  if (!servedRecent) reasons.push('nao_serviu_ultimos_dois');
+  if (baseCriteriaOk && !isAptoRange && !isAnaliseRange) reasons.push('idade_fora_faixa');
+
+  let perfilStatus = EXTERNAL_PERFIL_STATUS.FORA;
+  if (baseCriteriaOk && isAptoRange) {
+    perfilStatus = EXTERNAL_PERFIL_STATUS.APTO;
+  } else if (baseCriteriaOk && isAnaliseRange) {
+    perfilStatus = EXTERNAL_PERFIL_STATUS.ANALISE;
+  }
+
+  return {
+    perfilStatus,
+    perfilRazoes: reasons,
+  };
+};
+
+const buildExternalLiberacaoPayload = (rawInput = {}) => {
+  const dataNascimento = parseDateInput(rawInput.dataNascimento);
+  const idadeCalculada = calculateAgeFromDate(dataNascimento);
+  const participaParoquia = normalizeBooleanInput(rawInput.participaParoquia);
+  const domMusicalPossui = normalizeBooleanInput(rawInput.domMusicalPossui);
+  const serveEjcAnoAtual = normalizeBooleanInput(rawInput.serveEjcAnoAtual);
+  const serveOutroEjcAnoAtual = normalizeBooleanInput(rawInput.serveOutroEjcAnoAtual);
+  const interesseOutroEjc2026 = normalizeBooleanInput(rawInput.interesseOutroEjc2026);
+  const pastorais = participaParoquia
+    ? normalizeExternalMultiOptions(rawInput.pastorais, EXTERNAL_PAROQUIA_OPTIONS)
+    : [];
+  const equipeAtual = serveEjcAnoAtual
+    ? normalizeExternalMultiOptions(rawInput.equipeAtual, EXTERNAL_EQUIPE_OPTIONS)
+    : [];
+
+  const payload = {
+    nomeCompleto: normalizeTextInput(rawInput.nomeCompleto),
+    dataNascimento,
+    telefone: normalizeTextInput(rawInput.telefone),
+    email: normalizeTextInput(rawInput.email),
+    emailCanonical: normalizeEmailInput(rawInput.email),
+    genero: normalizeExternalGender(rawInput.genero),
+    enderecoRua: normalizeTextInput(rawInput.enderecoRua),
+    enderecoNumero: normalizeTextInput(rawInput.enderecoNumero),
+    enderecoBairro: normalizeTextInput(rawInput.enderecoBairro),
+    enderecoCidade: normalizeTextInput(rawInput.enderecoCidade),
+    domMusicalPossui,
+    domMusicalDescricao: domMusicalPossui ? normalizeTextInput(rawInput.domMusicalDescricao) : '',
+    participaParoquia,
+    pastorais,
+    pastoralOutroDescricao: pastorais.includes('Outro') ? normalizeTextInput(rawInput.pastoralOutroDescricao) : '',
+    ejcCopHistorico: normalizeExternalSingleOption(rawInput.ejcCopHistorico, EXTERNAL_EJC_COP_OPTIONS),
+    serveEjcAnoAtual,
+    equipeAtual,
+    serveOutroEjcAnoAtual,
+    outrosEjcsDescricao: serveOutroEjcAnoAtual ? normalizeTextInput(rawInput.outrosEjcsDescricao) : '',
+    interesseOutroEjc2026,
+    indisponibilidadeOutroEjc2026: interesseOutroEjc2026 ? normalizeTextInput(rawInput.indisponibilidadeOutroEjc2026) : '',
+    recadoDiris: normalizeTextInput(rawInput.recadoDiris),
+    estadoCivil: normalizeExternalEstadoCivil(rawInput.estadoCivil),
+    idadeCalculada,
+    dataAtualizacao: new Date(),
+  };
+
+  const profile = classifyExternalProfile(payload);
+  payload.perfilStatus = profile.perfilStatus;
+  payload.perfilRazoes = profile.perfilRazoes;
+  return payload;
+};
+
+const validateExternalLiberacaoPayload = (payload) => {
+  const errors = [];
+
+  if (!payload.nomeCompleto) errors.push('Nome completo e obrigatorio.');
+  if (!payload.dataNascimento || Number.isNaN(new Date(payload.dataNascimento).getTime())) errors.push('Data de nascimento invalida.');
+  if (!payload.telefone) errors.push('Telefone e obrigatorio.');
+  if (!payload.email || !payload.email.includes('@')) errors.push('E-mail invalido.');
+  if (!payload.enderecoRua) errors.push('Rua e obrigatoria.');
+  if (!payload.enderecoNumero) errors.push('Numero e obrigatorio.');
+  if (!payload.enderecoBairro) errors.push('Bairro e obrigatorio.');
+  if (!payload.enderecoCidade) errors.push('Cidade e obrigatoria.');
+  if (!payload.estadoCivil || !EXTERNAL_ESTADO_CIVIL_OPTIONS.includes(payload.estadoCivil)) errors.push('Estado civil invalido.');
+  if (!payload.ejcCopHistorico || !EXTERNAL_EJC_COP_OPTIONS.includes(payload.ejcCopHistorico)) errors.push('EJC COP invalido.');
+
+  if (payload.domMusicalPossui && !payload.domMusicalDescricao) {
+    errors.push('Descreva o dom musical quando a resposta for sim.');
+  }
+
+  if (payload.participaParoquia) {
+    const pastorais = Array.isArray(payload.pastorais) ? payload.pastorais : [];
+    if (!pastorais.length) {
+      errors.push('Selecione ao menos uma pastoral ou movimento.');
+    }
+    if (pastorais.includes('Outro') && !payload.pastoralOutroDescricao) {
+      errors.push('Descreva o item Outro da participacao na paroquia.');
+    }
+  }
+
+  if (payload.serveEjcAnoAtual) {
+    const equipes = Array.isArray(payload.equipeAtual) ? payload.equipeAtual : [];
+    if (!equipes.length) {
+      errors.push('Selecione ao menos uma equipe de servico atual.');
+    }
+  }
+
+  if (payload.serveOutroEjcAnoAtual && !payload.outrosEjcsDescricao) {
+    errors.push('Informe em quais outros EJC\'s voce esta servindo.');
+  }
+
+  return errors;
+};
+
+const extractExternalDiff = (beforeDoc, afterDoc) => {
+  const compareKeys = [
+    'nomeCompleto',
+    'telefone',
+    'email',
+    'genero',
+    'enderecoRua',
+    'enderecoNumero',
+    'enderecoBairro',
+    'enderecoCidade',
+    'domMusicalPossui',
+    'domMusicalDescricao',
+    'participaParoquia',
+    'pastorais',
+    'pastoralOutroDescricao',
+    'ejcCopHistorico',
+    'serveEjcAnoAtual',
+    'equipeAtual',
+    'serveOutroEjcAnoAtual',
+    'outrosEjcsDescricao',
+    'interesseOutroEjc2026',
+    'indisponibilidadeOutroEjc2026',
+    'recadoDiris',
+    'estadoCivil',
+    'perfilStatus',
+    'perfilRazoes',
+  ];
+
+  const diff = {};
+  compareKeys.forEach((key) => {
+    const beforeValue = beforeDoc?.[key];
+    const afterValue = afterDoc?.[key];
+    if (JSON.stringify(beforeValue) !== JSON.stringify(afterValue)) {
+      diff[key] = {
+        before: beforeValue,
+        after: afterValue,
+      };
+    }
+  });
+  return diff;
+};
+
+const computeExternalFaixaEtaria = (idade) => {
+  if (!Number.isFinite(idade)) return 'Nao informado';
+  if (idade <= 17) return 'Ate 17';
+  if (idade <= 25) return '18-25';
+  if (idade <= 35) return '26-35';
+  if (idade <= 45) return '36-45';
+  return '46+';
+};
+
+const buildExternalDashboardIndicators = (registros) => {
+  const base = {
+    totalInscricoes: 0,
+    totalPerfilApto: 0,
+    totalEmAnalise: 0,
+    totalForaPerfil: 0,
+    homens: 0,
+    mulheres: 0,
+    casados: 0,
+    solteiros: 0,
+    faixaEtaria: {},
+    porEquipe: {},
+    porPastoral: {},
+  };
+
+  (registros || []).forEach((item) => {
+    base.totalInscricoes += 1;
+    if (item.perfilStatus === EXTERNAL_PERFIL_STATUS.APTO) base.totalPerfilApto += 1;
+    else if (item.perfilStatus === EXTERNAL_PERFIL_STATUS.ANALISE) base.totalEmAnalise += 1;
+    else base.totalForaPerfil += 1;
+
+    if (item.genero === 'masculino') base.homens += 1;
+    if (item.genero === 'feminino') base.mulheres += 1;
+    if (item.estadoCivil === 'Casado') base.casados += 1;
+    if (item.estadoCivil === 'Solteiro') base.solteiros += 1;
+
+    const faixa = computeExternalFaixaEtaria(Number(item.idadeCalculada));
+    base.faixaEtaria[faixa] = (base.faixaEtaria[faixa] || 0) + 1;
+
+    (Array.isArray(item.equipeAtual) ? item.equipeAtual : []).forEach((equipe) => {
+      if (!equipe) return;
+      base.porEquipe[equipe] = (base.porEquipe[equipe] || 0) + 1;
+    });
+
+    (Array.isArray(item.pastorais) ? item.pastorais : []).forEach((pastoral) => {
+      if (!pastoral) return;
+      base.porPastoral[pastoral] = (base.porPastoral[pastoral] || 0) + 1;
+    });
+  });
+
+  return base;
+};
+
 const escapeRegExp = (value = '') => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const findExistingByNameOrEmail = async (Model, nomeCompleto, email, telefone = '', options = {}) => {
@@ -1622,6 +2031,64 @@ const buildEncontroPayloadFromEncontrista = (encontrista, ejcDestino) => {
     aprovado: approvalStatus === 'aprovado',
     statusAprovacao: approvalStatus,
     dataCadastro: encontrista.dataCadastro || new Date(),
+  };
+};
+
+const buildCadastroPayloadFromEncontreiro = (encontreiro) => {
+  const approvalStatus = resolveApprovalStatus(encontreiro);
+  const ejcOrigemNome = normalizeTextInput(encontreiro?.qualEjcPertence || encontreiro?.ejc);
+
+  return {
+    nomeCompleto: encontreiro.nomeCompleto,
+    comoQuerSerChamado: encontreiro.comoQuerSerChamado || '',
+    genero: normalizeGeneroEncontro(encontreiro.genero),
+    ejc: ejcOrigemNome || 'Nao informado',
+    ejcVinculadoId: encontreiro?.ejcVinculadoId || null,
+    ejcVinculadoNome: normalizeTextInput(encontreiro?.ejcVinculadoNome || ejcOrigemNome),
+    cep: encontreiro.cep || '',
+    complementoReferencia: encontreiro.complementoReferencia || '',
+    comQuemReside: '',
+    paisVivosContato: '',
+    estadoCivil: '',
+    nomeMae: '',
+    telefoneMae: '',
+    nomePai: '',
+    telefonePai: '',
+    possuiFilhos: '',
+    filhosDetalhes: '',
+    grauEscolaridade: '',
+    talentoHabilidadeArtistica: encontreiro.talentoHabilidadeArtistica || '',
+    tamanhoCamisa: encontreiro.tamanhoCamisa || '',
+    paroquiaFrequenta: encontreiro.paroquiaFrequenta || '',
+    participaMovimentoIgreja: encontreiro.participaMovimentoIgreja || '',
+    religiosidadeAtual: encontreiro.religiosidadeAtual || '',
+    conhecidoInscricaoHoje: '',
+    conhecidoFezEjc: '',
+    inscricaoAnterior: '',
+    instrumentoMusical: '',
+    quadroSaude: encontreiro.quadroSaude || '',
+    medicamentoControlado: encontreiro.medicamentoControlado || '',
+    expectativaXixEjcCop: '',
+    logradouro: encontreiro.logradouro,
+    bairro: encontreiro.bairro,
+    dataNascimento: encontreiro.dataNascimento,
+    telefone: encontreiro.telefone,
+    intolerante: encontreiro.intolerante || '',
+    ehAlergico: encontreiro.ehAlergico || 'nao',
+    alergiaDescricao: encontreiro.alergiaDescricao || '',
+    email: encontreiro.email,
+    emailCanonical: normalizeEmailInput(encontreiro.email),
+    instagram: encontreiro.instagram || '',
+    disponibilidadeEncontro: Boolean(encontreiro.disponibilidadeEncontro),
+    foto: encontreiro.foto || '',
+    fotoAjuste: encontreiro.fotoAjuste || { rotacao: 0, focoY: 28 },
+    observacoes: `Transferido da lista de encontreiros pelo painel admin. Origem: ${normalizeTextInput(encontreiro?.ejc) || 'Nao informado'}.`,
+    aprovado: approvalStatus === 'aprovado',
+    statusAprovacao: approvalStatus,
+    lgpdConsentimento: Boolean(encontreiro?.lgpdConsentimento),
+    lgpdConsentimentoData: encontreiro?.lgpdConsentimentoData || null,
+    lgpdConsentimentoIp: encontreiro?.lgpdConsentimentoIp || '',
+    dataCadastro: encontreiro.dataCadastro || new Date(),
   };
 };
 
@@ -6801,6 +7268,56 @@ app.post('/admin/transferir-encontrista/:id', checkAdminAuth, requireAdminPermis
   }
 });
 
+// POST /admin/transferir-encontreiro/:id - Move um encontreiro para a lista de encontristas
+app.post('/admin/transferir-encontreiro/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID de cadastro invalido.' });
+    }
+
+    const encontreiro = await Encontro.findById(id);
+    if (!encontreiro) {
+      return res.status(404).json({ success: false, error: 'Encontreiro nao encontrado.' });
+    }
+
+    if (encontreiro.tipo === 'tios' && (normalizeTextInput(encontreiro.tiosCategoria).toLowerCase() === 'casal' || encontreiro.tioParceiroId)) {
+      await clearTiosCoupleLink(id);
+    }
+
+    await VinculoEncontro.deleteMany({ pessoaTipo: 'encontreiro', pessoaId: id });
+
+    const existente = await findExistingByNameOrEmail(Cadastro, encontreiro.nomeCompleto, encontreiro.email, encontreiro.telefone);
+    const payloadCadastro = buildCadastroPayloadFromEncontreiro(encontreiro);
+
+    if (existente) {
+      await Cadastro.findByIdAndUpdate(existente._id, payloadCadastro, { new: true });
+      await Encontro.findByIdAndDelete(id);
+
+      return res.json({
+        success: true,
+        updated: true,
+        message: 'Cadastro de encontrista existente atualizado com sucesso.',
+      });
+    }
+
+    await Cadastro.create(payloadCadastro);
+    await Encontro.findByIdAndDelete(id);
+
+    return res.json({
+      success: true,
+      message: 'Encontreiro transferido para encontristas com sucesso.',
+    });
+  } catch (err) {
+    console.error('Erro ao transferir encontreiro para encontrista:', err);
+    return res.status(500).json({
+      success: false,
+      error: 'Erro ao transferir encontreiro: ' + err.message,
+    });
+  }
+});
+
 // POST /admin/transferir-encontristas-lote - Move varios encontristas para encontreiros
 app.post('/admin/transferir-encontristas-lote', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
   try {
@@ -9969,6 +10486,1013 @@ app.post('/admin/importar-cadastros', checkAdminAuth, requireAdminPermission('im
       error: 'Nao foi possivel importar os encontreiros. Verifique os dados informados.',
       details: process.env.NODE_ENV === 'development' ? String(err.message || err) : undefined,
     });
+  }
+});
+
+const getActiveExternalLink = async () => ExternalLiberacaoLink.findOne({ ativo: true }).sort({ criadoEm: -1 }).lean();
+
+const resolveExternalPublicAccess = async (tokenValue) => {
+  const token = normalizeTextInput(tokenValue);
+  if (!token) {
+    return {
+      accessGranted: false,
+      reason: 'Link de inscricao nao informado.',
+      linkDoc: null,
+    };
+  }
+
+  const linkDoc = await ExternalLiberacaoLink.findOne({ token, ativo: true }).lean();
+  if (!linkDoc) {
+    return {
+      accessGranted: false,
+      reason: 'Link invalido ou revogado.',
+      linkDoc: null,
+    };
+  }
+
+  const tokenExp = linkDoc.tokenExp ? new Date(linkDoc.tokenExp) : null;
+  if (tokenExp && tokenExp < new Date()) {
+    return {
+      accessGranted: false,
+      reason: 'Este link expirou. Solicite um novo link ao administrador.',
+      linkDoc,
+    };
+  }
+
+  return {
+    accessGranted: true,
+    reason: '',
+    linkDoc,
+  };
+};
+
+const buildExternalAdminQueryState = (query = {}) => ({
+  q: normalizeTextInput(query.q),
+  perfil: normalizeTextInput(query.perfil),
+  estadoCivil: normalizeTextInput(query.estadoCivil),
+  genero: normalizeTextInput(query.genero),
+  pastoral: normalizeTextInput(query.pastoral),
+  equipe: normalizeTextInput(query.equipe),
+  orderBy: normalizeTextInput(query.orderBy) || 'dataCadastro',
+  orderDir: normalizeTextInput(query.orderDir) === 'asc' ? 'asc' : 'desc',
+});
+
+const applyExternalAdminFilters = (registros, state) => {
+  const search = state.q.toLowerCase();
+  return (registros || []).filter((item) => {
+    if (state.perfil && item.perfilStatus !== state.perfil) return false;
+    if (state.estadoCivil && item.estadoCivil !== state.estadoCivil) return false;
+    if (state.genero && item.genero !== state.genero) return false;
+    if (state.pastoral && !(Array.isArray(item.pastorais) && item.pastorais.includes(state.pastoral))) return false;
+    if (state.equipe && !(Array.isArray(item.equipeAtual) && item.equipeAtual.includes(state.equipe))) return false;
+    if (!search) return true;
+
+    const searchBase = [
+      item.nomeCompleto,
+      item.email,
+      item.telefone,
+      item.enderecoCidade,
+      item.enderecoBairro,
+    ].join(' ').toLowerCase();
+
+    return searchBase.includes(search);
+  });
+};
+
+const applyExternalAdminSorting = (registros, state) => {
+  const sortFactor = state.orderDir === 'asc' ? 1 : -1;
+  const allowed = new Set(['nomeCompleto', 'dataCadastro', 'idadeCalculada', 'estadoCivil', 'perfilStatus', 'enderecoCidade']);
+  const orderBy = allowed.has(state.orderBy) ? state.orderBy : 'dataCadastro';
+
+  return [...(registros || [])].sort((a, b) => {
+    const va = a?.[orderBy];
+    const vb = b?.[orderBy];
+
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+
+    if (va instanceof Date || vb instanceof Date || orderBy === 'dataCadastro') {
+      return (new Date(va).getTime() - new Date(vb).getTime()) * sortFactor;
+    }
+
+    if (typeof va === 'number' || typeof vb === 'number') {
+      return (Number(va) - Number(vb)) * sortFactor;
+    }
+
+    return String(va).localeCompare(String(vb), 'pt-BR') * sortFactor;
+  });
+};
+
+const getExternalPerfilStatusLabel = (perfilStatus) => {
+  if (perfilStatus === EXTERNAL_PERFIL_STATUS.APTO) return 'Perfil Apto';
+  if (perfilStatus === EXTERNAL_PERFIL_STATUS.ANALISE) return 'Em Analise';
+  return 'Fora do Perfil';
+};
+
+const createExternalExportRows = (registros) => (registros || []).map((item) => ({
+  nomeCompleto: item.nomeCompleto || '',
+  idade: Number(item.idadeCalculada) || 0,
+  dataNascimento: item.dataNascimento ? formatDateBR(item.dataNascimento) : '',
+  telefone: item.telefone || '',
+  email: item.email || '',
+  genero: item.genero || '',
+  estadoCivil: item.estadoCivil || '',
+  endereco: [item.enderecoRua, item.enderecoNumero, item.enderecoBairro, item.enderecoCidade].filter(Boolean).join(', '),
+  domMusical: item.domMusicalPossui ? 'Sim' : 'Nao',
+  domMusicalDescricao: item.domMusicalDescricao || '',
+  pastorais: Array.isArray(item.pastorais) ? item.pastorais.join(', ') : '',
+  pastoralOutroDescricao: item.pastoralOutroDescricao || '',
+  ejcCopHistorico: item.ejcCopHistorico || '',
+  serveEjcAnoAtual: item.serveEjcAnoAtual ? 'Sim' : 'Nao',
+  equipeAtual: Array.isArray(item.equipeAtual) ? item.equipeAtual.join(', ') : '',
+  serveOutroEjcAnoAtual: item.serveOutroEjcAnoAtual ? 'Sim' : 'Nao',
+  outrosEjcsDescricao: item.outrosEjcsDescricao || '',
+  interesseOutroEjc2026: item.interesseOutroEjc2026 ? 'Sim' : 'Nao',
+  indisponibilidadeOutroEjc2026: item.indisponibilidadeOutroEjc2026 || '',
+  recadoDiris: item.recadoDiris || '',
+  perfilStatus: getExternalPerfilStatusLabel(item.perfilStatus),
+  perfilRazoes: Array.isArray(item.perfilRazoes) ? item.perfilRazoes.join(', ') : '',
+  dataCadastro: item.dataCadastro ? new Date(item.dataCadastro).toLocaleString('pt-BR') : '',
+}));
+
+app.get('/liberacoes-externas/inscricao', async (req, res) => {
+  try {
+    const access = await resolveExternalPublicAccess(req.query.token);
+    return res.render('liberacoes-externas-public', {
+      accessGranted: access.accessGranted,
+      accessMessage: access.reason,
+      token: normalizeTextInput(req.query.token),
+      errors: [],
+      formData: {},
+      successMessage: '',
+      ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+      pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+      equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+      estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+    });
+  } catch (err) {
+    return res.status(500).render('liberacoes-externas-public', {
+      accessGranted: false,
+      accessMessage: 'Nao foi possivel carregar o formulario no momento.',
+      token: normalizeTextInput(req.query.token),
+      errors: [],
+      formData: {},
+      successMessage: '',
+      ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+      pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+      equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+      estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+    });
+  }
+});
+
+app.post('/liberacoes-externas/inscricao', async (req, res) => {
+  const token = normalizeTextInput(req.query.token || req.body.token);
+  try {
+    const access = await resolveExternalPublicAccess(token);
+    if (!access.accessGranted) {
+      return res.status(403).render('liberacoes-externas-public', {
+        accessGranted: false,
+        accessMessage: access.reason,
+        token,
+        errors: [],
+        formData: req.body,
+        successMessage: '',
+        ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+        pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+        equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+        estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+      });
+    }
+
+    const payload = buildExternalLiberacaoPayload(req.body);
+    payload.origemTipo = 'link_publico';
+    payload.linkTokenId = access.linkDoc?._id || null;
+    payload.dataCadastro = new Date();
+
+    const validationErrors = validateExternalLiberacaoPayload(payload);
+    if (validationErrors.length) {
+      return res.status(400).render('liberacoes-externas-public', {
+        accessGranted: true,
+        accessMessage: '',
+        token,
+        errors: validationErrors,
+        formData: req.body,
+        successMessage: '',
+        ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+        pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+        equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+        estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+      });
+    }
+
+    const created = await ExternalLiberacao.create(payload);
+    await ExternalLiberacaoHistory.create({
+      registroId: created._id,
+      acao: 'create',
+      alteradoPorTipo: 'publico',
+      snapshot: created.toObject(),
+      diff: {},
+    });
+
+    return res.render('liberacoes-externas-public', {
+      accessGranted: true,
+      accessMessage: '',
+      token,
+      errors: [],
+      formData: {},
+      successMessage: 'Inscricao recebida com sucesso. Obrigado!',
+      ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+      pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+      equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+      estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+    });
+  } catch (err) {
+    return res.status(500).render('liberacoes-externas-public', {
+      accessGranted: true,
+      accessMessage: '',
+      token,
+      errors: ['Erro interno ao registrar inscricao. Tente novamente.'],
+      formData: req.body,
+      successMessage: '',
+      ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+      pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+      equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+      estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+    });
+  }
+});
+
+app.get('/admin/liberacoes-externas', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const queryState = buildExternalAdminQueryState(req.query);
+    const registros = await ExternalLiberacao.find({}).sort({ dataCadastro: -1 }).lean();
+    const filtrados = applyExternalAdminSorting(applyExternalAdminFilters(registros, queryState), queryState);
+    const indicadoresGeral = buildExternalDashboardIndicators(registros);
+    const indicadoresFiltrados = buildExternalDashboardIndicators(filtrados);
+    const linkAtivo = await getActiveExternalLink();
+
+    return res.render('admin-liberacoes-externas', {
+      adminUsername: req.session.adminUsername,
+      adminPermissoes: req.adminUser?.permissoes || [],
+      adminCsrfToken: req.session.adminCsrfToken,
+      appBaseUrl: `${req.protocol}://${req.get('host')}`,
+      registros: filtrados,
+      totalRegistrosBruto: registros.length,
+      indicadoresGeral,
+      indicadoresFiltrados,
+      queryState,
+      linkAtivo,
+      ejcOptions: EXTERNAL_EJC_COP_OPTIONS,
+      pastoralOptions: EXTERNAL_PAROQUIA_OPTIONS,
+      equipeOptions: EXTERNAL_EQUIPE_OPTIONS,
+      estadoCivilOptions: EXTERNAL_ESTADO_CIVIL_OPTIONS,
+      perfilStatusOptions: [
+        { value: EXTERNAL_PERFIL_STATUS.APTO, label: 'Perfil Apto' },
+        { value: EXTERNAL_PERFIL_STATUS.ANALISE, label: 'Em Analise' },
+        { value: EXTERNAL_PERFIL_STATUS.FORA, label: 'Fora do Perfil' },
+      ],
+    });
+  } catch (err) {
+    console.error('Erro ao carregar pagina de liberacoes externas:', err);
+    return res.status(500).send('Erro ao carregar Liberacoes Externas.');
+  }
+});
+
+app.post('/admin/liberacoes-externas/gerar-link', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const expDias = Number.parseInt(String(req.body.expDias || ''), 10);
+    const token = crypto.randomBytes(24).toString('base64url');
+    const tokenExp = (Number.isFinite(expDias) && expDias > 0)
+      ? new Date(Date.now() + expDias * 86_400_000)
+      : null;
+
+    await ExternalLiberacaoLink.updateMany({ ativo: true }, { $set: { ativo: false, revogadoEm: new Date() } });
+    const link = await ExternalLiberacaoLink.create({
+      token,
+      ativo: true,
+      tokenExp,
+      criadoPorAdminId: req.adminUser?._id || null,
+      criadoPorAdminUsername: req.adminUser?.username || '',
+    });
+
+    await logAdminAction(req, {
+      action: 'gerar_link_liberacoes_externas',
+      targetType: 'external_link',
+      targetId: String(link._id),
+      metadata: { expDias: Number.isFinite(expDias) ? expDias : 'sem_validade' },
+    });
+
+    return res.json({ success: true, token: link.token, tokenExp: link.tokenExp });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Erro ao gerar link publico.' });
+  }
+});
+
+app.post('/admin/liberacoes-externas/revogar-link', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const result = await ExternalLiberacaoLink.updateMany({ ativo: true }, { $set: { ativo: false, revogadoEm: new Date() } });
+    await logAdminAction(req, {
+      action: 'revogar_link_liberacoes_externas',
+      targetType: 'external_link',
+      metadata: { totalRevogados: result.modifiedCount || 0 },
+    });
+    return res.json({ success: true, message: 'Link revogado com sucesso.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Erro ao revogar link publico.' });
+  }
+});
+
+app.get('/admin/liberacoes-externas/registro/:id', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const id = normalizeTextInput(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID invalido.' });
+    }
+
+    const registro = await ExternalLiberacao.findById(id).lean();
+    if (!registro) {
+      return res.status(404).json({ success: false, error: 'Registro nao encontrado.' });
+    }
+
+    return res.json({ success: true, registro });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Erro ao carregar registro.' });
+  }
+});
+
+app.get('/admin/liberacoes-externas/registro/:id/historico', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const id = normalizeTextInput(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID invalido.' });
+    }
+
+    const historico = await ExternalLiberacaoHistory.find({ registroId: id }).sort({ dataAlteracao: -1 }).lean();
+    return res.json({ success: true, historico });
+  } catch {
+    return res.status(500).json({ success: false, error: 'Erro ao carregar historico.' });
+  }
+});
+
+app.post('/admin/liberacoes-externas/registro/:id/editar', checkAdminAuth, requireAdminPermission('cadastros.editar'), async (req, res) => {
+  try {
+    const id = normalizeTextInput(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID invalido.' });
+    }
+
+    const current = await ExternalLiberacao.findById(id);
+    if (!current) {
+      return res.status(404).json({ success: false, error: 'Registro nao encontrado.' });
+    }
+
+    const payload = buildExternalLiberacaoPayload(req.body);
+    payload.origemTipo = 'admin_edicao';
+
+    const validationErrors = validateExternalLiberacaoPayload(payload);
+    if (validationErrors.length) {
+      return res.status(400).json({ success: false, error: validationErrors[0], errors: validationErrors });
+    }
+
+    const before = current.toObject();
+    current.set(payload);
+    await current.save();
+
+    const after = current.toObject();
+    const diff = extractExternalDiff(before, after);
+    await ExternalLiberacaoHistory.create({
+      registroId: current._id,
+      acao: 'update',
+      alteradoPorTipo: 'admin',
+      alteradoPorAdminId: req.adminUser?._id || null,
+      alteradoPorAdminUsername: req.adminUser?.username || '',
+      snapshot: after,
+      diff,
+    });
+
+    await logAdminAction(req, {
+      action: 'editar_liberacao_externa',
+      targetType: 'external_registration',
+      targetId: String(current._id),
+      metadata: { camposAlterados: Object.keys(diff) },
+    });
+
+    return res.json({ success: true, message: 'Cadastro atualizado com sucesso.' });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'Erro ao editar cadastro.' });
+  }
+});
+
+app.post('/admin/liberacoes-externas/registro/:id/excluir', checkAdminAuth, requireAdminPermission('cadastros.excluir'), async (req, res) => {
+  try {
+    const id = normalizeTextInput(req.params.id);
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, error: 'ID invalido.' });
+    }
+
+    const current = await ExternalLiberacao.findById(id).lean();
+    if (!current) {
+      return res.status(404).json({ success: false, error: 'Registro nao encontrado.' });
+    }
+
+    await ExternalLiberacao.deleteOne({ _id: id });
+    await ExternalLiberacaoHistory.create({
+      registroId: id,
+      acao: 'delete',
+      alteradoPorTipo: 'admin',
+      alteradoPorAdminId: req.adminUser?._id || null,
+      alteradoPorAdminUsername: req.adminUser?.username || '',
+      snapshot: current,
+      diff: {},
+    });
+
+    await logAdminAction(req, {
+      action: 'excluir_liberacao_externa',
+      targetType: 'external_registration',
+      targetId: id,
+      metadata: { nomeCompleto: current.nomeCompleto || '' },
+    });
+
+    return res.json({ success: true, message: 'Cadastro removido com sucesso.' });
+  } catch {
+    return res.status(500).json({ success: false, error: 'Erro ao excluir cadastro.' });
+  }
+});
+
+app.get('/admin/liberacoes-externas/export/excel', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const Excel = require('exceljs');
+    const templatePath = normalizeTextInput(process.env.EXTERNAL_LIBERACOES_EXCEL_TEMPLATE)
+      || path.join(__dirname, 'templates', 'liberacoes-externas-template.xlsx');
+    const registros = await ExternalLiberacao.find({}).sort({ dataCadastro: -1 }).lean();
+    const aptos = registros.filter((item) => item.perfilStatus === EXTERNAL_PERFIL_STATUS.APTO);
+    const emAnalise = registros.filter((item) => item.perfilStatus === EXTERNAL_PERFIL_STATUS.ANALISE);
+    const foraPerfil = registros.filter((item) => item.perfilStatus === EXTERNAL_PERFIL_STATUS.FORA);
+    const indicadores = buildExternalDashboardIndicators(registros);
+
+    const workbook = new Excel.Workbook();
+    if (fs.existsSync(templatePath)) {
+      await workbook.xlsx.readFile(templatePath);
+    }
+    const generatedAt = new Date();
+    workbook.creator = 'EJC COP - Sistema de Gestao';
+    workbook.company = 'EJC Comunidade de Oracao Pai';
+    workbook.created = generatedAt;
+    workbook.modified = generatedAt;
+    workbook.lastPrinted = generatedAt;
+
+    const resolveImageExtension = (filePath) => {
+      const ext = path.extname(filePath || '').toLowerCase().replace('.', '');
+      if (ext === 'jpg') return 'jpeg';
+      if (ext === 'jpeg' || ext === 'png') return ext;
+      return '';
+    };
+
+    const logoCandidates = [
+      path.join(__dirname, 'public', 'images', 'tema.png'),
+      path.join(__dirname, 'public', 'images', 'logo.png'),
+      path.join(__dirname, 'uploads', IMPORT_PLACEHOLDER_IMAGE),
+    ];
+    const logoPath = logoCandidates.find((candidate) => fs.existsSync(candidate));
+    const logoExtension = resolveImageExtension(logoPath || '');
+    const logoImageId = (logoPath && logoExtension)
+      ? workbook.addImage({ filename: logoPath, extension: logoExtension })
+      : null;
+
+    const palette = {
+      primary: 'FF0B2545',
+      primarySoft: 'FFE8F0FB',
+      header: 'FF12355B',
+      border: 'FFD6DFEA',
+      zebra: 'FFF8FBFF',
+      accent: 'FF2A6FDB',
+      white: 'FFFFFFFF',
+      text: 'FF14263C',
+      muted: 'FF5C6B7A',
+      kpiBlue: 'FFDCEAFF',
+      kpiGreen: 'FFDBF5E7',
+      kpiAmber: 'FFFFF1D6',
+      kpiRed: 'FFFFE1E1',
+    };
+
+    const centerAlignment = { vertical: 'middle', horizontal: 'center' };
+    const thinBorder = {
+      top: { style: 'thin', color: { argb: palette.border } },
+      left: { style: 'thin', color: { argb: palette.border } },
+      bottom: { style: 'thin', color: { argb: palette.border } },
+      right: { style: 'thin', color: { argb: palette.border } },
+    };
+
+    const ensureWorksheet = (name, columns, options = {}) => {
+      const current = workbook.getWorksheet(name);
+      if (current) workbook.removeWorksheet(current.id);
+      const sheet = workbook.addWorksheet(name, options);
+      sheet.columns = columns;
+      sheet.views = options.views || [];
+      if (options.tabColor) sheet.properties.tabColor = { argb: options.tabColor };
+      return sheet;
+    };
+
+    const applyGridBorders = (sheet, fromRow, toRow, fromCol, toCol) => {
+      for (let r = fromRow; r <= toRow; r += 1) {
+        for (let c = fromCol; c <= toCol; c += 1) {
+          sheet.getCell(r, c).border = thinBorder;
+        }
+      }
+    };
+
+    const styleHeaderRow = (sheet, headerRowNumber, totalCols) => {
+      const row = sheet.getRow(headerRowNumber);
+      row.height = 21;
+      row.font = { bold: true, color: { argb: palette.white }, size: 10, name: 'Calibri' };
+      row.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+
+      for (let c = 1; c <= totalCols; c += 1) {
+        const cell = row.getCell(c);
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.header } };
+        cell.border = thinBorder;
+      }
+    };
+
+    const styleDataRows = (sheet, fromRow, totalCols) => {
+      for (let r = fromRow; r <= sheet.rowCount; r += 1) {
+        const row = sheet.getRow(r);
+        row.height = 18;
+        for (let c = 1; c <= totalCols; c += 1) {
+          const cell = row.getCell(c);
+          cell.border = thinBorder;
+          cell.font = { size: 10, color: { argb: palette.text }, name: 'Calibri' };
+          cell.alignment = { vertical: 'middle', horizontal: 'left', wrapText: c >= 8 };
+          if (r % 2 === 0) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.zebra } };
+          }
+        }
+      }
+    };
+
+    const addCorporateLogo = (sheet, fromCol, fromRow, toCol, toRow) => {
+      if (!logoImageId) return;
+      sheet.addImage(logoImageId, {
+        tl: { col: fromCol, row: fromRow },
+        br: { col: toCol, row: toRow },
+        editAs: 'oneCell',
+      });
+    };
+
+    const total = indicadores.totalInscricoes || 1;
+    const pct = (value) => `${Math.round(((Number(value) || 0) / total) * 100)}%`;
+
+    const directoriaColumns = [
+      { key: 'c1', width: 28 },
+      { key: 'c2', width: 18 },
+      { key: 'c3', width: 18 },
+      { key: 'c4', width: 30 },
+      { key: 'c5', width: 22 },
+      { key: 'c6', width: 22 },
+    ];
+    const diretoriaSheet = ensureWorksheet('Diretoria', directoriaColumns, {
+      views: [{ state: 'frozen', ySplit: 8 }],
+      tabColor: 'FF1B3A66',
+    });
+
+    diretoriaSheet.mergeCells('A1:F1');
+    const dirTitle = diretoriaSheet.getCell('A1');
+    dirTitle.value = 'PAINEL DIRETORIA - LIBERACOES EXTERNAS';
+    dirTitle.font = { bold: true, size: 18, color: { argb: 'FFFFFFFF' }, name: 'Calibri' };
+    dirTitle.alignment = centerAlignment;
+    dirTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primary } };
+    diretoriaSheet.getRow(1).height = 34;
+
+    diretoriaSheet.mergeCells('A2:F2');
+    const dirMeta = diretoriaSheet.getCell('A2');
+    dirMeta.value = `Gerado em ${generatedAt.toLocaleString('pt-BR')} | Visao executiva para reuniao de diretoria`;
+    dirMeta.font = { size: 10, color: { argb: palette.muted }, italic: true, name: 'Calibri' };
+    dirMeta.alignment = centerAlignment;
+    dirMeta.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primarySoft } };
+
+    addCorporateLogo(diretoriaSheet, 5.15, 0.15, 5.95, 1.85);
+
+    const cardDefs = [
+      { title: 'BASE TOTAL', value: indicadores.totalInscricoes, color: palette.kpiBlue },
+      { title: 'PERFIL APTO', value: `${indicadores.totalPerfilApto} (${pct(indicadores.totalPerfilApto)})`, color: palette.kpiGreen },
+      { title: 'EM ANALISE', value: `${indicadores.totalEmAnalise} (${pct(indicadores.totalEmAnalise)})`, color: palette.kpiAmber },
+      { title: 'FORA DO PERFIL', value: `${indicadores.totalForaPerfil} (${pct(indicadores.totalForaPerfil)})`, color: palette.kpiRed },
+    ];
+
+    cardDefs.forEach((card, idx) => {
+      const startCol = idx % 2 === 0 ? 1 : 4;
+      const endCol = idx % 2 === 0 ? 3 : 6;
+      const rowBase = idx < 2 ? 4 : 6;
+      diretoriaSheet.mergeCells(rowBase, startCol, rowBase, endCol);
+      diretoriaSheet.mergeCells(rowBase + 1, startCol, rowBase + 1, endCol);
+
+      const labelCell = diretoriaSheet.getCell(rowBase, startCol);
+      labelCell.value = card.title;
+      labelCell.font = { bold: true, size: 10, color: { argb: palette.muted }, name: 'Calibri' };
+      labelCell.alignment = centerAlignment;
+      labelCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: card.color } };
+
+      const valueCell = diretoriaSheet.getCell(rowBase + 1, startCol);
+      valueCell.value = card.value;
+      valueCell.font = { bold: true, size: 17, color: { argb: palette.primary }, name: 'Calibri' };
+      valueCell.alignment = centerAlignment;
+      valueCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+
+      applyGridBorders(diretoriaSheet, rowBase, rowBase + 1, startCol, endCol);
+    });
+
+    const rankByQuantity = (entries) => Object.entries(entries || {})
+      .sort((a, b) => Number(b[1]) - Number(a[1]))
+      .slice(0, 5);
+
+    const topEquipes = rankByQuantity(indicadores.porEquipe);
+    const topPastorais = rankByQuantity(indicadores.porPastoral);
+
+    const writeRankingBlock = (sheet, startCol, title, rows) => {
+      sheet.mergeCells(9, startCol, 9, startCol + 2);
+      const titleCell = sheet.getCell(9, startCol);
+      titleCell.value = title;
+      titleCell.font = { bold: true, size: 11, color: { argb: palette.white }, name: 'Calibri' };
+      titleCell.alignment = centerAlignment;
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.header } };
+      applyGridBorders(sheet, 9, 9, startCol, startCol + 2);
+
+      const headerRow = sheet.getRow(10);
+      headerRow.getCell(startCol).value = 'Ranking';
+      headerRow.getCell(startCol + 1).value = 'Categoria';
+      headerRow.getCell(startCol + 2).value = 'Qtd';
+      [headerRow.getCell(startCol), headerRow.getCell(startCol + 1), headerRow.getCell(startCol + 2)].forEach((cell) => {
+        cell.font = { bold: true, size: 10, color: { argb: palette.white }, name: 'Calibri' };
+        cell.alignment = centerAlignment;
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.header } };
+        cell.border = thinBorder;
+      });
+
+      for (let idx = 0; idx < 5; idx += 1) {
+        const row = sheet.getRow(11 + idx);
+        row.getCell(startCol).value = idx + 1;
+        row.getCell(startCol + 1).value = rows[idx]?.[0] || '-';
+        row.getCell(startCol + 2).value = rows[idx]?.[1] || 0;
+        [row.getCell(startCol), row.getCell(startCol + 1), row.getCell(startCol + 2)].forEach((cell) => {
+          cell.font = { size: 10, color: { argb: palette.text }, name: 'Calibri' };
+          cell.alignment = cell.col === (startCol + 1)
+            ? { vertical: 'middle', horizontal: 'left' }
+            : centerAlignment;
+          if ((11 + idx) % 2 === 0) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.zebra } };
+          }
+          cell.border = thinBorder;
+        });
+      }
+    };
+
+    writeRankingBlock(diretoriaSheet, 1, 'Top Equipes', topEquipes);
+    writeRankingBlock(diretoriaSheet, 4, 'Top Pastorais', topPastorais);
+
+    const resumoColumns = [
+      { key: 'indicador', width: 38 },
+      { key: 'valor', width: 16 },
+      { key: 'percentual', width: 14 },
+      { key: 'obs', width: 28 },
+    ];
+    const resumoSheet = ensureWorksheet('Resumo Executivo', resumoColumns, {
+      views: [{ state: 'frozen', ySplit: 8 }],
+      tabColor: palette.primary,
+    });
+
+    const resumoRows = [
+      { indicador: 'Total de inscritos', valor: indicadores.totalInscricoes, percentual: '100%', obs: 'Base completa' },
+      {
+        indicador: 'Total perfil apto',
+        valor: indicadores.totalPerfilApto,
+        percentual: pct(indicadores.totalPerfilApto),
+        obs: 'Ate 29 anos, serviu XVII ou XVIII, nao casado',
+      },
+      {
+        indicador: 'Total em analise',
+        valor: indicadores.totalEmAnalise,
+        percentual: pct(indicadores.totalEmAnalise),
+        obs: 'Faixa de 30 a 35 anos com os demais criterios atendidos',
+      },
+      {
+        indicador: 'Total fora do perfil',
+        valor: indicadores.totalForaPerfil,
+        percentual: pct(indicadores.totalForaPerfil),
+        obs: 'Nao atende aos criterios principais',
+      },
+      {
+        indicador: 'Homens',
+        valor: indicadores.homens,
+        percentual: pct(indicadores.homens),
+        obs: 'Distribuicao por genero',
+      },
+      {
+        indicador: 'Mulheres',
+        valor: indicadores.mulheres,
+        percentual: pct(indicadores.mulheres),
+        obs: 'Distribuicao por genero',
+      },
+    ];
+
+    resumoSheet.mergeCells('A1:D1');
+    const resumoTitle = resumoSheet.getCell('A1');
+    resumoTitle.value = 'RELATORIO EXECUTIVO - CENTRAL DE LIBERACOES EXTERNAS';
+    resumoTitle.font = { bold: true, size: 16, color: { argb: palette.white }, name: 'Calibri' };
+    resumoTitle.alignment = centerAlignment;
+    resumoTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primary } };
+    resumoSheet.getRow(1).height = 32;
+    addCorporateLogo(resumoSheet, 3.15, 0.1, 3.95, 1.9);
+
+    resumoSheet.mergeCells('A2:D2');
+    const resumoMeta = resumoSheet.getCell('A2');
+    resumoMeta.value = `Gerado em ${generatedAt.toLocaleString('pt-BR')} | Fonte: EJC Sistema`;
+    resumoMeta.font = { size: 10, color: { argb: palette.muted }, italic: true, name: 'Calibri' };
+    resumoMeta.alignment = centerAlignment;
+    resumoMeta.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primarySoft } };
+    resumoSheet.getRow(2).height = 20;
+
+    resumoSheet.mergeCells('A4:B4');
+    resumoSheet.mergeCells('C4:D4');
+    const kpiTotalLabel = resumoSheet.getCell('A4');
+    const kpiTotalValue = resumoSheet.getCell('A5');
+    const kpiAptoLabel = resumoSheet.getCell('C4');
+    const kpiAptoValue = resumoSheet.getCell('C5');
+    resumoSheet.mergeCells('A5:B5');
+    resumoSheet.mergeCells('C5:D5');
+
+    kpiTotalLabel.value = 'BASE TOTAL';
+    kpiAptoLabel.value = 'PERFIL APTO';
+    [kpiTotalLabel, kpiAptoLabel].forEach((cell) => {
+      cell.font = { bold: true, size: 10, color: { argb: palette.muted }, name: 'Calibri' };
+      cell.alignment = centerAlignment;
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.kpiBlue } };
+    });
+
+    kpiTotalValue.value = indicadores.totalInscricoes;
+    kpiAptoValue.value = indicadores.totalPerfilApto;
+    [kpiTotalValue, kpiAptoValue].forEach((cell) => {
+      cell.font = { bold: true, size: 22, color: { argb: palette.primary }, name: 'Calibri' };
+      cell.alignment = centerAlignment;
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.white } };
+    });
+
+    applyGridBorders(resumoSheet, 4, 5, 1, 4);
+
+    const resumoHeaderRow = 8;
+    resumoSheet.getRow(resumoHeaderRow).values = ['Indicador', 'Valor', 'Percentual', 'Observacao'];
+    styleHeaderRow(resumoSheet, resumoHeaderRow, 4);
+    resumoRows.forEach((item) => resumoSheet.addRow(item));
+
+    for (let r = resumoHeaderRow + 1; r <= resumoSheet.rowCount; r += 1) {
+      const row = resumoSheet.getRow(r);
+      row.height = 20;
+      row.eachCell((cell, colNumber) => {
+        cell.border = thinBorder;
+        cell.font = { size: 10, color: { argb: palette.text }, name: 'Calibri' };
+        cell.alignment = colNumber === 2 || colNumber === 3
+          ? centerAlignment
+          : { vertical: 'middle', horizontal: 'left', wrapText: true };
+        if (r % 2 === 0) {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.zebra } };
+        }
+      });
+    }
+    resumoSheet.autoFilter = { from: { row: resumoHeaderRow, column: 1 }, to: { row: resumoHeaderRow, column: 4 } };
+
+    const addDataSheet = (name, rows, tabColor = palette.accent) => {
+      const sheetColumns = [
+        { key: 'nomeCompleto', width: 34 },
+        { key: 'idade', width: 8 },
+        { key: 'dataNascimento', width: 16 },
+        { key: 'telefone', width: 20 },
+        { key: 'email', width: 28 },
+        { key: 'genero', width: 14 },
+        { key: 'estadoCivil', width: 16 },
+        { key: 'endereco', width: 42 },
+        { key: 'domMusical', width: 12 },
+        { key: 'domMusicalDescricao', width: 28 },
+        { key: 'pastorais', width: 36 },
+        { key: 'pastoralOutroDescricao', width: 24 },
+        { key: 'ejcCopHistorico', width: 18 },
+        { key: 'serveEjcAnoAtual', width: 14 },
+        { key: 'equipeAtual', width: 32 },
+        { key: 'serveOutroEjcAnoAtual', width: 16 },
+        { key: 'outrosEjcsDescricao', width: 28 },
+        { key: 'interesseOutroEjc2026', width: 24 },
+        { key: 'indisponibilidadeOutroEjc2026', width: 30 },
+        { key: 'recadoDiris', width: 32 },
+        { key: 'perfilStatus', width: 16 },
+        { key: 'perfilRazoes', width: 28 },
+        { key: 'dataCadastro', width: 22 },
+      ];
+
+      const headers = [
+        'Nome Completo',
+        'Idade',
+        'Data Nascimento',
+        'Telefone',
+        'E-mail',
+        'Genero',
+        'Estado Civil',
+        'Endereco',
+        'Dom Musical',
+        'Descricao Dom',
+        'Pastorais',
+        'Pastoral Outro',
+        'Historico EJC COP',
+        'Serve este ano',
+        'Equipe Atual',
+        'Serve outro EJC',
+        'Outros EJC',
+        'Interesse outro EJC 2026',
+        'Datas indisponiveis 2026',
+        'Recado DIRIS',
+        'Perfil',
+        'Razoes Perfil',
+        'Data Cadastro',
+      ];
+
+      const sheet = ensureWorksheet(name, sheetColumns, {
+        views: [{ state: 'frozen', ySplit: 4 }],
+        tabColor,
+      });
+
+      const totalCols = headers.length;
+      sheet.mergeCells(1, 1, 1, totalCols);
+      const titleCell = sheet.getCell(1, 1);
+      titleCell.value = `${name.toUpperCase()} - CADASTROS LIBERACOES EXTERNAS`;
+      titleCell.font = { bold: true, size: 14, color: { argb: palette.white }, name: 'Calibri' };
+      titleCell.alignment = centerAlignment;
+      titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primary } };
+      sheet.getRow(1).height = 28;
+
+      sheet.mergeCells(2, 1, 2, totalCols);
+      const subtitleCell = sheet.getCell(2, 1);
+      subtitleCell.value = `Registros: ${rows.length} | Gerado em ${generatedAt.toLocaleString('pt-BR')}`;
+      subtitleCell.font = { size: 10, color: { argb: palette.muted }, italic: true, name: 'Calibri' };
+      subtitleCell.alignment = centerAlignment;
+      subtitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primarySoft } };
+      sheet.getRow(2).height = 18;
+
+      sheet.getRow(4).values = headers;
+      styleHeaderRow(sheet, 4, totalCols);
+
+      const exportRows = createExternalExportRows(rows);
+      exportRows.forEach((row) => sheet.addRow(row));
+      styleDataRows(sheet, 5, totalCols);
+
+      // Destaque visual para análise operacional rápida em reunião.
+      exportRows.forEach((row, idx) => {
+        const rowNumber = 5 + idx;
+        const status = String(row.perfilStatus || '').toLowerCase();
+        const isForaPerfil = status.includes('fora');
+        const isEmAnalise = status.includes('analise');
+        const isCritico = isForaPerfil || Number(row.idade) >= 36;
+
+        if (isCritico || isEmAnalise) {
+          const tone = isForaPerfil ? 'FFFFEBEB' : 'FFFFF6E1';
+          for (let col = 1; col <= totalCols; col += 1) {
+            const cell = sheet.getCell(rowNumber, col);
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: tone } };
+            if (col === 1 || col === 21) {
+              cell.font = { ...cell.font, bold: true };
+            }
+          }
+        }
+
+        if (Number(row.idade) >= 36) {
+          const ageCell = sheet.getCell(rowNumber, 2);
+          ageCell.font = { bold: true, color: { argb: 'FF9B1C1C' }, name: 'Calibri', size: 10 };
+          ageCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFDDE1' } };
+        }
+      });
+
+      sheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: totalCols } };
+      addCorporateLogo(sheet, totalCols - 0.8, 0.1, totalCols - 0.05, 1.85);
+      sheet.getColumn('idade').alignment = centerAlignment;
+      sheet.getColumn('genero').alignment = centerAlignment;
+      sheet.getColumn('estadoCivil').alignment = centerAlignment;
+      sheet.getColumn('domMusical').alignment = centerAlignment;
+      sheet.getColumn('serveEjcAnoAtual').alignment = centerAlignment;
+      sheet.getColumn('serveOutroEjcAnoAtual').alignment = centerAlignment;
+      sheet.getColumn('interesseOutroEjc2026').alignment = centerAlignment;
+      sheet.getColumn('perfilStatus').alignment = centerAlignment;
+    };
+
+    addDataSheet('Perfil Apto', aptos, 'FF2D9F75');
+    addDataSheet('Em Analise', emAnalise, 'FFC7902A');
+    addDataSheet('Fora do Perfil', foraPerfil, 'FFD35B5B');
+
+    const biColumns = [
+      { key: 'dimensao', width: 24 },
+      { key: 'categoria', width: 34 },
+      { key: 'quantidade', width: 16 },
+      { key: 'participacao', width: 16 },
+    ];
+    const biSheet = ensureWorksheet('Dashboard BI', biColumns, {
+      views: [{ state: 'frozen', ySplit: 4 }],
+      tabColor: 'FF1E4E8C',
+    });
+    biSheet.mergeCells('A1:D1');
+    const biTitle = biSheet.getCell('A1');
+    biTitle.value = 'DASHBOARD BI - DISTRIBUICOES';
+    biTitle.font = { bold: true, size: 14, color: { argb: palette.white }, name: 'Calibri' };
+    biTitle.alignment = centerAlignment;
+    biTitle.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primary } };
+    biSheet.getRow(1).height = 26;
+    addCorporateLogo(biSheet, 3.15, 0.05, 3.95, 1.85);
+
+    biSheet.mergeCells('A2:D2');
+    const biMeta = biSheet.getCell('A2');
+    biMeta.value = `Base analisada: ${indicadores.totalInscricoes} registros`; 
+    biMeta.font = { size: 10, color: { argb: palette.muted }, italic: true, name: 'Calibri' };
+    biMeta.alignment = centerAlignment;
+    biMeta.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: palette.primarySoft } };
+
+    biSheet.getRow(4).values = ['Dimensao', 'Categoria', 'Quantidade', 'Participacao'];
+    styleHeaderRow(biSheet, 4, 4);
+
+    const appendBiRow = (dimensao, categoria, quantidade) => {
+      const percentual = `${Math.round((quantidade / total) * 100)}%`;
+      biSheet.addRow({ dimensao, categoria, quantidade, participacao: percentual });
+    };
+
+    Object.entries(indicadores.faixaEtaria || {}).forEach(([cat, qtd]) => appendBiRow('Faixa Etaria', cat, qtd));
+    Object.entries(indicadores.porEquipe || {}).forEach(([cat, qtd]) => appendBiRow('Equipe', cat, qtd));
+    Object.entries(indicadores.porPastoral || {}).forEach(([cat, qtd]) => appendBiRow('Pastoral', cat, qtd));
+
+    styleDataRows(biSheet, 5, 4);
+    biSheet.autoFilter = { from: { row: 4, column: 1 }, to: { row: 4, column: 4 } };
+    biSheet.getColumn('quantidade').alignment = centerAlignment;
+    biSheet.getColumn('participacao').alignment = centerAlignment;
+
+    const workbookBuffer = await workbook.xlsx.writeBuffer();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="liberacoes-externas-${new Date().toISOString().slice(0, 10)}.xlsx"`);
+    return res.end(Buffer.from(workbookBuffer));
+  } catch (err) {
+    console.error('Erro detalhado ao exportar Excel de Liberacoes Externas:', err);
+    return res.status(500).send('Erro ao exportar Excel de Liberacoes Externas.');
+  }
+});
+
+app.get('/admin/liberacoes-externas/export/pdf', checkAdminAuth, requireAdminPermission('cadastros.visualizar'), async (req, res) => {
+  try {
+    const PDFDocument = require('pdfkit');
+    const registros = await ExternalLiberacao.find({}).sort({ dataCadastro: -1 }).lean();
+    const indicadores = buildExternalDashboardIndicators(registros);
+
+    const doc = new PDFDocument({ margin: 28, size: 'A4', layout: 'landscape' });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="liberacoes-externas-${new Date().toISOString().slice(0, 10)}.pdf"`);
+    doc.pipe(res);
+
+    doc.fontSize(18).text('Liberacoes Externas - Relatorio Executivo', { align: 'left' });
+    doc.moveDown(0.4);
+    doc.fontSize(10).text(`Gerado em ${new Date().toLocaleString('pt-BR')}`);
+    doc.moveDown(0.5);
+    doc.fontSize(10).text(
+      `Total: ${indicadores.totalInscricoes} | Perfil apto: ${indicadores.totalPerfilApto} | Em analise: ${indicadores.totalEmAnalise} | Fora do perfil: ${indicadores.totalForaPerfil}`
+    );
+    doc.moveDown(0.8);
+
+    const rows = createExternalExportRows(registros).slice(0, 45);
+    const columns = [
+      { key: 'nomeCompleto', label: 'Nome', width: 180 },
+      { key: 'idade', label: 'Idade', width: 45 },
+      { key: 'estadoCivil', label: 'Estado civil', width: 90 },
+      { key: 'ejcCopHistorico', label: 'EJC COP', width: 90 },
+      { key: 'perfilStatus', label: 'Perfil', width: 90 },
+      { key: 'equipeAtual', label: 'Equipe', width: 150 },
+      { key: 'pastorais', label: 'Pastoral', width: 150 },
+    ];
+
+    let y = doc.y;
+    let x = 28;
+    columns.forEach((col) => {
+      doc.font('Helvetica-Bold').fontSize(8).text(col.label, x, y, { width: col.width, ellipsis: true });
+      x += col.width;
+    });
+
+    y += 16;
+    rows.forEach((row) => {
+      x = 28;
+      columns.forEach((col) => {
+        doc.font('Helvetica').fontSize(8).text(String(row[col.key] || ''), x, y, { width: col.width, ellipsis: true });
+        x += col.width;
+      });
+      y += 14;
+      if (y > 560) {
+        doc.addPage({ size: 'A4', layout: 'landscape', margin: 28 });
+        y = 36;
+      }
+    });
+
+    doc.end();
+  } catch {
+    return res.status(500).send('Erro ao exportar PDF de Liberacoes Externas.');
   }
 });
 

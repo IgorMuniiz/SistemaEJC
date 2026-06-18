@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Painel de Aprova��o EJC Admin" />
-  <title>Aprova��es � EJC Admin</title>
+  <meta name="description" content="Painel de Aprovacao EJC Admin" />
+  <title>Aprovacoes - EJC Admin</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -13,7 +13,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260501-button-styles-professional-60">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260531-admin-premium-01">
 </head>
 <body class="admin-panel admin-dashboard-page is-loading">
   <div class="db-bg" aria-hidden="true"></div>
@@ -28,8 +28,9 @@
       </div>
     </a>
     <nav class="topbar-nav">
-      <a href="/" class="topbar-link"><i class="fas fa-house"></i>In�cio</a>
+      <a href="/" class="topbar-link"><i class="fas fa-house"></i>Inicio</a>
       <a href="/admin/gerenciar-cadastros" class="topbar-link"><i class="fas fa-table-columns"></i>Cadastros</a>
+      <a href="/admin/liberacoes-externas" class="topbar-link"><i class="fas fa-globe"></i>Liberacoes Externas</a>
       <span class="topbar-user">
         <span class="topbar-user-avatar"><%= ((adminUsername || 'A').trim().charAt(0) || 'A').toUpperCase() %></span>
         <span><%= adminUsername %></span>
@@ -77,24 +78,24 @@
         acoesRecomendadas.push({
           tone: 'amber',
           icon: 'fa-clock',
-          titulo: 'Reduzir fila de pend�ncias',
-          texto: `${totalPendentes} cadastros est�o aguardando (${pressaoPendencia}% do funil). Priorize aprova��o em lote agora.`,
+          titulo: 'Reduzir fila de pendencias',
+          texto: `${totalPendentes} cadastros estao aguardando (${pressaoPendencia}% do funil). Priorize aprovacao em lote agora.`,
         });
       }
       if (totalProcessados > 0 && !aprovacaoSaudavel) {
         acoesRecomendadas.push({
           tone: 'blue',
           icon: 'fa-chart-line',
-          titulo: 'Aumentar convers�o de aprova��es',
-          texto: `Taxa atual em ${taxaAprovacao}%. Revisar crit�rios de triagem pode recuperar convers�o sem perder qualidade.`,
+          titulo: 'Aumentar conversao de aprovacoes',
+          texto: `Taxa atual em ${taxaAprovacao}%. Revisar criterios de triagem pode recuperar conversao sem perder qualidade.`,
         });
       }
       if (riscoAlto) {
         acoesRecomendadas.push({
           tone: 'red',
           icon: 'fa-triangle-exclamation',
-          titulo: 'Investigar padr�o de reprova��o',
-          texto: `${indiceRisco}% de reprova��o entre processados. Vale auditar dados incompletos ou inconsist�ncias recorrentes.`,
+          titulo: 'Investigar padrao de reprovacao',
+          texto: `${indiceRisco}% de reprovacao entre processados. Vale auditar dados incompletos ou inconsistencias recorrentes.`,
         });
       }
       if (acoesRecomendadas.length === 0) {
@@ -102,20 +103,20 @@
           {
             tone: 'green',
             icon: 'fa-circle-check',
-            titulo: 'Fluxo saud�vel',
-            texto: 'Os indicadores est�o equilibrados. Mantenha rotina de revis�o em lote para preservar a velocidade.',
+            titulo: 'Fluxo saudavel',
+            texto: 'Os indicadores estao equilibrados. Mantenha rotina de revisao em lote para preservar a velocidade.',
           },
           {
             tone: 'blue',
             icon: 'fa-list-check',
-            titulo: 'A��o r�pida sugerida',
-            texto: 'Fa�a uma rodada curta nos cadastros pendentes de maior tempo para evitar gargalos futuros.',
+            titulo: 'Acao rapida sugerida',
+            texto: 'Faca uma rodada curta nos cadastros pendentes de maior tempo para evitar gargalos futuros.',
           },
           {
             tone: 'amber',
             icon: 'fa-bullseye',
             titulo: 'Meta do dia',
-            texto: 'Busque manter pend�ncia abaixo de 30% do funil e taxa de aprova��o acima de 70%.',
+            texto: 'Busque manter pendencia abaixo de 30% do funil e taxa de aprovacao acima de 70%.',
           }
         );
       }
@@ -179,11 +180,11 @@
     <!-- Page Header -->
     <div class="db-header">
       <div>
-        <h1 class="db-header-title">Painel de Aprova��o</h1>
-        <p class="db-header-sub">Gerencie inscri��es de encontristas e encontreiros em tempo real</p>
+        <h1 class="db-header-title">Painel de Aprovacao</h1>
+        <p class="db-header-sub">Gerencie inscricoes de encontristas e encontreiros em tempo real</p>
       </div>
       <div class="db-header-actions">
-        <div class="event-scope-switch" role="group" aria-label="Escopo de evento">
+        <div class="event-scope-switch event-scope-workbench" role="group" aria-label="Escopo de evento">
           <button
             type="button"
             class="event-scope-btn <%= (escopoEventoAdmin || 'ativo') === 'ativo' ? 'active' : '' %>"
@@ -203,7 +204,7 @@
           <i class="fas fa-users-cog"></i>Gerenciar Cadastros
         </a>
         <span class="live-badge"><span class="live-dot"></span>Fluxo ativo</span>
-        <div class="motion-mode-switch" role="group" aria-label="Modo de anima��o">
+        <div class="motion-mode-switch" role="group" aria-label="Modo de animacao">
           <button type="button" class="motion-mode-btn" data-motion-mode="executivo" aria-pressed="false">
             <i class="fas fa-gauge-high"></i>Executivo
           </button>
@@ -224,17 +225,17 @@
       </span>
     </div>
 
-    <section class="quick-workbench" aria-label="Filtros avan�ados">
+    <section class="quick-workbench" aria-label="Filtros avancados">
       <div class="quick-workbench-title">
         <i class="fas fa-sliders"></i>
-        <span>Filtros avan�ados</span>
+        <span>Filtros avancados</span>
       </div>
       <div class="quick-filters-grid">
         <label class="quick-filter-field">
           <span>Status</span>
           <select id="filter-status">
             <option value="all">Todos</option>
-            <option value="pendente">Em an�lise</option>
+            <option value="pendente">Em analise</option>
             <option value="aprovado">Aprovados</option>
             <option value="reprovado">Reprovados</option>
           </select>
@@ -253,7 +254,7 @@
           <input type="date" id="filter-date-from" />
         </label>
         <label class="quick-filter-field">
-          <span>At�</span>
+          <span>Ate</span>
           <input type="date" id="filter-date-to" />
         </label>
       </div>
@@ -263,10 +264,10 @@
       </div>
     </section>
 
-    <section class="strategy-strip" aria-label="A��es recomendadas hoje">
+    <section class="strategy-strip" aria-label="Acoes recomendadas hoje">
       <div class="strategy-head">
-        <h2 class="strategy-title"><i class="fas fa-compass"></i>A��es recomendadas hoje</h2>
-        <span class="strategy-sub">Prioriza��o autom�tica com base no estado atual do funil</span>
+        <h2 class="strategy-title"><i class="fas fa-compass"></i>Acoes recomendadas hoje</h2>
+        <span class="strategy-sub">Priorizacao automatica com base no estado atual do funil</span>
       </div>
       <div class="strategy-grid">
         <% acoesRecomendadas.slice(0, 3).forEach((acao) => { %>
@@ -290,7 +291,7 @@
           <div class="stat-tile-lbl">Pendentes (Prioridade)</div>
           <div class="stat-tile-trend <%= pendenciaCritica ? 'trend-up trend-alert' : 'trend-down trend-good' %>">
             <i class="fas <%= pendenciaCritica ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
-            <span><%= pressaoPendencia %>% do funil aguardando an�lise</span>
+            <span><%= pressaoPendencia %>% do funil aguardando analise</span>
           </div>
         </div>
       </div>
@@ -298,7 +299,7 @@
         <div class="stat-tile-icon green"><i class="fas fa-chart-line"></i></div>
         <div>
           <div class="stat-tile-num"><%= taxaAprovacao %>%</div>
-          <div class="stat-tile-lbl">Taxa de Aprova��o</div>
+          <div class="stat-tile-lbl">Taxa de Aprovacao</div>
           <div class="stat-tile-trend <%= aprovacaoSaudavel ? 'trend-up trend-good' : 'trend-down trend-alert' %>">
             <i class="fas <%= aprovacaoSaudavel ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %>"></i>
             <span><%= totalAprovados %> aprovados de <%= totalProcessados %> processados</span>
@@ -335,7 +336,7 @@
         <div class="approval-head-main">
           <div>
             <h2 class="section-panel-title"><i class="fas fa-user-graduate"></i>Encontristas</h2>
-            <p class="approval-head-sub">Central de triagem e decis�o operacional para inscri��es de encontristas.</p>
+            <p class="approval-head-sub">Central de triagem e decisao operacional para inscricoes de encontristas.</p>
           </div>
           <div class="section-meta">
             <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontristas %> pendente(s)</span>
@@ -345,7 +346,7 @@
         </div>
         <div class="export-row approval-head-tools">
           <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontrista')">
-            <i class="fas fa-list-check"></i>Aprova��o em massa
+            <i class="fas fa-list-check"></i>Aprovacao em massa
           </button>
           <a href="/export?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontrista-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
@@ -358,19 +359,19 @@
             <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontrista','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
           </div>
           <div class="batch-cluster batch-cluster-counter">
-            <span class="batch-counter-label">Sele��o atual</span>
+            <span class="batch-counter-label">Selecao atual</span>
             <span class="batch-counter">0 selecionado(s)</span>
           </div>
           <div class="batch-cluster batch-cluster-manage">
             <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontrista')"><i class="fas fa-check-double"></i>Todos</button>
-            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar sele��o</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontrista')"><i class="fas fa-eraser"></i>Limpar selecao</button>
           </div>
           <div class="batch-cluster batch-cluster-actions">
             <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontrista', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
             <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontrista', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
           </div>
         </div>
-        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque v�rios cadastros e use os bot�es de aprova��o ou reprova��o em lote.</p>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque varios cadastros e use os botoes de aprovacao ou reprovacao em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -389,7 +390,7 @@
           <% if (pendentesEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o pendente</p>
+              <p class="empty-col-text">Nenhuma inscricao pendente</p>
             </div>
           <% } else { %>
             <% pendentesEncontristas.forEach(r => { %>
@@ -450,7 +451,7 @@
           <% if (aprovadosEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o aprovada</p>
+              <p class="empty-col-text">Nenhuma inscricao aprovada</p>
             </div>
           <% } else { %>
             <% aprovadosEncontristas.forEach(r => { %>
@@ -507,7 +508,7 @@
           <% if (reprovadosEncontristas.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o reprovada</p>
+              <p class="empty-col-text">Nenhuma inscricao reprovada</p>
             </div>
           <% } else { %>
             <% reprovadosEncontristas.forEach(r => { %>
@@ -564,7 +565,7 @@
         <div class="approval-head-main">
           <div>
             <h2 class="section-panel-title"><i class="fas fa-people-group"></i>Encontreiros</h2>
-            <p class="approval-head-sub">Fila inteligente de aprova��o para equipes de servi�o, jovens e tios.</p>
+            <p class="approval-head-sub">Fila inteligente de aprovacao para equipes de servico, jovens e tios.</p>
           </div>
           <div class="section-meta">
             <span class="meta-chip amber"><i class="fas fa-clock"></i><%= totalPendentesEncontreiros %> pendente(s)</span>
@@ -574,7 +575,7 @@
         </div>
         <div class="export-row approval-head-tools">
           <button type="button" class="export-btn approval-bulk-entry" onclick="focarAprovacaoEmMassa('encontreiro')">
-            <i class="fas fa-list-check"></i>Aprova��o em massa
+            <i class="fas fa-list-check"></i>Aprovacao em massa
           </button>
           <a href="/export-encontro?format=pdf" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-file-pdf"></i>PDF</a>
           <a href="/export-encontro-excel" class="export-btn" target="_blank" rel="noreferrer"><i class="fas fa-table"></i>Excel</a>
@@ -587,19 +588,19 @@
             <button type="button" class="batch-btn batch-filter-rejected" onclick="selecionarPorStatusLote('encontreiro','reprovado')"><i class="fas fa-circle-xmark"></i>Reprovados</button>
           </div>
           <div class="batch-cluster batch-cluster-counter">
-            <span class="batch-counter-label">Sele��o atual</span>
+            <span class="batch-counter-label">Selecao atual</span>
             <span class="batch-counter">0 selecionado(s)</span>
           </div>
           <div class="batch-cluster batch-cluster-manage">
             <button type="button" class="batch-btn batch-select-all" onclick="selecionarTodosLote('encontreiro')"><i class="fas fa-check-double"></i>Todos</button>
-            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar sele��o</button>
+            <button type="button" class="batch-btn batch-clear" onclick="limparSelecaoLote('encontreiro')"><i class="fas fa-eraser"></i>Limpar selecao</button>
           </div>
           <div class="batch-cluster batch-cluster-actions">
             <button type="button" class="batch-btn batch-approve" data-batch-action="aprovar" onclick="executarAcaoLote('encontreiro', 'aprovar')" disabled><i class="fas fa-circle-check"></i>Aprovar selecionados</button>
             <button type="button" class="batch-btn batch-reject" data-batch-action="desaprovar" onclick="executarAcaoLote('encontreiro', 'desaprovar')" disabled><i class="fas fa-circle-xmark"></i>Reprovar selecionados</button>
           </div>
         </div>
-        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque v�rios cadastros e use os bot�es de aprova��o ou reprova��o em lote.</p>
+        <p class="approval-batch-helper"><i class="fas fa-hand-pointer"></i>Marque varios cadastros e use os botoes de aprovacao ou reprovacao em lote.</p>
         <div class="status-tabs approval-view-switch" data-board-tabs>
           <button type="button" class="status-tab active" data-view="all"><i class="fas fa-border-all"></i>Todos</button>
           <button type="button" class="status-tab" data-view="pendente"><i class="fas fa-clock"></i>Pendentes</button>
@@ -618,7 +619,7 @@
           <% if (pendentesEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o pendente</p>
+              <p class="empty-col-text">Nenhuma inscricao pendente</p>
             </div>
           <% } else { %>
             <% pendentesEncontreiros.forEach(r => { %>
@@ -680,7 +681,7 @@
           <% if (aprovadosEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o aprovada</p>
+              <p class="empty-col-text">Nenhuma inscricao aprovada</p>
             </div>
           <% } else { %>
             <% aprovadosEncontreiros.forEach(r => { %>
@@ -739,7 +740,7 @@
           <% if (reprovadosEncontreiros.length === 0) { %>
             <div class="empty-col">
               <div class="empty-col-icon"><i class="fas fa-inbox"></i></div>
-              <p class="empty-col-text">Nenhuma inscri��o reprovada</p>
+              <p class="empty-col-text">Nenhuma inscricao reprovada</p>
             </div>
           <% } else { %>
             <% reprovadosEncontreiros.forEach(r => { %>
@@ -798,7 +799,7 @@
     <span>Novo encontrista</span>
   </a>
 
-  <nav class="mobile-quick-nav" aria-label="Navega��o r�pida">
+  <nav class="mobile-quick-nav" aria-label="Navegacao rapida">
     <a href="/admin" class="mobile-quick-item"><i class="fas fa-gauge"></i><span>Painel</span></a>
     <a href="/inscricao" class="mobile-quick-item"><i class="fas fa-user-plus"></i><span>Novo</span></a>
     <a href="/admin/gerenciar-cadastros" class="mobile-quick-item"><i class="fas fa-table-columns"></i><span>Cadastros</span></a>
@@ -834,7 +835,7 @@
               <div class="app-popup-headline">
                 <div class="app-popup-orb" id="app-popup-orb" aria-hidden="true"><i class="fas fa-sparkles"></i></div>
                 <div class="app-popup-title-stack">
-                  <span class="app-popup-kicker" id="app-popup-kicker">A��o r�pida</span>
+                  <span class="app-popup-kicker" id="app-popup-kicker">Acao rapida</span>
                   <h5 class="modal-title" id="app-popup-title">Aviso</h5>
                 </div>
               </div>
@@ -868,7 +869,7 @@
       const toneLabels = {
         primary: 'Acao rapida',
         warning: 'Confirmacao',
-        danger: 'Aten��o',
+        danger: 'Atencao',
         success: 'Concluido',
       };
       const toneNotes = {
@@ -923,7 +924,7 @@
 
     const appAlert   = (msg, tone = 'primary', title = 'Aviso') =>
       showAppPopup({ title, message: msg, confirmText: 'Entendi', tone });
-    const appConfirm = (msg, title = 'Confirma��o') =>
+    const appConfirm = (msg, title = 'Confirmacao') =>
       showAppPopup({ title, message: msg, confirmText: 'Confirmar', cancelText: 'Cancelar', tone: 'warning' });
 
     const MOTION_MODE_STORAGE_KEY = 'ejc-dashboard-motion-mode';
@@ -1014,9 +1015,9 @@
     }
 
     function formatarDataCurta(dateIso) {
-      if (!dateIso) return 'Data n�o informada';
+      if (!dateIso) return 'Data nao informada';
       const data = new Date(`${dateIso}T00:00:00`);
-      if (Number.isNaN(data.getTime())) return 'Data n�o informada';
+      if (Number.isNaN(data.getTime())) return 'Data nao informada';
       return data.toLocaleDateString('pt-BR');
     }
 
@@ -1066,7 +1067,7 @@
           metaClass: 'green',
           label: 'Aprovado',
           columnLabel: 'Aprovados',
-          emptyText: 'Nenhuma inscri��o aprovada',
+          emptyText: 'Nenhuma inscricao aprovada',
           primaryAction: '<i class="fas fa-check"></i>Aprovar',
           secondaryAction: '<i class="fas fa-xmark"></i>Desaprovar',
         };
@@ -1078,7 +1079,7 @@
           metaClass: 'red',
           label: 'Reprovado',
           columnLabel: 'Reprovados',
-          emptyText: 'Nenhuma inscri��o reprovada',
+          emptyText: 'Nenhuma inscricao reprovada',
           primaryAction: '<i class="fas fa-rotate-left"></i>Reativar',
           secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
         };
@@ -1089,7 +1090,7 @@
         metaClass: 'amber',
         label: 'Pendente',
         columnLabel: 'Pendentes',
-        emptyText: 'Nenhuma inscri��o pendente',
+        emptyText: 'Nenhuma inscricao pendente',
         primaryAction: '<i class="fas fa-check"></i>Aprovar',
         secondaryAction: '<i class="fas fa-xmark"></i>Reprovar',
       };
@@ -1163,10 +1164,10 @@
     }
 
     function syncCardTimeline(card, status) {
-      const timelineStatus = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em an�lise';
+      const timelineStatus = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em analise';
       const timelineValue = card.querySelector('.pcard-timeline li:last-child strong');
       if (timelineValue) {
-        timelineValue.textContent = `${timelineStatus} � Equipe Admin`;
+        timelineValue.textContent = `${timelineStatus} - Equipe Admin`;
       }
     }
 
@@ -1301,7 +1302,7 @@
 
         const saved = saveCurrentFilters();
         if (!saved) {
-          await appAlert('N�o foi poss�vel salvar os filtros neste navegador.', 'warning', 'Aten��o');
+          await appAlert('Nao foi possivel salvar os filtros neste navegador.', 'warning', 'Atencao');
           return;
         }
 
@@ -1346,7 +1347,7 @@
           body: JSON.stringify({ id, tipoLista }),
         });
         const data = await res.json();
-        if (!res.ok || !data.success) throw new Error(data.error || 'Falha na a��o r�pida');
+        if (!res.ok || !data.success) throw new Error(data.error || 'Falha na acao rapida');
 
         if (card) {
           moveApprovalCard(card, action === 'aprovar' ? 'aprovado' : 'reprovado');
@@ -1354,7 +1355,7 @@
       } catch (error) {
         setCardPendingState(card);
         if (button) button.disabled = false;
-        await appAlert('Erro: ' + error.message, 'danger', 'A��o r�pida falhou');
+        await appAlert('Erro: ' + error.message, 'danger', 'Acao rapida falhou');
       }
     }
 
@@ -1374,13 +1375,13 @@
             ai.innerHTML += '<span class="ai-chip warning"><i class="fas fa-triangle-exclamation"></i>Dados incompletos</span>';
           }
           if (card.dataset.duplicate === '1') {
-            ai.innerHTML += '<span class="ai-chip danger"><i class="fas fa-clone"></i>Poss�vel duplicado</span>';
+            ai.innerHTML += '<span class="ai-chip danger"><i class="fas fa-clone"></i>Possivel duplicado</span>';
           }
           if (card.dataset.recommended === '1') {
             ai.innerHTML += '<span class="ai-chip good"><i class="fas fa-wand-magic-sparkles"></i>Recomendado aprovar</span>';
           }
           if (!ai.innerHTML) {
-            ai.innerHTML = '<span class="ai-chip neutral"><i class="fas fa-circle-info"></i>Cadastro est�vel</span>';
+            ai.innerHTML = '<span class="ai-chip neutral"><i class="fas fa-circle-info"></i>Cadastro estavel</span>';
           }
           meta.appendChild(ai);
         }
@@ -1390,13 +1391,13 @@
           timeline.className = 'pcard-timeline';
           const createdDate = formatarDataCurta(card.dataset.date);
           const updatedDate = formatarDataCurta(card.dataset.updatedDate || card.dataset.date);
-          const statusLabel = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em an�lise';
+          const statusLabel = status === 'aprovado' ? 'Aprovado' : status === 'reprovado' ? 'Reprovado' : 'Em analise';
           timeline.innerHTML = `
             <div class="timeline-title"><i class="fas fa-timeline"></i>Timeline</div>
             <ul>
-              <li><span>Inscri��o</span><strong>${createdDate}</strong></li>
-              <li><span>�ltima altera��o</span><strong>${updatedDate}</strong></li>
-              <li><span>Status atual</span><strong>${statusLabel} � Equipe Admin</strong></li>
+              <li><span>Inscricao</span><strong>${createdDate}</strong></li>
+              <li><span>Ultima alteracao</span><strong>${updatedDate}</strong></li>
+              <li><span>Status atual</span><strong>${statusLabel} - Equipe Admin</strong></li>
             </ul>`;
           details.appendChild(timeline);
         }
@@ -1532,7 +1533,7 @@
         .map((checkbox) => checkbox.dataset.batchId);
 
       if (selecionados.length === 0) {
-        await appAlert('Selecione pelo menos um cadastro para continuar.', 'warning', 'Nenhuma sele��o');
+        await appAlert('Selecione pelo menos um cadastro para continuar.', 'warning', 'Nenhuma selecao');
         return;
       }
 
@@ -1549,11 +1550,11 @@
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Falha ao processar atualiza��o em lote');
+          throw new Error(data.error || 'Falha ao processar atualizacao em lote');
         }
 
         const complemento = data.missingCount > 0
-          ? ` ${data.missingCount} cadastro(s) n�o foram encontrados.`
+          ? ` ${data.missingCount} cadastro(s) nao foram encontrados.`
           : '';
 
         await appAlert(`${data.updatedCount} cadastro(s) atualizados com sucesso.${complemento}`, 'success', 'Sucesso');
@@ -1851,7 +1852,7 @@
 
     /* -- Actions ----------------------------------------------- */
     async function aprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprova��o')) return;
+      if (!await appConfirm('Tem certeza que deseja aprovar este cadastro?', 'Confirmar aprovacao')) return;
       const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
       setCardPendingState(card, 'approve');
       try {
@@ -1872,7 +1873,7 @@
     }
 
     async function desaprovarCadastro(id, tipoLista) {
-      if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprova��o')) return;
+      if (!await appConfirm('Tem certeza que deseja desaprovar este cadastro?', 'Confirmar desaprovacao')) return;
       const card = document.querySelector(`.pcard[data-id="${id}"][data-tipo="${tipoLista}"]`);
       setCardPendingState(card, 'reject');
       try {

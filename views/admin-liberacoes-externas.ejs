@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Painel administrativo de Liberacoes Externas" />
+  <title>Liberacoes Externas - Painel Admin</title>
+  <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
+  <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/liberacoes-externas.css?v=20260531-admin-07" />
+</head>
+<body class="le-admin-body" data-admin-theme="light">
+  <div class="le-bg-layer" aria-hidden="true">
+    <span class="le-shape le-shape-a"></span>
+    <span class="le-shape le-shape-b"></span>
+    <span class="le-shape le-shape-c"></span>
+  </div>
+
+  <header class="le-topbar">
+    <div class="le-topbar-brand">
+      <span class="le-topbar-logo"><i class="fas fa-compass-drafting"></i></span>
+      <div>
+        <strong>Liberacoes Externas</strong>
+        <small>Workspace executivo</small>
+      </div>
+    </div>
+    <nav class="le-topbar-nav">
+      <a href="/admin/gerenciar-cadastros"><i class="fas fa-table-columns"></i>Gestao Geral</a>
+      <a href="/admin/dashboard"><i class="fas fa-chart-line"></i>Dashboard</a>
+      <a href="/"><i class="fas fa-house"></i>Inicio</a>
+      <button type="button" class="le-theme-admin-toggle" id="leAdminThemeToggle" aria-label="Alternar tema do painel">
+        <i class="fas fa-sun"></i>
+        <span>Tema claro</span>
+      </button>
+      <span class="le-user-pill"><i class="fas fa-user-shield"></i><%= adminUsername %></span>
+      <form action="/admin/logout" method="POST">
+        <input type="hidden" name="_csrf" value="<%= adminCsrfToken %>">
+        <button type="submit" class="le-logout"><i class="fas fa-arrow-right-from-bracket"></i>Sair</button>
+      </form>
+    </nav>
+  </header>
+
+  <main class="le-admin-main">
+    <section class="le-hero">
+      <div>
+        <p class="le-kicker">Modulo isolado</p>
+        <h1>Central de Liberacoes Externas</h1>
+        <div class="le-hero-meta" aria-label="Resumo rapido">
+          <span><i class="fas fa-database"></i>Base: <strong><%= totalRegistrosBruto %></strong></span>
+          <span><i class="fas fa-link"></i>Link publico: <strong><%= linkAtivo ? 'Ativo' : 'Inativo' %></strong></span>
+          <span><i class="fas fa-clock"></i>Atualizado em: <strong><%= new Date().toLocaleString('pt-BR') %></strong></span>
+        </div>
+      </div>
+      <div class="le-hero-actions">
+        <a href="/admin/liberacoes-externas/export/excel" class="le-btn le-btn-primary"><i class="fas fa-file-excel"></i>Exportar Excel</a>
+        <a href="/admin/liberacoes-externas/export/pdf" class="le-btn le-btn-ghost"><i class="fas fa-file-pdf"></i>Exportar PDF</a>
+        <button type="button" class="le-btn le-btn-ghost" id="lePrintBtn"><i class="fas fa-print"></i>Imprimir</button>
+      </div>
+    </section>
+
+    <section class="le-kpi-grid">
+      <article class="le-kpi-card">
+        <small>Total de inscricoes</small>
+        <strong><%= indicadoresFiltrados.totalInscricoes %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Perfil apto</small>
+        <strong><%= indicadoresFiltrados.totalPerfilApto %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Em analise</small>
+        <strong><%= indicadoresFiltrados.totalEmAnalise %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Fora do perfil</small>
+        <strong><%= indicadoresFiltrados.totalForaPerfil %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Homens / Mulheres</small>
+        <strong><%= indicadoresFiltrados.homens %> / <%= indicadoresFiltrados.mulheres %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Casados / Solteiros</small>
+        <strong><%= indicadoresFiltrados.casados %> / <%= indicadoresFiltrados.solteiros %></strong>
+      </article>
+      <article class="le-kpi-card">
+        <small>Total bruto base</small>
+        <strong><%= totalRegistrosBruto %></strong>
+      </article>
+    </section>
+
+    <section class="le-card le-card-link">
+      <div class="le-card-head">
+        <div>
+          <h2>Link publico de inscricao</h2>
+          <p>O formulario fica oculto e so abre com token valido.</p>
+        </div>
+      </div>
+      <div class="le-link-grid">
+        <div>
+          <label class="le-label" for="leLinkField">URL compartilhavel</label>
+          <input
+            id="leLinkField"
+            class="le-input"
+            readonly
+            value="<%= linkAtivo ? (appBaseUrl + '/liberacoes-externas/inscricao?token=' + encodeURIComponent(linkAtivo.token)) : '' %>"
+            placeholder="Nenhum link ativo"
+          />
+          <small class="le-help" id="leLinkMeta">
+            <% if (linkAtivo && linkAtivo.tokenExp) { %>
+              Expira em <%= new Date(linkAtivo.tokenExp).toLocaleString('pt-BR') %>
+            <% } else if (linkAtivo) { %>
+              Sem expiracao definida
+            <% } else { %>
+              Gere um novo link para liberar o formulario
+            <% } %>
+          </small>
+        </div>
+        <div class="le-link-actions">
+          <div class="le-inline-field">
+            <label for="leExpDias">Dias para expirar (opcional)</label>
+            <input id="leExpDias" class="le-input" type="number" min="1" max="120" placeholder="Ex.: 7" />
+          </div>
+          <div class="le-inline-buttons">
+            <button type="button" class="le-btn le-btn-primary" id="leGerarLinkBtn"><i class="fas fa-link"></i>Gerar Link de Inscricao</button>
+            <button type="button" class="le-btn le-btn-ghost" id="leCopiarLinkBtn"><i class="fas fa-copy"></i>Copiar</button>
+            <button type="button" class="le-btn le-btn-danger" id="leRevogarLinkBtn"><i class="fas fa-ban"></i>Revogar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="le-card">
+      <form class="le-filters" method="GET" action="/admin/liberacoes-externas">
+        <div class="le-filter-grid">
+          <div>
+            <label class="le-label" for="q">Busca instantanea</label>
+            <input class="le-input" type="text" id="q" name="q" value="<%= queryState.q %>" placeholder="Nome, e-mail, telefone, cidade" />
+          </div>
+          <div>
+            <label class="le-label" for="perfil">Perfil</label>
+            <select class="le-input" id="perfil" name="perfil">
+              <option value="">Todos</option>
+              <% perfilStatusOptions.forEach(function(item){ %>
+                <option value="<%= item.value %>" <%= queryState.perfil === item.value ? 'selected' : '' %>><%= item.label %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="estadoCivil">Estado civil</label>
+            <select class="le-input" id="estadoCivil" name="estadoCivil">
+              <option value="">Todos</option>
+              <% estadoCivilOptions.forEach(function(item){ %>
+                <option value="<%= item %>" <%= queryState.estadoCivil === item ? 'selected' : '' %>><%= item %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="genero">Genero</label>
+            <select class="le-input" id="genero" name="genero">
+              <option value="">Todos</option>
+              <option value="masculino" <%= queryState.genero === 'masculino' ? 'selected' : '' %>>Masculino</option>
+              <option value="feminino" <%= queryState.genero === 'feminino' ? 'selected' : '' %>>Feminino</option>
+              <option value="nao_informado" <%= queryState.genero === 'nao_informado' ? 'selected' : '' %>>Nao informado</option>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="pastoral">Pastoral</label>
+            <select class="le-input" id="pastoral" name="pastoral">
+              <option value="">Todas</option>
+              <% pastoralOptions.forEach(function(item){ %>
+                <option value="<%= item %>" <%= queryState.pastoral === item ? 'selected' : '' %>><%= item %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="equipe">Equipe</label>
+            <select class="le-input" id="equipe" name="equipe">
+              <option value="">Todas</option>
+              <% equipeOptions.forEach(function(item){ %>
+                <option value="<%= item %>" <%= queryState.equipe === item ? 'selected' : '' %>><%= item %></option>
+              <% }); %>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="orderBy">Ordenar por</label>
+            <select class="le-input" id="orderBy" name="orderBy">
+              <option value="dataCadastro" <%= queryState.orderBy === 'dataCadastro' ? 'selected' : '' %>>Data cadastro</option>
+              <option value="nomeCompleto" <%= queryState.orderBy === 'nomeCompleto' ? 'selected' : '' %>>Nome</option>
+              <option value="idadeCalculada" <%= queryState.orderBy === 'idadeCalculada' ? 'selected' : '' %>>Idade</option>
+              <option value="estadoCivil" <%= queryState.orderBy === 'estadoCivil' ? 'selected' : '' %>>Estado civil</option>
+              <option value="perfilStatus" <%= queryState.orderBy === 'perfilStatus' ? 'selected' : '' %>>Perfil</option>
+            </select>
+          </div>
+          <div>
+            <label class="le-label" for="orderDir">Direcao</label>
+            <select class="le-input" id="orderDir" name="orderDir">
+              <option value="desc" <%= queryState.orderDir === 'desc' ? 'selected' : '' %>>Descendente</option>
+              <option value="asc" <%= queryState.orderDir === 'asc' ? 'selected' : '' %>>Ascendente</option>
+            </select>
+          </div>
+        </div>
+        <div class="le-filter-actions">
+          <button type="submit" class="le-btn le-btn-primary"><i class="fas fa-filter"></i>Aplicar filtros</button>
+          <a href="/admin/liberacoes-externas" class="le-btn le-btn-ghost"><i class="fas fa-rotate"></i>Limpar</a>
+        </div>
+      </form>
+
+      <div class="le-tabs" role="tablist" aria-label="Classificacao automatica">
+        <button class="le-tab is-active" type="button" data-perfil-tab="all">Todos (<%= registros.length %>)</button>
+        <button class="le-tab" type="button" data-perfil-tab="<%= perfilStatusOptions[0].value %>">Perfil Apto</button>
+        <button class="le-tab" type="button" data-perfil-tab="<%= perfilStatusOptions[1].value %>">Em Analise</button>
+        <button class="le-tab" type="button" data-perfil-tab="<%= perfilStatusOptions[2].value %>">Fora do Perfil</button>
+      </div>
+
+      <div class="le-table-wrap">
+        <table class="le-table" id="leRegistrosTable">
+          <thead>
+            <tr>
+              <th>Nome</th>
+              <th>Idade</th>
+              <th>Estado civil</th>
+              <th>EJC COP</th>
+              <th>Perfil</th>
+              <th>Equipe</th>
+              <th>Pastoral</th>
+              <th>Cadastro</th>
+              <th>Acoes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (registros.length) { %>
+              <% registros.forEach(function(item){ %>
+                <tr data-id="<%= item._id %>" data-perfil="<%= item.perfilStatus %>">
+                  <td>
+                    <strong><%= item.nomeCompleto %></strong>
+                    <small><%= item.email %></small>
+                  </td>
+                  <td><%= item.idadeCalculada %></td>
+                  <td><%= item.estadoCivil %></td>
+                  <td><%= item.ejcCopHistorico || '-' %></td>
+                  <td>
+                    <% if (item.perfilStatus === 'perfil_apto') { %>
+                      <span class="le-badge le-badge-ok">Perfil Apto</span>
+                    <% } else if (item.perfilStatus === 'em_analise') { %>
+                      <span class="le-badge le-badge-review">Em Analise</span>
+                    <% } else { %>
+                      <span class="le-badge le-badge-off">Fora do Perfil</span>
+                    <% } %>
+                  </td>
+                  <td><%= Array.isArray(item.equipeAtual) && item.equipeAtual.length ? item.equipeAtual.join(', ') : '-' %></td>
+                  <td><%= Array.isArray(item.pastorais) && item.pastorais.length ? item.pastorais.join(', ') : '-' %></td>
+                  <td><%= item.dataCadastro ? new Date(item.dataCadastro).toLocaleDateString('pt-BR') : '-' %></td>
+                  <td>
+                    <div class="le-actions">
+                      <button type="button" class="le-icon-btn" data-action="view" title="Visualizar"><i class="fas fa-eye"></i></button>
+                      <button type="button" class="le-icon-btn" data-action="edit" title="Editar" <%= adminPermissoes.includes('cadastros.editar') ? '' : 'disabled' %>><i class="fas fa-pen"></i></button>
+                      <button type="button" class="le-icon-btn" data-action="history" title="Historico"><i class="fas fa-clock-rotate-left"></i></button>
+                      <button type="button" class="le-icon-btn le-icon-btn-danger" data-action="delete" title="Excluir" <%= adminPermissoes.includes('cadastros.excluir') ? '' : 'disabled' %>><i class="fas fa-trash"></i></button>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr>
+                <td colspan="9" class="le-empty-state-cell">
+                  <div class="le-empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <strong>Nenhum cadastro encontrado</strong>
+                    <p>Quando os inscritos enviarem o formulario, os registros aparecerao aqui com classificacao automatica.</p>
+                  </div>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div class="le-modal" id="leModal" aria-hidden="true">
+    <div class="le-modal-backdrop" data-close-modal></div>
+    <div class="le-modal-dialog">
+      <header>
+        <h3 id="leModalTitle">Detalhes do cadastro</h3>
+        <button type="button" data-close-modal aria-label="Fechar"><i class="fas fa-xmark"></i></button>
+      </header>
+      <section id="leModalBody"></section>
+      <footer id="leModalFooter"></footer>
+    </div>
+  </div>
+
+  <script>
+    window.__LE_ADMIN__ = {
+      csrfToken: <%- JSON.stringify(adminCsrfToken || '') %>,
+      canEdit: <%- JSON.stringify((adminPermissoes || []).includes('cadastros.editar')) %>,
+      canDelete: <%- JSON.stringify((adminPermissoes || []).includes('cadastros.excluir')) %>,
+      linkPrefix: <%- JSON.stringify((appBaseUrl || '') + '/liberacoes-externas/inscricao?token=') %>
+    };
+  </script>
+  <script defer src="/js/admin-liberacoes-externas.js?v=20260531-admin-js-03"></script>
+</body>
+</html>

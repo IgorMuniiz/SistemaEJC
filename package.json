@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js",
+    "build:frontend": "webpack --config webpack.config.js",
     "lint": "npx --yes eslint app.js src tests",
     "format": "npx --yes prettier --write \"app.js\" \"src/**/*.js\" \"tests/**/*.js\" \"views/**/*.ejs\" \"public/css/**/*.css\" \"*.md\"",
     "format:check": "npx --yes prettier --check \"app.js\" \"src/**/*.js\" \"tests/**/*.js\" \"views/**/*.ejs\" \"public/css/**/*.css\" \"*.md\"",
@@ -19,7 +20,7 @@
     "test:e2e:ui": "npx playwright test --ui"
   },
   "author": "",
-  "license": "MIT",
+  "license": "MIT OR MPL-2.0",
   "dependencies": {
     "@capacitor/android": "^8.1.0",
     "@capacitor/cli": "^8.1.0",
@@ -39,7 +40,7 @@
     "express-validator": "^7.3.1",
     "helmet": "^8.1.0",
     "mongoose": "^9.2.4",
-    "multer": "^2.1.1",
+    "multer": "^2.2.0",
     "mysql2": "^3.11.3",
     "pdf-parse": "^1.1.1",
     "pdfkit": "^0.13.0",
@@ -55,9 +56,12 @@
     "babel-loader": "^10.1.1",
     "connect-livereload": "^0.6.1",
     "livereload": "^0.10.3",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.1.14",
     "supertest": "^7.2.2",
     "webpack": "^5.107.0",
     "webpack-cli": "^7.0.2"
+  },
+  "overrides": {
+    "uuid": "^11.1.1"
   }
 }

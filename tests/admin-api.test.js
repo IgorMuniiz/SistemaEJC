@@ -558,6 +558,81 @@ test('POST /admin/transferir-encontrista/:id atualiza encontreiro existente quan
   assert.equal(createCalled, false);
 });
 
+test('POST /admin/transferir-encontreiro/:id autenticado transfere para encontristas e limpa vinculos', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalEncontroFindById = Encontro.findById;
+  const originalEncontroFindByIdAndDelete = Encontro.findByIdAndDelete;
+  const originalCadastroFindOne = Cadastro.findOne;
+  const originalCadastroCreate = Cadastro.create;
+  const originalVinculoDeleteMany = VinculoEncontro.deleteMany;
+
+  let createPayload = null;
+  let deletedId = null;
+  let cleanedFilter = null;
+
+  Encontro.findById = async () => ({
+    _id: '507f1f77bcf86cd799439261',
+    nomeCompleto: 'Encontreiro Transferido',
+    comoQuerSerChamado: 'Neto',
+    genero: 'masculino',
+    ejc: 'EJC Serviu 2026',
+    qualEjcPertence: 'EJC Base 2020',
+    ejcVinculadoId: '507f1f77bcf86cd799439263',
+    ejcVinculadoNome: 'EJC Serviu 2026',
+    tipo: 'jovens',
+    email: 'neto@test.local',
+    telefone: '(11) 98888-0000',
+    logradouro: 'Rua B',
+    bairro: 'Centro',
+    dataNascimento: '1998-01-01',
+    instagram: '@neto',
+    foto: 'foto-encontro.webp',
+    disponibilidadeEncontro: true,
+    aprovado: false,
+    statusAprovacao: 'pendente',
+    dataCadastro: new Date('2026-04-02T00:00:00.000Z'),
+  });
+  Encontro.findByIdAndDelete = async (id) => {
+    deletedId = String(id);
+    return { acknowledged: true };
+  };
+  Cadastro.findOne = async () => null;
+  Cadastro.create = async (payload) => {
+    createPayload = payload;
+    return { _id: '507f1f77bcf86cd799439262', ...payload };
+  };
+  VinculoEncontro.deleteMany = async (filter) => {
+    cleanedFilter = filter;
+    return { acknowledged: true, deletedCount: 2 };
+  };
+
+  t.after(() => {
+    Encontro.findById = originalEncontroFindById;
+    Encontro.findByIdAndDelete = originalEncontroFindByIdAndDelete;
+    Cadastro.findOne = originalCadastroFindOne;
+    Cadastro.create = originalCadastroCreate;
+    VinculoEncontro.deleteMany = originalVinculoDeleteMany;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent.post('/admin/transferir-encontreiro/507f1f77bcf86cd799439261').send({})
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.equal(createPayload.ejc, 'EJC Base 2020');
+  assert.equal(String(createPayload.ejcVinculadoId), '507f1f77bcf86cd799439263');
+  assert.equal(createPayload.ejcVinculadoNome, 'EJC Serviu 2026');
+  assert.equal(createPayload.disponibilidadeEncontro, true);
+  assert.match(createPayload.observacoes, /Transferido da lista de encontreiros/i);
+  assert.deepEqual(cleanedFilter, { pessoaTipo: 'encontreiro', pessoaId: '507f1f77bcf86cd799439261' });
+  assert.equal(deletedId, '507f1f77bcf86cd799439261');
+});
+
 test('POST /admin/transferir-encontristas-lote autenticado exige encontro de destino', async (t) => {
   mockAdminAuthFlow(t);
 

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Formulario externo de liberacoes" />
+  <title>Liberacoes Externas - Inscricao</title>
+  <link rel="preload" href="/vendor/bootstrap/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
+  <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/liberacoes-externas.css?v=20260531-premium-rebuild-01" />
+</head>
+<body class="le-public-body" data-theme="dark">
+  <div class="le-bg-layer" aria-hidden="true">
+    <span class="le-shape le-shape-a"></span>
+    <span class="le-shape le-shape-b"></span>
+    <span class="le-shape le-shape-c"></span>
+  </div>
+
+  <main class="le-public-main">
+    <header class="le-public-header">
+      <p class="le-kicker">Paroquia Cristo Operario</p>
+      <h1>Formulario de Liberacoes Externas</h1>
+      <p>Preencha seus dados para avaliacao. Este formulario e exclusivo para pessoas externas.</p>
+      <div class="le-public-header-pills" aria-hidden="true">
+        <span>Triagem inteligente</span>
+        <span>Fluxo seguro por link</span>
+        <span>Analise executiva</span>
+      </div>
+      <button type="button" class="le-theme-toggle" id="leThemeToggle" aria-label="Alternar tema">
+        <i class="fas fa-moon"></i>
+        <span>Tema premium</span>
+      </button>
+    </header>
+
+    <% if (!accessGranted) { %>
+      <section class="le-card le-blocked">
+        <h2>Acesso indisponivel</h2>
+        <p><%= accessMessage || 'Link nao autorizado.' %></p>
+      </section>
+    <% } else { %>
+      <% if (successMessage) { %>
+        <section class="le-card le-success-box">
+          <i class="fas fa-circle-check"></i>
+          <div>
+            <strong>Inscricao enviada</strong>
+            <p><%= successMessage %></p>
+          </div>
+        </section>
+      <% } %>
+
+      <% if (errors && errors.length) { %>
+        <section class="le-card le-error-box">
+          <strong>Corrija os campos abaixo:</strong>
+          <ul>
+            <% errors.forEach(function(err){ %>
+              <li><%= err %></li>
+            <% }); %>
+          </ul>
+        </section>
+      <% } %>
+
+      <form class="le-card le-form" id="lePublicForm" method="POST" action="/liberacoes-externas/inscricao?token=<%= encodeURIComponent(token) %>">
+        <input type="hidden" name="token" value="<%= token %>" />
+
+        <div class="le-progress" aria-label="Progresso do formulario">
+          <div class="le-progress-head">
+            <strong>Progresso de preenchimento</strong>
+            <span id="leProgressText">0%</span>
+          </div>
+          <div class="le-progress-track">
+            <span id="leProgressFill"></span>
+          </div>
+          <div class="le-progress-steps" id="leProgressSteps">
+            <span data-step-index="0">Dados pessoais</span>
+            <span data-step-index="1">Dom musical</span>
+            <span data-step-index="2">Paroquia</span>
+            <span data-step-index="3">Historico</span>
+            <span data-step-index="4">Participacao atual</span>
+            <span data-step-index="5">Outros EJC's</span>
+          </div>
+        </div>
+
+        <section class="le-form-section" data-step="0" data-step-label="Dados pessoais">
+          <div class="le-form-section-head">
+            <h2>Dados pessoais</h2>
+            <p>Informacoes para identificacao e contato</p>
+          </div>
+          <div class="le-form-grid">
+            <label>
+              <span>Nome completo *</span>
+              <input class="le-input" type="text" name="nomeCompleto" required value="<%= formData.nomeCompleto || '' %>" />
+            </label>
+            <label>
+              <span>Data de nascimento *</span>
+              <input class="le-input" type="date" name="dataNascimento" required value="<%= formData.dataNascimento || '' %>" />
+            </label>
+            <label>
+              <span>Telefone (DDD + numero) *</span>
+              <input class="le-input" type="text" name="telefone" required value="<%= formData.telefone || '' %>" />
+            </label>
+            <label>
+              <span>E-mail *</span>
+              <input class="le-input" type="email" name="email" required value="<%= formData.email || '' %>" />
+            </label>
+            <label>
+              <span>Genero</span>
+              <select class="le-input" name="genero">
+                <option value="nao_informado" <%= (formData.genero || '') === 'nao_informado' ? 'selected' : '' %>>Nao informado</option>
+                <option value="masculino" <%= (formData.genero || '') === 'masculino' ? 'selected' : '' %>>Masculino</option>
+                <option value="feminino" <%= (formData.genero || '') === 'feminino' ? 'selected' : '' %>>Feminino</option>
+              </select>
+            </label>
+            <label>
+              <span>Estado civil *</span>
+              <select class="le-input" name="estadoCivil" required>
+                <option value="">Selecione</option>
+                <% estadoCivilOptions.forEach(function(item){ %>
+                  <option value="<%= item %>" <%= (formData.estadoCivil || '') === item ? 'selected' : '' %>><%= item %></option>
+                <% }); %>
+              </select>
+            </label>
+          </div>
+
+          <h3>Endereco completo</h3>
+          <div class="le-form-grid le-form-grid-4">
+            <label>
+              <span>Rua *</span>
+              <input class="le-input" type="text" name="enderecoRua" required value="<%= formData.enderecoRua || '' %>" />
+            </label>
+            <label>
+              <span>Numero *</span>
+              <input class="le-input" type="text" name="enderecoNumero" required value="<%= formData.enderecoNumero || '' %>" />
+            </label>
+            <label>
+              <span>Bairro *</span>
+              <input class="le-input" type="text" name="enderecoBairro" required value="<%= formData.enderecoBairro || '' %>" />
+            </label>
+            <label>
+              <span>Cidade *</span>
+              <input class="le-input" type="text" name="enderecoCidade" required value="<%= formData.enderecoCidade || '' %>" />
+            </label>
+          </div>
+        </section>
+
+        <section class="le-form-section" data-step="1" data-step-label="Dom musical">
+          <div class="le-form-section-head">
+            <h2>Dom musical</h2>
+            <p>Ajuda no direcionamento de servicos e ministerios</p>
+          </div>
+          <div class="le-radio-row">
+            <label><input type="radio" name="domMusicalPossui" value="true" <%= String(formData.domMusicalPossui || '') === 'true' ? 'checked' : '' %> /> <span>Sim</span></label>
+            <label><input type="radio" name="domMusicalPossui" value="false" <%= String(formData.domMusicalPossui || '') !== 'true' ? 'checked' : '' %> /> <span>Nao</span></label>
+          </div>
+          <label id="domMusicalDescricaoWrap" class="le-conditional">
+            <span>Se sim, descreva</span>
+            <textarea class="le-input" name="domMusicalDescricao" rows="2"><%= formData.domMusicalDescricao || '' %></textarea>
+          </label>
+        </section>
+
+        <section class="le-form-section" data-step="2" data-step-label="Participacao na paroquia">
+          <div class="le-form-section-head">
+            <h2>Participacao na paroquia</h2>
+            <p>Selecione pastorais e movimentos da comunidade</p>
+          </div>
+          <div class="le-radio-row">
+            <label><input type="radio" name="participaParoquia" value="true" <%= String(formData.participaParoquia || '') === 'true' ? 'checked' : '' %> /> <span>Sim</span></label>
+            <label><input type="radio" name="participaParoquia" value="false" <%= String(formData.participaParoquia || '') !== 'true' ? 'checked' : '' %> /> <span>Nao</span></label>
+          </div>
+          <div id="pastoraisWrap" class="le-check-grid">
+            <% pastoralOptions.forEach(function(item){ %>
+              <label>
+                <input
+                  type="checkbox"
+                  name="pastorais"
+                  value="<%= item %>"
+                  <%= (Array.isArray(formData.pastorais) ? formData.pastorais : [formData.pastorais]).filter(Boolean).includes(item) ? 'checked' : '' %>
+                />
+                <span><%= item %></span>
+              </label>
+            <% }); %>
+          </div>
+          <label id="pastoralOutroWrap" class="le-conditional">
+            <span>Descricao do campo Outro</span>
+            <input class="le-input" type="text" name="pastoralOutroDescricao" value="<%= formData.pastoralOutroDescricao || '' %>" />
+          </label>
+        </section>
+
+        <section class="le-form-section" data-step="3" data-step-label="Historico no EJC COP">
+          <div class="le-form-section-head">
+            <h2>Historico no EJC COP</h2>
+            <p>Selecione o ultimo encontro em que voce serviu</p>
+          </div>
+          <label>
+            <span>Voce fez qual EJC COP? *</span>
+            <select class="le-input" name="ejcCopHistorico" required>
+              <option value="">Selecione</option>
+              <% ejcOptions.forEach(function(item){ %>
+                <option value="<%= item %>" <%= (formData.ejcCopHistorico || '') === item ? 'selected' : '' %>><%= item %></option>
+              <% }); %>
+            </select>
+          </label>
+        </section>
+
+        <section class="le-form-section" data-step="4" data-step-label="Participacao atual">
+          <div class="le-form-section-head">
+            <h2>Participacao atual</h2>
+            <p>Informacoes sobre servico no ano vigente</p>
+          </div>
+          <div class="le-radio-row">
+            <label><input type="radio" name="serveEjcAnoAtual" value="true" <%= String(formData.serveEjcAnoAtual || '') === 'true' ? 'checked' : '' %> /> <span>Sim</span></label>
+            <label><input type="radio" name="serveEjcAnoAtual" value="false" <%= String(formData.serveEjcAnoAtual || '') !== 'true' ? 'checked' : '' %> /> <span>Nao</span></label>
+          </div>
+          <div id="equipesWrap" class="le-check-grid">
+            <% equipeOptions.forEach(function(item){ %>
+              <label>
+                <input
+                  type="checkbox"
+                  name="equipeAtual"
+                  value="<%= item %>"
+                  <%= (Array.isArray(formData.equipeAtual) ? formData.equipeAtual : [formData.equipeAtual]).filter(Boolean).includes(item) ? 'checked' : '' %>
+                />
+                <span><%= item %></span>
+              </label>
+            <% }); %>
+          </div>
+        </section>
+
+        <section class="le-form-section" data-step="5" data-step-label="Participacao em outros EJC's">
+          <div class="le-form-section-head">
+            <h2>Participacao em outros EJC's</h2>
+            <p>Registre se voce tambem serve em outras comunidades</p>
+          </div>
+          <div class="le-radio-row">
+            <label><input type="radio" name="serveOutroEjcAnoAtual" value="true" <%= String(formData.serveOutroEjcAnoAtual || '') === 'true' ? 'checked' : '' %> /> <span>Sim</span></label>
+            <label><input type="radio" name="serveOutroEjcAnoAtual" value="false" <%= String(formData.serveOutroEjcAnoAtual || '') !== 'true' ? 'checked' : '' %> /> <span>Nao</span></label>
+          </div>
+          <label id="outrosEjcWrap" class="le-conditional">
+            <span>Se sim, informar quais EJC's</span>
+            <input class="le-input" type="text" name="outrosEjcsDescricao" value="<%= formData.outrosEjcsDescricao || '' %>" />
+          </label>
+
+          <h3>Disponibilidade para 2026</h3>
+          <label>
+            <span>Voce possui interesse e disponibilidade de servir em outro EJC em 2026? *</span>
+          </label>
+          <div class="le-radio-row">
+            <label>
+              <input type="radio" name="interesseOutroEjc2026" value="true" required <%= String(formData.interesseOutroEjc2026 || '') === 'true' ? 'checked' : '' %> />
+              <span>Sim</span>
+            </label>
+            <label>
+              <input type="radio" name="interesseOutroEjc2026" value="false" required <%= String(formData.interesseOutroEjc2026 || '') === 'false' ? 'checked' : '' %> />
+              <span>Nao</span>
+            </label>
+          </div>
+
+          <label id="indisponibilidadeOutroEjc2026Wrap" class="le-conditional">
+            <span>Se sim, tem alguma data que voce NAO possui disponibilidade?</span>
+            <textarea class="le-input" name="indisponibilidadeOutroEjc2026" rows="2"><%= formData.indisponibilidadeOutroEjc2026 || '' %></textarea>
+          </label>
+
+          <label>
+            <span>Deixe aqui um recado para os DIRIS (recado, sugestao, incentivo, indicacoes...)</span>
+            <textarea class="le-input" name="recadoDiris" rows="3"><%= formData.recadoDiris || '' %></textarea>
+          </label>
+        </section>
+
+        <div class="le-form-actions">
+          <button type="submit" class="le-btn le-btn-primary"><i class="fas fa-paper-plane"></i>Enviar inscricao</button>
+        </div>
+      </form>
+    <% } %>
+  </main>
+
+  <script defer src="/js/admin-liberacoes-externas.js?v=20260531-public-toggle-01"></script>
+</body>
+</html>

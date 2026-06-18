@@ -9,7 +9,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/admin-saas.css?v=20260509-encontro-tremor-fix-01">
+  <link rel="stylesheet" href="/css/admin-saas.css?v=20260531-admin-premium-01">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700&display=swap" rel="stylesheet">
@@ -171,6 +171,7 @@
           <button type="button" class="menu-link" data-menu-title="Encontros" data-tab-target="encontros-tab" data-required-permission="encontros.gerenciar"><i class="fas fa-calendar-days"></i><span class="menu-label">Encontros</span></button>
           <button type="button" class="menu-link" data-menu-title="Sub-Equipes" data-tab-target="subequipes-tab" data-required-permission="equipes.gerenciar"><i class="fas fa-diagram-project"></i><span class="menu-label">Sub-Equipes</span></button>
           <button type="button" class="menu-link" data-menu-title="Financeiro" data-tab-target="gastos-tab" data-required-permission="gastos.gerenciar"><i class="fas fa-wallet"></i><span class="menu-label">Financeiro</span></button>
+          <a href="/admin/liberacoes-externas" class="menu-link" data-menu-title="Liberacoes Externas"><i class="fas fa-globe"></i><span class="menu-label">Liberacoes Externas</span></a>
           <a href="#administradores" class="menu-link" data-menu-title="Administradores" data-tab-target="administradores-tab" data-required-permission="admins.gerenciar" data-no-transition="true"><i class="fas fa-user-shield"></i><span class="menu-label">Administradores</span></a>
           <form action="/admin/logout" method="POST" class="menu-logout-form">
             <input type="hidden" name="_csrf" value="<%= adminCsrfToken %>">
@@ -1413,6 +1414,9 @@
                           <button class="btn btn-edit btn-sm" onclick="editarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-id-card me-1"></i>Perfil
                           </button>
+                          <button class="btn btn-approve btn-sm" onclick="transferirParaEncontreiros('<%= cadastro._id %>', '<%= cadastro.nomeCompleto.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-right-left me-1"></i>Transferir
+                          </button>
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontrista', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
                           </button>
@@ -1480,6 +1484,9 @@
                         <td class="approval-actions-cell">
                           <button class="btn btn-edit btn-sm" onclick="editarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-id-card me-1"></i>Perfil
+                          </button>
+                          <button class="btn btn-approve btn-sm" onclick="transferirParaEncontristas('<%= cadastro._id %>', '<%= cadastro.nomeCompleto.replace(/'/g, "\\'") %>')">
+                            <i class="fas fa-right-left me-1"></i>Transferir
                           </button>
                           <button class="btn btn-approve btn-sm" onclick="aprovarCadastro('encontreiro', '<%= cadastro._id %>')">
                             <i class="fas fa-check me-1"></i>Aprovar
@@ -3935,6 +3942,10 @@
         actionSelectors.push(`button[onclick*="transferirParaEncontreiros('${safeId}'"]`);
       }
 
+      if (tipo === 'encontreiro') {
+        actionSelectors.push(`button[onclick*="transferirParaEncontristas('${safeId}'"]`);
+      }
+
       document.querySelectorAll(actionSelectors.join(',')).forEach((button) => {
         const row = button.closest('tr');
         if (row) rows.add(row);
@@ -5163,6 +5174,44 @@
         if (result.success) {
           queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
           await appAlert(`Transferencia realizada com sucesso para o encontro ${encontroDestino.nome}.`, 'success', 'Sucesso');
+          recarregarMantendoAbaAtual();
+          return;
+        }
+
+        await appAlert(result.error || 'Nao foi possivel transferir o cadastro.', 'danger', 'Erro');
+      } catch (error) {
+        await appAlert('Erro ao transferir cadastro: ' + (error.message || 'falha de conexao'), 'danger', 'Erro');
+      } finally {
+        setActionButtonBusy(triggerButton, false);
+        setRowsPendingState(rows, false);
+      }
+    }
+
+    async function transferirParaEncontristas(id, nome) {
+      const triggerButton = getActionTriggerButton();
+      const rows = getCadastroRowsById('encontreiro', id);
+      const confirmar = await appConfirm(`Transferir "${nome}" de Encontreiros para Encontristas?\n\nAo confirmar, o cadastro sai da lista de Encontreiros e volta para Encontristas.`, 'Confirmar transferencia');
+      if (!confirmar) return;
+
+      setActionButtonBusy(triggerButton, true, 'Transferindo...');
+      setRowsPendingState(rows, true);
+
+      try {
+        const response = await fetch(`/admin/transferir-encontreiro/${encodeURIComponent(id)}`, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json'
+          },
+        });
+
+        const contentType = response.headers.get('content-type') || '';
+        const result = contentType.includes('application/json')
+          ? await response.json()
+          : { success: false, error: await response.text() };
+
+        if (result.success) {
+          queueManagerFeedback({ tabId: getAbaAtivaPainelId() });
+          await appAlert('Transferencia realizada com sucesso.', 'success', 'Sucesso');
           recarregarMantendoAbaAtual();
           return;
         }

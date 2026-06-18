@@ -17,7 +17,7 @@
   <noscript><link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css"></noscript>
   <link rel="preload" href="/vendor/fontawesome/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
   <noscript><link rel="stylesheet" href="/vendor/fontawesome/css/all.min.css"></noscript>
-  <link rel="stylesheet" href="/css/style.css?v=20260417-buttons-premium-15" />
+  <link rel="stylesheet" href="/css/style.css?v=20260531-premium-rebuild-01" />
 </head>
 <body class="portal-page">
   <div class="portal-ambient" aria-hidden="true">
@@ -31,15 +31,27 @@
   <main role="main" class="portal-blocked-shell">
     <div class="portal-blocked-card">
       <div class="portal-blocked-icon">&#128274;</div>
-      <h2 class="portal-blocked-title">Inscri��es Encerradas</h2>
+      <h2 class="portal-blocked-title">Inscricoes Encerradas</h2>
       <p class="portal-blocked-text">
-        <%= locals.motivoBloqueio || 'O formul�rio de inscri��o est� temporariamente indispon�vel.' %>
+        <%= locals.motivoBloqueio || 'O formulario de inscricao esta temporariamente indisponivel.' %>
       </p>
       <a href="/" class="portal-blocked-link">&#8592; Voltar &agrave; p&aacute;gina inicial</a>
     </div>
   </main>
   <% } else { %>
-  <main id="root" role="main"></main>
+  <main id="root" role="main">
+    <div class="container py-5" id="portal-loading-fallback">
+      <div class="alert alert-info text-center" role="status" aria-live="polite">
+        <h2 class="h5 mb-2">Carregando formulario de inscricao...</h2>
+        <p class="mb-0">Se esta mensagem nao sumir em alguns segundos, verifique sua conexao e tente recarregar a pagina.</p>
+      </div>
+      <noscript>
+        <div class="alert alert-warning mt-3" role="alert">
+          Este formulario precisa de JavaScript habilitado para funcionar.
+        </div>
+      </noscript>
+    </div>
+  </main>
   <% } %>
 
   <footer class="portal-footer text-center py-3">
@@ -55,10 +67,40 @@
   <!-- React and dependencies -->
   <script defer src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script defer src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script defer src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-  <script defer type="text/babel" src="/js/app.js?v=20260520-ejc-select-fix-2"></script>
+  <script defer src="/dist/bundle.js?v=20260618-runtime-free-01"></script>
   <% } %>
   <script>
+    setTimeout(() => {
+      const root = document.getElementById('root');
+      if (!root) return;
+
+      const appMounted = root.dataset.mounted === 'true';
+      const dependenciesReady = Boolean(window.React && window.ReactDOM);
+      if (appMounted || dependenciesReady) return;
+
+      fetch('/api/frontend-diagnostics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'form_boot_failed',
+          page: 'inscricao',
+          reason: 'react_or_bundle_not_loaded',
+          href: window.location.href,
+          userAgent: navigator.userAgent,
+        }),
+      }).catch(() => {});
+
+      root.innerHTML = `
+        <div class="container py-5">
+          <div class="alert alert-warning" role="alert">
+            <h2 class="h5 mb-2">Nao foi possivel carregar o formulario.</h2>
+            <p class="mb-2">Falha ao carregar recursos da pagina. Tente atualizar ou abrir novamente em alguns instantes.</p>
+            <a href="/" class="btn btn-outline-primary btn-sm">Voltar para a pagina inicial</a>
+          </div>
+        </div>
+      `;
+    }, 4500);
+
     const deferHeavyWork = (callback) => {
       if ('requestIdleCallback' in window) {
         window.requestIdleCallback(callback, { timeout: 3000 });

@@ -2414,6 +2414,10 @@ function GenericForm() {
   );
 }
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<GenericForm />);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  rootElement.dataset.mounted = 'true';
+  const root = ReactDOM.createRoot(rootElement);
+  root.render(<GenericForm />);
+}
 

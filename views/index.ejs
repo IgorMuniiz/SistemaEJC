@@ -25,6 +25,11 @@
   <link rel="manifest" href="/manifest.json" />
 </head>
 <body class="home-public-page">
+  <noscript>
+    <div style="margin:12px;padding:12px;border:1px solid #f0ad4e;border-radius:8px;background:#fff7e6;color:#7a4b00;font-family:Manrope,Segoe UI,sans-serif;">
+      Este site usa JavaScript para recursos visuais. Se algo nao carregar, atualize a pagina ou tente novamente em instantes.
+    </div>
+  </noscript>
   <!-- Navigation Bar -->
   <nav class="navbar">
     <div class="nav-container">
@@ -162,6 +167,24 @@
   </footer>
 
   <script>
+    window.addEventListener('error', (event) => {
+      const target = event && event.target;
+      const isScriptError = target && target.tagName === 'SCRIPT';
+      if (!isScriptError) return;
+
+      fetch('/api/frontend-diagnostics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'home_script_load_error',
+          page: 'index',
+          reason: 'script_tag_error',
+          href: window.location.href,
+          userAgent: navigator.userAgent,
+        }),
+      }).catch(() => {});
+    }, true);
+
     document.querySelectorAll('.cta-card').forEach((card) => {
       card.addEventListener('pointermove', (event) => {
         const rect = card.getBoundingClientRect();
