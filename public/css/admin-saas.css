@@ -10976,6 +10976,41 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       gap: 10px;
       min-width: 300px;
     }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-admin-theme-slot {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      align-self: center;
+      min-width: 118px;
+      min-height: 56px;
+      padding: 10px 12px;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.24);
+      background: linear-gradient(160deg, rgba(15, 23, 42, 0.76), rgba(15, 23, 42, 0.52));
+      box-shadow: 0 12px 30px rgba(2, 6, 23, 0.24);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-admin-theme-slot.app-theme-toggle-dock--manager {
+      width: auto;
+      flex: 0 0 auto;
+      justify-content: space-between;
+      margin-top: 0;
+      align-self: center;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-theme-caption {
+      display: inline-flex;
+      align-items: center;
+      line-height: 1;
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: rgba(191, 219, 254, 0.88);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-admin-theme-slot .app-theme-toggle--inline {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stat-card {
       padding: 10px 11px;
       border: 1px solid rgba(148, 163, 184, 0.24);
@@ -12445,6 +12480,10 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stats {
         width: 100%;
         min-width: 0;
+      }
+      body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-admin-theme-slot {
+        width: fit-content;
+        align-self: flex-start;
       }
       body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -18009,6 +18048,16 @@ html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-rev
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-hero-note {
   color: #334155 !important;
   font-weight: 600;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-admin-theme-slot {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.99), rgba(243, 247, 255, 0.95)) !important;
+  border-color: rgba(96, 165, 250, 0.22) !important;
+  box-shadow: 0 14px 26px rgba(37, 99, 235, 0.08), 0 8px 16px rgba(15, 23, 42, 0.04) !important;
+}
+
+html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-theme-caption {
+  color: #1d4ed8 !important;
 }
 
 html[data-theme='light'] body.admin-panel.admin-encontro-page.admin-encontro-revamp .hero-strip-pill,
