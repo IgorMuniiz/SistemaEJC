@@ -1621,8 +1621,17 @@
       }
     }
 
+    function normalizeChecklistSearchText(value) {
+      return String(value || '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
+    }
+
     function filtrarSelectMulti(selectId, termo) {
-      const filtro = String(termo || '').trim().toLowerCase();
+      const filtro = normalizeChecklistSearchText(termo);
       const { list } = getChecklistElements(selectId);
       if (!list) return;
 
@@ -1631,7 +1640,7 @@
       }
 
       Array.from(list.querySelectorAll('.multi-check-item')).forEach((item) => {
-        const texto = String(item.getAttribute('data-text') || '');
+        const texto = normalizeChecklistSearchText(item.getAttribute('data-text') || '');
         item.style.display = (!filtro || texto.includes(filtro)) ? '' : 'none';
       });
     }
@@ -1658,9 +1667,10 @@
         const optionValue = escapeHtml(String(option.value || ''));
         const optionTextRaw = String(option.textContent || '').trim();
         const optionText = escapeHtml(optionTextRaw);
+        const optionTextSearch = escapeHtml(normalizeChecklistSearchText(optionTextRaw));
         const checked = option.selected ? 'checked' : '';
         return `
-          <label class="multi-check-item" data-value="${optionValue}" data-text="${escapeHtml(optionTextRaw.toLowerCase())}">
+          <label class="multi-check-item" data-value="${optionValue}" data-text="${optionTextSearch}">
             <input type="checkbox" value="${optionValue}" ${checked} onchange="toggleChecklistValue('${selectId}', this.value, this.checked)">
             <span>${optionText}</span>
           </label>

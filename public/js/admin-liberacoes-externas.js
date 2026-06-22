@@ -345,10 +345,17 @@
       modal.setAttribute('aria-hidden', 'false');
     };
 
+    const normalizeSearchText = (value) => String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
+
     const filterRows = (perfilTab, localSearch = '') => {
-      const term = String(localSearch || '').trim().toLowerCase();
+      const term = normalizeSearchText(localSearch);
       rows.forEach((row) => {
-        const text = row.innerText.toLowerCase();
+        const text = normalizeSearchText(row.innerText);
         const matchesPerfil = perfilTab === 'all' || row.dataset.perfil === perfilTab;
         const matchesSearch = !term || text.includes(term);
         row.style.display = matchesPerfil && matchesSearch ? '' : 'none';

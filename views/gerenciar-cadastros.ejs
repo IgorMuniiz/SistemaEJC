@@ -4429,9 +4429,11 @@
 
     function normalizeSearchText(value) {
       return String(value || '')
+        .trim()
         .toLowerCase()
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\s+/g, ' ');
     }
 
     function filtrarTabela(table, query) {
@@ -4444,8 +4446,8 @@
       if (rows.length === 0) return;
 
       const headers = Array.from(table.querySelectorAll('thead th')).map((th) => normalizeSearchText(th.textContent));
-      const idxNome = headers.findIndex((h) => h === 'nome');
-      const idxEjc = headers.findIndex((h) => h === 'ejc');
+      const idxNome = headers.findIndex((h) => h.includes('nome'));
+      const idxEjc = headers.findIndex((h) => h.includes('ejc'));
 
       let visiveis = 0;
 
@@ -4453,7 +4455,9 @@
         const cells = Array.from(row.querySelectorAll('td'));
         const nomeText = idxNome >= 0 && cells[idxNome] ? cells[idxNome].textContent : '';
         const ejcText = idxEjc >= 0 && cells[idxEjc] ? cells[idxEjc].textContent : '';
-        const texto = normalizeSearchText(`${nomeText} ${ejcText}`);
+        const baseText = `${nomeText} ${ejcText}`;
+        const fallbackText = row.textContent || '';
+        const texto = normalizeSearchText(baseText.trim() ? baseText : fallbackText);
         const corresponde = !query || texto.includes(query);
         row.style.display = corresponde ? '' : 'none';
         if (corresponde) visiveis += 1;

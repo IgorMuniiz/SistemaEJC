@@ -10853,28 +10853,32 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       margin-bottom: 16px;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card {
-      border: 1px solid rgba(148, 163, 184, 0.22);
-      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 18px;
       background:
-        linear-gradient(160deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.56)),
-        radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.12), transparent 58%);
-      padding: 12px;
+        radial-gradient(circle at 16% 18%, rgba(56, 189, 248, 0.12), transparent 34%),
+        radial-gradient(circle at 100% 0%, rgba(168, 85, 247, 0.08), transparent 28%),
+        linear-gradient(160deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.62));
+      padding: 13px 14px;
+      min-height: 72px;
       display: flex;
       align-items: center;
       gap: 10px;
       text-align: left;
       color: rgba(241, 245, 249, 0.95);
-      box-shadow: 0 12px 26px rgba(2, 6, 23, 0.2);
-      transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, filter .22s ease;
+      box-shadow: 0 14px 30px rgba(2, 6, 23, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease, filter .22s ease, background .22s ease;
       position: relative;
       overflow: hidden;
+      backdrop-filter: blur(14px);
+      isolation: isolate;
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card::after {
       content: '';
       position: absolute;
-      inset: -145% 56% auto -46%;
-      height: 285%;
-      background: linear-gradient(110deg, transparent 36%, rgba(255, 255, 255, 0.11) 50%, transparent 64%);
+      inset: -150% 54% auto -42%;
+      height: 300%;
+      background: linear-gradient(110deg, transparent 34%, rgba(255, 255, 255, 0.14) 50%, transparent 66%);
       transform: translateX(-120%) rotate(9deg);
       transition: transform .75s cubic-bezier(0.22, 1, 0.36, 1);
       pointer-events: none;
@@ -10883,16 +10887,17 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       content: '';
       position: absolute;
       inset: 0 auto 0 0;
-      width: 3px;
+      width: 4px;
       background: rgba(125, 211, 252, 0.85);
       opacity: .82;
-      transition: width .22s ease, opacity .22s ease;
+      transition: width .22s ease, opacity .22s ease, box-shadow .22s ease;
+      box-shadow: 0 0 18px rgba(125, 211, 252, 0.22);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:hover {
       transform: translateY(-2px);
       border-color: rgba(125, 211, 252, 0.58);
-      box-shadow: 0 16px 30px rgba(2, 6, 23, 0.3);
-      filter: brightness(1.03);
+      box-shadow: 0 18px 36px rgba(2, 6, 23, 0.32), 0 0 0 1px rgba(125, 211, 252, 0.08) inset;
+      filter: brightness(1.05);
       text-decoration: none;
       color: rgba(241, 245, 249, 0.95);
     }
@@ -10906,9 +10911,10 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card.active {
       border-color: rgba(96, 165, 250, 0.84);
       background:
-        linear-gradient(145deg, rgba(37, 99, 235, 0.42), rgba(15, 23, 42, 0.8)),
+        radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.2), transparent 32%),
+        linear-gradient(145deg, rgba(37, 99, 235, 0.48), rgba(15, 23, 42, 0.84)),
         radial-gradient(circle at 0% 0%, rgba(125, 211, 252, 0.22), transparent 58%);
-      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.42), 0 0 0 1px rgba(125, 211, 252, 0.22) inset;
+      box-shadow: 0 18px 36px rgba(15, 23, 42, 0.46), 0 0 0 1px rgba(125, 211, 252, 0.24) inset, 0 0 28px rgba(56, 189, 248, 0.12);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card.active::before {
       width: 6px;
@@ -10918,6 +10924,26 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(2)::before { background: rgba(59, 130, 246, 0.95); }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(3)::before { background: rgba(245, 158, 11, 0.95); }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(4)::before { background: rgba(168, 85, 247, 0.95); }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(1) .encontro-module-icon {
+      border-color: rgba(74, 222, 128, 0.4);
+      color: rgba(187, 247, 208, 0.98);
+      background: linear-gradient(145deg, rgba(21, 128, 61, 0.44), rgba(15, 23, 42, 0.6));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(2) .encontro-module-icon {
+      border-color: rgba(59, 130, 246, 0.42);
+      color: rgba(191, 219, 254, 0.98);
+      background: linear-gradient(145deg, rgba(30, 64, 175, 0.46), rgba(15, 23, 42, 0.6));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(3) .encontro-module-icon {
+      border-color: rgba(245, 158, 11, 0.42);
+      color: rgba(254, 240, 138, 0.98);
+      background: linear-gradient(145deg, rgba(180, 83, 9, 0.45), rgba(15, 23, 42, 0.6));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card:nth-child(4) .encontro-module-icon {
+      border-color: rgba(168, 85, 247, 0.42);
+      color: rgba(233, 213, 255, 0.98);
+      background: linear-gradient(145deg, rgba(107, 33, 168, 0.45), rgba(15, 23, 42, 0.6));
+    }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-icon {
       width: 38px;
       height: 38px;
@@ -10930,6 +10956,7 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       background: linear-gradient(150deg, rgba(30, 41, 59, 0.8), rgba(30, 41, 59, 0.46));
       color: rgba(219, 234, 254, 0.98);
       font-size: .92rem;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 10px 20px rgba(2, 6, 23, 0.2);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-copy {
       min-width: 0;
@@ -10958,17 +10985,44 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      background: rgba(15, 23, 42, 0.94);
-      border: 1px solid rgba(148, 163, 184, 0.34);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.96), rgba(15, 23, 42, 0.8));
+      border: 1px solid rgba(148, 163, 184, 0.28);
       color: rgba(248, 250, 252, 0.98);
       font-size: .82rem;
       font-weight: 800;
       line-height: 1;
       padding: 0 8px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 8px 18px rgba(2, 6, 23, 0.18);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card-link .encontro-module-count {
       font-size: .74rem;
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card-link {
+      border-style: dashed;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(125, 211, 252, 0.12), transparent 28%),
+        linear-gradient(160deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.5));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card-link .encontro-module-icon {
+      border-color: rgba(148, 163, 184, 0.28);
+      color: rgba(248, 250, 252, 0.96);
+      background: linear-gradient(145deg, rgba(71, 85, 105, 0.5), rgba(15, 23, 42, 0.58));
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .encontro-module-card-link:hover {
+      border-color: rgba(148, 163, 184, 0.4);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .sidebar .btn.btn-light {
+      border-radius: 14px;
+      border: 1px solid rgba(148, 163, 184, 0.22);
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.84), rgba(15, 23, 42, 0.58));
+      color: rgba(241, 245, 249, 0.96);
+      box-shadow: 0 12px 24px rgba(2, 6, 23, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp .sidebar .btn.btn-light:hover {
+      border-color: rgba(125, 211, 252, 0.34);
+      background: linear-gradient(180deg, rgba(30, 41, 59, 0.92), rgba(15, 23, 42, 0.76));
+      color: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 16px 28px rgba(2, 6, 23, 0.28);
     }
     body.admin-panel.admin-encontro-page.admin-encontro-revamp .workspace-stats {
       display: grid;
