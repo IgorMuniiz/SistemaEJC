@@ -16,6 +16,7 @@ const assert = require('node:assert/strict');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
+const pdfParse = require('pdf-parse');
 
 process.env.NODE_ENV = 'test';
 process.env.SKIP_MONGO_CONNECT = '1';
@@ -1623,6 +1624,132 @@ test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/crachas autenticado 
   assert.ok(response.body.length > 0, 'O PDF de crachás deve ser gerado');
 });
 
+test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/pdf ordena casal de tios com mulher antes do homem', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439361';
+  const equipeId = '507f1f77bcf86cd799439362';
+  const homemId = '507f1f77bcf86cd799439363';
+  const mulherId = '507f1f77bcf86cd799439364';
+  const grupoCasal = 'casal-grupo-ordem';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEncontroFind = Encontro.find;
+  const originalCadastroFind = Cadastro.find;
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste Ordem Casal' }),
+  });
+
+  Equipe.findOne = () => ({
+    lean: async () => ({ _id: equipeId, ejcId, nome: 'Equipe Externa' }),
+  });
+
+  VinculoEncontro.find = () => ({
+    sort: () => ({
+      lean: async () => ([
+        {
+          _id: '507f1f77bcf86cd799439365',
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId: homemId,
+          papel: 'membro',
+          descricaoPapel: '',
+          dataCriacao: new Date('2026-04-04T10:00:00Z'),
+        },
+        {
+          _id: '507f1f77bcf86cd799439366',
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId: mulherId,
+          papel: 'membro',
+          descricaoPapel: '',
+          dataCriacao: new Date('2026-04-04T10:01:00Z'),
+        },
+      ]),
+    }),
+  });
+
+  Encontro.find = () => ({
+    select: () => ({
+      lean: async () => ([
+        {
+          _id: homemId,
+          nomeCompleto: 'Homem Casal',
+          comoQuerSerChamado: 'Homem Casal',
+          tipo: 'tios',
+          genero: 'masculino',
+          tiosCategoria: 'casal',
+          tiosGrupoId: grupoCasal,
+          telefone: '88999990001',
+          email: 'homem@example.com',
+          bairro: 'Centro',
+          logradouro: 'Rua A',
+          ejc: 'EJC Teste Ordem Casal',
+        },
+        {
+          _id: mulherId,
+          nomeCompleto: 'Mulher Casal',
+          comoQuerSerChamado: 'Mulher Casal',
+          tipo: 'tios',
+          genero: 'feminino',
+          tiosCategoria: 'casal',
+          tiosGrupoId: grupoCasal,
+          telefone: '88999990002',
+          email: 'mulher@example.com',
+          bairro: 'Centro',
+          logradouro: 'Rua B',
+          ejc: 'EJC Teste Ordem Casal',
+        },
+      ]),
+    }),
+  });
+
+  Cadastro.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    Encontro.find = originalEncontroFind;
+    Cadastro.find = originalCadastroFind;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .get(`/admin/encontros/${ejcId}/export/equipe/${equipeId}/pdf`)
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /pdf/i);
+  assert.ok(response.body.length > 0, 'O PDF da equipe deve ser gerado');
+
+  const parsed = await pdfParse(response.body);
+  const normalizedText = String(parsed.text || '').replace(/\s+/g, ' ');
+  const womanIndex = normalizedText.indexOf('Mulher Casal');
+  const manIndex = normalizedText.indexOf('Homem Casal');
+
+  assert.ok(womanIndex >= 0, 'O nome da mulher deve constar no PDF');
+  assert.ok(manIndex >= 0, 'O nome do homem deve constar no PDF');
+  assert.ok(
+    womanIndex < manIndex,
+    'No casal de tios, a mulher deve ser renderizada antes do homem (esquerda -> direita)',
+  );
+});
+
 test('GET /export-encontro-excel volta a registrar equipes atuais quando o cadastro já é de tio', async (t) => {
   const originalEncontroFind = Encontro.find;
   const originalVinculoFind = VinculoEncontro.find;
@@ -1805,6 +1932,94 @@ test('POST /admin/editar-circulo/:id transfere pessoas selecionadas para outro c
   assert.ok(
     transferUpdates.some(({ update }) => String(update?.$set?.entidadeId || '') === destinoId),
     'O vínculo selecionado deveria ser atualizado para o círculo de destino',
+  );
+});
+
+test('POST /admin/editar-circulo/:id altera papel para moita com descrição', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439156';
+  const circuloId = '507f1f77bcf86cd799439157';
+  const pessoaId = '507f1f77bcf86cd799439158';
+  const vinculoId = '507f1f77bcf86cd799439159';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalCirculoFindOne = Circulo.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoFindOne = VinculoEncontro.findOne;
+  const originalVinculoUpdateOne = VinculoEncontro.updateOne;
+
+  const circuloDoc = {
+    _id: circuloId,
+    ejcId,
+    nome: 'Círculo Azul',
+    nomeNormalizado: 'ejc teste::círculo azul',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Circulo.findOne = (query) => {
+    if (String(query?._id) === circuloId && String(query?.ejcId) === ejcId) {
+      return circuloDoc;
+    }
+    if (query && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        _id: vinculoId,
+        ejcId,
+        entidadeTipo: 'circulo',
+        entidadeId: circuloId,
+        pessoaTipo: 'encontrista',
+        pessoaId,
+        papel: 'membro',
+        descricaoPapel: '',
+      },
+    ]),
+  });
+
+  VinculoEncontro.findOne = async () => null;
+
+  const roleUpdates = [];
+  VinculoEncontro.updateOne = async (filter, update) => {
+    roleUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Circulo.findOne = originalCirculoFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.findOne = originalVinculoFindOne;
+    VinculoEncontro.updateOne = originalVinculoUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-circulo/${circuloId}`))
+    .send({
+      ejcId,
+      nome: 'Círculo Azul',
+      acaoVinculo: 'papel',
+      gerenciarPessoaIds: [pessoaId],
+      papelVinculo: 'moita',
+      descricaoPapelVinculo: 'Música',
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(
+    roleUpdates.some(({ update }) => String(update?.$set?.papel || '') === 'moita' && String(update?.$set?.descricaoPapel || '') === 'Música'),
+    'O vínculo selecionado deveria ser atualizado para papel moita com descrição',
   );
 });
 
@@ -2121,5 +2336,106 @@ test('POST /admin/editar-equipe/:id remove pessoas selecionadas da equipe', asyn
   assert.ok(
     historyUpdates.some(({ update }) => Array.isArray(update?.$pull?.equipeServiu?.$in)),
     'O histórico do encontreiro deve remover a equipe excluída',
+  );
+});
+
+test('POST /admin/editar-equipe/:id altera papel para coordenador e sincroniza histórico', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439191';
+  const equipeId = '507f1f77bcf86cd799439192';
+  const pessoaId = '507f1f77bcf86cd799439193';
+  const vinculoId = '507f1f77bcf86cd799439194';
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalVinculoFindOne = VinculoEncontro.findOne;
+  const originalVinculoUpdateOne = VinculoEncontro.updateOne;
+  const originalEncontroUpdateOne = Encontro.updateOne;
+
+  const equipeDoc = {
+    _id: equipeId,
+    ejcId,
+    nome: 'Acolhida',
+    ejcNome: 'EJC Teste',
+    nomeReferencia: 'EJC Teste - Acolhida',
+    nomeNormalizado: 'ejc teste::acolhida',
+    save: async () => {},
+  };
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste' }),
+  });
+
+  Equipe.findOne = (query) => {
+    if (String(query?._id) === equipeId && String(query?.ejcId) === ejcId) {
+      return equipeDoc;
+    }
+    if (query && query.nomeNormalizado && query._id && query._id.$ne) {
+      return { lean: async () => null };
+    }
+    return null;
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([
+      {
+        _id: vinculoId,
+        ejcId,
+        entidadeTipo: 'equipe',
+        entidadeId: equipeId,
+        pessoaTipo: 'encontreiro',
+        pessoaId,
+        papel: 'membro',
+        descricaoPapel: '',
+      },
+    ]),
+  });
+
+  VinculoEncontro.findOne = async () => null;
+
+  const roleUpdates = [];
+  VinculoEncontro.updateOne = async (filter, update) => {
+    roleUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  const historyUpdates = [];
+  Encontro.updateOne = async (filter, update) => {
+    historyUpdates.push({ filter, update });
+    return { acknowledged: true, matchedCount: 1, modifiedCount: 1 };
+  };
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    VinculoEncontro.findOne = originalVinculoFindOne;
+    VinculoEncontro.updateOne = originalVinculoUpdateOne;
+    Encontro.updateOne = originalEncontroUpdateOne;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(agent.post(`/admin/editar-equipe/${equipeId}`))
+    .send({
+      ejcId,
+      nome: 'Acolhida',
+      acaoVinculo: 'papel',
+      gerenciarPessoaIds: [pessoaId],
+      papelVinculo: 'coordenador',
+    });
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.success, true);
+  assert.ok(
+    roleUpdates.some(({ update }) => String(update?.$set?.papel || '') === 'coordenador'),
+    'O vínculo selecionado deveria ser atualizado para coordenador',
+  );
+  assert.ok(
+    historyUpdates.some(({ update }) => update?.$addToSet?.equipeCoordenou === 'EJC Teste - Acolhida'),
+    'O histórico do encontreiro deve adicionar a equipe em equipeCoordenou',
   );
 });

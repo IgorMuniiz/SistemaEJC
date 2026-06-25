@@ -4420,6 +4420,101 @@
       salvarAbaAtiva();
     }
 
+    function getHighlightRequestFromUrl() {
+      const url = new URL(window.location.href);
+      const highlight = String(url.searchParams.get('highlight') || '').trim();
+      if (!highlight) return null;
+
+      const tabParam = String(url.searchParams.get('tab') || '').trim().toLowerCase();
+      const aliasesAbas = { admins: 'administradores' };
+      const aba = aliasesAbas[tabParam] || tabParam;
+
+      return {
+        id: highlight,
+        aba,
+      };
+    }
+
+    function resolveHighlightTargetRows(highlightId, tabHint) {
+      const resolveTipo = (tipo) => ({
+        tipo,
+        rows: getCadastroRowsById(tipo, highlightId),
+      });
+
+      const tabToTipo = {
+        encontristas: 'encontrista',
+        encontreiros: 'encontreiro',
+      };
+
+      const tentativas = [];
+      if (tabToTipo[tabHint]) {
+        tentativas.push(resolveTipo(tabToTipo[tabHint]));
+      }
+
+      tentativas.push(resolveTipo('encontrista'));
+      tentativas.push(resolveTipo('encontreiro'));
+
+      const alvo = tentativas.find((item) => Array.isArray(item.rows) && item.rows.length > 0);
+      if (!alvo) {
+        return { tipo: null, rows: [] };
+      }
+
+      return alvo;
+    }
+
+    function limparHighlightDaUrl() {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('highlight')) return;
+      url.searchParams.delete('highlight');
+      window.history.replaceState({}, '', url.toString());
+    }
+
+    function aplicarHighlightCadastroDaUrl() {
+      const request = getHighlightRequestFromUrl();
+      if (!request) return;
+
+      const fallbackAba = getPrimeiraAbaDisponivelId();
+      const alvo = resolveHighlightTargetRows(request.id, request.aba);
+      const tipoParaAba = {
+        encontrista: 'encontristas',
+        encontreiro: 'encontreiros',
+      };
+
+      const abaDestino = request.aba || tipoParaAba[alvo.tipo] || fallbackAba;
+      const botaoAba = document.getElementById(`${abaDestino}-tab`);
+      if (botaoAba && window.getComputedStyle(botaoAba).display !== 'none') {
+        abrirAba(botaoAba.id, { scroll: false });
+      }
+
+      if (!alvo.rows.length) {
+        appAlert('Não foi possível localizar o cadastro solicitado. Verifique se ele ainda existe ou se você possui acesso a esta aba.', 'warning', 'Cadastro não encontrado').catch((error) => {
+          console.error('[aplicarHighlightCadastroDaUrl] falha ao exibir alerta de highlight não encontrado:', error);
+        });
+        limparHighlightDaUrl();
+        return;
+      }
+
+      window.setTimeout(() => {
+        const paneAtivo = document.querySelector('.tab-pane.show.active');
+        const rowVisivelNaAba = alvo.rows.find((row) => paneAtivo && paneAtivo.contains(row) && row.offsetParent !== null);
+        const rowAlvo = rowVisivelNaAba || alvo.rows.find((row) => row.offsetParent !== null) || alvo.rows[0];
+
+        if (rowAlvo && typeof rowAlvo.scrollIntoView === 'function') {
+          rowAlvo.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        alvo.rows.forEach((row) => {
+          pulseManagerElement(row, 'is-success-flash');
+          row.classList.add('is-pending-action');
+          window.setTimeout(() => {
+            row.classList.remove('is-pending-action');
+          }, 1800);
+        });
+
+        limparHighlightDaUrl();
+      }, 120);
+    }
+
     function recarregarMantendoAbaAtual() {
       salvarAbaAtiva();
       const url = new URL(window.location.href);
@@ -4428,10 +4523,15 @@
     }
 
     function normalizeSearchText(value) {
-      return String(value || '')
+      const base = String(value || '')
         .trim()
-        .toLowerCase()
-        .normalize('NFD')
+        .toLowerCase();
+
+      const normalized = typeof base.normalize === 'function'
+        ? base.normalize('NFD')
+        : base;
+
+      return normalized
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, ' ');
     }
@@ -4546,6 +4646,7 @@
     aplicarPermissoesNoPainel();
     bindTabTriggers();
     restaurarAbaAtiva();
+    aplicarHighlightCadastroDaUrl();
     applyManagerFeedbackOnLoad();
     promoverSecaoAdministradores();
     setupAdminKeyboardShortcuts();

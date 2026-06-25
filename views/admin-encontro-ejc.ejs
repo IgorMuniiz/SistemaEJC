@@ -473,6 +473,40 @@
         .sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
     }
 
+    function getRoleOptionsByEntityType(entidadeTipo) {
+      if (entidadeTipo === 'circulo') {
+        return [
+          { value: 'membro', label: 'Membro' },
+          { value: 'moita', label: 'Moita' },
+        ];
+      }
+
+      return [
+        { value: 'membro', label: 'Membro' },
+        { value: 'coordenador', label: 'Coordenador' },
+      ];
+    }
+
+    function getRoleEditorConfig(entidadeTipo) {
+      if (entidadeTipo === 'circulo') {
+        return {
+          roleLabel: 'Novo papel no círculo',
+          roleHelp: 'Membro mantém vínculo comum. Moita exige descrição.',
+          roleOptions: getRoleOptionsByEntityType('circulo'),
+          roleValue: 'membro',
+          roleDescriptionPlaceholder: 'Ex.: Música, Liturgia, Organização',
+          roleDescriptionHelp: 'Preencha quando o papel for Moita.',
+        };
+      }
+
+      return {
+        roleLabel: 'Novo papel na equipe',
+        roleHelp: 'Defina se a pessoa selecionada é Membro ou Coordenador.',
+        roleOptions: getRoleOptionsByEntityType('equipe'),
+        roleValue: 'membro',
+      };
+    }
+
     function getLinkedPeopleSelection(entidadeTipo, entidadeId) {
       return vinculos
         .filter((vinculo) => vinculo.entidadeTipo === entidadeTipo && String(vinculo.entidadeId) === String(entidadeId))
@@ -1203,6 +1237,11 @@
                     <span class="app-entity-action-title"><i class="fas fa-right-left me-1"></i>Transferir</span>
                     <small>Mover os selecionados para outro círculo ou equipe.</small>
                   </label>
+                  <label class="app-entity-action-option" data-action="papel">
+                    <input type="radio" name="app-entity-link-action" value="papel">
+                    <span class="app-entity-action-title"><i class="fas fa-user-pen me-1"></i>Alterar papel</span>
+                    <small>Atualizar o papel das pessoas selecionadas neste vínculo.</small>
+                  </label>
                   <label class="app-entity-action-option app-entity-action-danger" data-action="excluir">
                     <input type="radio" name="app-entity-link-action" value="excluir">
                     <span class="app-entity-action-title"><i class="fas fa-user-minus me-1"></i>Excluir vínculo</span>
@@ -1213,6 +1252,14 @@
                 <div class="app-entity-destination-wrap" id="app-entity-destination-wrap">
                   <label for="app-entity-transfer-destination" class="form-label app-entity-destination-label">Destino da transferência</label>
                   <select id="app-entity-transfer-destination" class="form-select app-entity-destination"></select>
+                </div>
+
+                <div class="app-entity-destination-wrap" id="app-entity-role-wrap" style="display:none;">
+                  <label for="app-entity-role-select" id="app-entity-role-label" class="form-label app-entity-destination-label">Novo papel</label>
+                  <select id="app-entity-role-select" class="form-select app-entity-destination"></select>
+                  <small class="text-muted d-block mt-2" id="app-entity-role-help" style="display:none;"></small>
+                  <input id="app-entity-role-description" type="text" class="form-control app-input-field mt-2" maxlength="120" placeholder="Descrição do papel (quando aplicável)" style="display:none;">
+                  <small class="text-muted d-block mt-2" id="app-entity-role-description-help" style="display:none;"></small>
                 </div>
 
                 <div class="app-entity-transfer-list" id="app-entity-transfer-list"></div>
@@ -1246,6 +1293,13 @@
       linkedPeople = [],
       emptyTransferText = 'Nenhuma pessoa vinculada disponível para gerenciamento.',
       defaultAction = 'transferir',
+      roleLabel = 'Novo papel',
+      roleHelp = '',
+      roleOptions = [],
+      roleValue = '',
+      roleDescription = '',
+      roleDescriptionPlaceholder = 'Descrição do papel (quando aplicável)',
+      roleDescriptionHelp = '',
     }) {
       const { element, instance } = ensureEntityEditorPopup();
       const titleEl = element.querySelector('#app-entity-editor-title');
@@ -1258,6 +1312,12 @@
       const transferHelpEl = element.querySelector('#app-entity-transfer-help');
       const transferSelect = element.querySelector('#app-entity-transfer-destination');
       const destinationWrap = element.querySelector('#app-entity-destination-wrap');
+      const roleWrap = element.querySelector('#app-entity-role-wrap');
+      const roleLabelEl = element.querySelector('#app-entity-role-label');
+      const roleSelect = element.querySelector('#app-entity-role-select');
+      const roleHelpEl = element.querySelector('#app-entity-role-help');
+      const roleDescriptionInput = element.querySelector('#app-entity-role-description');
+      const roleDescriptionHelpEl = element.querySelector('#app-entity-role-description-help');
       const transferList = element.querySelector('#app-entity-transfer-list');
       const actionOptions = Array.from(element.querySelectorAll('.app-entity-action-option'));
       const actionInputs = Array.from(element.querySelectorAll('input[name="app-entity-link-action"]'));
@@ -1283,6 +1343,23 @@
         .join('');
       transferSelect.disabled = !Array.isArray(transferOptions) || !transferOptions.length;
 
+      roleLabelEl.textContent = String(roleLabel || 'Novo papel');
+      roleSelect.innerHTML = ['<option value="">Selecione o papel</option>']
+        .concat((roleOptions || []).map((item) => `<option value="${escapeHtml(item.value)}">${escapeHtml(item.label)}</option>`))
+        .join('');
+      roleSelect.value = String(roleValue || '');
+      roleSelect.disabled = !Array.isArray(roleOptions) || !roleOptions.length;
+
+      roleHelpEl.textContent = String(roleHelp || '');
+      roleHelpEl.style.display = roleHelp ? '' : 'none';
+
+      roleDescriptionInput.value = String(roleDescription || '');
+      roleDescriptionInput.placeholder = String(roleDescriptionPlaceholder || 'Descrição do papel (quando aplicável)');
+      roleDescriptionInput.style.display = 'none';
+
+      roleDescriptionHelpEl.textContent = String(roleDescriptionHelp || '');
+      roleDescriptionHelpEl.style.display = 'none';
+
       const hasLinkedPeople = Array.isArray(linkedPeople) && linkedPeople.length > 0;
       selectAllCheckbox.checked = false;
       selectAllWrap.style.display = hasLinkedPeople ? '' : 'none';
@@ -1291,6 +1368,13 @@
         input.checked = input.value === defaultAction;
         input.disabled = !hasLinkedPeople;
       });
+
+      const syncRoleDescriptionVisibility = () => {
+        const papelAtual = String(roleSelect.value || '').toLowerCase();
+        const isMoita = papelAtual === 'moita';
+        roleDescriptionInput.style.display = isMoita ? '' : 'none';
+        roleDescriptionHelpEl.style.display = isMoita && roleDescriptionHelp ? '' : 'none';
+      };
 
       if (hasLinkedPeople) {
         transferList.innerHTML = linkedPeople.map((person) => `
@@ -1331,6 +1415,8 @@
         const acaoAtual = getSelectedAction();
         const totalSelecionados = selectedIds().length;
         destinationWrap.style.display = acaoAtual === 'transferir' ? '' : 'none';
+        roleWrap.style.display = acaoAtual === 'papel' ? '' : 'none';
+        syncRoleDescriptionVisibility();
 
         actionOptions.forEach((option) => {
           option.classList.toggle('is-active', option.getAttribute('data-action') === acaoAtual);
@@ -1340,6 +1426,10 @@
           confirmBtn.classList.remove('btn-primary');
           confirmBtn.classList.add('btn-danger');
           confirmBtn.innerHTML = '<i class="fas fa-user-minus me-1"></i>Excluir selecionados';
+        } else if (acaoAtual === 'papel' && totalSelecionados > 0) {
+          confirmBtn.classList.remove('btn-danger');
+          confirmBtn.classList.add('btn-primary');
+          confirmBtn.innerHTML = '<i class="fas fa-user-pen me-1"></i>Alterar papel';
         } else if (acaoAtual === 'transferir' && totalSelecionados > 0) {
           confirmBtn.classList.remove('btn-danger');
           confirmBtn.classList.add('btn-primary');
@@ -1369,6 +1459,8 @@
           selectAllCheckbox.removeEventListener('change', onToggleAll);
           transferList.removeEventListener('change', onListChange);
           actionInputs.forEach((input) => input.removeEventListener('change', onActionChange));
+          roleSelect.removeEventListener('change', onRoleChange);
+          roleDescriptionInput.removeEventListener('input', onRoleChange);
           element.removeEventListener('shown.bs.modal', onShown);
           element.removeEventListener('hidden.bs.modal', onHidden);
           window.removeEventListener('resize', onViewportChange);
@@ -1398,6 +1490,8 @@
             value: String(inputEl.value || ''),
             acaoVinculo,
             transferirParaId: acaoVinculo === 'transferir' ? String(transferSelect.value || '') : '',
+            papelVinculo: acaoVinculo === 'papel' ? String(roleSelect.value || '') : '',
+            descricaoPapelVinculo: acaoVinculo === 'papel' ? String(roleDescriptionInput.value || '').trim() : '',
             gerenciarPessoaIds,
             transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
             removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
@@ -1430,6 +1524,7 @@
         };
 
         const onActionChange = () => updateActionState();
+        const onRoleChange = () => updateActionState();
 
         const onShown = () => {
           syncEntityEditorViewport(element);
@@ -1446,6 +1541,8 @@
         selectAllCheckbox.addEventListener('change', onToggleAll);
         transferList.addEventListener('change', onListChange);
         actionInputs.forEach((input) => input.addEventListener('change', onActionChange));
+        roleSelect.addEventListener('change', onRoleChange);
+        roleDescriptionInput.addEventListener('input', onRoleChange);
         element.addEventListener('shown.bs.modal', onShown, { once: true });
         element.addEventListener('hidden.bs.modal', onHidden, { once: true });
         window.addEventListener('resize', onViewportChange);
@@ -1622,10 +1719,15 @@
     }
 
     function normalizeChecklistSearchText(value) {
-      return String(value || '')
+      const base = String(value || '')
         .trim()
-        .toLowerCase()
-        .normalize('NFD')
+        .toLowerCase();
+
+      const normalized = typeof base.normalize === 'function'
+        ? base.normalize('NFD')
+        : base;
+
+      return normalized
         .replace(/[\u0300-\u036f]/g, '')
         .replace(/\s+/g, ' ');
     }
@@ -1667,10 +1769,9 @@
         const optionValue = escapeHtml(String(option.value || ''));
         const optionTextRaw = String(option.textContent || '').trim();
         const optionText = escapeHtml(optionTextRaw);
-        const optionTextSearch = escapeHtml(normalizeChecklistSearchText(optionTextRaw));
         const checked = option.selected ? 'checked' : '';
         return `
-          <label class="multi-check-item" data-value="${optionValue}" data-text="${optionTextSearch}">
+          <label class="multi-check-item" data-value="${optionValue}" data-text="${optionText}">
             <input type="checkbox" value="${optionValue}" ${checked} onchange="toggleChecklistValue('${selectId}', this.value, this.checked)">
             <span>${optionText}</span>
           </label>
@@ -2005,6 +2106,7 @@
         transferOptions: getTransferDestinations('circulo', circuloId),
         linkedPeople: getLinkedPeopleSelection('circulo', circuloId),
         emptyTransferText: 'Nenhum encontrista vinculado a este círculo no momento.',
+        ...getRoleEditorConfig('circulo'),
       });
 
       if (!editorData) return;
@@ -2012,6 +2114,8 @@
       const novoNome = String(editorData.value || '').trim();
       const acaoVinculo = String(editorData.acaoVinculo || 'transferir');
       const transferirParaId = String(editorData.transferirParaId || '').trim();
+      const papelVinculo = String(editorData.papelVinculo || '').trim().toLowerCase();
+      const descricaoPapelVinculo = String(editorData.descricaoPapelVinculo || '').trim();
       const gerenciarPessoaIds = Array.isArray(editorData.gerenciarPessoaIds)
         ? editorData.gerenciarPessoaIds.filter(Boolean)
         : [];
@@ -2019,6 +2123,12 @@
       if (!novoNome) return await appAlert('Informe o nome do círculo.', 'warning', 'Campo obrigatório');
       if (gerenciarPessoaIds.length && acaoVinculo === 'transferir' && !transferirParaId) {
         return await appAlert('Escolha o círculo de destino para concluir a transferência.', 'warning', 'Transferência incompleta');
+      }
+      if (gerenciarPessoaIds.length && acaoVinculo === 'papel' && !papelVinculo) {
+        return await appAlert('Selecione o novo papel para as pessoas marcadas.', 'warning', 'Papel obrigatório');
+      }
+      if (gerenciarPessoaIds.length && acaoVinculo === 'papel' && papelVinculo === 'moita' && !descricaoPapelVinculo) {
+        return await appAlert('Informe a descrição do papel quando selecionar Moita.', 'warning', 'Descrição obrigatória');
       }
       if (novoNome === String(nomeAtual || '').trim() && !gerenciarPessoaIds.length) return;
 
@@ -2031,6 +2141,8 @@
           acaoVinculo,
           gerenciarPessoaIds,
           transferirParaId,
+          papelVinculo,
+          descricaoPapelVinculo,
           transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
           removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
         }),
@@ -2071,6 +2183,7 @@
         transferOptions: getTransferDestinations('equipe', equipeId),
         linkedPeople: getLinkedPeopleSelection('equipe', equipeId),
         emptyTransferText: 'Nenhuma pessoa vinculada a esta equipe no momento.',
+        ...getRoleEditorConfig('equipe'),
       });
 
       if (!editorData) return;
@@ -2078,6 +2191,8 @@
       const novoNome = String(editorData.value || '').trim();
       const acaoVinculo = String(editorData.acaoVinculo || 'transferir');
       const transferirParaId = String(editorData.transferirParaId || '').trim();
+      const papelVinculo = String(editorData.papelVinculo || '').trim().toLowerCase();
+      const descricaoPapelVinculo = String(editorData.descricaoPapelVinculo || '').trim();
       const gerenciarPessoaIds = Array.isArray(editorData.gerenciarPessoaIds)
         ? editorData.gerenciarPessoaIds.filter(Boolean)
         : [];
@@ -2085,6 +2200,9 @@
       if (!novoNome) return await appAlert('Informe o nome da equipe.', 'warning', 'Campo obrigatório');
       if (gerenciarPessoaIds.length && acaoVinculo === 'transferir' && !transferirParaId) {
         return await appAlert('Escolha a equipe de destino para concluir a transferência.', 'warning', 'Transferência incompleta');
+      }
+      if (gerenciarPessoaIds.length && acaoVinculo === 'papel' && !papelVinculo) {
+        return await appAlert('Selecione o novo papel para as pessoas marcadas.', 'warning', 'Papel obrigatório');
       }
       if (novoNome === String(nomeAtual || '').trim() && !gerenciarPessoaIds.length) return;
 
@@ -2097,6 +2215,8 @@
           acaoVinculo,
           gerenciarPessoaIds,
           transferirParaId,
+          papelVinculo,
+          descricaoPapelVinculo,
           transferirPessoaIds: acaoVinculo === 'transferir' ? gerenciarPessoaIds : [],
           removerPessoaIds: acaoVinculo === 'excluir' ? gerenciarPessoaIds : [],
         }),

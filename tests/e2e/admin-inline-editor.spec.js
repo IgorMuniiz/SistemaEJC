@@ -32,6 +32,12 @@ async function loginAdmin(page) {
   return true;
 }
 
+function removeAccents(value) {
+  const base = String(value || '').trim().toLowerCase();
+  if (typeof base.normalize !== 'function') return base;
+  return base.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
 // ─── Testes públicos (sem login) ──────────────────────────────────────────────
 
 test.describe('Rotas admin sem autenticação', () => {
@@ -188,5 +194,43 @@ test.describe('Seção Auditoria', () => {
     await page.waitForTimeout(300);
     const afterClick = await auditCard.evaluate((el) => el.classList.contains('is-open'));
     expect(afterClick).toBe(!initiallyOpen);
+  });
+});
+
+test.describe('Busca acento-insensível', () => {
+  test.beforeEach(async ({ page }) => {
+    const loggedIn = await loginAdmin(page);
+    test.skip(!loggedIn, 'ADMIN_USERNAME/ADMIN_PASSWORD não configurados');
+    await page.goto('/admin/gerenciar-cadastros');
+  });
+
+  test('Busca de tios encontra nome com acento usando termo sem acento', async ({ page }) => {
+    const tiosTab = page.locator('#tios-tab').first();
+    test.skip(!(await tiosTab.isVisible()), 'Aba de tios não disponível para o usuário atual');
+
+    await tiosTab.click();
+    await expect(page.locator('#tios')).toHaveClass(/show/);
+
+    const accentedName = await page.evaluate(() => {
+      const rows = Array.from(document.querySelectorAll('#tios tr[data-searchable="true"]'));
+      for (const row of rows) {
+        const name = String(row.querySelector('td:nth-child(2)')?.textContent || '').trim();
+        if (/[À-ÖØ-öø-ÿ]/.test(name)) {
+          return name;
+        }
+      }
+      return '';
+    });
+
+    test.skip(!accentedName, 'Sem nomes com acento para validar neste ambiente');
+
+    const searchTerm = removeAccents(accentedName);
+    test.skip(!searchTerm || searchTerm === accentedName.toLowerCase(), 'Nome encontrado não exige normalização de acento');
+
+    const searchInput = page.locator('#search-tios');
+    await searchInput.fill(searchTerm);
+
+    const matchedRow = page.locator('#tios tr[data-searchable="true"]').filter({ hasText: accentedName }).first();
+    await expect(matchedRow).toBeVisible();
   });
 });

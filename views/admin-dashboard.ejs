@@ -929,6 +929,45 @@
 
     const MOTION_MODE_STORAGE_KEY = 'ejc-dashboard-motion-mode';
     const FILTERS_STORAGE_KEY = 'ejc-dashboard-filters';
+    const PROFILE_DRAWER_ID = 'perfil-pessoa-drawer';
+    const PROFILE_DRAWER_ACTIVE_CARD_CLASS = 'is-profile-active';
+    let profileDrawerActiveCardId = '';
+
+    function escapeHtml(value) {
+      return String(value == null ? '' : value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatDateToPtBr(value) {
+      if (!value) return '-';
+      const parsed = new Date(value);
+      if (Number.isNaN(parsed.getTime())) return '-';
+      return parsed.toLocaleDateString('pt-BR');
+    }
+
+    function calculateAgeFromDate(value) {
+      if (!value) return '-';
+      const birthDate = new Date(value);
+      if (Number.isNaN(birthDate.getTime())) return '-';
+
+      const today = new Date();
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const monthDelta = today.getMonth() - birthDate.getMonth();
+      if (monthDelta < 0 || (monthDelta === 0 && today.getDate() < birthDate.getDate())) {
+        age -= 1;
+      }
+
+      return Number.isFinite(age) && age >= 0 ? `${age} anos` : '-';
+    }
+
+    function sanitizePhoneNumber(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
     const PROFILE_SOURCE_DATA = <%- JSON.stringify((todosCadastros || []).map((item) => ({
       id: String(item._id || ''),
       nomeCompleto: item.nomeCompleto || '',
@@ -942,6 +981,11 @@
       cep: item.cep || '',
       logradouro: item.logradouro || '',
       bairro: item.bairro || '',
+      equipe: item.equipe || '',
+      paroquia: item.paroquia || '',
+      responsavel: item.responsavel || item.nomeResponsavel || '',
+      telefoneResponsavel: item.telefoneResponsavel || item.telefone_responsavel || '',
+      dataCadastro: item.dataCadastro || item.createdAt || '',
       observacoes: item.observacoes || '',
       foto: item.foto || '',
     }))).replace(/</g, '\\u003c') %>;
@@ -1439,7 +1483,7 @@
           detailsBtn.innerHTML = '<i class="fas fa-eye"></i>';
           detailsBtn.addEventListener('click', (event) => {
             event.stopPropagation();
-            card.classList.toggle('is-expanded');
+            abrirPerfilCard(card);
           });
           quick.appendChild(detailsBtn);
 
@@ -1611,8 +1655,14 @@
         if (!header) return;
         header.addEventListener('click', (event) => {
           if (event.target.closest('button, a, input, label')) return;
-          card.classList.toggle('is-expanded');
+          abrirPerfilCard(card);
         });
+      });
+
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape') {
+          closeProfileDrawer();
+        }
       });
     });
 
@@ -1651,38 +1701,154 @@
         : (card.querySelector('.pcard-avatar img')?.getAttribute('src') || '');
 
       return {
+        id: profileId,
+        tipo: safeText(card.dataset.tipo, ''),
         nome,
         tipoCadastro,
+        statusCadastro: card.dataset.status || 'pendente',
         foto,
+        telefoneRaw: source?.telefone || detailMap['telefone'] || '',
         fields: {
-          'Como quer ser chamado': source?.comoQuerSerChamado || detailMap['como quer ser chamado'] || '-',
-          'Genero': source?.genero || detailMap['gênero'] || detailMap['genero'] || '-',
           'Data de nascimento': dataNascimentoFormatada || detailMap['nascimento'] || '-',
+          'Idade': calculateAgeFromDate(source?.dataNascimento),
           'Telefone': source?.telefone || detailMap['telefone'] || '-',
           'Email': source?.email || detailMap['email'] || '-',
-          'EJC': source?.ejc || detailMap['ejc'] || ejcFromMeta || '-',
-          'CEP': source?.cep || detailMap['cep'] || '-',
-          'Endereco': source?.logradouro || detailMap['logradouro'] || detailMap['endereço'] || detailMap['endereco'] || '-',
-          'Bairro': source?.bairro || detailMap['bairro'] || '-',
+          'Responsavel': source?.responsavel || detailMap['responsável'] || detailMap['responsavel'] || '-',
+          'Telefone do responsavel': source?.telefoneResponsavel || detailMap['telefone do responsável'] || detailMap['telefone do responsavel'] || '-',
+          'Paroquia': source?.paroquia || detailMap['paroquia'] || '-',
+          'Equipe': source?.equipe || source?.ejc || detailMap['equipe'] || detailMap['ejc'] || ejcFromMeta || '-',
+          'Data do cadastro': formatDateToPtBr(source?.dataCadastro || card.dataset.date),
           'Observacoes': source?.observacoes || detailMap['observações'] || detailMap['observacoes'] || '-',
         },
       };
     }
 
-    function ensurePerfilDashboardModal() {
-      let el = document.getElementById('perfil-pessoa-modal');
-      if (el) {
-        const existingInstance = bootstrap.Modal.getInstance(el);
-        if (existingInstance) existingInstance.dispose();
-        return el;
+    function updateProfileActiveCardState(card) {
+      document.querySelectorAll(`.pcard.${PROFILE_DRAWER_ACTIVE_CARD_CLASS}`).forEach((item) => {
+        item.classList.remove(PROFILE_DRAWER_ACTIVE_CARD_CLASS);
+      });
+
+      if (!card) {
+        profileDrawerActiveCardId = '';
+        return;
       }
 
-      el = document.createElement('div');
-      el.id = 'perfil-pessoa-modal';
-      el.tabIndex = -1;
-      el.setAttribute('aria-hidden', 'true');
-      document.body.appendChild(el);
-      return el;
+      card.classList.add(PROFILE_DRAWER_ACTIVE_CARD_CLASS);
+      profileDrawerActiveCardId = String(card.dataset.id || '');
+    }
+
+    function ensureProfileDrawer() {
+      let drawer = document.getElementById(PROFILE_DRAWER_ID);
+      if (drawer) return drawer;
+
+      drawer = document.createElement('aside');
+      drawer.id = PROFILE_DRAWER_ID;
+      drawer.className = 'profile-drawer-shell';
+      drawer.setAttribute('aria-hidden', 'true');
+      drawer.innerHTML = `
+        <button type="button" class="profile-drawer-overlay" data-profile-close="overlay" aria-label="Fechar painel"></button>
+        <section class="profile-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="profile-drawer-name">
+          <header class="profile-drawer-header">
+            <button type="button" class="profile-drawer-close" data-profile-close="button" aria-label="Fechar painel">
+              <i class="fas fa-xmark"></i>
+            </button>
+            <div class="profile-drawer-avatar-wrap" id="profile-drawer-avatar-wrap"></div>
+            <h3 id="profile-drawer-name" class="profile-drawer-name">-</h3>
+            <p class="profile-drawer-role" id="profile-drawer-role">-</p>
+            <span class="profile-drawer-status" id="profile-drawer-status">-</span>
+          </header>
+          <div class="profile-drawer-body" id="profile-drawer-body"></div>
+          <footer class="profile-drawer-footer" id="profile-drawer-footer">
+            <button type="button" class="profile-drawer-btn btn-edit" data-profile-action="edit"><i class="fas fa-pen"></i>Editar</button>
+            <button type="button" class="profile-drawer-btn btn-delete" data-profile-action="delete"><i class="fas fa-trash"></i>Excluir</button>
+            <button type="button" class="profile-drawer-btn btn-print" data-profile-action="print"><i class="fas fa-print"></i>Imprimir</button>
+            <button type="button" class="profile-drawer-btn btn-whatsapp" data-profile-action="whatsapp"><i class="fab fa-whatsapp"></i>WhatsApp</button>
+          </footer>
+        </section>
+      `;
+
+      document.body.appendChild(drawer);
+
+      drawer.addEventListener('click', (event) => {
+        if (event.target.closest('[data-profile-close]')) {
+          closeProfileDrawer();
+          return;
+        }
+
+        const actionButton = event.target.closest('[data-profile-action]');
+        if (actionButton) {
+          handleProfileDrawerAction(actionButton.getAttribute('data-profile-action'));
+        }
+      });
+
+      return drawer;
+    }
+
+    function closeProfileDrawer() {
+      const drawer = document.getElementById(PROFILE_DRAWER_ID);
+      if (!drawer) return;
+
+      drawer.classList.remove('is-open');
+      drawer.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('profile-drawer-open');
+      updateProfileActiveCardState(null);
+    }
+
+    async function handleProfileDrawerAction(action) {
+      const drawer = document.getElementById(PROFILE_DRAWER_ID);
+      if (!drawer) return;
+
+      const cardId = profileDrawerActiveCardId;
+      if (!cardId) return;
+
+      const card = document.querySelector(`.pcard[data-id="${cardId}"]`);
+      const profile = card ? getProfileInfoFromCard(card) : null;
+      if (!profile) return;
+
+      if (action === 'edit') {
+        const tab = profile.tipo === 'encontreiro' ? 'encontreiros' : 'encontristas';
+        const targetUrl = `/admin/gerenciar-cadastros?tab=${encodeURIComponent(tab)}&highlight=${encodeURIComponent(profile.id)}`;
+        window.location.href = targetUrl;
+        return;
+      }
+
+      if (action === 'delete') {
+        const confirmado = await appConfirm(`Tem certeza que deseja excluir ${profile.nome}? Esta ação não pode ser desfeita.`, 'Confirmar exclusão');
+        if (!confirmado) return;
+
+        try {
+          const res = await fetch(`/admin/deletar-cadastro/${encodeURIComponent(profile.tipo)}/${encodeURIComponent(profile.id)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          const data = await res.json();
+          if (!res.ok || !data.success) {
+            throw new Error(data.error || 'Falha ao excluir cadastro.');
+          }
+          await appAlert('Cadastro excluído com sucesso.', 'success', 'Sucesso');
+          window.location.reload();
+        } catch (error) {
+          await appAlert(`Erro: ${error.message}`, 'danger', 'Erro');
+        }
+        return;
+      }
+
+      if (action === 'print') {
+        window.print();
+        return;
+      }
+
+      if (action === 'whatsapp') {
+        const telefone = sanitizePhoneNumber(profile.telefoneRaw || profile.fields['Telefone']);
+        if (!telefone) {
+          await appAlert('Este cadastro não possui telefone para WhatsApp.', 'warning', 'Telefone indisponível');
+          return;
+        }
+
+        const mensagem = `Olá, ${profile.nome}. Tudo bem?`;
+        const url = `https://wa.me/55${telefone}?text=${encodeURIComponent(mensagem)}`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
     }
 
     function abrirPerfilCard(trigger) {
@@ -1692,158 +1858,60 @@
       const profile = getProfileInfoFromCard(card);
       if (!profile) return;
 
-      const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark' || !document.documentElement.getAttribute('data-theme');
-      const colors = isDarkTheme ? {
-        overlay: 'rgba(2, 6, 23, 0.58)',
-        surface: 'linear-gradient(156deg, rgba(6, 12, 24, 0.96) 0%, rgba(16, 28, 50, 0.95) 100%)',
-        border: 'rgba(148, 163, 184, 0.30)',
-        borderSoft: 'rgba(148, 163, 184, 0.18)',
-        title: '#f8fafc',
-        subtitle: 'rgba(186, 230, 253, 0.85)',
-        text: '#e2e8f0',
-        muted: 'rgba(148, 163, 184, 0.88)',
-        chipBg: 'rgba(14, 116, 144, 0.28)',
-        chipText: '#bae6fd',
-        cardBg: 'rgba(15, 23, 42, 0.52)',
-        shadow: '0 26px 58px rgba(2, 6, 23, 0.62), 0 1px 0 rgba(255,255,255,0.08) inset',
-        closeClass: 'btn-close-white'
-      } : {
-        overlay: 'rgba(15, 23, 42, 0.38)',
-        surface: 'linear-gradient(150deg, #ffffff 0%, #f7fbff 55%, #eff6ff 100%)',
-        border: 'rgba(30, 64, 175, 0.16)',
-        borderSoft: 'rgba(30, 64, 175, 0.10)',
-        title: '#0f172a',
-        subtitle: 'rgba(30, 64, 175, 0.82)',
-        text: '#1e293b',
-        muted: 'rgba(71, 85, 105, 0.92)',
-        chipBg: 'rgba(14, 165, 233, 0.14)',
-        chipText: '#075985',
-        cardBg: 'rgba(248, 250, 252, 0.92)',
-        shadow: '0 24px 52px rgba(15, 23, 42, 0.18), 0 1px 0 rgba(255,255,255,0.9) inset',
-        closeClass: 'btn-close'
+      const statusMap = {
+        pendente: { label: 'Pendente', className: 'status-pendente' },
+        aprovado: { label: 'Confirmado', className: 'status-aprovado' },
+        reprovado: { label: 'Reprovado', className: 'status-reprovado' },
       };
+      const statusInfo = statusMap[profile.statusCadastro] || statusMap.pendente;
 
-      const renderField = (icon, label, value, extraClass = '') => `
-        <article class="perfil-pessoa-field ${extraClass}">
-          <span class="perfil-pessoa-field-icon" aria-hidden="true"><i class="fas ${icon}"></i></span>
-          <div class="perfil-pessoa-field-copy">
-            <span class="perfil-pessoa-field-label">${escapeHtml(label)}</span>
-            <span class="perfil-pessoa-field-value">${escapeHtml(value || '-')}</span>
-          </div>
-        </article>
-      `;
+      const drawer = ensureProfileDrawer();
+      const avatarWrap = drawer.querySelector('#profile-drawer-avatar-wrap');
+      const nameEl = drawer.querySelector('#profile-drawer-name');
+      const roleEl = drawer.querySelector('#profile-drawer-role');
+      const statusEl = drawer.querySelector('#profile-drawer-status');
+      const bodyEl = drawer.querySelector('#profile-drawer-body');
 
-      const fieldsHtml = [
-        renderField('fa-tag', 'Como quer ser chamado', profile.fields['Como quer ser chamado']),
-        renderField('fa-venus-mars', 'Genero', profile.fields['Genero']),
-        renderField('fa-calendar-day', 'Data de nascimento', profile.fields['Data de nascimento']),
-        renderField('fa-phone', 'Telefone', profile.fields['Telefone']),
-        renderField('fa-envelope', 'Email', profile.fields['Email'], 'is-email'),
-        renderField('fa-church', 'EJC', profile.fields['EJC']),
-        renderField('fa-location-dot', 'CEP', profile.fields['CEP']),
-        renderField('fa-road', 'Endereco', profile.fields['Endereco']),
-        renderField('fa-map-pin', 'Bairro', profile.fields['Bairro']),
-        renderField('fa-note-sticky', 'Observacoes', profile.fields['Observacoes']),
-      ].join('');
+      if (avatarWrap) {
+        avatarWrap.innerHTML = profile.foto
+          ? `<img src="${escapeHtml(profile.foto)}" alt="Foto de ${escapeHtml(profile.nome)}" class="profile-drawer-avatar">`
+          : '<span class="profile-drawer-avatar profile-drawer-avatar-fallback"><i class="fas fa-user"></i></span>';
+      }
 
-      const modalEl = ensurePerfilDashboardModal();
-      modalEl.className = `modal fade perfil-pessoa-modal ${isDarkTheme ? 'perfil-theme-dark' : 'perfil-theme-light'}`;
-      modalEl.style.setProperty('--perfil-overlay', colors.overlay);
-      modalEl.style.setProperty('--perfil-surface', colors.surface);
-      modalEl.style.setProperty('--perfil-border', colors.border);
-      modalEl.style.setProperty('--perfil-border-soft', colors.borderSoft);
-      modalEl.style.setProperty('--perfil-title', colors.title);
-      modalEl.style.setProperty('--perfil-subtitle', colors.subtitle);
-      modalEl.style.setProperty('--perfil-text', colors.text);
-      modalEl.style.setProperty('--perfil-muted', colors.muted);
-      modalEl.style.setProperty('--perfil-chip-bg', colors.chipBg);
-      modalEl.style.setProperty('--perfil-chip-text', colors.chipText);
-      modalEl.style.setProperty('--perfil-card-bg', colors.cardBg);
-      modalEl.style.setProperty('--perfil-shadow', colors.shadow);
+      if (nameEl) nameEl.textContent = profile.nome;
+      if (roleEl) roleEl.textContent = profile.tipoCadastro;
+      if (statusEl) {
+        statusEl.className = `profile-drawer-status ${statusInfo.className}`;
+        statusEl.innerHTML = `<i class="fas fa-circle"></i>${statusInfo.label}`;
+      }
 
-      modalEl.innerHTML = `
-        <div class="modal-dialog modal-dialog-scrollable perfil-pessoa-dialog">
-          <div class="modal-content perfil-pessoa-card">
-            <div class="modal-header perfil-pessoa-header">
-              <div class="perfil-pessoa-headline">
-                <span class="perfil-pessoa-badge">Ficha completa</span>
-                <h5 class="modal-title">Perfil do ${escapeHtml(profile.tipoCadastro)}</h5>
-              </div>
-              <button type="button" class="btn-close ${colors.closeClass}" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body perfil-pessoa-body">
-              <section class="perfil-pessoa-hero">
-                ${profile.foto
-                  ? `<img src="${escapeHtml(profile.foto)}" alt="Foto" class="perfil-pessoa-avatar">`
-                  : `<div class="perfil-pessoa-avatar perfil-pessoa-avatar-placeholder"><i class="fas fa-user-circle"></i></div>`}
-                <div class="perfil-pessoa-main-info">
-                  <h3>${escapeHtml(profile.nome)}</h3>
-                  <p>${escapeHtml(profile.tipoCadastro)}</p>
-                </div>
-              </section>
-              <div class="perfil-pessoa-grid">
-                ${fieldsHtml}
-              </div>
-            </div>
-            <div class="modal-footer perfil-pessoa-footer">
-              <button type="button" class="btn perfil-pessoa-close-btn" data-bs-dismiss="modal">Fechar</button>
-            </div>
-          </div>
-        </div>
-      `;
+      const fieldRows = [
+        ['fa-calendar-day', 'Data de nascimento', profile.fields['Data de nascimento']],
+        ['fa-hourglass-half', 'Idade', profile.fields['Idade']],
+        ['fa-phone', 'Telefone', profile.fields['Telefone']],
+        ['fa-envelope', 'E-mail', profile.fields['Email']],
+        ['fa-user-group', 'Responsável', profile.fields['Responsavel']],
+        ['fa-phone-volume', 'Telefone do responsável', profile.fields['Telefone do responsavel']],
+        ['fa-church', 'Paróquia', profile.fields['Paroquia']],
+        ['fa-users', 'Equipe', profile.fields['Equipe']],
+        ['fa-calendar-check', 'Data do cadastro', profile.fields['Data do cadastro']],
+        ['fa-note-sticky', 'Observações', profile.fields['Observacoes']],
+      ];
 
-      const liberarScrollPagina = () => {
-        document.body.classList.remove('modal-open');
-        document.body.style.overflowY = 'auto';
-        document.body.style.removeProperty('padding-right');
-      };
+      if (bodyEl) {
+        bodyEl.innerHTML = fieldRows.map(([icon, label, value]) => `
+          <article class="profile-drawer-item">
+            <span class="profile-drawer-item-icon"><i class="fas ${icon}"></i></span>
+            <span class="profile-drawer-item-label">${escapeHtml(label)}</span>
+            <span class="profile-drawer-item-value">${escapeHtml(value || '-')}</span>
+          </article>
+        `).join('');
+      }
 
-      let perfilScrollRafId = null;
-      const syncModalWithPageScroll = () => {
-        modalEl.style.top = `${Math.max(0, window.scrollY)}px`;
-      };
-
-      const requestModalScrollSync = () => {
-        if (perfilScrollRafId !== null) return;
-        perfilScrollRafId = window.requestAnimationFrame(() => {
-          perfilScrollRafId = null;
-          syncModalWithPageScroll();
-        });
-      };
-
-      const enableFollowScroll = () => {
-        modalEl.classList.add('perfil-pessoa-follow-scroll');
-        syncModalWithPageScroll();
-        window.addEventListener('scroll', requestModalScrollSync, { passive: true });
-        window.addEventListener('resize', requestModalScrollSync);
-      };
-
-      const restaurarScrollPadrao = () => {
-        if (perfilScrollRafId !== null) {
-          window.cancelAnimationFrame(perfilScrollRafId);
-          perfilScrollRafId = null;
-        }
-        window.removeEventListener('scroll', requestModalScrollSync);
-        window.removeEventListener('resize', requestModalScrollSync);
-        modalEl.classList.remove('perfil-pessoa-follow-scroll');
-        modalEl.style.removeProperty('top');
-        document.body.style.removeProperty('overflow-y');
-      };
-
-      modalEl.addEventListener('shown.bs.modal', () => {
-        liberarScrollPagina();
-        if (getPerfilModalScrollMode() === 'follow') {
-          enableFollowScroll();
-        }
-      }, { once: true });
-      modalEl.addEventListener('hidden.bs.modal', restaurarScrollPadrao, { once: true });
-
-      const modal = new bootstrap.Modal(modalEl, {
-        backdrop: true,
-        keyboard: true,
-        focus: true,
-      });
-      modal.show();
+      updateProfileActiveCardState(card);
+      drawer.classList.add('is-open');
+      drawer.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('profile-drawer-open');
     }
 
     function toggleCardDetails(trigger) {

@@ -818,7 +818,7 @@ const extractEntityLinkSelection = (body = {}) => {
           : [];
 
   const acaoBruta = normalizeTextInput(body.acaoVinculo || body.linkAction || body.gerenciarAcao).toLowerCase();
-  const acao = ['excluir', 'remover', 'transferir'].includes(acaoBruta)
+  const acao = ['excluir', 'remover', 'transferir', 'papel', 'alterar_papel', 'editar_papel'].includes(acaoBruta)
     ? (acaoBruta === 'remover' ? 'excluir' : acaoBruta)
     : (Array.isArray(body.removerPessoaIds) ? 'excluir' : 'transferir');
 
@@ -832,6 +832,147 @@ const extractEntityLinkSelection = (body = {}) => {
     )],
   };
 };
+
+function resolveEntityRolePayload(entidadeTipo, papelRaw, descricaoRaw = '') {
+  const tipo = normalizeTextInput(entidadeTipo).toLowerCase();
+  const papelRecebido = normalizeTextInput(papelRaw).toLowerCase();
+  const descricaoPapel = normalizeTextInput(descricaoRaw);
+
+  if (tipo === 'equipe') {
+    if (['coordenador', 'coordenou'].includes(papelRecebido)) {
+      return { papel: 'coordenador', descricaoPapel: '' };
+    }
+    if (['membro', 'serviu'].includes(papelRecebido)) {
+      return { papel: 'membro', descricaoPapel: '' };
+    }
+    return { error: 'Papel inválido para equipe. Use Membro ou Coordenador.' };
+  }
+
+  if (tipo === 'circulo') {
+    if (!['membro', 'moita'].includes(papelRecebido)) {
+      return { error: 'Papel inválido para círculo. Use Membro ou Moita.' };
+    }
+    if (papelRecebido === 'moita' && !descricaoPapel) {
+      return { error: 'Informe qual papel a pessoa fará como moita.' };
+    }
+    return {
+      papel: papelRecebido,
+      descricaoPapel: papelRecebido === 'moita' ? descricaoPapel : '',
+    };
+  }
+
+  return { error: 'Tipo de entidade inválido para alterar papel.' };
+}
+
+async function syncEquipeHistoryAfterRoleChange({ pessoaId, papelAnterior, papelNovo, equipeNome }) {
+  const nome = normalizeTextInput(equipeNome);
+  if (!pessoaId || !nome) return;
+
+  const papelAnteriorNormalizado = normalizeTextInput(papelAnterior).toLowerCase();
+  const papelNovoNormalizado = normalizeTextInput(papelNovo).toLowerCase();
+  const fieldAnterior = ['coordenador', 'coordenou'].includes(papelAnteriorNormalizado) ? 'equipeCoordenou' : 'equipeServiu';
+  const fieldNovo = ['coordenador', 'coordenou'].includes(papelNovoNormalizado) ? 'equipeCoordenou' : 'equipeServiu';
+
+  if (fieldAnterior === fieldNovo) {
+    await Encontro.updateOne(
+      { _id: pessoaId },
+      { $addToSet: { [fieldNovo]: nome } }
+    );
+    return;
+  }
+
+  await Encontro.updateOne(
+    { _id: pessoaId },
+    {
+      $pull: {
+        equipeServiu: nome,
+        equipeCoordenou: nome,
+      },
+      $addToSet: {
+        [fieldNovo]: nome,
+      },
+    }
+  );
+}
+
+async function updateSelectedEntityLinksRole({
+  ejcId,
+  entidadeTipo,
+  origemId,
+  pessoaIds,
+  papel,
+  descricaoPapel = '',
+  entidadeNome = '',
+}) {
+  const { validIds, ignoredIds } = normalizeSelectedEntityPersonIds(pessoaIds);
+
+  if (!validIds.length) {
+    return { alterados: 0, mesclados: 0, ignorados: 0 };
+  }
+
+  const vinculosSelecionados = await VinculoEncontro.find({
+    ejcId,
+    entidadeTipo,
+    entidadeId: origemId,
+    pessoaId: { $in: validIds },
+  }).lean();
+
+  if (!Array.isArray(vinculosSelecionados) || !vinculosSelecionados.length) {
+    return { alterados: 0, mesclados: 0, ignorados: validIds.length + ignoredIds.length };
+  }
+
+  let alterados = 0;
+  let mesclados = 0;
+
+  for (const vinculo of vinculosSelecionados) {
+    const descricaoAlvo = papel === 'moita' ? descricaoPapel : '';
+    const papelAtual = normalizeTextInput(vinculo.papel).toLowerCase();
+    const descricaoAtual = normalizeTextInput(vinculo.descricaoPapel);
+    const papelJaAplicado = papelAtual === papel && descricaoAtual === descricaoAlvo;
+
+    if (papelJaAplicado) {
+      continue;
+    }
+
+    const duplicado = await VinculoEncontro.findOne({
+      _id: { $ne: vinculo._id },
+      ejcId,
+      entidadeTipo,
+      entidadeId: origemId,
+      pessoaTipo: vinculo.pessoaTipo,
+      pessoaId: vinculo.pessoaId,
+      papel,
+      descricaoPapel: descricaoAlvo,
+    });
+
+    if (duplicado) {
+      await VinculoEncontro.deleteOne({ _id: vinculo._id });
+      mesclados += 1;
+      continue;
+    }
+
+    await VinculoEncontro.updateOne(
+      { _id: vinculo._id },
+      { $set: { papel, descricaoPapel: descricaoAlvo } }
+    );
+    alterados += 1;
+
+    if (entidadeTipo === 'equipe' && vinculo.pessoaTipo === 'encontreiro') {
+      await syncEquipeHistoryAfterRoleChange({
+        pessoaId: vinculo.pessoaId,
+        papelAnterior: vinculo.papel,
+        papelNovo: papel,
+        equipeNome: entidadeNome,
+      });
+    }
+  }
+
+  return {
+    alterados,
+    mesclados,
+    ignorados: Math.max(validIds.length + ignoredIds.length - vinculosSelecionados.length, 0),
+  };
+}
 
 async function syncEquipeHistoryAfterTransfer({ pessoaId, papel, origemNomes = [], destinoNome }) {
   const papelNormalizado = normalizeTextInput(papel).toLowerCase();
@@ -2857,6 +2998,7 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
     focoY: Number.isFinite(Number(pessoa?.fotoAjuste?.focoY)) ? Number(pessoa.fotoAjuste.focoY) : 28,
   },
   tipo: pessoa?.tipo || 'jovens',
+  genero: pessoa?.genero || '',
   tiosCategoria: pessoa?.tiosCategoria || '',
   tiosGrupoId: pessoa?.tiosGrupoId || '',
   pessoaTipo: vinculo?.pessoaTipo || 'encontrista',
@@ -3259,16 +3401,38 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   const cardHeight = 126;
   const titleBlockHeight = 80;
   const topStart = PDF_PAGE_MARGIN_PT + titleBlockHeight;
+  const equipeTopStart = PDF_PAGE_MARGIN_PT + 30;
   const bottomLimit = doc.page.height - PDF_PAGE_MARGIN_PT;
   const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
   const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
 
   const _ejcPart = _mainTitle ? _mainTitle.replace(/^(Equipes|Circulos|Circulos|Quadrante)\s*-\s*/i, '') : '';
   let _currentGroupTitle = '';
+  let _currentGroupType = '';
+  const getCurrentTopStart = () => (_currentGroupType === 'equipe' ? equipeTopStart : topStart);
   const drawPageTitle = () => {
     const title = _currentGroupTitle && _ejcPart
       ? `${_currentGroupTitle} - ${_ejcPart}`
       : (_mainTitle || 'Estruturas do EJC');
+
+    if (_currentGroupType === 'equipe') {
+      // Para PDF de equipes, remove a tarja azul e aplica um cabeçalho limpo.
+      const headerY = PDF_PAGE_MARGIN_PT - 2;
+      doc.save();
+      doc.font('Helvetica-Bold').fontSize(15).fillColor('#1f2f46').text(title, left, headerY, {
+        width: contentWidth,
+        align: 'center',
+        lineBreak: false,
+        ellipsis: true,
+      });
+      doc.strokeColor('#c6d0dc').lineWidth(0.8)
+        .moveTo(left, headerY + 26)
+        .lineTo(left + contentWidth, headerY + 26)
+        .stroke();
+      doc.restore();
+      return;
+    }
+
     drawPdfTitle(doc, title);
   };
 
@@ -3311,6 +3475,17 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   };
 
   const sortEquipeEntriesByOrder = (items, getOrder) => {
+    const getCoupleGenderSideOrder = (entry) => {
+      const genero = normalizeTextInput(entry && entry.genero)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase();
+
+      if (['f', 'fem', 'feminino', 'mulher', 'feminina'].includes(genero)) return 0;
+      if (['m', 'masc', 'masculino', 'homem', 'masculina'].includes(genero)) return 1;
+      return 2;
+    };
+
     const ordered = (items || [])
       .map((entry, idx) => ({ entry, idx }))
       .sort((a, b) => {
@@ -3338,6 +3513,11 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       usedGroups.add(grupoId);
       const casalEntries = ordered
         .filter((item) => normalizeTextInput(item.entry && item.entry.tiosGrupoId) === grupoId)
+        .sort((a, b) => {
+          const sideDiff = getCoupleGenderSideOrder(a.entry) - getCoupleGenderSideOrder(b.entry);
+          if (sideDiff !== 0) return sideDiff;
+          return a.idx - b.idx;
+        })
         .map((item) => item.entry);
 
       grouped.push(...casalEntries);
@@ -3402,7 +3582,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       if (y + rowHeight > bottomLimit) {
         doc.addPage();
         drawPageTitle();
-        y = topStart;
+        y = getCurrentTopStart();
         col = 0;
       }
 
@@ -3539,6 +3719,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   for (let index = 0; index < groups.length; index += 1) {
     const group = groups[index];
     _currentGroupTitle = group.nome || '';
+    _currentGroupType = normalizeTextInput(group.tipo).toLowerCase();
     if (index > 0) {
       doc.addPage();
     }
@@ -3569,7 +3750,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const moitaX = circleRightX - mmToPt(2);
       const topBlockHeight = titleHeight;
       const memberCardHeight = personCardHeight;
-      const headerY = topStart;
+      const headerY = getCurrentTopStart();
       const topCardY = headerY + ((titleHeight - monitorCardHeight) / 2);
       const circleTopCardOptions = {
         fontBoost: 0.2,
@@ -3678,13 +3859,13 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     );
 
     const equipePageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
-    const equipeStartY = topStart;
-    const equipeCardWidth = mmToPt(85);
-    const equipeCardHeight = mmToPt(34);
-    const equipePhotoWidth = mmToPt(26);
-    const equipePhotoHeight = mmToPt(30);
-    const equipeColGap = mmToPt(10);
-    const equipeRowGap = mmToPt(5);
+    const equipeStartY = getCurrentTopStart();
+    const equipeCardWidth = mmToPt(87);
+    const equipeCardHeight = mmToPt(35);
+    const equipePhotoWidth = mmToPt(27);
+    const equipePhotoHeight = mmToPt(31);
+    const equipeColGap = mmToPt(8);
+    const equipeRowGap = mmToPt(4);
     const equipeCardOptions = {
       photoWidth: equipePhotoWidth,
       photoHeight: equipePhotoHeight,
@@ -3811,14 +3992,32 @@ const renderCardGridPdf = async (res, entries, options) => {
     photoValign: 'top',
   };
 
-  const isTiosCasal = (entry) => {
+  const getTiosCoupleKey = (entry) => {
     const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
-    return Boolean(entry && entry.tipo === 'tios' && entry.tiosCategoria === 'casal' && grupoId);
+    if (grupoId) {
+      return `grp:${grupoId}`;
+    }
+
+    const ownId = normalizeTextInput(entry && entry._id);
+    const parceiroId = normalizeTextInput(entry && entry.tioParceiroId);
+    if (!ownId || !parceiroId) {
+      return '';
+    }
+
+    const pair = [ownId, parceiroId].sort();
+    return `pair:${pair[0]}:${pair[1]}`;
+  };
+
+  const isTiosCasal = (entry) => {
+    const tipo = normalizeTextInput(entry && entry.tipo).toLowerCase();
+    const categoria = normalizeTextInput(entry && entry.tiosCategoria).toLowerCase();
+    const isTio = tipo === 'tios' || (!tipo && categoria === 'casal');
+    return Boolean(isTio && getTiosCoupleKey(entry));
   };
 
   const isCasalPair = (leftEntry, rightEntry) => {
     if (!isTiosCasal(leftEntry) || !isTiosCasal(rightEntry)) return false;
-    return normalizeTextInput(leftEntry.tiosGrupoId) === normalizeTextInput(rightEntry.tiosGrupoId);
+    return getTiosCoupleKey(leftEntry) === getTiosCoupleKey(rightEntry);
   };
 
   drawPdfTitle(doc, options.title);
@@ -4003,16 +4202,28 @@ app.get('/export-encontro', async (req, res) => {
       res.setHeader('Content-Disposition','attachment; filename="encontro.csv"');
       return res.send(csv);
     } else if (format === 'pdf') {
-      // Reorganizar entries para que casais de tios fiquem lado a lado
+      // Reorganizar entries para que casais de tios fiquem lado a lado.
+      const getTiosCoupleKey = (entry) => {
+        if (normalizeTextInput(entry && entry.tipo).toLowerCase() !== 'tios') return '';
+        const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
+        if (grupoId) return `grp:${grupoId}`;
+        const ownId = normalizeTextInput(entry && entry._id);
+        const parceiroId = normalizeTextInput(entry && entry.tioParceiroId);
+        if (!ownId || !parceiroId) return '';
+        const pair = [ownId, parceiroId].sort();
+        return `pair:${pair[0]}:${pair[1]}`;
+      };
+
       const tiosGroups = {};
       const individuais = [];
       
       entries.forEach(entry => {
-        if (entry.tipo === 'tios' && entry.tiosGrupoId) {
-          if (!tiosGroups[entry.tiosGrupoId]) {
-            tiosGroups[entry.tiosGrupoId] = [];
+        const casalKey = getTiosCoupleKey(entry);
+        if (casalKey) {
+          if (!tiosGroups[casalKey]) {
+            tiosGroups[casalKey] = [];
           }
-          tiosGroups[entry.tiosGrupoId].push(entry);
+          tiosGroups[casalKey].push(entry);
         } else {
           individuais.push(entry);
         }
@@ -4051,15 +4262,26 @@ app.get('/export-tios', async (req, res) => {
     }
 
     // Manter casais agrupados lado a lado no PDF.
+    const getTiosCoupleKey = (entry) => {
+      const grupoId = normalizeTextInput(entry && entry.tiosGrupoId);
+      if (grupoId) return `grp:${grupoId}`;
+      const ownId = normalizeTextInput(entry && entry._id);
+      const parceiroId = normalizeTextInput(entry && entry.tioParceiroId);
+      if (!ownId || !parceiroId) return '';
+      const pair = [ownId, parceiroId].sort();
+      return `pair:${pair[0]}:${pair[1]}`;
+    };
+
     const tiosGroups = {};
     const individuais = [];
 
     entries.forEach((entry) => {
-      if (entry.tiosGrupoId) {
-        if (!tiosGroups[entry.tiosGrupoId]) {
-          tiosGroups[entry.tiosGrupoId] = [];
+      const casalKey = getTiosCoupleKey(entry);
+      if (casalKey) {
+        if (!tiosGroups[casalKey]) {
+          tiosGroups[casalKey] = [];
         }
-        tiosGroups[entry.tiosGrupoId].push(entry);
+        tiosGroups[casalKey].push(entry);
       } else {
         individuais.push(entry);
       }
@@ -8338,6 +8560,8 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
     const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const papelVinculoRaw = normalizeTextInput(req.body.papelVinculo || req.body.papel);
+    const descricaoPapelVinculoRaw = normalizeTextInput(req.body.descricaoPapelVinculo || req.body.descricaoPapel);
     const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
@@ -8351,12 +8575,17 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
         return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
       }
 
-      if (acaoVinculo !== 'excluir') {
+      if (acaoVinculo === 'transferir') {
         if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
           return res.status(400).json({ success: false, error: 'Selecione um circulo de destino valido para a transferencia.' });
         }
         if (String(transferirParaId) === String(id)) {
           return res.status(400).json({ success: false, error: 'Escolha um circulo diferente do atual para concluir a transferencia.' });
+        }
+      } else if (acaoVinculo === 'papel' || acaoVinculo === 'alterar_papel' || acaoVinculo === 'editar_papel') {
+        const rolePayload = resolveEntityRolePayload('circulo', papelVinculoRaw, descricaoPapelVinculoRaw);
+        if (rolePayload.error) {
+          return res.status(400).json({ success: false, error: rolePayload.error });
         }
       }
     }
@@ -8390,6 +8619,20 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
           origemId: id,
           pessoaIds: gerenciarPessoaIds,
         });
+      } else if (acaoVinculo === 'papel' || acaoVinculo === 'alterar_papel' || acaoVinculo === 'editar_papel') {
+        const rolePayload = resolveEntityRolePayload('circulo', papelVinculoRaw, descricaoPapelVinculoRaw);
+        if (rolePayload.error) {
+          return res.status(400).json({ success: false, error: rolePayload.error });
+        }
+
+        transferSummary = await updateSelectedEntityLinksRole({
+          ejcId,
+          entidadeTipo: 'circulo',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+          papel: rolePayload.papel,
+          descricaoPapel: rolePayload.descricaoPapel,
+        });
       } else {
         const circuloDestino = await Circulo.findOne({ _id: transferirParaId, ejcId });
         if (!circuloDestino) {
@@ -8408,8 +8651,11 @@ app.post('/admin/editar-circulo/:id', checkAdminAuth, requireAdminPermission('en
 
     const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
     const totalRemovidas = transferSummary.removidos || 0;
+    const totalPapeisAlterados = (transferSummary.alterados || 0) + (transferSummary.mesclados || 0);
     const message = totalRemovidas
       ? `Circulo atualizado com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalPapeisAlterados
+        ? `Circulo atualizado com sucesso. ${totalPapeisAlterados} papel(is) alterado(s).`
       : totalMovidas
         ? `Circulo atualizado com sucesso. ${totalMovidas} pessoa(s) movida(s).`
         : 'Circulo atualizado com sucesso.';
@@ -8457,6 +8703,8 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
     const ejcId = normalizeTextInput(req.body.ejcId);
     const nome = normalizeTextInput(req.body.nome);
     const { acao: acaoVinculo, destinoId: transferirParaId, pessoaIds: gerenciarPessoaIds } = extractEntityLinkSelection(req.body);
+    const papelVinculoRaw = normalizeTextInput(req.body.papelVinculo || req.body.papel);
+    const descricaoPapelVinculoRaw = normalizeTextInput(req.body.descricaoPapelVinculo || req.body.descricaoPapel);
     const solicitouGerenciamento = Boolean(gerenciarPessoaIds.length || transferirParaId);
 
     if (!mongoose.Types.ObjectId.isValid(id) || !mongoose.Types.ObjectId.isValid(ejcId)) {
@@ -8470,12 +8718,17 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
         return res.status(400).json({ success: false, error: 'Selecione ao menos uma pessoa vinculada para continuar.' });
       }
 
-      if (acaoVinculo !== 'excluir') {
+      if (acaoVinculo === 'transferir') {
         if (!transferirParaId || !mongoose.Types.ObjectId.isValid(transferirParaId)) {
           return res.status(400).json({ success: false, error: 'Selecione uma equipe de destino valida para a transferencia.' });
         }
         if (String(transferirParaId) === String(id)) {
           return res.status(400).json({ success: false, error: 'Escolha uma equipe diferente da atual para concluir a transferencia.' });
+        }
+      } else if (acaoVinculo === 'papel' || acaoVinculo === 'alterar_papel' || acaoVinculo === 'editar_papel') {
+        const rolePayload = resolveEntityRolePayload('equipe', papelVinculoRaw, descricaoPapelVinculoRaw);
+        if (rolePayload.error) {
+          return res.status(400).json({ success: false, error: rolePayload.error });
         }
       }
     }
@@ -8535,6 +8788,21 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
           pessoaIds: gerenciarPessoaIds,
           origemNomes: [nomeReferenciaAntigo, nomeReferenciaNovo],
         });
+      } else if (acaoVinculo === 'papel' || acaoVinculo === 'alterar_papel' || acaoVinculo === 'editar_papel') {
+        const rolePayload = resolveEntityRolePayload('equipe', papelVinculoRaw, descricaoPapelVinculoRaw);
+        if (rolePayload.error) {
+          return res.status(400).json({ success: false, error: rolePayload.error });
+        }
+
+        transferSummary = await updateSelectedEntityLinksRole({
+          ejcId,
+          entidadeTipo: 'equipe',
+          origemId: id,
+          pessoaIds: gerenciarPessoaIds,
+          papel: rolePayload.papel,
+          descricaoPapel: rolePayload.descricaoPapel,
+          entidadeNome: nomeReferenciaNovo,
+        });
       } else {
         let equipeDestino = await Equipe.findOne({ _id: transferirParaId, ejcId });
         if (!equipeDestino) {
@@ -8564,8 +8832,11 @@ app.post('/admin/editar-equipe/:id', checkAdminAuth, requireAdminPermission('equ
 
     const totalMovidas = (transferSummary.transferidos || 0) + (transferSummary.mesclados || 0);
     const totalRemovidas = transferSummary.removidos || 0;
+    const totalPapeisAlterados = (transferSummary.alterados || 0) + (transferSummary.mesclados || 0);
     const message = totalRemovidas
       ? `Equipe atualizada com sucesso. ${totalRemovidas} pessoa(s) removida(s).`
+      : totalPapeisAlterados
+        ? `Equipe atualizada com sucesso. ${totalPapeisAlterados} papel(is) alterado(s).`
       : totalMovidas
         ? `Equipe atualizada com sucesso. ${totalMovidas} pessoa(s) movida(s).`
         : 'Equipe atualizada com sucesso.';
@@ -8878,7 +9149,7 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
@@ -9252,7 +9523,7 @@ app.get('/admin/encontros/:ejcId/export/crachas/pdf', checkAdminAuth, requireAdm
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto fotoAjuste')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto fotoAjuste')
           .lean()
         : [],
     ]);
@@ -9335,7 +9606,7 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);

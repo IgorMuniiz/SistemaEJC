@@ -12,6 +12,7 @@
   const THEME_COLOR_META_ID = 'app-theme-color-meta';
   let pendingAjaxContext = null;
   let telemetryStore = [];
+  let themeAnimationTimer = null;
 
   function injectStyles() {
     if (document.getElementById(STYLE_ID)) return;
@@ -286,16 +287,33 @@
       }
 
       html.app-theme-animating body,
-      html.app-theme-animating body *,
-      html.app-theme-animating body::before,
-      html.app-theme-animating body::after {
+      html.app-theme-animating .app-theme-toggle,
+      html.app-theme-animating .app-theme-toggle *,
+      html.app-theme-animating body.admin-panel :is(
+        .sidebar,
+        .surface,
+        .admin-form-card,
+        .admin-config-card,
+        .table-wrap,
+        .tab-workspace-head,
+        .workspace-hero,
+        .manager-module-card,
+        .workspace-stat-card,
+        .hero-strip-pill,
+        .event-scope-switch,
+        .menu-btn,
+        .nav-tabs .nav-link,
+        .form-control,
+        .form-select,
+        textarea,
+        input,
+        button,
+        .btn
+      ) {
         transition:
-          background-color 220ms ease,
-          background-image 260ms ease,
-          color 220ms ease,
-          border-color 220ms ease,
-          box-shadow 240ms ease,
-          filter 220ms ease !important;
+          background-color 80ms linear,
+          color 70ms linear,
+          border-color 80ms linear !important;
       }
 
       .app-theme-toggle {
@@ -443,15 +461,15 @@
       }
 
       .app-theme-toggle.is-switching {
-        animation: appThemePulse 320ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: appThemePulse 160ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .app-theme-toggle.is-switching .app-theme-toggle__switch {
-        animation: appThemeSwitchGlow 420ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: appThemeSwitchGlow 180ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .app-theme-toggle.is-switching .app-theme-toggle__thumb {
-        animation: appThemeThumbSpin 420ms cubic-bezier(0.22, 1, 0.36, 1);
+        animation: appThemeThumbSpin 180ms cubic-bezier(0.22, 1, 0.36, 1);
       }
 
       .app-theme-toggle__label {
@@ -1382,7 +1400,9 @@
         .app-theme-toggle,
         .app-theme-toggle__thumb,
         html.app-theme-animating body,
-        html.app-theme-animating body * { 
+        html.app-theme-animating .app-theme-toggle,
+        html.app-theme-animating .app-theme-toggle *,
+        html.app-theme-animating body.admin-panel :is(.sidebar, .surface, .admin-form-card, .admin-config-card, .table-wrap, .tab-workspace-head, .workspace-hero, .manager-module-card, .workspace-stat-card, .hero-strip-pill, .event-scope-switch, .menu-btn, .nav-tabs .nav-link, .form-control, .form-select, textarea, input, button, .btn) {
           transition: none !important;
           animation: none !important;
         }
@@ -1493,12 +1513,16 @@
 
   function animateThemeTransition() {
     const root = document.documentElement;
-    root.classList.remove('app-theme-animating');
-    void root.offsetWidth;
     root.classList.add('app-theme-animating');
-    window.setTimeout(() => {
+
+    if (themeAnimationTimer) {
+      window.clearTimeout(themeAnimationTimer);
+    }
+
+    themeAnimationTimer = window.setTimeout(() => {
       root.classList.remove('app-theme-animating');
-    }, 320);
+      themeAnimationTimer = null;
+    }, 90);
   }
 
   function applyTheme(theme, options = {}) {
@@ -1609,8 +1633,9 @@
         const currentTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
         const nextTheme = currentTheme === 'dark' ? 'light' : 'dark';
         toggle.classList.remove('is-switching');
-        void toggle.offsetWidth;
-        toggle.classList.add('is-switching');
+        window.requestAnimationFrame(() => {
+          toggle.classList.add('is-switching');
+        });
         animateThemeTransition();
         applyTheme(nextTheme);
         trackUx('theme_change', { theme: nextTheme });
