@@ -3419,12 +3419,6 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       // Para PDF de equipes, remove a tarja azul e aplica um cabeçalho limpo.
       const headerY = PDF_PAGE_MARGIN_PT - 2;
       doc.save();
-      doc.font('Helvetica-Bold').fontSize(15).fillColor('#1f2f46').text(title, left, headerY, {
-        width: contentWidth,
-        align: 'center',
-        lineBreak: false,
-        ellipsis: true,
-      });
       doc.strokeColor('#c6d0dc').lineWidth(0.8)
         .moveTo(left, headerY + 26)
         .lineTo(left + contentWidth, headerY + 26)
@@ -4555,11 +4549,17 @@ app.get('/export-encontro-relatorio', async (req, res) => {
 app.get('/export-encontro-excel', async (req, res) => {
   try {
     const Excel = require('exceljs');
-    const rawEntries = await Encontro.find().sort({ dataCadastro: 1 }).lean();
+    const scope = normalizeTextInput(req.query.scope).toLowerCase() === 'tios' ? 'tios' : 'encontreiros';
+    const onlyTios = scope === 'tios';
+    const entriesFilter = onlyTios ? { tipo: 'tios' } : {};
+    const rawEntries = await Encontro.find(entriesFilter).sort({ dataCadastro: 1 }).lean();
     const rawAllEncontreiros = rawEntries;
     const tiosEquipeMap = await buildTiosEquipeReportMap([...rawEntries, ...rawAllEncontreiros]);
     const entries = rawEntries.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
     const allEncontreiros = rawAllEncontreiros.map((entry) => buildEncontroReportEntry(entry, tiosEquipeMap));
+    const entidadeLabelPlural = onlyTios ? 'tios' : 'encontreiros';
+    const allSheetName = onlyTios ? 'Todos Tios' : 'Todos Encontreiros';
+    const outputFilePrefix = onlyTios ? 'EJC_Relatorio_Tios_' : 'EJC_Relatorio_Equipes_';
 
     const equipes = [
       'Sala',
@@ -4664,7 +4664,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     dashboard.mergeCells('B3:F3');
     const subtitleCell = dashboard.getCell('B3');
     const dataHora = new Date();
-    subtitleCell.value = `${dataHora.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | ${dataHora.toLocaleTimeString('pt-BR')} | Total: ${entries.length} encontreiros`;
+    subtitleCell.value = `${dataHora.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} | ${dataHora.toLocaleTimeString('pt-BR')} | Total: ${entries.length} ${entidadeLabelPlural}`;
     subtitleCell.font = { italic: true, size: 10, color: { argb: 'FF5A6C7D' }, name: 'Segoe UI' };
     subtitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
     subtitleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFAFBFF' } };
@@ -5271,7 +5271,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     });
 
     // Aba consolidada com todos os encontreiros do sistema
-    const allSheet = workbook.addWorksheet('Todos Encontreiros', {
+    const allSheet = workbook.addWorksheet(allSheetName, {
       views: [{ state: 'frozen', ySplit: 1 }],
     });
     allSheet.properties.tabColor = { argb: 'FF0B2545' };
@@ -5404,7 +5404,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     const totalAprovadosAll = allEncontreiros.filter((e) => resolveApprovalStatus(e) === 'aprovado').length;
     const totalPendentesAll = allEncontreiros.filter((e) => resolveApprovalStatus(e) === 'pendente').length;
     const summaryAll = allSheet.addRow({
-      nome: `Total geral de encontreiros: ${allEncontreiros.length}`,
+      nome: `Total geral de ${entidadeLabelPlural}: ${allEncontreiros.length}`,
       email: `Aprovados: ${totalAprovadosAll} | Pendentes: ${totalPendentesAll}`,
       dataCadastro: `Gerado em: ${new Date().toLocaleDateString('pt-BR')} as ${new Date().toLocaleTimeString('pt-BR')}`,
     });
@@ -5422,7 +5422,7 @@ app.get('/export-encontro-excel', async (req, res) => {
     });
 
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename="EJC_Relatorio_Equipes_' + new Date().toISOString().split('T')[0] + '.xlsx"');
+    res.setHeader('Content-Disposition', 'attachment; filename="' + outputFilePrefix + new Date().toISOString().split('T')[0] + '.xlsx"');
 
     await workbook.xlsx.write(res);
     res.end();

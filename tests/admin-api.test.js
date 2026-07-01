@@ -1539,6 +1539,168 @@ test('GET /export-encontro-excel preserva histórico de equipes de tios no relat
   assert.equal(comprasRow.getCell(15).value || '', 'Secretaria');
 });
 
+test('GET /export-encontro-excel?scope=tios exporta somente cadastros de tios', async (t) => {
+  const originalEncontroFind = Encontro.find;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEquipeFind = Equipe.find;
+
+  const registros = [
+    {
+      _id: '507f1f77bcf86cd799439130',
+      nomeCompleto: 'Tia Ana',
+      comoQuerSerChamado: 'Ana',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: true,
+      temVeiculoProprio: false,
+      equipeServiu: ['Sala'],
+      equipeCoordenou: [],
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-05T10:00:00Z'),
+    },
+    {
+      _id: '507f1f77bcf86cd799439131',
+      nomeCompleto: 'Joao Jovem',
+      comoQuerSerChamado: 'Joao',
+      tipo: 'jovens',
+      temVeiculoProprio: true,
+      equipeServiu: ['Compras'],
+      equipeCoordenou: [],
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-06T10:00:00Z'),
+    },
+  ];
+
+  Encontro.find = (query = {}) => {
+    const filtrados = query && query.tipo
+      ? registros.filter((item) => item.tipo === query.tipo)
+      : registros;
+
+    return {
+      sort: () => ({
+        lean: async () => filtrados,
+      }),
+    };
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([]),
+  });
+
+  Equipe.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Encontro.find = originalEncontroFind;
+    VinculoEncontro.find = originalVinculoFind;
+    Equipe.find = originalEquipeFind;
+  });
+
+  const response = await request(app)
+    .get('/export-encontro-excel?scope=tios')
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /spreadsheetml|octet-stream/i);
+  assert.match(String(response.headers['content-disposition'] || ''), /EJC_Relatorio_Tios_/i);
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(response.body);
+
+  const allSheet = workbook.getWorksheet('Todos Tios');
+  assert.ok(allSheet, 'A aba consolidada de tios deve existir');
+
+  const rowTia = findRowByName(allSheet, 'Tia Ana');
+  const rowJovem = findRowByName(allSheet, 'Joao Jovem');
+  assert.ok(rowTia, 'Tio deve constar na aba consolidada de tios');
+  assert.equal(rowJovem, null, 'Cadastro de jovem nao deve constar no escopo tios');
+});
+
+test('GET /export-encontro-excel?scope=invalid usa fluxo padrao de encontreiros', async (t) => {
+  const originalEncontroFind = Encontro.find;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEquipeFind = Equipe.find;
+
+  const registros = [
+    {
+      _id: '507f1f77bcf86cd799439132',
+      nomeCompleto: 'Tia Rosa',
+      comoQuerSerChamado: 'Rosa',
+      tipo: 'tios',
+      tiosCategoria: 'solo',
+      origemTios: true,
+      temVeiculoProprio: false,
+      equipeServiu: ['Sala'],
+      equipeCoordenou: [],
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-07T10:00:00Z'),
+    },
+    {
+      _id: '507f1f77bcf86cd799439133',
+      nomeCompleto: 'Carlos Jovem',
+      comoQuerSerChamado: 'Carlos',
+      tipo: 'jovens',
+      temVeiculoProprio: true,
+      equipeServiu: ['Compras'],
+      equipeCoordenou: [],
+      statusAprovacao: 'aprovado',
+      dataCadastro: new Date('2026-04-08T10:00:00Z'),
+    },
+  ];
+
+  Encontro.find = (query = {}) => {
+    const filtrados = query && query.tipo
+      ? registros.filter((item) => item.tipo === query.tipo)
+      : registros;
+
+    return {
+      sort: () => ({
+        lean: async () => filtrados,
+      }),
+    };
+  };
+
+  VinculoEncontro.find = () => ({
+    lean: async () => ([]),
+  });
+
+  Equipe.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Encontro.find = originalEncontroFind;
+    VinculoEncontro.find = originalVinculoFind;
+    Equipe.find = originalEquipeFind;
+  });
+
+  const response = await request(app)
+    .get('/export-encontro-excel?scope=invalid')
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /spreadsheetml|octet-stream/i);
+  assert.match(String(response.headers['content-disposition'] || ''), /EJC_Relatorio_Equipes_/i);
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(response.body);
+
+  const allSheet = workbook.getWorksheet('Todos Encontreiros');
+  assert.ok(allSheet, 'A aba consolidada padrao deve existir');
+
+  const rowTia = findRowByName(allSheet, 'Tia Rosa');
+  const rowJovem = findRowByName(allSheet, 'Carlos Jovem');
+  assert.ok(rowTia, 'Tio deve constar no escopo padrao');
+  assert.ok(rowJovem, 'Jovem deve constar no escopo padrao');
+});
+
 test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/crachas autenticado retorna PDF bonito de crachás', async (t) => {
   mockAdminAuthFlow(t);
 

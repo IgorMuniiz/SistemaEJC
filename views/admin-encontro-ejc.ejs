@@ -1165,12 +1165,6 @@
         document.documentElement?.clientHeight || 0,
         320,
       );
-      const viewportTop = Math.max(
-        window.scrollY || 0,
-        window.pageYOffset || 0,
-        document.documentElement?.scrollTop || 0,
-        0,
-      );
       const gap = Number.parseFloat(getComputedStyle(element).getPropertyValue('--entity-modal-gap')) || 12;
       const card = element.querySelector('.app-entity-editor-card');
       const cardHeight = card
@@ -1179,7 +1173,7 @@
       const centeredOffset = Math.max(gap, Math.round((viewportHeight - cardHeight) / 2));
 
       document.documentElement.style.setProperty('--entity-modal-vh', `${viewportHeight}px`);
-      document.documentElement.style.setProperty('--entity-modal-page-top', `${viewportTop + centeredOffset}px`);
+      document.documentElement.style.setProperty('--entity-modal-page-top', `${centeredOffset}px`);
     }
 
     function ensureEntityEditorPopup() {
@@ -1464,7 +1458,6 @@
           element.removeEventListener('shown.bs.modal', onShown);
           element.removeEventListener('hidden.bs.modal', onHidden);
           window.removeEventListener('resize', onViewportChange);
-          window.removeEventListener('scroll', onViewportChange, true);
           if (viewportTarget) {
             viewportTarget.removeEventListener('resize', onViewportChange);
             viewportTarget.removeEventListener('scroll', onViewportChange);
@@ -1546,7 +1539,6 @@
         element.addEventListener('shown.bs.modal', onShown, { once: true });
         element.addEventListener('hidden.bs.modal', onHidden, { once: true });
         window.addEventListener('resize', onViewportChange);
-        window.addEventListener('scroll', onViewportChange, true);
         if (viewportTarget) {
           viewportTarget.addEventListener('resize', onViewportChange);
           viewportTarget.addEventListener('scroll', onViewportChange);
@@ -1850,7 +1842,7 @@
       const windowMode = String(window?.EJC_PROFILE_MODAL_SCROLL_MODE || '').trim().toLowerCase();
       if (windowMode === 'fixed' || windowMode === 'follow') return windowMode;
 
-      return 'follow';
+      return 'fixed';
     }
 
     async function abrirPerfilPessoa(pessoaId, pessoaTipo) {
