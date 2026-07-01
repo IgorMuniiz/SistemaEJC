@@ -2452,44 +2452,59 @@ const truncateText = (value, max = 42) => {
   return `${text.slice(0, max - 1)}...`;
 };
 
+const abbreviatePdfPersonName = (nomeCompleto, max = 28) => {
+  const nome = normalizeTextInput(nomeCompleto) || 'Não informado';
+  if (nome.length <= max) return nome;
+
+  const parts = nome.split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return truncateText(nome, max);
+
+  const firstToken = normalizeTextInput(parts[0]).toLowerCase();
+  const preserveCount = ['tio', 'tia'].includes(firstToken)
+    ? Math.min(parts.length >= 5 ? 3 : 2, parts.length)
+    : Math.min(2, parts.length);
+
+  const abbreviateFromIndex = (startIndex) => parts.map((part, index) => {
+    if (index < startIndex) return part;
+    const initial = normalizeTextInput(part).charAt(0);
+    return initial ? `${initial.toUpperCase()}.` : '';
+  }).filter(Boolean).join(' ');
+
+  const candidates = [
+    abbreviateFromIndex(preserveCount),
+    abbreviateFromIndex(Math.min(1, parts.length)),
+  ];
+
+  if (['tio', 'tia'].includes(firstToken) && parts.length > 2) {
+    candidates.unshift(abbreviateFromIndex(2));
+  }
+
+  for (const candidate of candidates) {
+    if (candidate && candidate.length <= max) {
+      return candidate;
+    }
+  }
+
+  return truncateText(candidates.find(Boolean) || nome, max);
+};
+
 const buildPdfDisplayName = (nomeCompleto, comoQuerSerChamado, max = 28) => {
   const nome = normalizeTextInput(nomeCompleto) || 'Não informado';
   const apelido = normalizeTextInput(comoQuerSerChamado);
-  const parts = nome.split(/\s+/).filter(Boolean);
-
-  const abbreviateSurnames = () => {
-    if (parts.length <= 2) return nome;
-
-    const firstToken = normalizeTextInput(parts[0]).toLowerCase();
-    const preserveCount = ['tio', 'tia'].includes(firstToken)
-      ? Math.min(parts.length >= 5 ? 3 : 2, parts.length)
-      : Math.min(2, parts.length);
-
-    return parts.map((part, index) => {
-      if (index < preserveCount) return part;
-      const initial = normalizeTextInput(part).charAt(0);
-      return initial ? `${initial.toUpperCase()}.` : '';
-    }).filter(Boolean).join(' ');
-  };
 
   if (!apelido) {
-    if (nome.length <= max) return nome;
-    const abbreviatedName = abbreviateSurnames();
-    if (abbreviatedName.length <= max) return abbreviatedName;
-    return truncateText(abbreviatedName, max);
+    return abbreviatePdfPersonName(nome, max);
   }
 
   const render = (baseName) => `${baseName} (${apelido})`;
   let composed = render(nome);
   if (composed.length <= max) return composed;
 
-  if (parts.length > 2) {
-    composed = render(abbreviateSurnames());
-    if (composed.length <= max) return composed;
-  }
+  composed = render(abbreviatePdfPersonName(nome, Math.max(8, max - apelido.length - 4)));
+  if (composed.length <= max) return composed;
 
   const fallbackBaseMax = Math.max(8, max - apelido.length - 4);
-  return `${truncateText(nome, fallbackBaseMax)} (${truncateText(apelido, 10)})`;
+  return `${abbreviatePdfPersonName(nome, fallbackBaseMax)} (${truncateText(apelido, 10)})`;
 };
 
 const fitPdfTextToWidth = (doc, value, width, options = {}) => {
@@ -2898,7 +2913,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const headerOffset = badgeLabel ? 24 : topPadding;
 
   const nameMaxChars = Number(options.nameMaxChars) > 0 ? Number(options.nameMaxChars) : 28;
-  const displayName = truncateText(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
+  const displayName = abbreviatePdfPersonName(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
   const preferredName = normalizeSingleLineText(entry.comoQuerSerChamado || entry.apelido || entry.nomeSocial) || '-';
   const displayNickname = truncateText(preferredName, Math.max(16, Math.min(26, nameMaxChars - 2)));
 
