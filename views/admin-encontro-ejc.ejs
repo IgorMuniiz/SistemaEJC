@@ -897,9 +897,32 @@
       renderAll();
     }
 
+    function pinModalToViewport(modalElement, dialogSelector) {
+      if (!modalElement) return;
+
+      modalElement.style.setProperty('position', 'fixed', 'important');
+      modalElement.style.setProperty('inset', '0', 'important');
+      modalElement.style.setProperty('top', '0', 'important');
+      modalElement.style.setProperty('right', '0', 'important');
+      modalElement.style.setProperty('bottom', '0', 'important');
+      modalElement.style.setProperty('left', '0', 'important');
+      modalElement.style.setProperty('min-height', '100dvh', 'important');
+      modalElement.style.setProperty('height', '100dvh', 'important');
+
+      const dialogElement = modalElement.querySelector(dialogSelector);
+      if (!dialogElement) return;
+
+      dialogElement.style.display = 'flex';
+      dialogElement.style.alignItems = 'center';
+      dialogElement.style.justifyContent = 'center';
+      dialogElement.style.minHeight = 'calc(100dvh - 24px)';
+      dialogElement.style.margin = '12px auto';
+    }
+
     function ensureAppPopup() {
       let modalElement = document.getElementById('app-popup-modal');
       if (modalElement) {
+        pinModalToViewport(modalElement, '.app-popup-dialog');
         return {
           element: modalElement,
           instance: bootstrap.Modal.getOrCreateInstance(modalElement),
@@ -936,6 +959,8 @@
         </div>
       `;
       document.body.appendChild(modalElement);
+
+      pinModalToViewport(modalElement, '.app-popup-dialog');
 
       return {
         element: modalElement,
