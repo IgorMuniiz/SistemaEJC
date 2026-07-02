@@ -3416,8 +3416,9 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   const cardHeight = 126;
   const titleBlockHeight = 80;
   const topStart = PDF_PAGE_MARGIN_PT + titleBlockHeight;
-  const equipeTopStart = PDF_PAGE_MARGIN_PT + 30;
+  const equipeTopStart = PDF_PAGE_MARGIN_PT + 18;
   const bottomLimit = doc.page.height - PDF_PAGE_MARGIN_PT;
+  const equipeBottomLimit = doc.page.height - (PDF_PAGE_MARGIN_PT - 18);
   const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
   const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
 
@@ -3432,7 +3433,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
 
     if (_currentGroupType === 'equipe') {
       // Para PDF de equipes, remove a tarja azul e aplica um cabeçalho limpo.
-      const headerY = PDF_PAGE_MARGIN_PT - 2;
+      const headerY = PDF_PAGE_MARGIN_PT - 10;
       doc.save();
       doc.strokeColor('#c6d0dc').lineWidth(0.8)
         .moveTo(left, headerY + 26)
@@ -3542,6 +3543,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const gridCardWidth = Number(config.cardWidth) > 0 ? Number(config.cardWidth) : cardWidth;
     const gridGap = Number(config.gap) >= 0 ? Number(config.gap) : gap;
     const rowGap = Number(config.rowGap) >= 0 ? Number(config.rowGap) : 10;
+    const gridBottomLimit = Number(config.bottomLimit) > 0 ? Number(config.bottomLimit) : bottomLimit;
     const gridLeft = Number(config.left) >= 0 ? Number(config.left) : left;
     const gridRightX = gridLeft + gridCardWidth + gridGap;
     const customDrawOptions = config.drawOptions && typeof config.drawOptions === 'object' ? config.drawOptions : {};
@@ -3588,7 +3590,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         }
       }
 
-      if (y + rowHeight > bottomLimit) {
+      if (y + rowHeight > gridBottomLimit) {
         doc.addPage();
         drawPageTitle();
         y = getCurrentTopStart();
@@ -3690,8 +3692,8 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   };
 
   const drawEquipeHeader = (groupName, y) => {
-    const titleFontSize = 18;
-    const logoSize = 28;
+    const titleFontSize = 16;
+    const logoSize = 24;
     const logoGap = 8;
     const availableWidth = contentWidth;
     const reservedLogoWidth = hasEquipeHeaderLogo ? (logoSize + logoGap) : 0;
@@ -3720,7 +3722,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       ellipsis: true,
     });
 
-    return 34;
+    return 28;
   };
 
   let totalRegistros = 0;
@@ -3870,11 +3872,11 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const equipePageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
     const equipeStartY = getCurrentTopStart();
     const equipeCardWidth = mmToPt(87);
-    const equipeCardHeight = mmToPt(35);
+    const equipeCardHeight = mmToPt(32);
     const equipePhotoWidth = mmToPt(27);
     const equipePhotoHeight = mmToPt(31);
     const equipeColGap = mmToPt(8);
-    const equipeRowGap = mmToPt(4);
+    const equipeRowGap = mmToPt(2.5);
     const equipeCardOptions = {
       photoWidth: equipePhotoWidth,
       photoHeight: equipePhotoHeight,
@@ -3925,6 +3927,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         left: equipePageMargin,
         gap: equipeColGap,
         rowGap: equipeRowGap,
+        bottomLimit: equipeBottomLimit,
         cardWidth: equipeCardWidth,
         cardHeight: equipeCardHeight,
         drawOptions: equipeCoordenadorCardOptions,
@@ -3938,6 +3941,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
         left: equipePageMargin,
         gap: equipeColGap,
         rowGap: equipeRowGap,
+        bottomLimit: equipeBottomLimit,
         cardWidth: equipeCardWidth,
         cardHeight: equipeCardHeight,
         drawOptions: equipeCardOptions,
