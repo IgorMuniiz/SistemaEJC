@@ -1440,6 +1440,22 @@ const publicImageUploadSingle = (viewName) => (req, res, next) => {
   });
 };
 
+const adminImageUploadSingle = (req, res, next) => {
+  upload.single('foto')(req, res, (err) => {
+    if (!err) return next();
+
+    const rawMessage = normalizeTextInput(err?.message);
+    const normalizedMessage = /only\s+jpg\s+and\s+png\s+images\s+are\s+allowed/i.test(rawMessage)
+      ? 'Envie uma foto nos formatos JPG, JPEG ou PNG.'
+      : (rawMessage || 'Falha ao processar a foto enviada.');
+
+    return res.status(400).json({
+      success: false,
+      error: normalizedMessage,
+    });
+  });
+};
+
 const parseDateInput = (value) => {
   if (!value) return null;
 
@@ -4116,13 +4132,23 @@ const exportImagesFromModel = async (Model, zipName, res) => {
 // Middleware para verificar autenticação de admin e carregar permissões
 const checkAdminAuth = async (req, res, next) => {
   try {
+    const acceptsJson = req.xhr
+      || String(req.headers.accept || '').includes('application/json')
+      || req.method !== 'GET';
+
     if (!req.session.adminId) {
+      if (acceptsJson) {
+        return res.status(401).json({ success: false, error: 'Sessao de administrador expirada. Faca login novamente.' });
+      }
       return res.redirect('/admin/login');
     }
 
     const admin = await Admin.findById(req.session.adminId).select('username nivelAcesso permissoes').lean();
     if (!admin) {
       req.session.destroy(() => {});
+      if (acceptsJson) {
+        return res.status(401).json({ success: false, error: 'Sessao de administrador invalida. Faca login novamente.' });
+      }
       return res.redirect('/admin/login');
     }
 
@@ -4134,6 +4160,12 @@ const checkAdminAuth = async (req, res, next) => {
     return next();
   } catch (err) {
     console.error('Erro ao validar sessão de admin:', err);
+    const acceptsJson = req.xhr
+      || String(req.headers.accept || '').includes('application/json')
+      || req.method !== 'GET';
+    if (acceptsJson) {
+      return res.status(500).json({ success: false, error: 'Falha ao validar sessao de administrador.' });
+    }
     return res.redirect('/admin/login');
   }
 };
@@ -7164,7 +7196,7 @@ app.post('/admin/atualizar-config-bloqueio', checkAdminAuth, requireAdminPermiss
 });
 
 // POST /admin/atualizar-cadastro/:tipo/:id - Atualizar cadastro
-app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), upload.single('foto'), async (req, res) => {
+app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPermission('cadastros.editar'), adminImageUploadSingle, async (req, res) => {
   try {
     const { tipo, id } = req.params;
     

@@ -2279,7 +2279,10 @@
 
         const res = await fetch('/admin/vincular-encontro', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
           body: JSON.stringify({
             ejcId,
             entidadeTipo: 'circulo',
@@ -2290,6 +2293,14 @@
             descricaoPapel,
           })
         });
+
+        const contentType = String(res.headers.get('content-type') || '');
+        if (!contentType.includes('application/json')) {
+          if (res.status === 401) {
+            throw new Error('Sua sessao expirou. Atualize a pagina e faça login novamente.');
+          }
+          throw new Error('Resposta invalida do servidor ao vincular no circulo.');
+        }
 
         const data = await res.json();
         console.log('[VINCULAR CIRCULO] resposta:', res.status, data);
@@ -2339,9 +2350,20 @@
 
         const res = await fetch('/admin/vincular-encontro', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
           body: JSON.stringify({ ejcId, entidadeTipo: 'equipe', entidadeId, pessoaTipo: 'encontreiro', pessoaIds, papel })
         });
+
+        const contentType = String(res.headers.get('content-type') || '');
+        if (!contentType.includes('application/json')) {
+          if (res.status === 401) {
+            throw new Error('Sua sessao expirou. Atualize a pagina e faça login novamente.');
+          }
+          throw new Error('Resposta invalida do servidor ao vincular na equipe.');
+        }
 
         const data = await res.json();
         console.log('[VINCULAR EQUIPE] resposta:', res.status, data);

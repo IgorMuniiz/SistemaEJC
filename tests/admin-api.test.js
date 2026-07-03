@@ -1412,6 +1412,47 @@ test('POST /admin/atualizar-cadastro/encontreiro/:id nao bloqueia a resposta qua
   assert.ok(durationMs < 1500, `A resposta demorou ${durationMs}ms e nao deveria aguardar a auditoria`);
 });
 
+test('POST /admin/atualizar-cadastro/encontreiro/:id retorna JSON quando a foto possui extensao invalida', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const originalFindById = Encontro.findById;
+  const cadastroId = '507f1f77bcf86cd799439119';
+
+  Encontro.findById = async () => ({
+    _id: cadastroId,
+    nomeCompleto: 'Foto Invalida',
+    tipo: 'jovens',
+    fotoAjuste: {},
+  });
+
+  t.after(() => {
+    Encontro.findById = originalFindById;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await asSameOrigin(
+    agent
+      .post(`/admin/atualizar-cadastro/encontreiro/${cadastroId}`)
+      .field('nomeCompleto', 'Foto Invalida')
+      .field('ejc', 'EJC 2026')
+      .field('logradouro', 'Rua C')
+      .field('bairro', 'Centro')
+      .field('telefone', '88999999999')
+      .field('email', 'foto.invalida@example.com')
+      .field('instagram', '@foto')
+      .field('dataNascimento', '1990-05-10')
+      .field('tipo', 'jovens')
+      .attach('foto', Buffer.from('arquivo fake'), 'foto.webp')
+  );
+
+  assert.equal(response.status, 400);
+  assert.equal(response.type, 'application/json');
+  assert.equal(response.body.success, false);
+  assert.match(String(response.body.error || ''), /jpg|jpeg|png/i);
+});
+
 test('GET /admin/logout sem origem confiavel nao encerra a sessao', async (t) => {
   mockAdminAuthFlow(t);
 
