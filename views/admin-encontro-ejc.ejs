@@ -138,7 +138,7 @@
                 <div class="create-form-wrap">
                   <div class="input-group">
                     <input id="circulo_nome" class="form-control" placeholder="Ex: Circulo Sao Paulo">
-                    <button class="btn btn-primary" onclick="criarCirculo()">Criar</button>
+                    <button type="button" class="btn btn-primary" onclick="criarCirculo()">Criar</button>
                   </div>
                 </div>
               </div>
@@ -200,7 +200,7 @@
                       </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end col-link-action">
-                      <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontristaCirculo()">Vincular</button>
+                      <button type="button" class="btn btn-primary link-action-btn w-100" onclick="vincularEncontristaCirculo()">Vincular</button>
                     </div>
                     <div class="col-12" id="wrap_papel_moita" style="display:none;">
                       <input id="descricao_papel_moita" class="form-control" placeholder="Qual papel esta fazendo na moita? Ex: Animacao, Acolhida, Intercessao">
@@ -242,7 +242,7 @@
                 <div class="create-form-wrap">
                   <div class="input-group">
                     <input id="equipe_nome" class="form-control" placeholder="Ex: Liturgia">
-                    <button class="btn btn-primary" onclick="criarEquipe()">Criar</button>
+                    <button type="button" class="btn btn-primary" onclick="criarEquipe()">Criar</button>
                   </div>
                 </div>
               </div>
@@ -304,7 +304,7 @@
                       </select>
                     </div>
                     <div class="col-md-2 d-flex align-items-end col-link-action">
-                      <button class="btn btn-primary link-action-btn w-100" onclick="vincularEncontreiroEquipeEJC()">Vincular</button>
+                      <button type="button" class="btn btn-primary link-action-btn w-100" onclick="vincularEncontreiroEquipeEJC()">Vincular</button>
                     </div>
                   </div>
                 </div>
@@ -405,7 +405,7 @@
       const papel = isMoita ? (vinculo.descricaoPapel || '-') : 'Membro';
       const podeRemover = hasPermission('encontros.gerenciar');
       const acaoRemover = podeRemover
-        ? `<button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
+        ? `<button type="button" class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
         : '<span class="text-muted small">Sem permissao</span>';
       return `
         <tr>
@@ -432,10 +432,10 @@
         : 'Membro';
       const podeRemover = hasPermission('equipes.gerenciar');
       const acaoRemover = podeRemover
-        ? `<button class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
+        ? `<button type="button" class="btn btn-sm btn-danger-soft" onclick="removerVinculo('${escapeHtml(String(vinculo._id || ''))}')"><i class="fas fa-trash me-1"></i>Remover</button>`
         : '<span class="text-muted small">Sem permissao</span>';
       const acaoPerfil = pessoa
-        ? `<button class="btn btn-sm btn-perfil" onclick="abrirPerfilPessoa('${escapeHtml(String(pessoa._id || ''))}', '${escapeHtml(String(vinculo.pessoaTipo || ''))}')"><i class="fas fa-user me-1"></i>Perfil</button>`
+        ? `<button type="button" class="btn btn-sm btn-perfil" onclick="abrirPerfilPessoa('${escapeHtml(String(pessoa._id || ''))}', '${escapeHtml(String(vinculo.pessoaTipo || ''))}')"><i class="fas fa-user me-1"></i>Perfil</button>`
         : '<span class="text-muted small">-</span>';
       return `
         <tr>
@@ -1861,12 +1861,6 @@
     });
 
     function getPerfilModalScrollMode() {
-      const datasetMode = String(document.body?.dataset?.perfilModalScroll || '').trim().toLowerCase();
-      if (datasetMode === 'fixed' || datasetMode === 'follow') return datasetMode;
-
-      const windowMode = String(window?.EJC_PROFILE_MODAL_SCROLL_MODE || '').trim().toLowerCase();
-      if (windowMode === 'fixed' || windowMode === 'follow') return windowMode;
-
       return 'fixed';
     }
 
