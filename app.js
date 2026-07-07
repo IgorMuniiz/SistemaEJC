@@ -1504,6 +1504,22 @@ const resolveApprovalStatus = (doc) => {
 const normalizeTextInput = (value) => String(value || '').trim();
 const normalizeEmailInput = (value) => normalizeTextInput(value).toLowerCase();
 
+const resolveEjcDisplayValue = ({ ejc = '', qualEjcPertence = '', ejcOutro = '', fallback = 'Nao informado' } = {}) => {
+  const ejcNormalizado = normalizeTextInput(ejc);
+  const qualNormalizado = normalizeTextInput(qualEjcPertence);
+  const outroNormalizado = normalizeTextInput(ejcOutro);
+
+  if (ejcNormalizado.toLowerCase() === 'outro') {
+    return outroNormalizado || ejcNormalizado || normalizeTextInput(fallback) || 'Nao informado';
+  }
+
+  if ((ejcNormalizado === 'EJC' || ejcNormalizado === 'ECC') && qualNormalizado) {
+    return qualNormalizado;
+  }
+
+  return ejcNormalizado || qualNormalizado || normalizeTextInput(fallback) || 'Nao informado';
+};
+
 const normalizeFotoAjusteInput = (rawInput, currentValue = {}) => {
   const currentRotacao = Number(currentValue && currentValue.rotacao);
   const currentFocoY = Number(currentValue && currentValue.focoY);
@@ -2932,6 +2948,11 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const displayName = abbreviatePdfPersonName(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
   const preferredName = normalizeSingleLineText(entry.comoQuerSerChamado || entry.apelido || entry.nomeSocial) || '-';
   const displayNickname = truncateText(preferredName, Math.max(16, Math.min(26, nameMaxChars - 2)));
+  const displayEjc = resolveEjcDisplayValue({
+    ejc: entry && entry.ejc,
+    qualEjcPertence: entry && entry.qualEjcPertence,
+    fallback: '-',
+  });
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
@@ -2939,7 +2960,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
-    ['EJC', entry.ejc, 0, 8.5 + fontBoost],
+    ['EJC', displayEjc, 0, 8.5 + fontBoost],
   ];
 
   const availableFieldLines = {
@@ -2950,7 +2971,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
     aniversario: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
     niver: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
-    ejc: ['EJC', entry.ejc, 0, 8.5 + fontBoost],
+    ejc: ['EJC', displayEjc, 0, 8.5 + fontBoost],
     email: ['Email', entry.email, 0, 7.5 + fontBoost],
     bairro: ['Bairro', entry.bairro, 0, 8.5 + fontBoost],
     logradouro: ['Logradouro', entry.logradouro, 4, 8.5 + fontBoost],
@@ -3016,7 +3037,12 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
   comoQuerSerChamado: pessoa?.comoQuerSerChamado || pessoa?.apelido || pessoa?.nomeSocial || '',
-  ejc: pessoa?.ejc || ejcNome,
+  ejc: resolveEjcDisplayValue({
+    ejc: pessoa?.ejc,
+    qualEjcPertence: pessoa?.qualEjcPertence,
+    fallback: ejcNome,
+  }),
+  qualEjcPertence: pessoa?.qualEjcPertence || '',
   logradouro: pessoa?.logradouro || 'Nao informado',
   bairro: pessoa?.bairro || 'Nao informado',
   dataNascimento: pessoa?.dataNascimento || null,
@@ -6040,7 +6066,12 @@ app.post(
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
         genero: normalizeGeneroEncontro(req.body.genero),
-        ejc: normalizeTextInput(req.body.ejc) || cadastroExistente?.ejc || 'Nao informado',
+        ejc: resolveEjcDisplayValue({
+          ejc: req.body.ejc,
+          qualEjcPertence: req.body.qualEjcPertence,
+          ejcOutro: req.body.ejcOutro,
+          fallback: cadastroExistente?.ejc || 'Nao informado',
+        }),
         ...eventLinkData,
         cep: req.body.cep || '',
         complementoReferencia: req.body.complementoReferencia || '',
@@ -6264,13 +6295,19 @@ app.post(
         || req.body.disponibilidadeEncontro === '1'
         || req.body.disponibilidadeEncontro === true;
 
+      const qualEjcPertenceNormalizado = normalizeTextInput(req.body.qualEjcPertence);
       const encontroData = {
         nomeCompleto: req.body.nomeCompleto,
         comoQuerSerChamado: req.body.comoQuerSerChamado || '',
         genero: normalizeGeneroEncontro(req.body.genero),
-        ejc: normalizeTextInput(req.body.ejc) || encontroExistente?.ejc || 'Nao informado',
+        ejc: resolveEjcDisplayValue({
+          ejc: req.body.ejc,
+          qualEjcPertence: qualEjcPertenceNormalizado,
+          ejcOutro: req.body.ejcOutro,
+          fallback: encontroExistente?.ejc || 'Nao informado',
+        }),
         ...eventLinkData,
-        qualEjcPertence: req.body.qualEjcPertence || '',
+        qualEjcPertence: qualEjcPertenceNormalizado,
         tipo: tipoNormalizado,
         tiosCategoria: tiosCategoriaNormalizada,
         origemTios,
@@ -7235,7 +7272,12 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
 
     const updateData = {
       nomeCompleto: req.body.nomeCompleto,
-      ejc: req.body.ejc,
+      ejc: resolveEjcDisplayValue({
+        ejc: req.body.ejc,
+        qualEjcPertence: req.body.qualEjcPertence,
+        ejcOutro: req.body.ejcOutro,
+        fallback: cadastroAtual.ejc,
+      }),
       logradouro: req.body.logradouro,
       bairro: req.body.bairro,
       telefone: req.body.telefone,
@@ -7293,7 +7335,7 @@ app.post('/admin/atualizar-cadastro/:tipo/:id', checkAdminAuth, requireAdminPerm
         : '';
       updateData.comoQuerSerChamado = req.body.comoQuerSerChamado || '';
       updateData.genero = normalizeGeneroEncontro(req.body.genero);
-      updateData.qualEjcPertence = req.body.qualEjcPertence || '';
+      updateData.qualEjcPertence = normalizeTextInput(req.body.qualEjcPertence);
       // Converter origemTios para Boolean
       updateData.origemTios = req.body.origemTios === 'true' || req.body.origemTios === true;
 

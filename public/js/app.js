@@ -774,6 +774,22 @@ function GenericForm() {
       return Boolean(fallback);
     };
 
+    const resolveEjcValueForSubmit = (data) => {
+      const ejcSelecionado = String(data?.ejc || '').trim();
+      const qualEjcPertence = String(data?.qualEjcPertence || '').trim();
+      const ejcOutro = String(data?.ejcOutro || '').trim();
+
+      if (ejcSelecionado === 'Outro') {
+        return ejcOutro || ejcSelecionado;
+      }
+
+      if ((ejcSelecionado === 'EJC' || ejcSelecionado === 'ECC') && qualEjcPertence) {
+        return qualEjcPertence;
+      }
+
+      return ejcSelecionado;
+    };
+
     try {
       const endpoint = isEncontro ? '/encontro' : '/inscricao';
 
@@ -794,7 +810,7 @@ function GenericForm() {
           const data = new FormData();
           const dataToSend = {
             ...tiosData[pessoa],
-            ejc: tiosData[pessoa].ejc === 'Outro' ? tiosData[pessoa].ejcOutro : tiosData[pessoa].ejc,
+            ejc: resolveEjcValueForSubmit(tiosData[pessoa]),
           };
 
           dataToSend.disponibilidadeEncontro = resolveCheckboxValue(`#disponibilidadeEncontro-${pessoa}`, dataToSend.disponibilidadeEncontro);
@@ -840,7 +856,7 @@ function GenericForm() {
         const data = new FormData();
         const formDataToSend = {
           ...formData,
-          ejc: formData.ejc === 'Outro' ? formData.ejcOutro : formData.ejc,
+          ejc: resolveEjcValueForSubmit(formData),
           disponibilidadeEncontro: resolveCheckboxValue('#disponibilidadeEncontro-unico', formData.disponibilidadeEncontro),
           lgpdConsentimento: resolveCheckboxValue('#lgpdConsentimento-unico', formData.lgpdConsentimento),
         };
@@ -1525,7 +1541,7 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
+          <label htmlFor={`ejc-${pessoa}`} className="form-label">Você fez EJC ou ECC? *</label>
           <div className="input-group">
             <span className="input-group-text"><i className="fas fa-church"></i></span>
             <select
@@ -1538,9 +1554,14 @@ function GenericForm() {
                 if (value === 'Outro') {
                   handleCh({ target: { name: 'ejc', value: 'Outro' } });
                   handleCh({ target: { name: 'qualEjcPertence', value: '' } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
+                } else if (value === 'EJC' || value === 'ECC') {
+                  handleCh({ target: { name: 'ejc', value } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
                 } else {
                   handleCh({ target: { name: 'ejc', value } });
                   handleCh({ target: { name: 'qualEjcPertence', value: '' } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
                 }
               }}
               required
@@ -1553,18 +1574,21 @@ function GenericForm() {
           </div>
           {/* Campo para especificar qual EJC ou ECC fez */}
           {(['EJC', 'ECC'].includes(data.ejc)) && (
-            <div className="input-group mt-2">
-              <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
-              <input
-                type="text"
-                className="form-control"
-                id={`qualEjcPertence-${pessoa}`}
-                name="qualEjcPertence"
-                value={data.qualEjcPertence}
-                onChange={handleCh}
-                placeholder={data.ejc === 'EJC' ? 'Ex: XIX EJC COP, EJC 2023...' : 'Ex: ECC 15, ECC 2022...'}
-                required
-              />
+            <div className="mt-2">
+              <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">{data.ejc === 'ECC' ? 'Qual ECC você fez? *' : 'Qual EJC você fez? *'}</label>
+              <div className="input-group">
+                <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
+                <input
+                  type="text"
+                  className="form-control"
+                  id={`qualEjcPertence-${pessoa}`}
+                  name="qualEjcPertence"
+                  value={data.qualEjcPertence}
+                  onChange={handleCh}
+                  placeholder="Ex: XIX EJC COP, EJC 2023..."
+                  required
+                />
+              </div>
             </div>
           )}
           {/* Campo extra para "Outro" */}
@@ -1889,7 +1913,7 @@ function GenericForm() {
         </div>
 
         <div className="mb-3">
-          <label htmlFor={`ejc-${pessoa}`} className="form-label">Qual EJC/ECC você fez? *</label>
+          <label htmlFor={`ejc-${pessoa}`} className="form-label">Você fez EJC ou ECC? *</label>
           <div className="input-group">
             <span className="input-group-text"><i className="fas fa-church"></i></span>
             <select
@@ -1902,9 +1926,14 @@ function GenericForm() {
                 if (value === 'Outro') {
                   handleCh({ target: { name: 'ejc', value: 'Outro' } });
                   handleCh({ target: { name: 'qualEjcPertence', value: '' } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
+                } else if (value === 'EJC' || value === 'ECC') {
+                  handleCh({ target: { name: 'ejc', value } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
                 } else {
                   handleCh({ target: { name: 'ejc', value } });
                   handleCh({ target: { name: 'qualEjcPertence', value: '' } });
+                  handleCh({ target: { name: 'ejcOutro', value: '' } });
                 }
               }}
               required
@@ -1917,18 +1946,21 @@ function GenericForm() {
           </div>
           {/* Campo para especificar qual EJC ou ECC fez */}
           {(data.ejc === 'EJC' || data.ejc === 'ECC') && (
-            <div className="input-group mt-2">
-              <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
-              <input
-                type="text"
-                className="form-control"
-                id={`qualEjcPertence-${pessoa}`}
-                name="qualEjcPertence"
-                value={data.qualEjcPertence}
-                onChange={handleCh}
-                placeholder={data.ejc === 'EJC' ? 'Ex: XIX EJC COP, EJC 2023...' : 'Ex: ECC 15, ECC 2022...'}
-                required
-              />
+            <div className="mt-2">
+              <label htmlFor={`qualEjcPertence-${pessoa}`} className="form-label">{data.ejc === 'ECC' ? 'Qual ECC você fez? *' : 'Qual EJC você fez? *'}</label>
+              <div className="input-group">
+                <span className="input-group-text"><i className="fas fa-hashtag"></i></span>
+                <input
+                  type="text"
+                  className="form-control"
+                  id={`qualEjcPertence-${pessoa}`}
+                  name="qualEjcPertence"
+                  value={data.qualEjcPertence}
+                  onChange={handleCh}
+                  placeholder="Ex: XIX EJC COP, EJC 2023..."
+                  required
+                />
+              </div>
             </div>
           )}
           {/* Campo extra para "Outro" */}
