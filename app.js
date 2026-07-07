@@ -2359,6 +2359,15 @@ const formatDateBR = (value) => {
   return `${day}/${month}/${year}`;
 };
 
+const formatDateBRDayMonth = (value) => {
+  if (!value) return '-';
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return '-';
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+  return `${day}/${month}`;
+};
+
 const buildTiosEquipeReportMap = async (entries = []) => {
   const tioIds = [...new Set(
     (Array.isArray(entries) ? entries : [])
@@ -2896,6 +2905,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const rowHeight = Number(options.rowHeight) > 0 ? Number(options.rowHeight) : 16;
   const topPadding = Number(options.topPadding) >= 0 ? Number(options.topPadding) : 8;
   const textMax = Number(options.textMax) > 0 ? Number(options.textMax) : 46;
+  const birthDateFormatter = typeof options.birthDateFormatter === 'function' ? options.birthDateFormatter : formatDateBR;
   const photoValign = options.photoValign === 'center' ? 'center' : 'top';
   const photoAlign = options.photoAlign === 'left' ? 'left' : (options.photoAlign === 'right' ? 'right' : 'center');
   const showLabels = options.showLabels !== false;
@@ -2925,15 +2935,19 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 
   const photoX = cardX + photoInset;
   const photoY = cardY + (badgeLabel ? 24 : topPadding);
+  const maxPhotoWidth = Math.max(1, cardWidth - (photoInset * 2));
+  const maxPhotoHeight = Math.max(1, cardHeight - (photoY - cardY) - 1);
+  const safePhotoWidth = Math.min(photoWidth, maxPhotoWidth);
+  const safePhotoHeight = Math.min(photoHeight, maxPhotoHeight);
 
-  doc.lineWidth(0.6).strokeColor(photoStrokeColor).rect(photoX, photoY, photoWidth, photoHeight).stroke();
+  doc.lineWidth(0.6).strokeColor(photoStrokeColor).rect(photoX, photoY, safePhotoWidth, safePhotoHeight).stroke();
 
   const photoPath = resolvePhotoPath(entry.foto);
   if (photoPath) {
     try {
       const fotoAjuste = entry && typeof entry.fotoAjuste === 'object' ? entry.fotoAjuste : {};
-      const photoTargetWidth = Math.max(1, Math.round((photoWidth - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
-      const photoTargetHeight = Math.max(1, Math.round((photoHeight - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
+      const photoTargetWidth = Math.max(1, Math.round((safePhotoWidth - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
+      const photoTargetHeight = Math.max(1, Math.round((safePhotoHeight - 2) * PDF_CARD_IMAGE_RENDER_SCALE));
       const photoBuffer = await getPdfSmartCoverBuffer(photoPath, photoTargetWidth, photoTargetHeight, {
         strategy: 'attention',
         align: photoAlign,
@@ -2946,9 +2960,9 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
       }
 
       doc.save();
-      doc.rect(photoX + 1, photoY + 1, photoWidth - 2, photoHeight - 2).clip();
+      doc.rect(photoX + 1, photoY + 1, safePhotoWidth - 2, safePhotoHeight - 2).clip();
       doc.image(photoBuffer, photoX + 1, photoY + 1, {
-        fit: [photoWidth - 2, photoHeight - 2],
+        fit: [safePhotoWidth - 2, safePhotoHeight - 2],
         align: 'center',
         valign: 'center',
       });
@@ -2958,7 +2972,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     }
   }
 
-  const textX = photoX + photoWidth + textGap;
+  const textX = photoX + safePhotoWidth + textGap;
   const textWidth = cardWidth - (textX - cardX) - photoInset;
   const headerOffset = badgeLabel ? 24 : topPadding;
 
@@ -2978,7 +2992,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
-    ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
+    ['Niver', birthDateFormatter(entry.dataNascimento), 0, 8.5 + fontBoost],
     ['EJC', displayEjc, 0, 8.5 + fontBoost],
   ];
 
@@ -2988,8 +3002,8 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     como_quer_ser_chamado: ['Como quer ser chamado', displayNickname, 0, 8.5 + fontBoost],
     instagram: ['Instagram', entry.instagram || '-', 0, 8.5 + fontBoost],
     telefone: ['Telefone', entry.telefone, 0, 8.5 + fontBoost],
-    aniversario: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
-    niver: ['Niver', formatDateBR(entry.dataNascimento), 0, 8.5 + fontBoost],
+    aniversario: ['Niver', birthDateFormatter(entry.dataNascimento), 0, 8.5 + fontBoost],
+    niver: ['Niver', birthDateFormatter(entry.dataNascimento), 0, 8.5 + fontBoost],
     ejc: ['EJC', displayEjc, 0, 8.5 + fontBoost],
     email: ['Email', entry.email, 0, 7.5 + fontBoost],
     bairro: ['Bairro', entry.bairro, 0, 8.5 + fontBoost],
@@ -3017,7 +3031,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   }
 
   const contentAreaTop = cardY + headerOffset;
-  const contentAreaHeight = Math.max(photoHeight, cardHeight - headerOffset - topPadding);
+  const contentAreaHeight = Math.max(safePhotoHeight, cardHeight - headerOffset - topPadding);
   const linesHeight = lines.reduce((sum, line) => sum + rowHeight + (line[2] || 0), 0);
   let rowY = contentAreaTop + Math.max(0, (contentAreaHeight - linesHeight) / 2);
 
@@ -3484,6 +3498,18 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   const equipeBottomLimit = doc.page.height - (PDF_PAGE_MARGIN_PT - 18);
   const equipeHeaderLogoPath = path.join(__dirname, 'public', 'images', 'rodape.png');
   const hasEquipeHeaderLogo = fs.existsSync(equipeHeaderLogoPath);
+  const equipeVisualPreset = {
+    headerTitleFontSize: 22,
+    headerLogoSize: 36,
+    headerLogoGap: 12,
+    headerMinHeight: 38,
+    cardFontBoost: 0.35,
+    cardNameBoost: 1,
+    sectionTitleFontSize: 12.8,
+    sectionTitleHeight: 18,
+    sectionTitleWidth: 168,
+    sectionSpacingAfter: 20,
+  };
 
   const _ejcPart = _mainTitle ? _mainTitle.replace(/^(Equipes|Circulos|Circulos|Quadrante)\s*-\s*/i, '') : '';
   let _currentGroupTitle = '';
@@ -3765,9 +3791,10 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
   };
 
   const drawEquipeHeader = (groupName, y) => {
-    const titleFontSize = 16;
-    const logoSize = 24;
-    const logoGap = 8;
+    const titleFontSize = equipeVisualPreset.headerTitleFontSize;
+    const logoSize = equipeVisualPreset.headerLogoSize;
+    const logoGap = equipeVisualPreset.headerLogoGap;
+    const headerHeight = Math.max(equipeVisualPreset.headerMinHeight, logoSize + 2, titleFontSize + 8);
     const availableWidth = contentWidth;
     const reservedLogoWidth = hasEquipeHeaderLogo ? (logoSize + logoGap) : 0;
     const textWidth = Math.max(120, availableWidth - reservedLogoWidth);
@@ -3777,25 +3804,26 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const measuredTextWidth = Math.min(doc.widthOfString(titleText), textWidth);
     const totalBlockWidth = measuredTextWidth + reservedLogoWidth;
     const startX = left + Math.max(0, availableWidth - totalBlockWidth);
-    const logoY = y - ((logoSize - titleFontSize) / 2);
+    const logoY = y + ((headerHeight - logoSize) / 2) - 1;
     const textX = startX + reservedLogoWidth;
+    const textY = y + ((headerHeight - titleFontSize) / 2);
 
     if (hasEquipeHeaderLogo) {
       doc.image(equipeHeaderLogoPath, startX, logoY, {
         fit: [logoSize, logoSize],
-      align: 'left',
+        align: 'left',
         valign: 'center',
       });
     }
 
-    doc.fillColor('#1f2f46').text(titleText, textX, y, {
+    doc.fillColor('#1f2f46').text(titleText, textX, textY, {
       width: textWidth,
       align: 'left',
       lineBreak: false,
       ellipsis: true,
     });
 
-    return 28;
+    return headerHeight;
   };
 
   let totalRegistros = 0;
@@ -3840,6 +3868,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const circleTopCardOptions = {
         fontBoost: 0.2,
         nameFontBoost: 0.5,
+        birthDateFormatter: formatDateBRDayMonth,
         photoWidth,
         photoHeight,
         photoInset: 5,
@@ -3861,6 +3890,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const circleMemberCardOptions = {
         fontBoost: 0.2,
         nameFontBoost: 0.5,
+        birthDateFormatter: formatDateBRDayMonth,
         photoWidth,
         photoHeight,
         photoInset: 5,
@@ -3952,6 +3982,9 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const equipeColGap = mmToPt(8);
     const equipeRowGap = mmToPt(2.5);
     const equipeCardOptions = {
+      fontBoost: equipeVisualPreset.cardFontBoost,
+      nameFontBoost: equipeVisualPreset.cardNameBoost,
+      birthDateFormatter: formatDateBRDayMonth,
       photoWidth: equipePhotoWidth,
       photoHeight: equipePhotoHeight,
       photoInset: 5,
@@ -3982,21 +4015,21 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     if (coordenadores.length > 0) {
       const headingText = 'COORDENACAO';
       const headingY = y;
-      const headingBoxHeight = 16;
-      const headingBoxWidth = 156;
+      const headingBoxHeight = equipeVisualPreset.sectionTitleHeight;
+      const headingBoxWidth = equipeVisualPreset.sectionTitleWidth;
       const headingBoxX = left;
 
       doc.save();
       doc.roundedRect(headingBoxX, headingY - 1, headingBoxWidth, headingBoxHeight, 4).fill('#edf3fb');
-      doc.font('Helvetica-Bold').fontSize(12).fillColor('#1b3f6b').text(headingText, headingBoxX + 8, headingY + 2, {
+      doc.font('Helvetica-Bold').fontSize(equipeVisualPreset.sectionTitleFontSize).fillColor('#1b3f6b').text(headingText, headingBoxX + 8, headingY + 2, {
         width: headingBoxWidth - 16,
         align: 'left',
         lineBreak: false,
       });
       doc.restore();
 
-      doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 7).lineTo(left + contentWidth, headingY + 7).stroke();
-      y += 18;
+      doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 8).lineTo(left + contentWidth, headingY + 8).stroke();
+      y += equipeVisualPreset.sectionSpacingAfter;
       y = await drawGrid(coordenadores, y, {
         left: equipePageMargin,
         gap: equipeColGap,
