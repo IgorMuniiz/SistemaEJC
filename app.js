@@ -90,7 +90,7 @@ if (!IS_PRODUCTION && ENABLE_LIVERELOAD) {
 }
 
 const PORT = process.env.PORT || 3000;
-const HOST = process.env.HOST || '0.0.0.0';
+const HOST = String(process.env.HOST || '').trim();
 const IMPORT_PLACEHOLDER_IMAGE = 'import-placeholder.jpg';
 
 const resolveTrustProxySetting = () => {
@@ -1504,10 +1504,15 @@ const resolveApprovalStatus = (doc) => {
 const normalizeTextInput = (value) => String(value || '').trim();
 const normalizeEmailInput = (value) => normalizeTextInput(value).toLowerCase();
 
-const resolveEjcDisplayValue = ({ ejc = '', qualEjcPertence = '', ejcOutro = '', fallback = 'Nao informado' } = {}) => {
+const resolveEjcDisplayValue = ({ ejc = '', qualEjcPertence = '', ejcOutro = '', ejcVinculadoNome = '', fallback = 'Nao informado' } = {}) => {
   const ejcNormalizado = normalizeTextInput(ejc);
   const qualNormalizado = normalizeTextInput(qualEjcPertence);
   const outroNormalizado = normalizeTextInput(ejcOutro);
+  const vinculadoNormalizado = normalizeTextInput(ejcVinculadoNome);
+
+  if (vinculadoNormalizado) {
+    return vinculadoNormalizado;
+  }
 
   if (ejcNormalizado.toLowerCase() === 'outro') {
     return outroNormalizado || ejcNormalizado || normalizeTextInput(fallback) || 'Nao informado';
@@ -2767,6 +2772,19 @@ const drawHeartBetweenCards = (doc, centerX, centerY, size = 13, color = '#d94b7
   doc.restore();
 };
 
+const getReadableTextColorForBackground = (hexColor = '#202020') => {
+  const raw = String(hexColor || '').trim().replace('#', '');
+  if (!/^[0-9a-fA-F]{6}$/.test(raw)) {
+    return '#ffffff';
+  }
+
+  const r = Number.parseInt(raw.slice(0, 2), 16);
+  const g = Number.parseInt(raw.slice(2, 4), 16);
+  const b = Number.parseInt(raw.slice(4, 6), 16);
+  const luminance = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+  return luminance >= 150 ? '#1f2f46' : '#ffffff';
+};
+
 const drawCardLine = (doc, x, y, width, label, value, extraSpace = 0, fontSize = 8.5, options = {}) => {
   const rowHeight = Number(options.rowHeight) > 0 ? Number(options.rowHeight) : 16;
   const textMax = Number(options.textMax) > 0 ? Number(options.textMax) : 46;
@@ -2951,6 +2969,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const displayEjc = resolveEjcDisplayValue({
     ejc: entry && entry.ejc,
     qualEjcPertence: entry && entry.qualEjcPertence,
+    ejcVinculadoNome: entry && entry.ejcVinculadoNome,
     fallback: '-',
   });
 
@@ -3040,8 +3059,10 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   ejc: resolveEjcDisplayValue({
     ejc: pessoa?.ejc,
     qualEjcPertence: pessoa?.qualEjcPertence,
+    ejcVinculadoNome: pessoa?.ejcVinculadoNome,
     fallback: ejcNome,
   }),
+  ejcVinculadoNome: pessoa?.ejcVinculadoNome || ejcNome || '',
   qualEjcPertence: pessoa?.qualEjcPertence || '',
   logradouro: pessoa?.logradouro || 'Nao informado',
   bairro: pessoa?.bairro || 'Nao informado',
@@ -3485,6 +3506,11 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       return;
     }
 
+    if (_currentGroupType === 'circulo') {
+      // Para PDF de circulos, remove completamente os elementos de cabecalho.
+      return;
+    }
+
     drawPdfTitle(doc, title);
   };
 
@@ -3693,6 +3719,11 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const headerLeft = Number(options.left) >= 0 ? Number(options.left) : left;
     const headerWidth = Number(options.width) > 0 ? Number(options.width) : cardWidth;
     const headerHeight = Number(options.height) > 0 ? Number(options.height) : 58;
+    const groupPalette = resolveCirculoCrachaTheme(groupName);
+    const headerBgColor = groupPalette.accent || '#202020';
+    const titleColor = getReadableTextColorForBackground(headerBgColor);
+    const subtitleColor = titleColor === '#ffffff' ? '#f3f6fb' : '#1f2f46';
+    const lineColor = titleColor === '#ffffff' ? '#e9eef5' : '#d5deea';
     const rawName = String(groupName || '').replace(/^circulo\b/i, 'Círculo').trim();
     const parts = rawName.match(/^(.*?)\s[-|]\s(.*)$/);
     const displayName = parts ? parts[1].trim() : rawName;
@@ -3708,8 +3739,8 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const subtitleY = titleY + titleApproxHeight + subtitleGap;
     const lineY = Math.min(y + headerHeight - 6, (subtitle ? (subtitleY + subtitleApproxHeight) : (titleY + titleApproxHeight)) + 4);
     doc.save();
-    doc.rect(headerLeft, y, headerWidth, headerHeight).fill('#202020');
-    doc.fillColor('#ffffff').font('Helvetica-Bold').fontSize(titleFontSize).text(displayName, headerLeft + 12, titleY, {
+    doc.rect(headerLeft, y, headerWidth, headerHeight).fill(headerBgColor);
+    doc.fillColor(titleColor).font('Helvetica-Bold').fontSize(titleFontSize).text(displayName, headerLeft + 12, titleY, {
       width: headerWidth - 24,
       align: 'center',
       lineBreak: false,
@@ -3717,7 +3748,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     });
 
     if (subtitle) {
-      doc.fillColor('#f2f2f2').font('Helvetica').fontSize(subtitleFontSize).text(subtitle, headerLeft + 14, subtitleY, {
+      doc.fillColor(subtitleColor).font('Helvetica').fontSize(subtitleFontSize).text(subtitle, headerLeft + 14, subtitleY, {
         width: headerWidth - 28,
         align: 'center',
         lineBreak: false,
@@ -3725,7 +3756,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       });
     }
 
-    doc.strokeColor('#e9eef5').lineWidth(0.9)
+    doc.strokeColor(lineColor).lineWidth(0.9)
       .moveTo(headerLeft + 22, lineY)
       .lineTo(headerLeft + headerWidth - 22, lineY)
       .stroke();
@@ -3784,7 +3815,7 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     if (group.tipo === 'circulo') {
       // Layout fixo em milimetros conforme especificacao do usuario.
       const pageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
-      const titleWidth = mmToPt(82);
+      const titleWidth = mmToPt(85);
       const titleHeight = mmToPt(38);
       const monitorCardWidth = mmToPt(80);
       const monitorCardHeight = mmToPt(32);
@@ -3800,10 +3831,11 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
       const circleCardWidth = personCardWidth;
       const circleRightX = circleLeft + circleCardWidth + circleGap;
       const moitaCardWidth = monitorCardWidth;
-      const moitaX = circleRightX - mmToPt(2);
+      const moitaX = circleRightX + mmToPt(4);
       const topBlockHeight = titleHeight;
       const memberCardHeight = personCardHeight;
-      const headerY = getCurrentTopStart();
+      const circleVerticalOffset = mmToPt(6);
+      const headerY = Math.max(PDF_PAGE_MARGIN_PT - mmToPt(2), getCurrentTopStart() - circleVerticalOffset);
       const topCardY = headerY + ((titleHeight - monitorCardHeight) / 2);
       const circleTopCardOptions = {
         fontBoost: 0.2,
@@ -6424,6 +6456,15 @@ app.post(
 );
 
 // ROTAS DE ADMIN
+
+// GET /admin - Entrada amigavel para o modulo administrativo
+app.get('/admin', (req, res) => {
+  if (req.session && req.session.adminId) {
+    return res.redirect('/admin/gerenciar-cadastros');
+  }
+
+  return res.redirect('/admin/login');
+});
 
 // GET /admin/login - Exibir formulário de login
 app.get('/admin/login', (req, res) => {
@@ -11887,16 +11928,21 @@ let serverInstance = null;
 const startServer = () => {
   if (serverInstance) return serverInstance;
 
-  serverInstance = app.listen(PORT, HOST, () => {
-    const displayHost = HOST === '0.0.0.0' ? 'localhost' : HOST;
+  const onListening = () => {
+    const resolvedHost = HOST || '::';
+    const displayHost = !HOST || HOST === '0.0.0.0' || HOST === '::' ? 'localhost' : HOST;
     logStartupBanner({
-      host: HOST,
+      host: resolvedHost,
       port: PORT,
       displayHost,
       environment: process.env.NODE_ENV || 'development',
       mongoState: mongoose.connection.readyState,
     });
-  });
+  };
+
+  serverInstance = HOST
+    ? app.listen(PORT, HOST, onListening)
+    : app.listen(PORT, onListening);
 
   return serverInstance;
 };
