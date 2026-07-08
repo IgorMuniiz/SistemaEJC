@@ -3071,7 +3071,7 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
   comoQuerSerChamado: pessoa?.comoQuerSerChamado || pessoa?.apelido || pessoa?.nomeSocial || '',
   ejc: normalizeTextInput(vinculo?.pessoaTipo).toLowerCase() === 'encontreiro'
-    ? normalizeTextInput(pessoa?.ejc || pessoa?.qualEjcPertence || 'Nao informado')
+    ? normalizeTextInput(pessoa?.qualEjcPertence || pessoa?.ejc || 'Nao informado')
     : resolveEjcDisplayValue({
       ejc: pessoa?.ejc,
       qualEjcPertence: pessoa?.qualEjcPertence,
@@ -9336,7 +9336,7 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc qualEjcPertence bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
@@ -9710,7 +9710,7 @@ app.get('/admin/encontros/:ejcId/export/crachas/pdf', checkAdminAuth, requireAdm
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto fotoAjuste')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId logradouro bairro dataNascimento telefone email instagram foto fotoAjuste ejc qualEjcPertence')
           .lean()
         : [],
     ]);
@@ -9793,7 +9793,7 @@ app.get('/admin/encontros/:ejcId/export/quadrante/pdf', checkAdminAuth, requireA
         : [],
       idsEncontreiros.length
         ? Encontro.find({ _id: { $in: idsEncontreiros } })
-          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc bairro foto fotoAjuste logradouro dataNascimento instagram')
+          .select('nomeCompleto comoQuerSerChamado tipo genero tiosCategoria tiosGrupoId telefone email ejc qualEjcPertence bairro foto fotoAjuste logradouro dataNascimento instagram')
           .lean()
         : [],
     ]);
