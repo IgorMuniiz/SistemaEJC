@@ -1504,13 +1504,13 @@ const resolveApprovalStatus = (doc) => {
 const normalizeTextInput = (value) => String(value || '').trim();
 const normalizeEmailInput = (value) => normalizeTextInput(value).toLowerCase();
 
-const resolveEjcDisplayValue = ({ ejc = '', qualEjcPertence = '', ejcOutro = '', ejcVinculadoNome = '', fallback = 'Nao informado' } = {}) => {
+const resolveEjcDisplayValue = ({ ejc = '', qualEjcPertence = '', ejcOutro = '', ejcVinculadoNome = '', fallback = 'Nao informado', preferVinculoNome = true } = {}) => {
   const ejcNormalizado = normalizeTextInput(ejc);
   const qualNormalizado = normalizeTextInput(qualEjcPertence);
   const outroNormalizado = normalizeTextInput(ejcOutro);
   const vinculadoNormalizado = normalizeTextInput(ejcVinculadoNome);
 
-  if (vinculadoNormalizado) {
+  if (preferVinculoNome && vinculadoNormalizado) {
     return vinculadoNormalizado;
   }
 
@@ -3075,6 +3075,7 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
     qualEjcPertence: pessoa?.qualEjcPertence,
     ejcVinculadoNome: pessoa?.ejcVinculadoNome,
     fallback: ejcNome,
+    preferVinculoNome: normalizeTextInput(vinculo?.pessoaTipo).toLowerCase() !== 'encontreiro',
   }),
   ejcVinculadoNome: pessoa?.ejcVinculadoNome || ejcNome || '',
   qualEjcPertence: pessoa?.qualEjcPertence || '',
