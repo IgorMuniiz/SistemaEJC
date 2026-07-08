@@ -3976,9 +3976,9 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     const equipePageMargin = mmToPt(PDF_PAGE_MARGIN_MM);
     const equipeStartY = getCurrentTopStart();
     const equipeCardWidth = mmToPt(87);
-    const equipeCardHeight = mmToPt(32);
+    const equipeCardHeight = mmToPt(34);
     const equipePhotoWidth = mmToPt(27);
-    const equipePhotoHeight = mmToPt(31);
+    const equipePhotoHeight = mmToPt(32);
     const equipeColGap = mmToPt(8);
     const equipeRowGap = mmToPt(2.5);
     const equipeCardOptions = {
@@ -4044,6 +4044,23 @@ const renderEstruturasPdf = async (res, { fileName, mainTitle: _mainTitle, group
     }
 
     if (membros.length > 0) {
+      const headingText = 'MEMBROS';
+      const headingY = y;
+      const headingBoxHeight = equipeVisualPreset.sectionTitleHeight;
+      const headingBoxWidth = equipeVisualPreset.sectionTitleWidth;
+      const headingBoxX = left;
+
+      doc.save();
+      doc.roundedRect(headingBoxX, headingY - 1, headingBoxWidth, headingBoxHeight, 4).fill('#edf3fb');
+      doc.font('Helvetica-Bold').fontSize(equipeVisualPreset.sectionTitleFontSize).fillColor('#1b3f6b').text(headingText, headingBoxX + 8, headingY + 2, {
+        width: headingBoxWidth - 16,
+        align: 'left',
+        lineBreak: false,
+      });
+      doc.restore();
+
+      doc.strokeColor('#b9c6d8').lineWidth(0.9).moveTo(headingBoxX + headingBoxWidth + 8, headingY + 8).lineTo(left + contentWidth, headingY + 8).stroke();
+      y += equipeVisualPreset.sectionSpacingAfter;
       y = await drawGrid(membros, y, {
         left: equipePageMargin,
         gap: equipeColGap,
