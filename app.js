@@ -3070,13 +3070,15 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
 const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
   comoQuerSerChamado: pessoa?.comoQuerSerChamado || pessoa?.apelido || pessoa?.nomeSocial || '',
-  ejc: resolveEjcDisplayValue({
-    ejc: pessoa?.ejc,
-    qualEjcPertence: pessoa?.qualEjcPertence,
-    ejcVinculadoNome: pessoa?.ejcVinculadoNome,
-    fallback: ejcNome,
-    preferVinculoNome: normalizeTextInput(vinculo?.pessoaTipo).toLowerCase() !== 'encontreiro',
-  }),
+  ejc: normalizeTextInput(vinculo?.pessoaTipo).toLowerCase() === 'encontreiro'
+    ? normalizeTextInput(pessoa?.ejc || pessoa?.qualEjcPertence || 'Nao informado')
+    : resolveEjcDisplayValue({
+      ejc: pessoa?.ejc,
+      qualEjcPertence: pessoa?.qualEjcPertence,
+      ejcVinculadoNome: pessoa?.ejcVinculadoNome,
+      fallback: ejcNome,
+      preferVinculoNome: true,
+    }),
   ejcVinculadoNome: pessoa?.ejcVinculadoNome || ejcNome || '',
   qualEjcPertence: pessoa?.qualEjcPertence || '',
   logradouro: pessoa?.logradouro || 'Nao informado',
