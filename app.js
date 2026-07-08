@@ -2984,6 +2984,7 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
     ejc: entry && entry.ejc,
     qualEjcPertence: entry && entry.qualEjcPertence,
     ejcVinculadoNome: entry && entry.ejcVinculadoNome,
+    preferVinculoNome: normalizeTextInput(entry && entry.pessoaTipo).toLowerCase() !== 'encontreiro',
     fallback: '-',
   });
 
