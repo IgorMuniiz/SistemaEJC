@@ -3072,7 +3072,7 @@ const buildPdfEntryFromVinculo = (vinculo, pessoa, ejcNome) => ({
   nomeCompleto: pessoa?.nomeCompleto || 'Nao informado',
   comoQuerSerChamado: pessoa?.comoQuerSerChamado || pessoa?.apelido || pessoa?.nomeSocial || '',
   ejc: normalizeTextInput(vinculo?.pessoaTipo).toLowerCase() === 'encontreiro'
-    ? normalizeTextInput(pessoa?.qualEjcPertence || pessoa?.ejc || 'Nao informado')
+    ? normalizeTextInput(pessoa?.ejc || pessoa?.qualEjcPertence || 'Nao informado')
     : resolveEjcDisplayValue({
       ejc: pessoa?.ejc,
       qualEjcPertence: pessoa?.qualEjcPertence,
