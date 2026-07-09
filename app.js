@@ -2980,13 +2980,16 @@ const drawRegistrationCard = async (doc, entry, x, y, width, height, mode, optio
   const displayName = abbreviatePdfPersonName(normalizeSingleLineText(entry.nomeCompleto) || '-', nameMaxChars);
   const preferredName = normalizeSingleLineText(entry.comoQuerSerChamado || entry.apelido || entry.nomeSocial) || '-';
   const displayNickname = truncateText(preferredName, Math.max(16, Math.min(26, nameMaxChars - 2)));
-  const displayEjc = resolveEjcDisplayValue({
-    ejc: entry && entry.ejc,
-    qualEjcPertence: entry && entry.qualEjcPertence,
-    ejcVinculadoNome: entry && entry.ejcVinculadoNome,
-    preferVinculoNome: normalizeTextInput(entry && entry.pessoaTipo).toLowerCase() !== 'encontreiro',
-    fallback: '-',
-  });
+  const isEncontreiroEntry = normalizeTextInput(entry && entry.pessoaTipo).toLowerCase() === 'encontreiro';
+  const displayEjc = isEncontreiroEntry
+    ? (normalizeSingleLineText(entry && entry.ejc) || '-')
+    : resolveEjcDisplayValue({
+      ejc: entry && entry.ejc,
+      qualEjcPertence: entry && entry.qualEjcPertence,
+      ejcVinculadoNome: entry && entry.ejcVinculadoNome,
+      preferVinculoNome: true,
+      fallback: '-',
+    });
 
   const defaultLines = [
     ['Nome', displayName, 0, 8.5 + fontBoost + nameFontBoost],
