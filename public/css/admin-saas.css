@@ -12309,7 +12309,7 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
     body.admin-panel.admin-encontro-page.admin-encontro-revamp #app-popup-modal {
       padding: clamp(10px, 3vh, 28px);
     }
-    body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#app-popup-modal, #app-input-modal) {
+    body.admin-panel.admin-encontro-page.admin-encontro-revamp :is(#app-popup-modal, #app-input-modal, #perfil-pessoa-modal) {
       position: fixed !important;
       inset: 0;
       z-index: 1075;
@@ -12323,7 +12323,7 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       align-items: center;
       justify-content: center;
     }
-    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-dialog {
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal, #perfil-pessoa-modal) .modal-dialog {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -12332,16 +12332,16 @@ html[data-theme='light'] body.admin-panel .sidebar .menu-alert-counter {
       transform: translateY(18px) scale(.985);
       transition: transform .24s ease, opacity .24s ease;
     }
-    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal).show .modal-dialog {
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal, #perfil-pessoa-modal).show .modal-dialog {
       transform: translateY(0) scale(1);
     }
-    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .modal-content {
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal, #perfil-pessoa-modal) .modal-content {
       width: 100%;
     }
-    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .btn-close {
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal, #perfil-pessoa-modal) .btn-close {
       transition: opacity .18s ease, transform .18s ease;
     }
-    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal) .btn-close:hover {
+    body.admin-panel :is(#app-popup-modal, #app-input-modal, #app-entity-editor-modal, #perfil-pessoa-modal) .btn-close:hover {
       opacity: 1;
       transform: rotate(4deg) scale(1.02);
     }
