@@ -4242,6 +4242,71 @@ const exportImagesFromModel = async (Model, zipName, res) => {
   archive.finalize();
 };
 
+const sanitizeExportFilePart = (value, fallback) => {
+  const clean = String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9_-]+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_|_$/g, '')
+    .toLowerCase();
+  return clean || fallback;
+};
+
+const exportEntityPhotosZip = async ({ res, arquivoBase, entidadeTipo, entidadeNome, vinculos, mapEncontristas, mapEncontreiros }) => {
+  const fotoEntries = [];
+  const usedNames = new Set();
+
+  vinculos.forEach((v) => {
+    const pessoa = v.pessoaTipo === 'encontrista'
+      ? mapEncontristas.get(String(v.pessoaId))
+      : mapEncontreiros.get(String(v.pessoaId));
+
+    const foto = String(pessoa?.foto || '').trim();
+    if (!foto) return;
+
+    const filePath = path.join(__dirname, 'uploads', path.basename(foto));
+    if (!isSafeFilePath(path.join(__dirname, 'uploads'), filePath) || !fs.existsSync(filePath)) return;
+
+    const ext = path.extname(filePath).toLowerCase() || '.jpg';
+    const nomeBase = sanitizeExportFilePart(
+      pessoa?.comoQuerSerChamado || pessoa?.nomeCompleto || `${v.pessoaTipo}_${v.pessoaId}`,
+      `${v.pessoaTipo}_${String(v.pessoaId)}`,
+    );
+
+    let archiveName = `${nomeBase}${ext}`;
+    let suffix = 2;
+    while (usedNames.has(archiveName)) {
+      archiveName = `${nomeBase}_${suffix}${ext}`;
+      suffix += 1;
+    }
+
+    usedNames.add(archiveName);
+    fotoEntries.push({ filePath, archiveName });
+  });
+
+  if (!fotoEntries.length) {
+    return res.status(404).send(`Nao ha fotos para exportar em ${entidadeTipo} ${entidadeNome}.`);
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${arquivoBase}_fotos.zip"`);
+
+  const archive = archiver('zip', { zlib: { level: 9 } });
+  archive.on('error', (err) => {
+    console.error('Archive error', err);
+    if (!res.headersSent) {
+      res.status(500).send('Erro ao criar arquivo ZIP');
+    }
+  });
+
+  archive.pipe(res);
+  fotoEntries.forEach(({ filePath, archiveName }) => {
+    archive.file(filePath, { name: archiveName });
+  });
+  await archive.finalize();
+};
+
 // routes
 
 // Middleware para verificar autenticação de admin e carregar permissões
@@ -9305,8 +9370,8 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
     if (!['circulo', 'equipe'].includes(entidadeTipo)) {
       return res.status(400).send('Tipo de entidade invalido.');
     }
-    if (!['excel', 'pdf', 'crachas'].includes(formato)) {
-      return res.status(400).send('Formato invalido. Use excel, pdf ou crachas.');
+    if (!['excel', 'pdf', 'crachas', 'fotos'].includes(formato)) {
+      return res.status(400).send('Formato invalido. Use excel, pdf, crachas ou fotos.');
     }
 
     const ejc = await Ejc.findById(ejcId).lean();
@@ -9392,6 +9457,19 @@ app.get('/admin/encontros/:ejcId/export/:entidadeTipo/:entidadeId/:formato', che
       .replace(/_+/g, '_')
       .replace(/^_|_$/g, '')
       .toLowerCase() || entidadeTipo;
+
+    if (formato === 'fotos') {
+      await exportEntityPhotosZip({
+        res,
+        arquivoBase,
+        entidadeTipo,
+        entidadeNome,
+        vinculos,
+        mapEncontristas,
+        mapEncontreiros,
+      });
+      return;
+    }
 
     if (formato === 'excel') {
       const Excel = require('exceljs');

@@ -13,6 +13,8 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
 const request = require('supertest');
 const mongoose = require('mongoose');
 const ExcelJS = require('exceljs');
@@ -1825,6 +1827,129 @@ test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/crachas autenticado 
   assert.equal(response.status, 200);
   assert.match(String(response.headers['content-type'] || ''), /pdf/i);
   assert.ok(response.body.length > 0, 'O PDF de crachás deve ser gerado');
+});
+
+test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/fotos exporta ZIP apenas com fotos dos vinculados da equipe', async (t) => {
+  mockAdminAuthFlow(t);
+
+  const ejcId = '507f1f77bcf86cd799439351';
+  const equipeId = '507f1f77bcf86cd799439352';
+  const pessoaComFotoId = '507f1f77bcf86cd799439353';
+  const pessoaSemFotoId = '507f1f77bcf86cd799439354';
+  const uploadDir = path.join(__dirname, '..', 'uploads');
+  const fotoFileName = 'teste-exportacao-equipe-fotos.jpg';
+  const fotoFilePath = path.join(uploadDir, fotoFileName);
+
+  const originalEjcFindById = Ejc.findById;
+  const originalEquipeFindOne = Equipe.findOne;
+  const originalVinculoFind = VinculoEncontro.find;
+  const originalEncontroFind = Encontro.find;
+  const originalCadastroFind = Cadastro.find;
+
+  fs.writeFileSync(fotoFilePath, Buffer.from('fake-image-content'));
+  t.after(() => {
+    if (fs.existsSync(fotoFilePath)) {
+      fs.unlinkSync(fotoFilePath);
+    }
+  });
+
+  Ejc.findById = () => ({
+    lean: async () => ({ _id: ejcId, nome: 'EJC Teste Fotos' }),
+  });
+
+  Equipe.findOne = () => ({
+    lean: async () => ({ _id: equipeId, ejcId, nome: 'Sala de Fotos' }),
+  });
+
+  VinculoEncontro.find = () => ({
+    sort: () => ({
+      lean: async () => ([
+        {
+          _id: '507f1f77bcf86cd799439355',
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId: pessoaComFotoId,
+          papel: 'membro',
+          descricaoPapel: '',
+          dataCriacao: new Date('2026-04-04T10:00:00Z'),
+        },
+        {
+          _id: '507f1f77bcf86cd799439356',
+          ejcId,
+          entidadeTipo: 'equipe',
+          entidadeId: equipeId,
+          pessoaTipo: 'encontreiro',
+          pessoaId: pessoaSemFotoId,
+          papel: 'membro',
+          descricaoPapel: '',
+          dataCriacao: new Date('2026-04-04T10:01:00Z'),
+        },
+      ]),
+    }),
+  });
+
+  Encontro.find = () => ({
+    select: () => ({
+      lean: async () => ([
+        {
+          _id: pessoaComFotoId,
+          nomeCompleto: 'João com Foto',
+          comoQuerSerChamado: 'João',
+          tipo: 'jovens',
+          telefone: '88999990011',
+          email: 'joao-com-foto@example.com',
+          bairro: 'Centro',
+          logradouro: 'Rua A',
+          ejc: 'EJC Teste Fotos',
+          foto: fotoFileName,
+        },
+        {
+          _id: pessoaSemFotoId,
+          nomeCompleto: 'Maria sem Foto',
+          comoQuerSerChamado: 'Maria',
+          tipo: 'jovens',
+          telefone: '88999990012',
+          email: 'maria-sem-foto@example.com',
+          bairro: 'Centro',
+          logradouro: 'Rua B',
+          ejc: 'EJC Teste Fotos',
+          foto: '',
+        },
+      ]),
+    }),
+  });
+
+  Cadastro.find = () => ({
+    select: () => ({
+      lean: async () => ([]),
+    }),
+  });
+
+  t.after(() => {
+    Ejc.findById = originalEjcFindById;
+    Equipe.findOne = originalEquipeFindOne;
+    VinculoEncontro.find = originalVinculoFind;
+    Encontro.find = originalEncontroFind;
+    Cadastro.find = originalCadastroFind;
+  });
+
+  const agent = request.agent(app);
+  await loginAsAdmin(agent);
+
+  const response = await agent
+    .get(`/admin/encontros/${ejcId}/export/equipe/${equipeId}/fotos`)
+    .buffer(true)
+    .parse(binaryParser);
+
+  assert.equal(response.status, 200);
+  assert.match(String(response.headers['content-type'] || ''), /zip/i);
+  assert.match(String(response.headers['content-disposition'] || ''), /equipe_sala_de_fotos_fotos\.zip/i);
+
+  const zipText = response.body.toString('latin1');
+  assert.match(zipText, /joao\.jpg/i, 'O ZIP deve conter a foto do vinculado com arquivo');
+  assert.doesNotMatch(zipText, /maria/i, 'O ZIP nao deve incluir pessoa sem foto');
 });
 
 test('GET /admin/encontros/:ejcId/export/equipe/:entidadeId/pdf ordena casal de tios com mulher antes do homem', async (t) => {
